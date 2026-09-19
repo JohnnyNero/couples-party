@@ -5,8 +5,8 @@
 html, body, #root { height: 100%; }
 
 body {
-  background: #0d0d0f;
-  color: #f4f3ee;
+  background: #1a0b16;
+  color: #ffe9ee;
   margin: 0;
   font-family: 'Space Grotesk', Arial, sans-serif;
   /* Real, lining, tabular numerals — the results-board look. */

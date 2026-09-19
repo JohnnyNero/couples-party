@@ -6,9 +6,10 @@ export default {
       colors: {
         // Three colours only. The accent is used ONLY to mark whose turn it is
         // / what just happened — never for decoration.
-        bg: '#0d0d0f',
-        fg: '#f4f3ee',
-        accent: '#f5d000',
+        // Romantic + vibrant: deep aubergine ground, warm blush ink, hot-rose accent.
+        bg: '#1a0b16',
+        fg: '#ffe9ee',
+        accent: '#ff2e63',
       },
       fontFamily: {
         // Make Space Grotesk the default everywhere (preflight sets `sans` on html)
