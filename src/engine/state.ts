@@ -1,5 +1,10 @@
 export type PlayerId = 'A' | 'B'
 
+export const DEFAULT_SEEDS = [
+  'spaghetti', 'handcuffs', 'cathedral', 'lawnmower',
+  'volcano', 'umbrella', 'trombone', 'glacier',
+]
+
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'FORFEIT_WRITE' | 'POT_SHUFFLE'
@@ -61,6 +66,7 @@ export type SessionState = {
   gapActs: GapAct[]
   listActs: ListAct[]
   meldWords: string[] // every word either player typed, incl. misses
+  seedWords: string[]
 }
 
 export type Action =
@@ -70,7 +76,7 @@ export type Action =
 // Future actions (M2+): SUBMIT_FORFEITS, SUBMIT_RATING, TOGGLE_LIE, CALL,
 // SUBMIT_ITEMS, SWAP_ITEM, PLACE_ITEM, DOUBLE
 
-export function initialState(seed: number): SessionState {
+export function initialState(seed: number, seedWords: string[] = DEFAULT_SEEDS): SessionState {
   return {
     seed,
     phase: 'JOIN',
@@ -82,5 +88,6 @@ export function initialState(seed: number): SessionState {
     gapActs: [],
     listActs: [],
     meldWords: [],
+    seedWords,
   }
 }
