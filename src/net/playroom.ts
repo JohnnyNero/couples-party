@@ -18,6 +18,7 @@ import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
 import { assignPlayerId, getPlayerId } from './ids'
+import type { PlayMode } from '../start/mode'
 
 const SESSION_KEY = 'session'
 
@@ -47,17 +48,24 @@ function placeholderState(): SessionState {
   return initialState(0, seedWords)
 }
 
-export async function initNet(): Promise<void> {
+export async function initNet(mode: PlayMode): Promise<void> {
   if (started) return
   started = true
 
   const packs = await loadPacks()
   seedWords = packs.seedWords
 
-  await insertCoin({ streamMode: true, maxPlayersPerRoom: 2 })
+  // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
+  // controllers). Duo mode = regular multiplayer (both devices are equal players,
+  // no stream screen). The reducer/host wiring below is identical either way.
+  await insertCoin(
+    mode === 'screen'
+      ? { streamMode: true, maxPlayersPerRoom: 2 }
+      : { maxPlayersPerRoom: 2 },
+  )
 
-  // Ruling P1: Playroom Stream Mode collects each player's name at join, so JOIN is
-  // dispatched automatically here (host-guarded) instead of via a name-entry UI.
+  // Ruling P1: Playroom collects each player's name at join, so JOIN is dispatched
+  // automatically here (host-guarded) instead of via a name-entry UI.
   onPlayerJoin((player: PlayerState) => {
     const id = assignPlayerId(player.id, getRoomCode())
     if (isHost()) {
@@ -104,7 +112,9 @@ export function dispatch(action: Action): void {
   }
 }
 
-export function useIsStreamScreen(): boolean {
+// Plain function (not a hook): only meaningful in screen mode, and only called after
+// initNet has run, so it never touches Playroom before insertCoin.
+export function getIsStreamScreen(): boolean {
   return isStreamScreen()
 }
 
