@@ -70,7 +70,7 @@ export async function initNet(): Promise<void> {
   })
 
   if (isHost()) {
-    setState(SESSION_KEY, hostFreshState(), true)
+    setState(SESSION_KEY, (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState(), true)
 
     RPC.register('dispatch', async (action: Action) => {
       const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
