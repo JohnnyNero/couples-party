@@ -9,6 +9,7 @@ import {
   useMultiplayerState,
   getState,
   setState,
+  getRoomCode,
   RPC,
   type PlayerState,
 } from 'playroomkit'
@@ -58,7 +59,7 @@ export async function initNet(): Promise<void> {
   // Ruling P1: Playroom Stream Mode collects each player's name at join, so JOIN is
   // dispatched automatically here (host-guarded) instead of via a name-entry UI.
   onPlayerJoin((player: PlayerState) => {
-    const id = assignPlayerId(player.id)
+    const id = assignPlayerId(player.id, getRoomCode())
     if (isHost()) {
       const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
       const name = player.getProfile().name || id
@@ -109,5 +110,5 @@ export function useIsStreamScreen(): boolean {
 
 export function useMyPlayerId(): PlayerId | null {
   const me = myPlayer()
-  return me ? getPlayerId(me.id) : null
+  return me ? getPlayerId(me.id, getRoomCode()) : null
 }
