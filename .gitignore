@@ -28,3 +28,6 @@ dist-ssr
 
 # Test / coverage
 coverage
+
+# Superpowers SDD scratch (ledger, briefs, review packages)
+.superpowers/
