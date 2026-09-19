@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "houseForfeits": [
+    "makes the next round of tea",
+    "picks up the next takeaway",
+    "loses aux privileges for a day",
+    "does the washing up tonight",
+    "takes the bins out this week",
+    "makes breakfast tomorrow"
+  ],
+  "themes": [
+    { "id": "t001", "text": "seven things {name} would struggle to give up" },
+    { "id": "t002", "text": "seven of {name}'s strongest opinions" },
+    { "id": "t003", "text": "seven people {name} would call at 3am" },
+    { "id": "t004", "text": "seven of {name}'s small fears" },
+    { "id": "t005", "text": "seven things {name} always says" },
+    { "id": "t006", "text": "seven of {name}'s guilty pleasures" },
+    { "id": "t007", "text": "seven ways to annoy {name} instantly" },
+    { "id": "t008", "text": "seven things {name} is secretly proud of" }
+  ]
+}

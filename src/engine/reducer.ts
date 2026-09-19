@@ -1,9 +1,34 @@
 import type { Action, MeldResult, MeldRound, PlayerId, SessionState } from './state'
 import { isMatch } from './match'
 import { makeRng, pick } from './rng'
-import { DURATIONS, MELD } from './phases'
+import { DURATIONS, MELD, FORFEIT } from './phases'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
+
+function potCount(state: SessionState, player: PlayerId): number {
+  return state.forfeits.filter((f) => f.authoredBy === player).length
+}
+
+function beginForfeitWrite(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.phase = 'FORFEIT_WRITE'
+  s.phaseEndsAt = now + DURATIONS.FORFEIT_WRITE!
+  s.forfeitWriteExtended = false
+  return s
+}
+
+function finishForfeitWrite(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  let k = 0
+  while (s.forfeits.length < FORFEIT.potFloor && s.houseForfeits.length > 0) {
+    const text = s.houseForfeits[k % s.houseForfeits.length]
+    s.forfeits.push({ id: `h${k}`, text, authoredBy: null, state: 'pot' })
+    k++
+  }
+  s.phase = 'POT_SHUFFLE'
+  s.phaseEndsAt = now + DURATIONS.POT_SHUFFLE!
+  return s
+}
 
 function beginMeld(state: SessionState, now: number): SessionState {
   const rng = makeRng(state.seed)
@@ -47,6 +72,16 @@ function finalize(state: SessionState, now: number): SessionState {
   meld.finalWord = round.converged ? round.words.A : null
   s.phase = 'MELD_RESULT'
   s.phaseEndsAt = now + DURATIONS.MELD_RESULT!
+  if (meld.converged && meld.roundsTaken <= MELD.burnThreshold) {
+    const burnRng = makeRng(s.seed ^ 0x5f37)
+    const potIdx = s.forfeits
+      .map((f, i) => (f.state === 'pot' ? i : -1))
+      .filter((i) => i >= 0)
+    if (potIdx.length > 0) {
+      const chosen = pick(burnRng, potIdx)
+      s.forfeits[chosen].state = 'burned'
+    }
+  }
   return s
 }
 
@@ -71,8 +106,17 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const s = clone(state)
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
-      if (both && s.phase === 'JOIN') return beginMeld(s, now)
+      if (both && s.phase === 'JOIN') return beginForfeitWrite(s, now)
       return s
+    }
+    case 'SUBMIT_FORFEITS': {
+      if (state.phase !== 'FORFEIT_WRITE') return state
+      if (potCount(state, action.player) >= FORFEIT.targetEach) return state
+      const s = clone(state)
+      const id = `${action.player}${potCount(state, action.player)}`
+      s.forfeits.push({ id, text: action.text, authoredBy: action.player, state: 'pot' })
+      const bothFull = potCount(s, 'A') >= FORFEIT.targetEach && potCount(s, 'B') >= FORFEIT.targetEach
+      return bothFull ? finishForfeitWrite(s, now) : s
     }
     case 'SUBMIT_WORD': {
       if (state.phase !== 'MELD_TYPE') return state
@@ -85,6 +129,17 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
     }
     case 'TIMEOUT': {
       switch (state.phase) {
+        case 'FORFEIT_WRITE': {
+          const under = potCount(state, 'A') < FORFEIT.minEach || potCount(state, 'B') < FORFEIT.minEach
+          if (under && !state.forfeitWriteExtended) {
+            const s = clone(state)
+            s.forfeitWriteExtended = true
+            s.phaseEndsAt = now + 20000
+            return s
+          }
+          return finishForfeitWrite(state, now)
+        }
+        case 'POT_SHUFFLE': return beginMeld(state, now)
         case 'MELD_TYPE': return toReveal(state, now)
         case 'MELD_REVEAL': return advanceReveal(state, now)
         case 'MELD_RESULT': { const s = clone(state); s.phase = 'DONE'; s.phaseEndsAt = null; return s }

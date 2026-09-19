@@ -33,10 +33,17 @@ export function Screen() {
 
 function Pot({ s }: { s: SessionState }) {
   const pot = s.forfeits.filter((f) => f.state === 'pot').length
+  const owed = (p: 'A' | 'B') => s.forfeits.filter((f) => f.state === 'owed' && f.owedBy === p).length
   return (
-    <div>
-      <div className="text-xs uppercase tracking-widest text-fg/40">Pot</div>
-      <div className="text-4xl sm:text-5xl font-bold tabular-nums leading-none">{pot}</div>
+    <div className="flex items-end gap-6 sm:gap-10">
+      <div>
+        <div className="text-xs uppercase tracking-widest text-fg/40">Pot</div>
+        <div className="text-4xl sm:text-5xl font-bold tabular-nums leading-none">{pot}</div>
+      </div>
+      <div className="text-sm sm:text-base uppercase tracking-wider text-fg/60 tabular-nums">
+        <div>{(s.players.A.name || 'A')} owes {owed('A')}</div>
+        <div>{(s.players.B.name || 'B')} owes {owed('B')}</div>
+      </div>
     </div>
   )
 }

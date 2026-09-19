@@ -25,6 +25,15 @@ export function DebugBar({ s }: { s: SessionState }) {
       >
         converge
       </button>
+      <button
+        className={btn}
+        onClick={() => {
+          for (const p of ['A', 'B'] as const)
+            for (let i = 0; i < 5; i++) dispatch({ type: 'SUBMIT_FORFEITS', player: p, text: `${p} forfeit ${i}` })
+        }}
+      >
+        fill-pot
+      </button>
       <span className="px-2 uppercase tracking-wider text-fg/50">{s.phase}</span>
     </div>
   )
