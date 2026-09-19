@@ -1,5 +1,6 @@
 import { useSession } from '../net/playroom'
 import { Clock } from './Clock'
+import { DebugBar } from '../debug/DebugBar'
 import { ScreenJoin } from './phases/ScreenJoin'
 import { ScreenMeldType } from './phases/ScreenMeldType'
 import { ScreenMeldReveal } from './phases/ScreenMeldReveal'
@@ -7,6 +8,7 @@ import { ScreenMeldResult } from './phases/ScreenMeldResult'
 
 export function Screen() {
   const s = useSession()
+  const debug = new URLSearchParams(location.search).get('debug') === '1'
   const railText =
     s.phase.startsWith('MELD') && s.meld
       ? `ACT I · MIND MELD · ROUND ${s.meld.rounds.length} OF 7`
@@ -24,6 +26,7 @@ export function Screen() {
         <div className="text-xl tracking-widest">POT 0</div>
         <Clock phaseEndsAt={s.phaseEndsAt} />
       </div>
+      {debug && <DebugBar s={s} />}
     </div>
   )
 }
