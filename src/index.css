@@ -3,4 +3,19 @@
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
-body { background: #111111; color: #f5f5f5; margin: 0; }
+
+body {
+  background: #0d0d0f;
+  color: #f4f3ee;
+  margin: 0;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  /* Real, lining, tabular numerals — the results-board look. */
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* The whole app is a fixed board — never rubber-band or scroll the page itself. */
+#root { overflow: hidden; }
