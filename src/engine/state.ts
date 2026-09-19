@@ -17,7 +17,7 @@ export type Phase =
 export type Forfeit = {
   id: string
   text: string
-  authoredBy: PlayerId // never rendered
+  authoredBy: PlayerId | null // never rendered; null = house forfeit
   state: 'pot' | 'burned' | 'owed'
   owedBy?: PlayerId
 }
@@ -67,16 +67,23 @@ export type SessionState = {
   listActs: ListAct[]
   meldWords: string[] // every word either player typed, incl. misses
   seedWords: string[]
+  houseForfeits: string[]
+  forfeitWriteExtended: boolean
 }
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
+  | { type: 'SUBMIT_FORFEITS'; player: PlayerId; text: string }
   | { type: 'TIMEOUT' }
-// Future actions (M2+): SUBMIT_FORFEITS, SUBMIT_RATING, TOGGLE_LIE, CALL,
+// Future actions (M2+): SUBMIT_RATING, TOGGLE_LIE, CALL,
 // SUBMIT_ITEMS, SWAP_ITEM, PLACE_ITEM, DOUBLE
 
-export function initialState(seed: number, seedWords: string[] = DEFAULT_SEEDS): SessionState {
+export function initialState(
+  seed: number,
+  seedWords: string[] = DEFAULT_SEEDS,
+  houseForfeits: string[] = [],
+): SessionState {
   return {
     seed,
     phase: 'JOIN',
@@ -89,5 +96,7 @@ export function initialState(seed: number, seedWords: string[] = DEFAULT_SEEDS):
     listActs: [],
     meldWords: [],
     seedWords,
+    houseForfeits,
+    forfeitWriteExtended: false,
   }
 }

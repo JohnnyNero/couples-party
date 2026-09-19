@@ -12,3 +12,5 @@ export const MELD = {
   roundCap: 7,
   burnThreshold: 3, // converge in <= 3 rounds burns a forfeit (wired in M2)
 }
+
+export const FORFEIT = { targetEach: 5, minEach: 2, potFloor: 6, maxLen: 60 }
