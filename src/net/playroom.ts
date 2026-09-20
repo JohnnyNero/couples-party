@@ -114,10 +114,16 @@ export function dispatch(action: Action): void {
   }
 }
 
-// Plain function (not a hook): only meaningful in screen mode, and only called after
-// initNet has run, so it never touches Playroom before insertCoin.
+// Plain functions (not hooks): only called after initNet has run, so they never touch
+// Playroom before insertCoin.
 export function getIsStreamScreen(): boolean {
   return isStreamScreen()
+}
+
+// The authority. Anything that acts on its own — the timer loop, the bot — runs here and
+// nowhere else, or every client does it at once.
+export function getIsHost(): boolean {
+  return isHost()
 }
 
 export function useMyPlayerId(): PlayerId | null {

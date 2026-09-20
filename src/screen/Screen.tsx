@@ -1,7 +1,9 @@
 import type { SessionState } from '../engine/state'
-import { useSession } from '../net/playroom'
+import { useSession } from '../net'
 import { Clock } from './Clock'
 import { DebugBar } from '../debug/DebugBar'
+import { Bot } from '../bot/Bot'
+import { resolveBot } from '../start/mode'
 import { BoardStage, railText } from '../views/board'
 import { standing } from '../engine/standing'
 import { playerName } from '../views/list'
@@ -11,6 +13,7 @@ import { playerName } from '../views/list'
 export function Screen() {
   const s = useSession()
   const debug = new URLSearchParams(location.search).get('debug') === '1'
+  const bot = resolveBot(location.search)
   return (
     <div className="h-full w-full flex flex-col p-6 sm:p-10 select-none">
       <div className="text-sm sm:text-lg uppercase tracking-[0.25em] text-fg/70 border-b-2 border-fg/80 pb-3">
@@ -29,6 +32,7 @@ export function Screen() {
         </div>
       </div>
       {debug && <DebugBar s={s} />}
+      {bot && <Bot />}
     </div>
   )
 }

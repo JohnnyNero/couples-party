@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { initNet, getIsStreamScreen } from './net/playroom'
+import { initNet, getIsStreamScreen } from './net'
 import { resolveMode, stampMode, type PlayMode } from './start/mode'
 import { ModePicker } from './start/ModePicker'
 import { Screen } from './screen/Screen'
@@ -18,10 +18,11 @@ export default function App() {
   if (!mode) {
     // stampMode writes ?mode into the URL BEFORE initNet, so Playroom's share link
     // (location.href + #r=CODE) carries the mode to the joining device.
-    return <ModePicker onPick={(m) => { stampMode(m); setMode(m) }} />
+    return <ModePicker onPick={(m, bot) => { stampMode(m, bot); setMode(m) }} />
   }
   if (!ready) return <Connecting />
   if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />
+  // Duo and solo share a layout: the board on top, your own controller underneath.
   return <Duo />
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
-import { dispatch } from '../../net/playroom'
+import { dispatch } from '../../net'
 import { shownPair, isAlreadySaid } from '../../views/meld'
 import { PlayWaiting } from './PlayWaiting'
 

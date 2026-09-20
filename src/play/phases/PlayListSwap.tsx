@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { LIST } from '../../engine/phases'
 import { currentAct } from '../../engine/list'
-import { dispatch } from '../../net/playroom'
+import { dispatch } from '../../net'
 import { PlayWaiting } from './PlayWaiting'
 
 // The guardrail. Free, one item, no explanation asked for and none given — the act is

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { LIST } from '../../engine/phases'
 import { currentAct } from '../../engine/list'
-import { dispatch } from '../../net/playroom'
+import { dispatch } from '../../net'
 import { themeText } from '../../views/list'
 
 // Fields lock one at a time, like the cold open did: a phone that sleeps or a clock that

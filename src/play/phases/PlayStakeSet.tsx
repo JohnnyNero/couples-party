@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { SessionState } from '../../engine/state'
 import { STAKE } from '../../engine/phases'
-import { dispatch } from '../../net/playroom'
+import { dispatch } from '../../net'
 import { PlayWaiting } from './PlayWaiting'
 
 // Either phone can type the single agreed forfeit; the first non-empty submission wins

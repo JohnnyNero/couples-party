@@ -2,7 +2,7 @@ import type { SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { LIST } from '../engine/phases'
 import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
-import { dispatch } from '../net/playroom'
+import { dispatch } from '../net'
 
 // Dev-only overlay, mounted on ?debug=1. Shows public phase state only. Reaching the
 // back half of the session by hand every time is the single biggest tax on iteration,

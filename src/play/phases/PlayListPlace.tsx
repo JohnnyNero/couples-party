@@ -1,7 +1,7 @@
 import type { PlayerId, SessionState } from '../../engine/state'
 import { LIST } from '../../engine/phases'
 import { SLOTS, currentAct, currentItem, slotOf, usedSlots } from '../../engine/list'
-import { dispatch } from '../../net/playroom'
+import { dispatch } from '../../net'
 import { PlayWaiting } from './PlayWaiting'
 
 // One item at a time, an irreversible bet each time. The author predicts, the ranker

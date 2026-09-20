@@ -1,4 +1,4 @@
-import { useSession, useMyPlayerId } from '../net/playroom'
+import { useSession, useMyPlayerId } from '../net'
 import { Controller } from '../views/controller'
 import { PlayWaiting } from './phases/PlayWaiting'
 

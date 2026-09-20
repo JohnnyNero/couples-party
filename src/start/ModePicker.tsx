@@ -1,6 +1,6 @@
 import type { PlayMode } from './mode'
 
-export function ModePicker({ onPick }: { onPick: (m: PlayMode) => void }) {
+export function ModePicker({ onPick }: { onPick: (m: PlayMode, bot?: boolean) => void }) {
   return (
     <div className="h-full w-full flex flex-col select-none p-6 sm:p-10">
       <div className="text-sm sm:text-lg uppercase tracking-[0.25em] text-fg/70 border-b-2 border-fg/80 pb-3">
@@ -20,9 +20,14 @@ export function ModePicker({ onPick }: { onPick: (m: PlayMode) => void }) {
           title="Just two phones"
           sub="No shared screen · each phone shows the board and your controls"
         />
+        <PickButton
+          onClick={() => onPick('solo', true)}
+          title="On your own"
+          sub="A bot takes the other seat · for testing the loop, not for a night in"
+        />
       </div>
       <div className="text-xs uppercase tracking-widest text-fg/30 border-t-2 border-fg/80 pt-3">
-        Greybox · Mind Meld
+        Greybox · Mind Meld · Shortlist
       </div>
     </div>
   )
