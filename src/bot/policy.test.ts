@@ -15,7 +15,8 @@ const BRAIN: BotBrain = {
   stakes: ['loser makes the tea'],
 }
 
-const THEMES = [{ id: 't001', text: 'seven things {name} would miss' }]
+const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+const THEMES = [{ id: 't001', text: 'seven things {name} would miss', pool: POOL }]
 const rng = () => makeRng(7)
 
 describe('meldWord', () => {
@@ -84,8 +85,8 @@ describe('the bot plays a whole session through the real reducer', () => {
   it('reaches DONE without stalling, and nothing it does is illegal', () => {
     const r = makeRng(3)
     let s = initialState(99, undefined, [
-      { id: 't001', text: 'seven things {name} would miss' },
-      { id: 't002', text: "seven of {name}'s opinions" },
+      { id: 't001', text: 'seven things {name} would miss', pool: POOL },
+      { id: 't002', text: "seven of {name}'s opinions", pool: POOL },
     ])
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 800) {

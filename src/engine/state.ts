@@ -46,20 +46,23 @@ export type GapAct = {
   outcome: 'caught' | 'missed' | 'never-called' | null
 }
 
-export type Theme = { id: string; text: string }
+// `pool` is the theme's own bank of candidate items (~20) — the author picks seven of
+// them rather than writing anything, so nobody has to come up with items cold.
+export type Theme = { id: string; text: string; pool: string[] }
 
 export type ListItem = {
   id: string
   text: string
   swapped: boolean               // replaced by the ranker; never shown as whose veto it was
+  poolIndex: number | null       // which pool entry this was; null for a blank pad or a swap-in
   actualSlot: number | null      // 1..7, the ranker's commitment
   predictedSlot: number | null   // 1..7, the author's guess at it
 }
 export type ListAct = {
   author: PlayerId
   themeId: string
+  pool: string[]                 // this act's shuffled candidates, drawn from the theme's own pool
   items: ListItem[]              // exactly 7; authored order until LIST_SWAP ends, then reveal order
-  placeIndex: number             // 0-based index into items — which one is on the table now
   swapDone: boolean
   displacement: number | null    // 0..24, set at LIST_REVEAL
 }
@@ -88,11 +91,13 @@ export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
   | { type: 'SET_STAKE'; text: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
-  // One locked field at a time, so a timeout keeps whatever was already written.
-  | { type: 'SUBMIT_ITEMS'; player: PlayerId; text: string }
+  // One pick locked at a time, from the theme's pool — so a timeout keeps whatever was
+  // already picked.
+  | { type: 'SUBMIT_ITEMS'; player: PlayerId; poolIndex: number }
   // The ranker's free veto. `index: null` = declined; either way the phase ends.
   | { type: 'SWAP_ITEM'; player: PlayerId; index: number | null; text: string }
-  | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
+  // One player's whole ranking, dragged into order in one pass — top of `order` is 1st.
+  | { type: 'SUBMIT_ORDER'; player: PlayerId; order: string[] }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 

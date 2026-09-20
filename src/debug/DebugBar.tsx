@@ -1,7 +1,7 @@
 import type { SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { LIST } from '../engine/phases'
-import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
+import { currentAct } from '../engine/list'
 import { dispatch } from '../net'
 
 // Dev-only overlay, mounted on ?debug=1. Shows public phase state only. Reaching the
@@ -53,8 +53,13 @@ function ListButtons({ s, btn }: { s: SessionState; btn: string }) {
       <button
         className={btn}
         onClick={() => {
-          for (let i = act.items.length; i < LIST.items; i++) {
-            dispatch({ type: 'SUBMIT_ITEMS', player: act.author, text: `debug item ${i + 1}` })
+          const picked = new Set(act.items.map((i) => i.poolIndex))
+          let i = 0
+          for (let n = act.items.length; n < LIST.items; n++) {
+            while (picked.has(i)) i++
+            dispatch({ type: 'SUBMIT_ITEMS', player: act.author, poolIndex: i })
+            picked.add(i)
+            i++
           }
         }}
       >
@@ -73,18 +78,13 @@ function ListButtons({ s, btn }: { s: SessionState; btn: string }) {
     )
   }
   if (s.phase === 'LIST_PLACE') {
-    const item = currentItem(act)
+    const order = act.items.map((i) => i.id)
     return (
       <button
         className={btn}
         onClick={() => {
-          if (!item) return
-          if (item.actualSlot === null) {
-            dispatch({ type: 'PLACE_ITEM', player: other(act.author), slot: lowestFreeSlot(act, false) })
-          }
-          if (item.predictedSlot === null) {
-            dispatch({ type: 'PLACE_ITEM', player: act.author, slot: lowestFreeSlot(act, true) })
-          }
+          dispatch({ type: 'SUBMIT_ORDER', player: act.author, order })
+          dispatch({ type: 'SUBMIT_ORDER', player: other(act.author), order })
         }}
       >
         place-both

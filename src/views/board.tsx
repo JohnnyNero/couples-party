@@ -1,5 +1,5 @@
 import type { SessionState } from '../engine/state'
-import { LIST, MELD } from '../engine/phases'
+import { MELD } from '../engine/phases'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
 import { ScreenStakeSet } from '../screen/phases/ScreenStakeSet'
 import { ScreenStakeReveal } from '../screen/phases/ScreenStakeReveal'
@@ -22,11 +22,10 @@ export function railText(s: SessionState): string {
   if (s.phase === 'STAKE_SET') return 'The Stake · Agree the forfeit'
   if (s.phase === 'STAKE_REVEAL') return 'The Stake'
   if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
-    const act = s.listActs[s.listActs.length - 1]
     const run = `Act III · Shortlist · ${s.listActs.length} of 2`
-    if (s.phase === 'LIST_WRITE') return `${run} · Writing`
+    if (s.phase === 'LIST_WRITE') return `${run} · Picking`
     if (s.phase === 'LIST_SWAP') return `${run} · The swap`
-    if (s.phase === 'LIST_PLACE') return `${run} · Item ${act.placeIndex + 1} of ${LIST.items}`
+    if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
   }
   if (s.phase === 'DONE') return 'That\'s the session'

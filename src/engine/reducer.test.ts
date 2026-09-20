@@ -138,9 +138,10 @@ describe('mind meld does not touch the stake (co-op)', () => {
 
 // ---------------------------------------------------------------- Act III · Shortlist
 
+const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 const THEMES = [
-  { id: 't001', text: 'seven things {name} would struggle to give up' },
-  { id: 't002', text: "seven of {name}'s strongest opinions" },
+  { id: 't001', text: 'seven things {name} would struggle to give up', pool: POOL },
+  { id: 't002', text: "seven of {name}'s strongest opinions", pool: POOL },
 ]
 
 // Straight to the top of Act III: both joined, stake set, Act I converged and timed out.
@@ -157,15 +158,16 @@ const atListWrite = () => {
   return s
 }
 
+// Picks n pool entries (indices `from`..`from+n-1`) for the current author, one at a time.
 const write = (s: SessionState, n: number, from = 0) => {
   const author = s.listActs[s.listActs.length - 1].author
   for (let i = from; i < from + n; i++) {
-    s = reduce(s, { type: 'SUBMIT_ITEMS', player: author, text: `item ${i + 1}` }, 1000)
+    s = reduce(s, { type: 'SUBMIT_ITEMS', player: author, poolIndex: i }, 1000)
   }
   return s
 }
 
-// Seven written items -> swap declined -> sitting on the first placement.
+// Seven picked items -> swap declined -> sitting at the start of placement.
 const atListPlace = () => {
   let s = write(atListWrite(), 7)
   const ranker = s.listActs[0].author === 'A' ? 'B' : 'A'
@@ -173,45 +175,53 @@ const atListPlace = () => {
   return s
 }
 
-// Place every item, ranker and author, from two slot orders.
+// Each side submits its whole order in one shot. `actual`/`predicted` give the desired
+// slot (1..7) for each item in `act.items` order — translated here into the id order
+// SUBMIT_ORDER actually takes, so callers can still talk in slots.
 const placeAll = (s: SessionState, actual: number[], predicted: number[]) => {
-  const act = () => s.listActs[s.listActs.length - 1]
-  const author = act().author
-  const ranker = author === 'A' ? 'B' : 'A'
-  for (let i = 0; i < 7; i++) {
-    s = reduce(s, { type: 'PLACE_ITEM', player: ranker, slot: actual[i] }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: author, slot: predicted[i] }, 1000)
-  }
+  const act = s.listActs[s.listActs.length - 1]
+  const ranker = act.author === 'A' ? 'B' : 'A'
+  const orderFor = (slots: number[]) =>
+    act.items
+      .map((item, i) => ({ id: item.id, slot: slots[i] }))
+      .sort((x, y) => x.slot - y.slot)
+      .map((x) => x.id)
+  s = reduce(s, { type: 'SUBMIT_ORDER', player: ranker, order: orderFor(actual) }, 1000)
+  s = reduce(s, { type: 'SUBMIT_ORDER', player: act.author, order: orderFor(predicted) }, 1000)
   return s
 }
 
 describe('act III · write', () => {
-  it('opens on author A with a theme and a 60s clock', () => {
+  it('opens on author A with a theme, a shuffled pool, and a 30s clock', () => {
     const s = atListWrite()
     expect(s.phase).toBe('LIST_WRITE')
-    expect(s.phaseEndsAt).toBe(1000 + 60000)
+    expect(s.phaseEndsAt).toBe(1000 + 30000)
     expect(s.listActs).toHaveLength(1)
     expect(s.listActs[0].author).toBe('A')
     expect(THEMES.map((t) => t.id)).toContain(s.listActs[0].themeId)
+    expect([...s.listActs[0].pool].sort()).toEqual([...POOL].sort())
     expect(s.listActs[0].items).toEqual([])
   })
-  it('locks one field at a time and ignores the ranker', () => {
+  it('locks one pick at a time and ignores the ranker', () => {
     let s = write(atListWrite(), 2)
-    s = reduce(s, { type: 'SUBMIT_ITEMS', player: 'B', text: 'not yours' }, 1000)
-    s = reduce(s, { type: 'SUBMIT_ITEMS', player: 'A', text: '   ' }, 1000)
-    expect(s.listActs[0].items.map((i) => i.text)).toEqual(['item 1', 'item 2'])
+    const pool = s.listActs[0].pool
+    s = reduce(s, { type: 'SUBMIT_ITEMS', player: 'B', poolIndex: 5 }, 1000) // not the ranker's turn
+    expect(s.listActs[0].items).toHaveLength(2)
+    expect(s.listActs[0].items.map((i) => i.text)).toEqual([pool[0], pool[1]])
   })
-  it('trims to 40 characters', () => {
-    const s = reduce(atListWrite(), { type: 'SUBMIT_ITEMS', player: 'A', text: 'x'.repeat(60) }, 1000)
-    expect(s.listActs[0].items[0].text).toHaveLength(40)
+  it('ignores a pool index already picked, or out of range', () => {
+    let s = write(atListWrite(), 1)
+    s = reduce(s, { type: 'SUBMIT_ITEMS', player: 'A', poolIndex: 0 }, 1000) // already picked
+    s = reduce(s, { type: 'SUBMIT_ITEMS', player: 'A', poolIndex: 99 }, 1000) // out of range
+    expect(s.listActs[0].items).toHaveLength(1)
   })
-  it('the seventh item ends the phase early — nobody presses next', () => {
+  it('the seventh pick ends the phase early — nobody presses next', () => {
     const s = write(atListWrite(), 7)
     expect(s.phase).toBe('LIST_SWAP')
     expect(s.phaseEndsAt).toBe(1000 + 20000)
     expect(s.listActs[0].items).toHaveLength(7)
   })
-  it('ignores an eighth item', () => {
+  it('ignores an eighth pick', () => {
     const s = write(atListWrite(), 8)
     expect(s.listActs[0].items).toHaveLength(7)
   })
@@ -221,6 +231,7 @@ describe('act III · write', () => {
     expect(s.phase).toBe('LIST_SWAP')
     expect(s.listActs[0].items).toHaveLength(7)
     expect(s.listActs[0].items.slice(3).every((i) => i.text === '(blank)')).toBe(true)
+    expect(s.listActs[0].items.slice(3).every((i) => i.poolIndex === null)).toBe(true)
   })
 })
 
@@ -230,10 +241,11 @@ describe('act III · swap', () => {
     const before = s.listActs[0].items[2].text
     s = reduce(s, { type: 'SWAP_ITEM', player: 'B', index: 2, text: 'the bins' }, 3000)
     expect(s.phase).toBe('LIST_PLACE')
-    expect(s.phaseEndsAt).toBe(3000 + 15000)
+    expect(s.phaseEndsAt).toBe(3000 + 45000)
     const swapped = s.listActs[0].items.filter((i) => i.swapped)
     expect(swapped).toHaveLength(1)
     expect(swapped[0].text).toBe('the bins')
+    expect(swapped[0].poolIndex).toBe(null) // no longer a pool-original pick
     expect(s.listActs[0].items.map((i) => i.text)).not.toContain(before)
   })
   it('ignores the author — the veto is the ranker\'s', () => {
@@ -259,40 +271,44 @@ describe('act III · swap', () => {
 })
 
 describe('act III · placement', () => {
-  it('holds the phase until both have committed', () => {
+  it('holds the phase until both sides have submitted their whole order', () => {
     let s = atListPlace()
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 4 }, 1000)
+    const act = s.listActs[0]
+    const ranker = act.author === 'A' ? 'B' : 'A'
+    const order = act.items.map((i) => i.id)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: ranker, order }, 1000)
     expect(s.phase).toBe('LIST_PLACE')
-    expect(s.listActs[0].placeIndex).toBe(0)
-    expect(s.listActs[0].items[0].actualSlot).toBe(4)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'A', slot: 6 }, 2000)
-    expect(s.listActs[0].placeIndex).toBe(1)
-    expect(s.listActs[0].items[0].predictedSlot).toBe(6)
-    expect(s.phaseEndsAt).toBe(2000 + 15000)
+    expect(s.listActs[0].items.every((i) => i.actualSlot !== null)).toBe(true)
+    expect(s.listActs[0].items.every((i) => i.predictedSlot === null)).toBe(true)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: act.author, order: [...order].reverse() }, 2000)
+    expect(s.phase).toBe('LIST_REVEAL')
+    expect(s.listActs[0].items[0].predictedSlot).toBe(7) // first item, last in the reversed order
   })
-  it('rejects a used slot, an out-of-range slot, and a second thought', () => {
+  it('rejects a second submission, an incomplete order, and a duplicate id', () => {
     let s = atListPlace()
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 4 }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'A', slot: 4 }, 1000) // author's own grid is free
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 4 }, 1000) // now taken for the ranker
-    expect(s.listActs[0].items[1].actualSlot).toBe(null)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 8 }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 0 }, 1000)
-    expect(s.listActs[0].items[1].actualSlot).toBe(null)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 1 }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 2 }, 1000) // no changing your mind
-    expect(s.listActs[0].items[1].actualSlot).toBe(1)
+    const act = s.listActs[0]
+    const ranker = act.author === 'A' ? 'B' : 'A'
+    const order = act.items.map((i) => i.id)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: ranker, order }, 1000)
+    const firstPass = s.listActs[0].items.map((i) => i.actualSlot)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: ranker, order: [...order].reverse() }, 1000) // no changing your mind
+    expect(s.listActs[0].items.map((i) => i.actualSlot)).toEqual(firstPass)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: act.author, order: order.slice(0, 6) }, 1000) // too short
+    expect(s.listActs[0].items.every((i) => i.predictedSlot === null)).toBe(true)
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: act.author, order: [order[0], ...order] }, 1000) // duplicate id
+    expect(s.listActs[0].items.every((i) => i.predictedSlot === null)).toBe(true)
   })
-  it('a timed-out placement takes the lowest free slot, per player', () => {
+  it('a side that never drags gets the order it was shown, on timeout', () => {
     let s = atListPlace()
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 1 }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'A', slot: 7 }, 1000)
-    s = reduce(s, { type: 'PLACE_ITEM', player: 'B', slot: 3 }, 1000) // author says nothing
-    s = reduce(s, { type: 'TIMEOUT' }, 2000)
-    expect(s.listActs[0].items[1].actualSlot).toBe(3)
-    expect(s.listActs[0].items[1].predictedSlot).toBe(1) // lowest free in the author's grid
+    const act = s.listActs[0]
+    const shown = act.items.map((i) => i.id)
+    const ranker = act.author === 'A' ? 'B' : 'A'
+    s = reduce(s, { type: 'SUBMIT_ORDER', player: ranker, order: [...shown].reverse() }, 1000)
+    s = reduce(s, { type: 'TIMEOUT' }, 2000) // the author never dragged
+    expect(s.phase).toBe('LIST_REVEAL')
+    expect(s.listActs[0].items.map((i) => i.predictedSlot)).toEqual(shown.map((_, i) => i + 1))
   })
-  it('the last item is forced, and the seventh placement opens the reveal', () => {
+  it('a full, matching order on both sides opens the reveal with zero displacement', () => {
     const order = [1, 2, 3, 4, 5, 6, 7]
     const s = placeAll(atListPlace(), order, order)
     expect(s.phase).toBe('LIST_REVEAL')

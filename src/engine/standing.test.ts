@@ -3,7 +3,7 @@ import { initialState, type ListAct, type PlayerId } from './state'
 import { listAward, standing, leader } from './standing'
 
 const act = (author: PlayerId, displacement: number | null): ListAct => ({
-  author, themeId: 't001', items: [], placeIndex: 7, swapDone: true, displacement,
+  author, themeId: 't001', pool: [], items: [], swapDone: true, displacement,
 })
 
 const withActs = (...acts: ListAct[]) => ({ ...initialState(1), listActs: acts })

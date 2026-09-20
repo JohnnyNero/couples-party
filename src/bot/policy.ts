@@ -1,7 +1,7 @@
 import type { Action, PlayerId, SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { normalize } from '../engine/match'
-import { currentAct, currentItem, usedSlots } from '../engine/list'
+import { currentAct } from '../engine/list'
 import { LIST } from '../engine/phases'
 import { isAlreadySaid } from '../views/meld'
 
@@ -81,9 +81,10 @@ export function nextBotAction(
     case 'LIST_WRITE': {
       const act = currentAct(s)
       if (!act || act.author !== me || act.items.length >= LIST.items) return null
-      const written = new Set(act.items.map((i) => i.text))
-      const free = brain.items.filter((t) => !written.has(t))
-      return { type: 'SUBMIT_ITEMS', player: me, text: free.length ? pickFrom(rng, free) : `item ${act.items.length + 1}` }
+      const picked = new Set(act.items.map((i) => i.poolIndex))
+      const free = act.pool.map((_, i) => i).filter((i) => !picked.has(i))
+      if (free.length === 0) return null
+      return { type: 'SUBMIT_ITEMS', player: me, poolIndex: pickFrom(rng, free) }
     }
 
     case 'LIST_SWAP': {
@@ -104,14 +105,17 @@ export function nextBotAction(
 
     case 'LIST_PLACE': {
       const act = currentAct(s)
-      const item = act && currentItem(act)
-      if (!act || !item) return null
+      if (!act) return null
       const byAuthor = act.author === me
-      if ((byAuthor ? item.predictedSlot : item.actualSlot) !== null) return null
-      const used = new Set(usedSlots(act, byAuthor))
-      const free = Array.from({ length: LIST.items }, (_, i) => i + 1).filter((n) => !used.has(n))
-      if (free.length === 0) return null
-      return { type: 'PLACE_ITEM', player: me, slot: pickFrom(rng, free) }
+      const already = act.items.every((i) => (byAuthor ? i.predictedSlot : i.actualSlot) !== null)
+      if (already) return null
+      // Shuffle its own copy of the order — good enough for a testing seat.
+      const order = act.items.map((i) => i.id)
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1))
+        ;[order[i], order[j]] = [order[j], order[i]]
+      }
+      return { type: 'SUBMIT_ORDER', player: me, order }
     }
 
     default:

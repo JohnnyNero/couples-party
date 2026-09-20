@@ -3,12 +3,12 @@ import { initialState, type ListAct } from '../engine/state'
 import { themeText, rankerOf } from './list'
 
 const act: ListAct = {
-  author: 'A', themeId: 't001', items: [], placeIndex: 0, swapDone: false, displacement: null,
+  author: 'A', themeId: 't001', pool: [], items: [], swapDone: false, displacement: null,
 }
 
 describe('themeText', () => {
   const base = () => {
-    const s = initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss' }])
+    const s = initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss', pool: [] }])
     s.players.A.name = 'Sam'
     return s
   }

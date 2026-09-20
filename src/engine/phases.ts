@@ -5,9 +5,9 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   MELD_TYPE: 20000,
   MELD_REVEAL: 4000,
   MELD_RESULT: 6000,
-  LIST_WRITE: 60000,
+  LIST_WRITE: 30000,  // tapping seven from a pool, not typing them
   LIST_SWAP: 20000,
-  LIST_PLACE: 15000,
+  LIST_PLACE: 45000,  // dragging all seven into order, both players at once
   LIST_REVEAL: 15000,
   // STAKE_SET is untimed: the pair agree at their own pace, then one types it in.
 }

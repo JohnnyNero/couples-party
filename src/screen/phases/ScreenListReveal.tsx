@@ -1,7 +1,10 @@
 import type { SessionState } from '../../engine/state'
-import { SLOTS, currentAct } from '../../engine/list'
+import { LIST } from '../../engine/phases'
+import { currentAct } from '../../engine/list'
 import { listAward } from '../../engine/standing'
 import { playerName } from '../../views/list'
+
+const SLOTS: number[] = Array.from({ length: LIST.items }, (_, i) => i + 1)
 
 // Actual against predicted, side by side. The board states the result and says nothing
 // about it — with two people in the room it is the only neutral party.

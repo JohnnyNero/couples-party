@@ -3,7 +3,6 @@ import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
 import { DURATIONS, LIST, MELD } from './phases'
-import { currentItem, lowestFreeSlot, slotOf, usedSlots } from './list'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -93,11 +92,14 @@ function pickTheme(state: SessionState, run: number): string {
 
 function beginList(state: SessionState, now: number, author: PlayerId): SessionState {
   const s = clone(state)
+  const themeId = pickTheme(s, s.listActs.length)
+  const theme = s.themes.find((t) => t.id === themeId)
+  const pool = shuffled(makeRng((s.seed ^ 0x7331) + s.listActs.length), theme?.pool ?? [])
   s.listActs.push({
     author,
-    themeId: pickTheme(s, s.listActs.length),
+    themeId,
+    pool,
     items: [],
-    placeIndex: 0,
     swapDone: false,
     displacement: null,
   })
@@ -114,6 +116,7 @@ function padItems(act: ListAct): void {
       id: `${act.author}${act.items.length}`,
       text: LIST.blank,
       swapped: false,
+      poolIndex: null,
       actualSlot: null,
       predictedSlot: null,
     })
@@ -129,13 +132,12 @@ function beginSwap(state: SessionState, now: number): SessionState {
 }
 
 // The items go into reveal order only once the veto has closed: the ranker judges the
-// authored order, then neither player controls what comes up when.
+// authored order, and this is the order both players see while dragging into their own.
 function beginPlace(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const act = currentList(s)!
   act.swapDone = true
   act.items = shuffled(makeRng((s.seed ^ 0x5157) + s.listActs.length), act.items)
-  act.placeIndex = 0
   s.phase = 'LIST_PLACE'
   s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
   return s
@@ -153,25 +155,29 @@ function toReveal(state: SessionState, now: number): SessionState {
   return s
 }
 
-// Both committed (or timed out): on to the next item, or to the reveal after the seventh.
-function advancePlace(state: SessionState, now: number): SessionState {
-  const act = currentList(state)!
-  if (act.placeIndex >= LIST.items - 1) return toReveal(state, now)
-  const s = clone(state)
-  currentList(s)!.placeIndex += 1
-  s.phase = 'LIST_PLACE'
-  s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
-  return s
+const bothOrdered = (act: ListAct): boolean =>
+  act.items.every((i) => i.actualSlot !== null && i.predictedSlot !== null)
+
+// Applies one player's whole dragged order at once: top of the array is slot 1.
+function applyOrder(act: ListAct, byAuthor: boolean, order: string[]): void {
+  const byId = new Map(act.items.map((i) => [i.id, i]))
+  order.forEach((id, i) => {
+    const item = byId.get(id)
+    if (!item) return
+    if (byAuthor) item.predictedSlot = i + 1
+    else item.actualSlot = i + 1
+  })
 }
 
+// Whoever didn't drag in time gets the order they were shown — the reveal-order array
+// itself — rather than a slot-by-slot fallback.
 function timeoutPlace(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const act = currentList(s)!
-  const item = currentItem(act)!
-  // A timed-out placement takes the lowest-numbered free slot, per player.
-  if (item.actualSlot === null) item.actualSlot = lowestFreeSlot(act, false)
-  if (item.predictedSlot === null) item.predictedSlot = lowestFreeSlot(act, true)
-  return advancePlace(s, now)
+  const shown = act.items.map((i) => i.id)
+  if (act.items.some((i) => i.predictedSlot === null)) applyOrder(act, true, shown)
+  if (act.items.some((i) => i.actualSlot === null)) applyOrder(act, false, shown)
+  return toReveal(s, now)
 }
 
 // Act III runs twice, roles swapped. After the second run the session is out of built
@@ -224,18 +230,21 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       if (state.phase !== 'LIST_WRITE') return state
       const act = currentList(state)
       if (!act || action.player !== act.author) return state
-      const text = action.text.trim().slice(0, LIST.maxLen)
-      if (text.length === 0 || act.items.length >= LIST.items) return state
+      if (act.items.length >= LIST.items) return state
+      const text = act.pool[action.poolIndex]
+      if (text === undefined) return state
+      if (act.items.some((i) => i.poolIndex === action.poolIndex)) return state // already picked
       const s = clone(state)
       const mine = currentList(s)!
       mine.items.push({
         id: `${mine.author}${mine.items.length}`,
         text,
         swapped: false,
+        poolIndex: action.poolIndex,
         actualSlot: null,
         predictedSlot: null,
       })
-      // The seventh field ends the phase early — nobody presses next.
+      // The seventh pick ends the phase early — nobody presses next.
       if (mine.items.length >= LIST.items) return beginSwap(s, now)
       return s
     }
@@ -248,26 +257,29 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const text = action.text.trim().slice(0, LIST.maxLen)
       if (action.index !== null && text.length > 0) {
         const item = mine.items[action.index]
-        if (item) { item.text = text; item.swapped = true }
+        if (item) { item.text = text; item.swapped = true; item.poolIndex = null }
       }
       // Declined or spent, the veto is a one-shot and it closes the phase either way.
       return beginPlace(s, now)
     }
-    case 'PLACE_ITEM': {
+    case 'SUBMIT_ORDER': {
       if (state.phase !== 'LIST_PLACE') return state
       const act = currentList(state)
       if (!act) return state
       const byAuthor = action.player === act.author
-      if (action.slot < 1 || action.slot > LIST.items) return state
-      if (usedSlots(act, byAuthor).includes(action.slot)) return state // a used slot is dead
-      const item = currentItem(act)!
-      if (slotOf(item, byAuthor) !== null) return state // no changing your mind
+      // One submission each — no changing your mind once it lands.
+      const already = act.items.every((i) => (byAuthor ? i.predictedSlot : i.actualSlot) !== null)
+      if (already) return state
+      const ids = new Set(act.items.map((i) => i.id))
+      const valid =
+        action.order.length === act.items.length &&
+        new Set(action.order).size === action.order.length &&
+        action.order.every((id) => ids.has(id))
+      if (!valid) return state
       const s = clone(state)
-      const mineItem = currentItem(currentList(s)!)!
-      if (byAuthor) mineItem.predictedSlot = action.slot
-      else mineItem.actualSlot = action.slot
-      if (mineItem.actualSlot !== null && mineItem.predictedSlot !== null) return advancePlace(s, now)
-      return s
+      const mine = currentList(s)!
+      applyOrder(mine, byAuthor, action.order)
+      return bothOrdered(mine) ? toReveal(s, now) : s
     }
     case 'TIMEOUT': {
       switch (state.phase) {

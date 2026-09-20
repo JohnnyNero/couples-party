@@ -10,7 +10,7 @@ export function ScreenListWrite({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-3xl mx-auto text-center">
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        {playerName(s, act.author)} writes · {playerName(s, rankerOf(act))} ranks
+        {playerName(s, act.author)} picks · {playerName(s, rankerOf(act))} ranks
       </div>
       <div className="text-2xl sm:text-5xl font-bold uppercase tracking-tight break-words">
         {themeText(s, act)}
