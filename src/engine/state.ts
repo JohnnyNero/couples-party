@@ -7,6 +7,10 @@ export const DEFAULT_SEEDS = [
 
 export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
+// Which acts this session runs. 'full' is the whole night; 'meld' and 'list' skip
+// straight to one game, for a shorter session or for testing a single act in isolation.
+export type Game = 'full' | 'meld' | 'list'
+
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'STAKE_SET' | 'STAKE_REVEAL'
@@ -77,6 +81,7 @@ export type SessionState = {
   meldWords: string[] // every word either player typed, incl. misses
   seedWords: string[]
   themes: Theme[]
+  game: Game
 }
 
 export type Action =
@@ -95,6 +100,7 @@ export function initialState(
   seed: number,
   seedWords: string[] = DEFAULT_SEEDS,
   themes: Theme[] = [],
+  game: Game = 'full',
 ): SessionState {
   return {
     seed,
@@ -109,5 +115,6 @@ export function initialState(
     meldWords: [],
     seedWords,
     themes,
+    game,
   }
 }

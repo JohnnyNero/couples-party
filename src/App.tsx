@@ -1,24 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { initNet, getIsStreamScreen } from './net'
-import { resolveMode, stampMode, type PlayMode } from './start/mode'
+import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
+import { GamePicker } from './start/GamePicker'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
 
 export default function App() {
-  // Mode comes from the URL (a shared link carries ?mode=…) or the launch picker.
+  // Mode and game both come from the URL (a shared link carries both) or the two launch
+  // pickers in sequence — how you're playing, then what you're playing.
   const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
+  const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
+  const pendingBot = useRef(false)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (mode) initNet(mode).then(() => setReady(true))
-  }, [mode])
+    if (mode && game) initNet(mode, game).then(() => setReady(true))
+  }, [mode, game])
 
   if (!mode) {
-    // stampMode writes ?mode into the URL BEFORE initNet, so Playroom's share link
-    // (location.href + #r=CODE) carries the mode to the joining device.
-    return <ModePicker onPick={(m, bot) => { stampMode(m, bot); setMode(m) }} />
+    return <ModePicker onPick={(m, bot) => { pendingBot.current = !!bot; setMode(m) }} />
+  }
+  if (!game) {
+    // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
+    // link (location.href + #r=CODE) carries both to the joining device.
+    return <GamePicker onPick={(g) => { stampMode(mode, g, pendingBot.current); setGame(g) }} />
   }
   if (!ready) return <Connecting />
   if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />

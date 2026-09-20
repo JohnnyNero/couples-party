@@ -328,3 +328,36 @@ describe('act III · reveal and alternation', () => {
     expect(s.stakeOwedBy).toBe(null) // the standing is derived, never stored
   })
 })
+
+describe('game selection', () => {
+  it('meld-only: both joining skips straight to MELD_TYPE, no stake at all', () => {
+    let s = initialState(1, undefined, [], 'meld')
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    expect(s.phase).toBe('MELD_TYPE')
+    expect(s.stake).toBe(null)
+  })
+  it('meld-only: the session ends after MELD_RESULT instead of moving to Shortlist', () => {
+    let s = initialState(1, undefined, [], 'meld')
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 1000)
+    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 1000) // converges
+    s = reduce(s, { type: 'TIMEOUT' }, 2000) // MELD_REVEAL -> MELD_RESULT
+    expect(s.phase).toBe('MELD_RESULT')
+    s = reduce(s, { type: 'TIMEOUT' }, 3000) // MELD_RESULT -> DONE, not LIST_WRITE
+    expect(s.phase).toBe('DONE')
+    expect(s.listActs).toHaveLength(0)
+  })
+  it('list-only: joining still sets a stake, then skips Mind Meld entirely', () => {
+    let s = initialState(1, undefined, [], 'list')
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    expect(s.phase).toBe('STAKE_SET')
+    s = reduce(s, { type: 'SET_STAKE', text: 'loser does the dishes' }, 1000)
+    expect(s.phase).toBe('STAKE_REVEAL')
+    s = reduce(s, { type: 'TIMEOUT' }, 2000) // STAKE_REVEAL -> LIST_WRITE, not MELD_TYPE
+    expect(s.phase).toBe('LIST_WRITE')
+    expect(s.meld).toBe(null)
+  })
+})

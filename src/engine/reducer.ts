@@ -179,6 +179,10 @@ function timeoutPlace(state: SessionState, now: number): SessionState {
 function afterListReveal(state: SessionState, now: number): SessionState {
   const first = state.listActs[0]
   if (state.listActs.length < 2) return beginList(state, now, other(first.author))
+  return finishSession(state)
+}
+
+function finishSession(state: SessionState): SessionState {
   const s = clone(state)
   s.phase = 'DONE'
   s.phaseEndsAt = null
@@ -191,7 +195,10 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const s = clone(state)
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
-      if (both && s.phase === 'JOIN') return beginStakeSet(s)
+      if (both && s.phase === 'JOIN') {
+        // 'meld' is a co-op-only game: no forfeit, so no stake to agree first.
+        return s.game === 'meld' ? beginMeld(s, now) : beginStakeSet(s)
+      }
       return s
     }
     case 'SET_STAKE': {
@@ -264,10 +271,12 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
     }
     case 'TIMEOUT': {
       switch (state.phase) {
-        case 'STAKE_REVEAL': return beginMeld(state, now)
+        // 'list' skips Mind Meld and goes straight to Shortlist after the stake is set.
+        case 'STAKE_REVEAL': return state.game === 'list' ? beginList(state, now, 'A') : beginMeld(state, now)
         case 'MELD_TYPE': return toMeldReveal(state, now)
         case 'MELD_REVEAL': return advanceReveal(state, now)
-        case 'MELD_RESULT': return beginList(state, now, 'A')
+        // 'meld' is meld-only: the session ends here instead of moving on to Shortlist.
+        case 'MELD_RESULT': return state.game === 'meld' ? finishSession(state) : beginList(state, now, 'A')
         case 'LIST_WRITE': return beginSwap(state, now)
         case 'LIST_SWAP': return beginPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)

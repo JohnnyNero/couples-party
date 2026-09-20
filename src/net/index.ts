@@ -1,4 +1,4 @@
-import type { Action, PlayerId, SessionState } from '../engine/state'
+import type { Action, Game, PlayerId, SessionState } from '../engine/state'
 import type { PlayMode } from '../start/mode'
 import { loadPacks } from '../packs'
 import * as playroom from './playroom'
@@ -10,11 +10,11 @@ import { SOLO_PLAYER, initLocal, localDispatch, useLocalSession } from './local'
 // always take the same branch on every render.
 let solo = false
 
-export async function initNet(mode: PlayMode): Promise<void> {
+export async function initNet(mode: PlayMode, game: Game): Promise<void> {
   solo = mode === 'solo'
-  if (!solo) return playroom.initNet(mode)
+  if (!solo) return playroom.initNet(mode, game)
   const packs = await loadPacks()
-  initLocal(packs.seedWords, packs.themes)
+  initLocal(packs.seedWords, packs.themes, game)
 }
 
 export function useSession(): SessionState {
