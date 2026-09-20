@@ -7,20 +7,12 @@ export const DEFAULT_SEEDS = [
 
 export type Phase =
   | 'BOOT' | 'JOIN'
-  | 'FORFEIT_WRITE' | 'POT_SHUFFLE'
+  | 'STAKE_SET' | 'STAKE_REVEAL'
   | 'MELD_TYPE' | 'MELD_REVEAL' | 'MELD_RESULT'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_WRITE' | 'LIST_SWAP' | 'LIST_PLACE' | 'LIST_REVEAL'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
-  | 'DONE' // M1 terminal placeholder; replaced when M2 wires the pot/next act
-
-export type Forfeit = {
-  id: string
-  text: string
-  authoredBy: PlayerId | null // never rendered; null = house forfeit
-  state: 'pot' | 'burned' | 'owed'
-  owedBy?: PlayerId
-}
+  | 'DONE' // terminal placeholder until later acts extend the flow
 
 export type MeldRound = {
   index: number // 1-based
@@ -60,43 +52,40 @@ export type SessionState = {
   phase: Phase
   phaseEndsAt: number | null // absolute epoch ms; null = untimed
   players: Record<PlayerId, { name: string; connected: boolean }>
-  forfeits: Forfeit[]
-  doubledBy: PlayerId | null
+  // The single forfeit, agreed out loud and typed in by one player before the match.
+  // It is the stake for the whole session; `stakeOwedBy` records who ends up doing it
+  // (set by the competitive acts — null until then).
+  stake: string | null
+  stakeOwedBy: PlayerId | null
   meld: MeldResult | null
   gapActs: GapAct[]
   listActs: ListAct[]
   meldWords: string[] // every word either player typed, incl. misses
   seedWords: string[]
-  houseForfeits: string[]
-  forfeitWriteExtended: boolean
 }
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
+  | { type: 'SET_STAKE'; text: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
-  | { type: 'SUBMIT_FORFEITS'; player: PlayerId; text: string }
   | { type: 'TIMEOUT' }
-// Future actions (M2+): SUBMIT_RATING, TOGGLE_LIE, CALL,
-// SUBMIT_ITEMS, SWAP_ITEM, PLACE_ITEM, DOUBLE
+// Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, SUBMIT_ITEMS, SWAP_ITEM, PLACE_ITEM
 
 export function initialState(
   seed: number,
   seedWords: string[] = DEFAULT_SEEDS,
-  houseForfeits: string[] = [],
 ): SessionState {
   return {
     seed,
     phase: 'JOIN',
     phaseEndsAt: null,
     players: { A: { name: '', connected: false }, B: { name: '', connected: false } },
-    forfeits: [],
-    doubledBy: null,
+    stake: null,
+    stakeOwedBy: null,
     meld: null,
     gapActs: [],
     listActs: [],
     meldWords: [],
     seedWords,
-    houseForfeits,
-    forfeitWriteExtended: false,
   }
 }

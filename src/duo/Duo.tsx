@@ -21,7 +21,7 @@ export function Duo() {
         <div className="flex items-center justify-between text-[0.6rem] uppercase tracking-[0.2em] text-fg/60 pb-2">
           <span className="truncate pr-2">{railText(s)}</span>
           <span className="flex items-center gap-3 shrink-0">
-            <PotInline s={s} />
+            <StakeInline s={s} />
             <span className="tabular-nums text-fg/80">
               <Clock phaseEndsAt={s.phaseEndsAt} />
             </span>
@@ -40,11 +40,12 @@ export function Duo() {
   )
 }
 
-function PotInline({ s }: { s: SessionState }) {
-  const pot = s.forfeits.filter((f) => f.state === 'pot').length
+function StakeInline({ s }: { s: SessionState }) {
+  if (!s.stake) return <span className="uppercase text-fg/40">No stake yet</span>
   return (
-    <span className="uppercase">
-      Pot <span className="tabular-nums text-fg">{pot}</span>
+    <span className="uppercase truncate max-w-[45vw] inline-block align-bottom">
+      <span className="text-fg/40">Stake </span>
+      <span className="text-fg">{s.stake}</span>
     </span>
   )
 }

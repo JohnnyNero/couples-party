@@ -17,9 +17,9 @@ export function Screen() {
       <div className="flex-1 flex items-center justify-center py-6">
         <BoardStage s={s} />
       </div>
-      <div className="flex justify-between items-end border-t-2 border-fg/80 pt-3">
-        <Pot s={s} />
-        <div className="text-right">
+      <div className="flex justify-between items-end gap-6 border-t-2 border-fg/80 pt-3">
+        <Stake s={s} />
+        <div className="text-right shrink-0">
           <div className="text-xs uppercase tracking-widest text-fg/40">Time</div>
           <div className="text-4xl sm:text-5xl leading-none">
             <Clock phaseEndsAt={s.phaseEndsAt} />
@@ -31,18 +31,15 @@ export function Screen() {
   )
 }
 
-function Pot({ s }: { s: SessionState }) {
-  const pot = s.forfeits.filter((f) => f.state === 'pot').length
-  const owed = (p: 'A' | 'B') => s.forfeits.filter((f) => f.state === 'owed' && f.owedBy === p).length
+function Stake({ s }: { s: SessionState }) {
+  const owed = s.stakeOwedBy ? (s.players[s.stakeOwedBy].name || s.stakeOwedBy) : null
   return (
-    <div className="flex items-end gap-6 sm:gap-10">
-      <div>
-        <div className="text-xs uppercase tracking-widest text-fg/40">Pot</div>
-        <div className="text-4xl sm:text-5xl font-bold tabular-nums leading-none">{pot}</div>
+    <div className="min-w-0">
+      <div className="text-xs uppercase tracking-widest text-fg/40">
+        {owed ? `${owed} does` : 'The forfeit'}
       </div>
-      <div className="text-sm sm:text-base uppercase tracking-wider text-fg/60 tabular-nums">
-        <div>{(s.players.A.name || 'A')} owes {owed('A')}</div>
-        <div>{(s.players.B.name || 'B')} owes {owed('B')}</div>
+      <div className="text-lg sm:text-2xl font-bold uppercase tracking-tight truncate">
+        {s.stake ?? '—'}
       </div>
     </div>
   )

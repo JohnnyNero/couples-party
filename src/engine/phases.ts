@@ -1,16 +1,15 @@
 import type { Phase } from './state'
 
 export const DURATIONS: Partial<Record<Phase, number>> = {
-  FORFEIT_WRITE: 45000,
-  POT_SHUFFLE: 4000,
+  STAKE_REVEAL: 4000,
   MELD_TYPE: 20000,
   MELD_REVEAL: 4000,
   MELD_RESULT: 6000,
+  // STAKE_SET is untimed: the pair agree at their own pace, then one types it in.
 }
 
 export const MELD = {
   roundCap: 7,
-  burnThreshold: 3, // converge in <= 3 rounds burns a forfeit (wired in M2)
 }
 
-export const FORFEIT = { targetEach: 5, minEach: 2, potFloor: 6, maxLen: 60 }
+export const STAKE = { maxLen: 80 }
