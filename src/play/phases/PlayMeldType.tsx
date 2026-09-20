@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
-import { normalize } from '../../engine/match'
 import { dispatch } from '../../net/playroom'
-import { shownPair } from '../../views/meld'
+import { shownPair, isAlreadySaid } from '../../views/meld'
 import { PlayWaiting } from './PlayWaiting'
 
 export function PlayMeldType({ s, me }: { s: SessionState; me: PlayerId }) {
@@ -21,7 +20,7 @@ export function PlayMeldType({ s, me }: { s: SessionState; me: PlayerId }) {
   const submit = () => {
     const w = word.trim()
     if (w.length === 0) return
-    if (s.meldWords.some((x) => normalize(x) === normalize(w))) {
+    if (isAlreadySaid(meld, round, w)) {
       setErr('already said')
       return
     }
