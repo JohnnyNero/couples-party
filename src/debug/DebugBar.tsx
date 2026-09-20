@@ -27,12 +27,9 @@ export function DebugBar({ s }: { s: SessionState }) {
       </button>
       <button
         className={btn}
-        onClick={() => {
-          for (const p of ['A', 'B'] as const)
-            for (let i = 0; i < 5; i++) dispatch({ type: 'SUBMIT_FORFEITS', player: p, text: `${p} forfeit ${i}` })
-        }}
+        onClick={() => dispatch({ type: 'SET_STAKE', text: 'loser makes the tea' })}
       >
-        fill-pot
+        set-stake
       </button>
       <span className="px-2 uppercase tracking-wider text-fg/50">{s.phase}</span>
     </div>

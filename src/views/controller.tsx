@@ -1,6 +1,6 @@
 import type { PlayerId, SessionState } from '../engine/state'
 import { PlayJoin } from '../play/phases/PlayJoin'
-import { PlayForfeitWrite } from '../play/phases/PlayForfeitWrite'
+import { PlayStakeSet } from '../play/phases/PlayStakeSet'
 import { PlayMeldType } from '../play/phases/PlayMeldType'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
 
@@ -11,10 +11,10 @@ export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
   switch (s.phase) {
     case 'JOIN':
       return <PlayJoin s={s} me={me} />
-    case 'FORFEIT_WRITE':
-      return <PlayForfeitWrite s={s} me={me} />
-    case 'POT_SHUFFLE':
-      return <PlayWaiting label="Shuffling the pot…" />
+    case 'STAKE_SET':
+      return <PlayStakeSet s={s} />
+    case 'STAKE_REVEAL':
+      return <PlayWaiting label="The stake is set" />
     case 'MELD_TYPE':
       return <PlayMeldType s={s} me={me} />
     case 'MELD_REVEAL':

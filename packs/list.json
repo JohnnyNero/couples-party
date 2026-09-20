@@ -1,13 +1,5 @@
 {
   "version": 1,
-  "houseForfeits": [
-    "makes the next round of tea",
-    "picks up the next takeaway",
-    "loses aux privileges for a day",
-    "does the washing up tonight",
-    "takes the bins out this week",
-    "makes breakfast tomorrow"
-  ],
   "themes": [
     { "id": "t001", "text": "seven things {name} would struggle to give up" },
     { "id": "t002", "text": "seven of {name}'s strongest opinions" },

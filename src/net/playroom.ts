@@ -23,7 +23,6 @@ import type { PlayMode } from '../start/mode'
 const SESSION_KEY = 'session'
 
 let seedWords: string[] = []
-let houseForfeits: string[] = []
 let started = false
 
 // Ruling P2: the per-session seed pair must vary across plays, so it is generated ONCE
@@ -40,13 +39,13 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), seedWords, houseForfeits)
+  return initialState(ensureSessionSeed(), seedWords)
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
 // host's real (seeded) session state has synced. Deliberately does not touch Math.random.
 function placeholderState(): SessionState {
-  return initialState(0, seedWords, houseForfeits)
+  return initialState(0, seedWords)
 }
 
 export async function initNet(mode: PlayMode): Promise<void> {
@@ -55,7 +54,6 @@ export async function initNet(mode: PlayMode): Promise<void> {
 
   const packs = await loadPacks()
   seedWords = packs.seedWords
-  houseForfeits = packs.houseForfeits
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,
