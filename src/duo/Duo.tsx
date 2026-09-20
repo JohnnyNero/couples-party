@@ -5,6 +5,8 @@ import { Controller } from '../views/controller'
 import { Clock } from '../screen/Clock'
 import { DebugBar } from '../debug/DebugBar'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
+import { standing } from '../engine/standing'
+import { playerName } from '../views/list'
 
 // Phones-only renderer: no shared screen, so each phone carries BOTH the public
 // board (top) and this player's private controller (bottom). Reveals fire on both
@@ -42,10 +44,26 @@ export function Duo() {
 
 function StakeInline({ s }: { s: SessionState }) {
   if (!s.stake) return <span className="uppercase text-fg/40">No stake yet</span>
+  const tally = standing(s)
+  const scored = tally.A > 0 || tally.B > 0
   return (
     <span className="uppercase truncate max-w-[45vw] inline-block align-bottom">
-      <span className="text-fg/40">Stake </span>
-      <span className="text-fg">{s.stake}</span>
+      {scored ? (
+        <span className="tabular-nums">
+          <span className={tally.A > tally.B ? 'text-accent' : 'text-fg'}>
+            {playerName(s, 'A')} {tally.A}
+          </span>
+          <span className="text-fg/30"> · </span>
+          <span className={tally.B > tally.A ? 'text-accent' : 'text-fg'}>
+            {playerName(s, 'B')} {tally.B}
+          </span>
+        </span>
+      ) : (
+        <>
+          <span className="text-fg/40">Stake </span>
+          <span className="text-fg">{s.stake}</span>
+        </>
+      )}
     </span>
   )
 }

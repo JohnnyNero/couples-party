@@ -5,6 +5,8 @@ export const DEFAULT_SEEDS = [
   'volcano', 'umbrella', 'trombone', 'glacier',
 ]
 
+export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
+
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'STAKE_SET' | 'STAKE_REVEAL'
@@ -39,12 +41,23 @@ export type GapAct = {
   lieSpent: boolean; callSpent: boolean
   outcome: 'caught' | 'missed' | 'never-called' | null
 }
+
+export type Theme = { id: string; text: string }
+
 export type ListItem = {
-  id: string; text: string; swapped: boolean
-  actualSlot: number | null; predictedSlot: number | null
+  id: string
+  text: string
+  swapped: boolean               // replaced by the ranker; never shown as whose veto it was
+  actualSlot: number | null      // 1..7, the ranker's commitment
+  predictedSlot: number | null   // 1..7, the author's guess at it
 }
 export type ListAct = {
-  author: PlayerId; themeId: string; items: ListItem[]; displacement: number | null
+  author: PlayerId
+  themeId: string
+  items: ListItem[]              // exactly 7; authored order until LIST_SWAP ends, then reveal order
+  placeIndex: number             // 0-based index into items — which one is on the table now
+  swapDone: boolean
+  displacement: number | null    // 0..24, set at LIST_REVEAL
 }
 
 export type SessionState = {
@@ -54,7 +67,8 @@ export type SessionState = {
   players: Record<PlayerId, { name: string; connected: boolean }>
   // The single forfeit, agreed out loud and typed in by one player before the match.
   // It is the stake for the whole session; `stakeOwedBy` records who ends up doing it
-  // (set by the competitive acts — null until then).
+  // (set at the end of the session — null until then; the standing is derived, see
+  // engine/standing.ts, because the spec allows no stored score).
   stake: string | null
   stakeOwedBy: PlayerId | null
   meld: MeldResult | null
@@ -62,18 +76,25 @@ export type SessionState = {
   listActs: ListAct[]
   meldWords: string[] // every word either player typed, incl. misses
   seedWords: string[]
+  themes: Theme[]
 }
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
   | { type: 'SET_STAKE'; text: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
+  // One locked field at a time, so a timeout keeps whatever was already written.
+  | { type: 'SUBMIT_ITEMS'; player: PlayerId; text: string }
+  // The ranker's free veto. `index: null` = declined; either way the phase ends.
+  | { type: 'SWAP_ITEM'; player: PlayerId; index: number | null; text: string }
+  | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
   | { type: 'TIMEOUT' }
-// Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, SUBMIT_ITEMS, SWAP_ITEM, PLACE_ITEM
+// Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
 export function initialState(
   seed: number,
   seedWords: string[] = DEFAULT_SEEDS,
+  themes: Theme[] = [],
 ): SessionState {
   return {
     seed,
@@ -87,5 +108,6 @@ export function initialState(
     listActs: [],
     meldWords: [],
     seedWords,
+    themes,
   }
 }

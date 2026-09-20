@@ -12,3 +12,14 @@ export function makeRng(seed: number): () => number {
 export function pick<T>(rng: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length)]
 }
+
+// Fisher–Yates over a copy. Seeded, so the reveal order of a list is reproducible
+// and identical on every client without being broadcast field by field.
+export function shuffled<T>(rng: () => number, arr: readonly T[]): T[] {
+  const out = arr.slice()
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
