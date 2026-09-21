@@ -1,7 +1,6 @@
 import type { SessionState } from '../engine/state'
 import { other } from '../engine/state'
-import { LIST } from '../engine/phases'
-import { currentAct } from '../engine/list'
+import { currentAct, SLOTS } from '../engine/list'
 import { dispatch } from '../net'
 
 // Dev-only overlay, mounted on ?debug=1. Shows public phase state only. Reaching the
@@ -74,43 +73,23 @@ export function DebugBar({ s }: { s: SessionState }) {
 function ListButtons({ s, btn }: { s: SessionState; btn: string }) {
   const act = currentAct(s)
   if (!act) return null
-  if (s.phase === 'LIST_WRITE') {
-    return (
-      <button
-        className={btn}
-        onClick={() => {
-          const picked = new Set(act.items.map((i) => i.poolIndex))
-          let i = 0
-          for (let n = act.items.length; n < LIST.items; n++) {
-            while (picked.has(i)) i++
-            dispatch({ type: 'SUBMIT_ITEMS', player: act.author, poolIndex: i })
-            picked.add(i)
-            i++
-          }
-        }}
-      >
-        fill-list
-      </button>
-    )
-  }
-  if (s.phase === 'LIST_SWAP') {
-    return (
-      <button
-        className={btn}
-        onClick={() => dispatch({ type: 'SWAP_ITEM', player: other(act.author), index: null, text: '' })}
-      >
-        keep-all
-      </button>
-    )
-  }
   if (s.phase === 'LIST_PLACE') {
-    const order = act.items.map((i) => i.id)
     return (
       <button
         className={btn}
         onClick={() => {
-          dispatch({ type: 'SUBMIT_ORDER', player: act.author, order })
-          dispatch({ type: 'SUBMIT_ORDER', player: other(act.author), order })
+          // Fires enough PLACE_ITEM actions to clear every remaining item, both sides —
+          // tracked locally since dispatch doesn't hand back the state it produced.
+          const usedA = new Set(act.items.map((i) => i.predictedSlot).filter((n): n is number => n !== null))
+          const usedB = new Set(act.items.map((i) => i.actualSlot).filter((n): n is number => n !== null))
+          for (let i = act.placeIndex; i < act.items.length; i++) {
+            const slotA = SLOTS.find((n) => !usedA.has(n))!
+            usedA.add(slotA)
+            dispatch({ type: 'PLACE_ITEM', player: act.author, slot: slotA })
+            const slotB = SLOTS.find((n) => !usedB.has(n))!
+            usedB.add(slotB)
+            dispatch({ type: 'PLACE_ITEM', player: other(act.author), slot: slotB })
+          }
         }}
       >
         place-both

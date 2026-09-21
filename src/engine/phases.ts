@@ -4,9 +4,7 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   MELD_TYPE: 20000,
   MELD_REVEAL: 4000,
   MELD_RESULT: 6000,
-  LIST_WRITE: 30000,  // tapping seven from a pool, not typing them
-  LIST_SWAP: 20000,
-  LIST_PLACE: 45000,  // dragging all seven into order, both players at once
+  LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
   LIST_REVEAL: 15000,
   FINGER_ROUND: 15000,  // read it, think about it, decide privately
   FINGER_REVEAL: 4000,
@@ -22,9 +20,8 @@ export const MELD = {
 }
 
 export const LIST = {
-  items: 7,       // seven items, seven slots
-  maxLen: 40,     // one line on a phone
-  blank: '(blank)', // pads a short list on timeout — seven slots need seven items
+  items: 7,         // seven items, seven slots
+  blank: '(blank)', // pads a theme whose pool comes up short of seven
 }
 
 export const FINGER = {

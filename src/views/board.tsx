@@ -4,8 +4,6 @@ import { ScreenJoin } from '../screen/phases/ScreenJoin'
 import { ScreenMeldType } from '../screen/phases/ScreenMeldType'
 import { ScreenMeldReveal } from '../screen/phases/ScreenMeldReveal'
 import { ScreenMeldResult } from '../screen/phases/ScreenMeldResult'
-import { ScreenListWrite } from '../screen/phases/ScreenListWrite'
-import { ScreenListSwap } from '../screen/phases/ScreenListSwap'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
 import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
@@ -26,8 +24,6 @@ export function railText(s: SessionState): string {
   if (s.phase === 'JOIN') return 'Lobby'
   if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
     const run = `Act III · Shortlist · ${s.listActs.length} of 2`
-    if (s.phase === 'LIST_WRITE') return `${run} · Picking`
-    if (s.phase === 'LIST_SWAP') return `${run} · The swap`
     if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
   }
@@ -51,10 +47,6 @@ export function BoardStage({ s }: { s: SessionState }) {
       return <ScreenMeldReveal s={s} />
     case 'MELD_RESULT':
       return <ScreenMeldResult s={s} />
-    case 'LIST_WRITE':
-      return <ScreenListWrite s={s} />
-    case 'LIST_SWAP':
-      return <ScreenListSwap s={s} />
     case 'LIST_PLACE':
       return <ScreenListPlace s={s} />
     case 'LIST_REVEAL':

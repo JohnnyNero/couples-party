@@ -9,45 +9,36 @@ import { Controller } from './controller'
 // items before LIST_REVEAL.
 
 const ITEMS = ['the bins', 'your sister', 'my driving', 'the good mug', 'sunday', 'the aux', 'tea']
-const POOL = [...ITEMS, 'extra one', 'extra two', 'extra three']
 
 const act = (over: Partial<ListAct> = {}): ListAct => ({
   author: 'A',
   themeId: 't001',
-  pool: POOL,
-  items: ITEMS.map((text, i) => ({
-    id: `A${i}`, text, swapped: false, poolIndex: i, actualSlot: null, predictedSlot: null,
-  })),
-  swapDone: false,
+  items: ITEMS.map((text, i) => ({ id: `A${i}`, text, actualSlot: null, predictedSlot: null })),
+  placeIndex: 0,
   displacement: null,
   ...over,
 })
 
 const session = (phase: SessionState['phase'], a: ListAct): SessionState => ({
-  ...initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss', pool: POOL }]),
+  ...initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss', pool: ITEMS }]),
   phase,
   players: { A: { name: 'Sam', connected: true }, B: { name: 'Alex', connected: true } },
   listActs: [a],
 })
 
-// The ranker (B) has locked in their real order; the author (A) has not submitted yet.
+// The ranker (B) has locked in the live item's real slot; the author (A) has not yet.
 const halfPlaced = () =>
-  act({
-    swapDone: true,
-    items: act().items.map((i, n) => ({ ...i, actualSlot: n + 1, predictedSlot: null })),
-  })
+  act({ items: act().items.map((i, n) => (n === 0 ? { ...i, actualSlot: 1 } : i)) })
 
 const revealed = () =>
   act({
-    swapDone: true,
+    placeIndex: 6,
     displacement: 4,
     items: act().items.map((i, n) => ({ ...i, actualSlot: n + 1, predictedSlot: ((n + 1) % 7) + 1 })),
   })
 
 describe('board renders every Act III phase', () => {
   const cases: Array<[SessionState['phase'], ListAct]> = [
-    ['LIST_WRITE', act({ items: act().items.slice(0, 3) })],
-    ['LIST_SWAP', act()],
     ['LIST_PLACE', halfPlaced()],
     ['LIST_REVEAL', revealed()],
     ['DONE', revealed()],
@@ -59,16 +50,9 @@ describe('board renders every Act III phase', () => {
     expect(railText(s)).toMatch(phase === 'DONE' ? /session/i : /Act III/)
   })
 
-  it('never shows the items while they are still being picked, vetoed, or ranked', () => {
-    const cases: Array<[SessionState['phase'], ListAct]> = [
-      ['LIST_WRITE', act()],
-      ['LIST_SWAP', act()],
-      ['LIST_PLACE', halfPlaced()],
-    ]
-    for (const [phase, a] of cases) {
-      const html = renderToStaticMarkup(<BoardStage s={session(phase, a)} />)
-      for (const text of ITEMS) expect(html).not.toContain(text)
-    }
+  it('never shows the items on the board while they are still being ranked', () => {
+    const html = renderToStaticMarkup(<BoardStage s={session('LIST_PLACE', halfPlaced())} />)
+    for (const text of ITEMS) expect(html).not.toContain(text)
   })
 
   it('shows the whole list, both columns and the award at the reveal', () => {
@@ -80,7 +64,7 @@ describe('board renders every Act III phase', () => {
 })
 
 describe('controllers render for both players', () => {
-  const phases = ['LIST_WRITE', 'LIST_SWAP', 'LIST_PLACE', 'LIST_REVEAL'] as const
+  const phases = ['LIST_PLACE', 'LIST_REVEAL'] as const
   it.each(phases)('%s renders for author and ranker', (phase) => {
     const a = phase === 'LIST_PLACE' ? halfPlaced() : act()
     for (const me of ['A', 'B'] as const) {
@@ -88,17 +72,11 @@ describe('controllers render for both players', () => {
     }
   })
 
-  it('shows the ranker the items to veto, and the author nothing', () => {
-    const s = session('LIST_SWAP', act())
-    expect(renderToStaticMarkup(<Controller s={s} me="B" />)).toContain(ITEMS[0])
-    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).not.toContain(ITEMS[0])
-  })
-
-  it('a player who has already submitted sees no list, only a waiting message', () => {
-    const s = session('LIST_PLACE', halfPlaced()) // B (the ranker) has already submitted
-    const ranker = renderToStaticMarkup(<Controller s={s} me="B" />)
-    const author = renderToStaticMarkup(<Controller s={s} me="A" />)
-    for (const text of ITEMS) expect(ranker).not.toContain(text)
-    expect(author).toContain(ITEMS[0]) // still dragging their own guess
+  it('shows the live item to whichever side has not placed it, and a waiting message to whoever has', () => {
+    const s = session('LIST_PLACE', halfPlaced())
+    // B (the ranker) already locked in the live item's real slot.
+    expect(renderToStaticMarkup(<Controller s={s} me="B" />)).not.toContain(ITEMS[0])
+    // A (the author) has not guessed yet.
+    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain(ITEMS[0])
   })
 })

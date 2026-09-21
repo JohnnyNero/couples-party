@@ -15,7 +15,7 @@ export type Phase =
   | 'BOOT' | 'JOIN'
   | 'MELD_TYPE' | 'MELD_REVEAL' | 'MELD_RESULT'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
-  | 'LIST_WRITE' | 'LIST_SWAP' | 'LIST_PLACE' | 'LIST_REVEAL'
+  | 'LIST_PLACE' | 'LIST_REVEAL'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
@@ -47,24 +47,21 @@ export type GapAct = {
   outcome: 'caught' | 'missed' | 'never-called' | null
 }
 
-// `pool` is the theme's own bank of candidate items (~20) — the author picks seven of
-// them rather than writing anything, so nobody has to come up with items cold.
+// `pool` is the theme's own bank of candidate items (~20); seven are drawn at random for
+// each act, so nobody — author or ranker — has picked or seen them in advance.
 export type Theme = { id: string; text: string; pool: string[] }
 
 export type ListItem = {
   id: string
   text: string
-  swapped: boolean               // replaced by the ranker; never shown as whose veto it was
-  poolIndex: number | null       // which pool entry this was; null for a blank pad or a swap-in
   actualSlot: number | null      // 1..7, the ranker's commitment
   predictedSlot: number | null   // 1..7, the author's guess at it
 }
 export type ListAct = {
   author: PlayerId
   themeId: string
-  pool: string[]                 // this act's shuffled candidates, drawn from the theme's own pool
-  items: ListItem[]              // exactly 7; authored order until LIST_SWAP ends, then reveal order
-  swapDone: boolean
+  items: ListItem[]              // exactly 7, drawn at random and revealed one at a time
+  placeIndex: number             // 0-based — which item is currently live in LIST_PLACE
   displacement: number | null    // 0..24, set at LIST_REVEAL
 }
 
@@ -120,13 +117,9 @@ export type SessionState = {
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
-  // One pick locked at a time, from the theme's pool — so a timeout keeps whatever was
-  // already picked.
-  | { type: 'SUBMIT_ITEMS'; player: PlayerId; poolIndex: number }
-  // The ranker's free veto. `index: null` = declined; either way the phase ends.
-  | { type: 'SWAP_ITEM'; player: PlayerId; index: number | null; text: string }
-  // One player's whole ranking, dragged into order in one pass — top of `order` is 1st.
-  | { type: 'SUBMIT_ORDER'; player: PlayerId; order: string[] }
+  // One item is live at a time. Each side locks a slot on it the instant they tap one —
+  // no changing your mind, and a slot already spent on an earlier item can't be reused.
+  | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
   // Put a Finger Down: a private yes/no to the round's statement. No changing your mind.
   | { type: 'SUBMIT_FINGER'; player: PlayerId; applies: boolean }
   // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.

@@ -1,8 +1,7 @@
 import type { Action, PlayerId, SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { normalize } from '../engine/match'
-import { currentAct } from '../engine/list'
-import { LIST } from '../engine/phases'
+import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
 import { isAlreadySaid } from '../views/meld'
 
 // A stand-in second player, so the loop can be played solo. It lives entirely outside
@@ -72,44 +71,16 @@ export function nextBotAction(
       return { type: 'SUBMIT_WORD', player: me, word }
     }
 
-    case 'LIST_WRITE': {
-      const act = currentAct(s)
-      if (!act || act.author !== me || act.items.length >= LIST.items) return null
-      const picked = new Set(act.items.map((i) => i.poolIndex))
-      const free = act.pool.map((_, i) => i).filter((i) => !picked.has(i))
-      if (free.length === 0) return null
-      return { type: 'SUBMIT_ITEMS', player: me, poolIndex: pickFrom(rng, free) }
-    }
-
-    case 'LIST_SWAP': {
-      const act = currentAct(s)
-      if (!act || other(act.author) !== me) return null
-      // Mostly leaves the list alone — the veto is a guardrail, not a move.
-      if (rng() > 0.25) return { type: 'SWAP_ITEM', player: me, index: null, text: '' }
-      const written = new Set(act.items.map((i) => i.text))
-      const free = brain.items.filter((t) => !written.has(t))
-      if (free.length === 0) return { type: 'SWAP_ITEM', player: me, index: null, text: '' }
-      return {
-        type: 'SWAP_ITEM',
-        player: me,
-        index: Math.floor(rng() * act.items.length),
-        text: pickFrom(rng, free),
-      }
-    }
-
     case 'LIST_PLACE': {
       const act = currentAct(s)
       if (!act) return null
+      const item = currentItem(act)
+      if (!item) return null
       const byAuthor = act.author === me
-      const already = act.items.every((i) => (byAuthor ? i.predictedSlot : i.actualSlot) !== null)
+      const already = byAuthor ? item.predictedSlot !== null : item.actualSlot !== null
       if (already) return null
-      // Shuffle its own copy of the order — good enough for a testing seat.
-      const order = act.items.map((i) => i.id)
-      for (let i = order.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1))
-        ;[order[i], order[j]] = [order[j], order[i]]
-      }
-      return { type: 'SUBMIT_ORDER', player: me, order }
+      // Not a considered guess — just any slot it hasn't already spent.
+      return { type: 'PLACE_ITEM', player: me, slot: lowestFreeSlot(act, byAuthor) }
     }
 
     case 'FINGER_ROUND': {
@@ -150,9 +121,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
   switch (s.phase) {
     case 'JOIN': return 400
     case 'MELD_TYPE': return spread(4000, 11000)
-    case 'LIST_WRITE': return spread(1500, 4000) // per item
-    case 'LIST_SWAP': return spread(3000, 8000)
-    case 'LIST_PLACE': return spread(2500, 8000)
+    case 'LIST_PLACE': return spread(1200, 4000) // per item
     case 'FINGER_ROUND': return spread(2000, 6000)
     case 'WAVE_CLUE': return spread(3000, 9000)
     case 'WAVE_GUESS': return spread(2000, 7000)

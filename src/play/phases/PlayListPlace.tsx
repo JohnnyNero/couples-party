@@ -1,37 +1,53 @@
-import { useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
-import { currentAct } from '../../engine/list'
+import { currentAct, currentItem, usedSlots, SLOTS } from '../../engine/list'
 import { dispatch } from '../../net'
-import { DragRankList } from '../DragRankList'
+import { themeText } from '../../views/list'
 import { PlayWaiting } from './PlayWaiting'
 
-// Both players rank the same seven items at once, in private: the author drags to guess
-// where the ranker will put each one, the ranker drags their real order. One submission
-// each — no changing your mind once it lands.
+// Items come up one at a time. Tap a slot and it's locked immediately — no dragging, no
+// changing your mind, and a slot already spent on an earlier item can't be reused. The
+// author guesses where the ranker will put it; the ranker gives the real answer.
 export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
   const act = currentAct(s)!
+  const item = currentItem(act)!
   const byAuthor = me === act.author
-  const submitted = act.items.every((i) => (byAuthor ? i.predictedSlot : i.actualSlot) !== null)
+  const placed = byAuthor ? item.predictedSlot !== null : item.actualSlot !== null
+  const used = usedSlots(act, byAuthor)
 
-  const [order, setOrder] = useState<string[]>(() => act.items.map((i) => i.id))
-
-  if (submitted) return <PlayWaiting label="Locked in — waiting" />
-
-  const rows = act.items.map((i) => ({ id: i.id, text: i.text }))
+  if (placed) return <PlayWaiting label="Locked in — waiting on them" />
 
   return (
-    <div className="h-full flex flex-col justify-center p-5 gap-3">
-      <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">
-        {byAuthor ? 'Drag to guess their order' : 'Drag into your real order'}
+    <div className="h-full flex flex-col p-5 gap-3">
+      <div>
+        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-1">
+          Item {act.placeIndex + 1} of {SLOTS.length} · {byAuthor ? 'guess where they\'ll rank it' : 'rank it for real'}
+        </div>
+        <div className="text-sm uppercase tracking-wide text-fg/50 truncate">{themeText(s, act)}</div>
       </div>
-      <div className="text-[0.6rem] uppercase tracking-[0.25em] text-fg/30">Top = 1st</div>
-      <DragRankList rows={rows} order={order} onChange={setOrder} />
-      <button
-        className="w-full min-h-[56px] bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px"
-        onClick={() => dispatch({ type: 'SUBMIT_ORDER', player: me, order })}
-      >
-        Lock in my order
-      </button>
+      <div className="rounded-2xl bg-fg text-bg px-5 py-6 text-xl font-bold uppercase tracking-tight text-center shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
+        {item.text}
+      </div>
+      <div className="grid grid-cols-4 gap-2.5 flex-1 content-start">
+        {SLOTS.map((n) => {
+          const taken = used.has(n)
+          return (
+            <button
+              key={n}
+              disabled={taken}
+              onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
+              className={
+                'min-h-[64px] rounded-2xl text-2xl font-bold tabular-nums border-2 active:translate-y-px ' +
+                (taken
+                  ? 'border-fg/10 text-fg/20'
+                  : 'border-fg/20 bg-accent text-bg shadow-[3px_3px_0_rgba(0,0,0,0.18)]')
+              }
+            >
+              {n}
+            </button>
+          )
+        })}
+      </div>
+      <div className="text-xs uppercase tracking-wide text-fg/40 text-center">1st down to 7th — tap one, it's locked</div>
     </div>
   )
 }

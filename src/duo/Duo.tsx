@@ -24,7 +24,7 @@ const BOARD_LED = new Set([
 // Phases whose board is just a theme line and a small stat, but whose controller is the
 // real interaction (a pool of items, a drag list) — the board takes only what its own
 // content needs instead of a fixed share, so the controller gets the rest.
-const COMPACT_BOARD = new Set(['LIST_WRITE', 'LIST_SWAP', 'LIST_PLACE'])
+const COMPACT_BOARD = new Set(['LIST_PLACE'])
 
 export function Duo() {
   const s = useSession()

@@ -37,7 +37,7 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
     s.phase,
     s.meld?.rounds.length ?? 0,
     s.listActs.length,
-    act?.items.length ?? 0,
+    act?.placeIndex ?? 0,
   ].join('|')
 
   // Keyed on the decision point, so an ordinary re-render never restarts the clock the

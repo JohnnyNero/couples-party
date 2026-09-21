@@ -1,8 +1,6 @@
 import type { PlayerId, SessionState } from '../engine/state'
 import { PlayJoin } from '../play/phases/PlayJoin'
 import { PlayMeldType } from '../play/phases/PlayMeldType'
-import { PlayListWrite } from '../play/phases/PlayListWrite'
-import { PlayListSwap } from '../play/phases/PlayListSwap'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
 import { PlayWaveClue } from '../play/phases/PlayWaveClue'
@@ -22,10 +20,6 @@ export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayWaiting label="Reveal" />
     case 'MELD_RESULT':
       return <PlayWaiting label="See the board" />
-    case 'LIST_WRITE':
-      return <PlayListWrite s={s} me={me} />
-    case 'LIST_SWAP':
-      return <PlayListSwap s={s} me={me} />
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':

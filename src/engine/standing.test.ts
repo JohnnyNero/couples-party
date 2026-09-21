@@ -3,7 +3,7 @@ import { initialState, type FingerGame, type ListAct, type PlayerId, type WaveRo
 import { listAward, standing, leader, fingerAward, waveAward } from './standing'
 
 const act = (author: PlayerId, displacement: number | null): ListAct => ({
-  author, themeId: 't001', pool: [], items: [], swapDone: true, displacement,
+  author, themeId: 't001', items: [], placeIndex: 0, displacement,
 })
 
 const withActs = (...acts: ListAct[]) => ({ ...initialState(1), listActs: acts })

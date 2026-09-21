@@ -1,8 +1,9 @@
-import type { Action, FingerGame, ListAct, MeldResult, MeldRound, PlayerId, SessionState, WaveGame } from './state'
+import type { Action, FingerGame, ListAct, ListItem, MeldResult, MeldRound, PlayerId, SessionState, WaveGame } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
 import { DURATIONS, FINGER, LIST, MELD, WAVE } from './phases'
+import { lowestFreeSlot, usedSlots } from './list'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -87,50 +88,19 @@ function beginList(state: SessionState, now: number, author: PlayerId): SessionS
   const s = clone(state)
   const themeId = pickTheme(s, s.listActs.length)
   const theme = s.themes.find((t) => t.id === themeId)
-  const pool = shuffled(makeRng((s.seed ^ 0x7331) + s.listActs.length), theme?.pool ?? [])
-  s.listActs.push({
-    author,
-    themeId,
-    pool,
-    items: [],
-    swapDone: false,
-    displacement: null,
-  })
-  s.phase = 'LIST_WRITE'
-  s.phaseEndsAt = now + DURATIONS.LIST_WRITE!
-  return s
-}
-
-// Seven slots need seven items, so a short list is padded on timeout. The blanks are
-// visible and rankable — hiding them would be worse than owning them.
-function padItems(act: ListAct): void {
-  while (act.items.length < LIST.items) {
-    act.items.push({
-      id: `${act.author}${act.items.length}`,
-      text: LIST.blank,
-      swapped: false,
-      poolIndex: null,
-      actualSlot: null,
-      predictedSlot: null,
-    })
+  const drawn = shuffled(makeRng((s.seed ^ 0x7331) + s.listActs.length), theme?.pool ?? [])
+    .slice(0, LIST.items)
+  const items: ListItem[] = drawn.map((text, i) => ({
+    id: `${author}${i}`,
+    text,
+    actualSlot: null,
+    predictedSlot: null,
+  }))
+  // A theme whose pool comes up short of seven still needs seven slots filled.
+  while (items.length < LIST.items) {
+    items.push({ id: `${author}${items.length}`, text: LIST.blank, actualSlot: null, predictedSlot: null })
   }
-}
-
-function beginSwap(state: SessionState, now: number): SessionState {
-  const s = clone(state)
-  padItems(currentList(s)!)
-  s.phase = 'LIST_SWAP'
-  s.phaseEndsAt = now + DURATIONS.LIST_SWAP!
-  return s
-}
-
-// The items go into reveal order only once the veto has closed: the ranker judges the
-// authored order, and this is the order both players see while dragging into their own.
-function beginPlace(state: SessionState, now: number): SessionState {
-  const s = clone(state)
-  const act = currentList(s)!
-  act.swapDone = true
-  act.items = shuffled(makeRng((s.seed ^ 0x5157) + s.listActs.length), act.items)
+  s.listActs.push({ author, themeId, items, placeIndex: 0, displacement: null })
   s.phase = 'LIST_PLACE'
   s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
   return s
@@ -148,29 +118,29 @@ function toReveal(state: SessionState, now: number): SessionState {
   return s
 }
 
-const bothOrdered = (act: ListAct): boolean =>
-  act.items.every((i) => i.actualSlot !== null && i.predictedSlot !== null)
+const bothPlaced = (item: ListItem): boolean =>
+  item.actualSlot !== null && item.predictedSlot !== null
 
-// Applies one player's whole dragged order at once: top of the array is slot 1.
-function applyOrder(act: ListAct, byAuthor: boolean, order: string[]): void {
-  const byId = new Map(act.items.map((i) => [i.id, i]))
-  order.forEach((id, i) => {
-    const item = byId.get(id)
-    if (!item) return
-    if (byAuthor) item.predictedSlot = i + 1
-    else item.actualSlot = i + 1
-  })
+// The live item is locked on both sides — move to the next one, or to the reveal once
+// all seven are done.
+function advancePlace(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const act = currentList(s)!
+  if (act.placeIndex >= act.items.length - 1) return toReveal(s, now)
+  act.placeIndex += 1
+  s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
+  return s
 }
 
-// Whoever didn't drag in time gets the order they were shown — the reveal-order array
-// itself — rather than a slot-by-slot fallback.
+// Whoever didn't lock the live item in time gets its lowest free slot — the same thing
+// a distracted phone would land on anyway.
 function timeoutPlace(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const act = currentList(s)!
-  const shown = act.items.map((i) => i.id)
-  if (act.items.some((i) => i.predictedSlot === null)) applyOrder(act, true, shown)
-  if (act.items.some((i) => i.actualSlot === null)) applyOrder(act, false, shown)
-  return toReveal(s, now)
+  const item = act.items[act.placeIndex]
+  if (item.predictedSlot === null) item.predictedSlot = lowestFreeSlot(act, true)
+  if (item.actualSlot === null) item.actualSlot = lowestFreeSlot(act, false)
+  return advancePlace(s, now)
 }
 
 // Act III runs twice, roles swapped. After the second run the session is out of built
@@ -330,60 +300,22 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       if (round.words.A !== null && round.words.B !== null) return toMeldReveal(s, now)
       return s
     }
-    case 'SUBMIT_ITEMS': {
-      if (state.phase !== 'LIST_WRITE') return state
-      const act = currentList(state)
-      if (!act || action.player !== act.author) return state
-      if (act.items.length >= LIST.items) return state
-      const text = act.pool[action.poolIndex]
-      if (text === undefined) return state
-      if (act.items.some((i) => i.poolIndex === action.poolIndex)) return state // already picked
-      const s = clone(state)
-      const mine = currentList(s)!
-      mine.items.push({
-        id: `${mine.author}${mine.items.length}`,
-        text,
-        swapped: false,
-        poolIndex: action.poolIndex,
-        actualSlot: null,
-        predictedSlot: null,
-      })
-      // The seventh pick ends the phase early — nobody presses next.
-      if (mine.items.length >= LIST.items) return beginSwap(s, now)
-      return s
-    }
-    case 'SWAP_ITEM': {
-      if (state.phase !== 'LIST_SWAP') return state
-      const act = currentList(state)
-      if (!act || action.player !== other(act.author)) return state // the ranker's veto only
-      const s = clone(state)
-      const mine = currentList(s)!
-      const text = action.text.trim().slice(0, LIST.maxLen)
-      if (action.index !== null && text.length > 0) {
-        const item = mine.items[action.index]
-        if (item) { item.text = text; item.swapped = true; item.poolIndex = null }
-      }
-      // Declined or spent, the veto is a one-shot and it closes the phase either way.
-      return beginPlace(s, now)
-    }
-    case 'SUBMIT_ORDER': {
+    case 'PLACE_ITEM': {
       if (state.phase !== 'LIST_PLACE') return state
       const act = currentList(state)
       if (!act) return state
+      const item = act.items[act.placeIndex]
       const byAuthor = action.player === act.author
-      // One submission each — no changing your mind once it lands.
-      const already = act.items.every((i) => (byAuthor ? i.predictedSlot : i.actualSlot) !== null)
-      if (already) return state
-      const ids = new Set(act.items.map((i) => i.id))
-      const valid =
-        action.order.length === act.items.length &&
-        new Set(action.order).size === action.order.length &&
-        action.order.every((id) => ids.has(id))
-      if (!valid) return state
+      const already = byAuthor ? item.predictedSlot !== null : item.actualSlot !== null
+      if (already) return state // no changing your mind once it lands
+      if (action.slot < 1 || action.slot > LIST.items) return state
+      if (usedSlots(act, byAuthor).has(action.slot)) return state // spent on an earlier item
       const s = clone(state)
       const mine = currentList(s)!
-      applyOrder(mine, byAuthor, action.order)
-      return bothOrdered(mine) ? toReveal(s, now) : s
+      const mineItem = mine.items[mine.placeIndex]
+      if (byAuthor) mineItem.predictedSlot = action.slot
+      else mineItem.actualSlot = action.slot
+      return bothPlaced(mineItem) ? advancePlace(s, now) : s
     }
     case 'SUBMIT_FINGER': {
       if (state.phase !== 'FINGER_ROUND') return state
@@ -422,8 +354,6 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         case 'MELD_REVEAL': return advanceReveal(state, now)
         // 'meld' is meld-only: the session ends here instead of moving on to Shortlist.
         case 'MELD_RESULT': return state.game === 'meld' ? finishSession(state) : beginList(state, now, 'A')
-        case 'LIST_WRITE': return beginSwap(state, now)
-        case 'LIST_SWAP': return beginPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)
         case 'LIST_REVEAL': return afterListReveal(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
