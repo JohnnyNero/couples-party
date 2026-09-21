@@ -17,7 +17,7 @@ export function resolveMode(search: string): PlayMode | null {
 // link must agree with the host before either side calls initNet).
 export function resolveGame(search: string): Game | null {
   const g = new URLSearchParams(search).get('game')
-  return g === 'full' || g === 'meld' || g === 'list' ? g : null
+  return g === 'full' || g === 'meld' || g === 'list' || g === 'finger' ? g : null
 }
 
 // The bot flag rides in the URL too. A second human joining a bot room is harmless: the

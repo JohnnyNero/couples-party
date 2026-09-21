@@ -35,6 +35,17 @@ export function DebugBar({ s }: { s: SessionState }) {
         </>
       )}
       <ListButtons s={s} btn={btn} />
+      {s.phase === 'FINGER_ROUND' && (
+        <button
+          className={btn}
+          onClick={() => {
+            dispatch({ type: 'SUBMIT_FINGER', player: 'A', applies: Math.random() < 0.5 })
+            dispatch({ type: 'SUBMIT_FINGER', player: 'B', applies: Math.random() < 0.5 })
+          }}
+        >
+          fill-both
+        </button>
+      )}
       <span className="px-2 uppercase tracking-wider text-fg/50">{s.phase}</span>
     </div>
   )

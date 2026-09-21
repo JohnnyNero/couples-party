@@ -4,6 +4,7 @@ import { PlayMeldType } from '../play/phases/PlayMeldType'
 import { PlayListWrite } from '../play/phases/PlayListWrite'
 import { PlayListSwap } from '../play/phases/PlayListSwap'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
+import { PlayFingerRound } from '../play/phases/PlayFingerRound'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
 
 // This player's private controller for the current phase, shared by the phone
@@ -26,6 +27,12 @@ export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':
+      return <PlayWaiting label="See the board" />
+    case 'FINGER_ROUND':
+      return <PlayFingerRound s={s} me={me} />
+    case 'FINGER_REVEAL':
+      return <PlayWaiting label="Reveal" />
+    case 'FINGER_RESULT':
       return <PlayWaiting label="See the board" />
     case 'DONE':
       return <PlayWaiting label="That's the session" />

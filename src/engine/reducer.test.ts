@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
+import { FINGER } from './phases'
 
 const bothConnected = () => {
   let s = initialState(1)
@@ -336,5 +337,81 @@ describe('game selection', () => {
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     expect(s.phase).toBe('LIST_WRITE')
     expect(s.meld).toBe(null)
+  })
+  it('finger-only: both joining goes straight to FINGER_ROUND', () => {
+    let s = initialState(1, undefined, [], 'finger', FINGER_POOL)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    expect(s.phase).toBe('FINGER_ROUND')
+    expect(s.meld).toBe(null)
+  })
+})
+
+// ---------------------------------------------------------------- Put a Finger Down
+
+const FINGER_POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
+const atFingerRound = () => {
+  let s = initialState(1, undefined, [], 'finger', FINGER_POOL)
+  s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+  return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+}
+
+describe('put a finger down', () => {
+  it('opens on round 1 of 5, a full hand each, and a 15s clock', () => {
+    const s = atFingerRound()
+    expect(s.phase).toBe('FINGER_ROUND')
+    expect(s.phaseEndsAt).toBe(1000 + 15000)
+    expect(s.finger?.current).toBe(0)
+    expect(s.finger?.rounds).toHaveLength(FINGER.rounds)
+    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers })
+  })
+  it('holds the round until both answer, then reveals', () => {
+    let s = atFingerRound()
+    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 2000)
+    expect(s.phase).toBe('FINGER_ROUND')
+    expect(s.finger?.rounds[0].applies.A).toBe(true)
+    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: false }, 2500)
+    expect(s.phase).toBe('FINGER_REVEAL')
+    expect(s.phaseEndsAt).toBe(2500 + 4000)
+    // A's finger went down, B's stayed up.
+    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers - 1, B: FINGER.startFingers })
+  })
+  it('ignores a second answer from the same player', () => {
+    let s = atFingerRound()
+    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 2000)
+    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 2000)
+    expect(s.finger?.rounds[0].applies.A).toBe(true)
+  })
+  it('a statement neither answers counts as "stays up" for both, on timeout', () => {
+    let s = atFingerRound()
+    s = reduce(s, { type: 'TIMEOUT' }, 5000) // round -> reveal, nobody answered
+    expect(s.phase).toBe('FINGER_REVEAL')
+    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers })
+  })
+  it('advances through all five rounds to FINGER_RESULT, then DONE', () => {
+    let s = atFingerRound()
+    for (let r = 0; r < FINGER.rounds; r++) {
+      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 1000) // A always confesses
+      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: false }, 1000)
+      expect(s.phase).toBe('FINGER_REVEAL')
+      s = reduce(s, { type: 'TIMEOUT' }, 1000) // reveal -> next round, or result on the last
+    }
+    expect(s.phase).toBe('FINGER_RESULT')
+    expect(s.finger?.fingersLeft).toEqual({ A: 0, B: FINGER.startFingers })
+    s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    expect(s.phase).toBe('DONE')
+  })
+  it('feeds the leaderboard: fewer fingers down wins, not first to zero', () => {
+    let s = atFingerRound()
+    // A confesses to none, B confesses to two — B ends with fewer fingers but the game
+    // still runs all five rounds rather than stopping early.
+    for (let r = 0; r < FINGER.rounds; r++) {
+      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 1000)
+      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: r < 2 }, 1000)
+      s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    }
+    expect(s.phase).toBe('FINGER_RESULT')
+    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers - 2 })
   })
 })

@@ -1,4 +1,4 @@
-import type { ListAct, PlayerId, SessionState } from './state'
+import type { FingerGame, ListAct, PlayerId, SessionState } from './state'
 import { other } from './state'
 
 // An act outcome awards points on the spec's own numbers; the player ahead at the end
@@ -21,12 +21,23 @@ export function listAward(act: ListAct): Award {
   return { player: other(act.author), points: 1 }
 }
 
+// Put a Finger Down: whoever has more fingers left after five rounds takes it — level
+// hands is just a tie, no drama needed for a bedtime game.
+export function fingerAward(f: FingerGame | null): Award {
+  if (!f) return null
+  const { A, B } = f.fingersLeft
+  if (A === B) return null
+  return A > B ? { player: 'A', points: 2 } : { player: 'B', points: 2 }
+}
+
 export function standing(s: SessionState): Standing {
   const tally: Standing = { A: 0, B: 0 }
   for (const act of s.listActs) {
     const award = listAward(act)
     if (award) tally[award.player] += award.points
   }
+  const fAward = fingerAward(s.finger)
+  if (fAward) tally[fAward.player] += fAward.points
   return tally
 }
 

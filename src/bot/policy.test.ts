@@ -98,4 +98,23 @@ describe('the bot plays a whole session through the real reducer', () => {
       }
     }
   })
+
+  it('also gets a Finger Down session to DONE with a real five-round hand', () => {
+    const r = makeRng(11)
+    let s = initialState(42, undefined, [], 'finger', ['a', 'b', 'c', 'd', 'e', 'f'])
+    let steps = 0
+    while (s.phase !== 'DONE' && steps++ < 200) {
+      const a = nextBotAction(s, 'A', BRAIN, r)
+      const b = nextBotAction(s, 'B', BRAIN, r)
+      const before = s
+      if (a) s = reduce(s, a, steps)
+      if (b) s = reduce(s, b, steps)
+      if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+    }
+    expect(s.phase).toBe('DONE')
+    expect(s.finger?.rounds).toHaveLength(5)
+    expect(s.finger?.fingersLeft.A).toBeGreaterThanOrEqual(0)
+    expect(s.finger?.fingersLeft.B).toBeGreaterThanOrEqual(0)
+    expect(s.finger?.rounds.every((round) => round.applies.A !== null && round.applies.B !== null)).toBe(true)
+  })
 })

@@ -23,8 +23,8 @@ function set(next: SessionState): void {
   emit()
 }
 
-export function initLocal(seedWords: string[], themes: Theme[], game: Game): void {
-  state = initialState(Math.floor(Math.random() * 1e9), seedWords, themes, game)
+export function initLocal(seedWords: string[], themes: Theme[], game: Game, fingerStatements: string[]): void {
+  state = initialState(Math.floor(Math.random() * 1e9), seedWords, themes, game, fingerStatements)
   // The human takes the first seat the moment the app opens; the bot claims the other.
   state = reduce(state, { type: 'JOIN', player: SOLO_PLAYER, name: 'Player 1' }, Date.now())
   emit()

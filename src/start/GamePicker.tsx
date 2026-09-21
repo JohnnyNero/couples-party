@@ -19,6 +19,11 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
         title="Shortlist only"
         sub="Straight to ranking"
       />
+      <PickButton
+        onClick={() => onPick('finger')}
+        title="Put a Finger Down"
+        sub="Five statements · least fingers down wins"
+      />
     </PickerScreen>
   )
 }

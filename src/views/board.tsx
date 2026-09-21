@@ -1,5 +1,5 @@
 import type { SessionState } from '../engine/state'
-import { MELD } from '../engine/phases'
+import { FINGER, MELD } from '../engine/phases'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
 import { ScreenMeldType } from '../screen/phases/ScreenMeldType'
 import { ScreenMeldReveal } from '../screen/phases/ScreenMeldReveal'
@@ -8,6 +8,9 @@ import { ScreenListWrite } from '../screen/phases/ScreenListWrite'
 import { ScreenListSwap } from '../screen/phases/ScreenListSwap'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
+import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
+import { ScreenFingerReveal } from '../screen/phases/ScreenFingerReveal'
+import { ScreenFingerResult } from '../screen/phases/ScreenFingerResult'
 
 // The public "board" content for the current phase, shared by the shared-screen
 // renderer (Screen) and the phones-only renderer (Duo). Holds no logic and shows
@@ -23,6 +26,9 @@ export function railText(s: SessionState): string {
     if (s.phase === 'LIST_SWAP') return `${run} · The swap`
     if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
+  }
+  if (s.phase.startsWith('FINGER') && s.finger) {
+    return `Put a Finger Down · Round ${s.finger.rounds[s.finger.current].index} of ${FINGER.rounds}`
   }
   if (s.phase === 'DONE') return 'That\'s the session'
   return s.phase
@@ -46,9 +52,17 @@ export function BoardStage({ s }: { s: SessionState }) {
       return <ScreenListPlace s={s} />
     case 'LIST_REVEAL':
       return <ScreenListReveal s={s} />
+    case 'FINGER_ROUND':
+      return <ScreenFingerRound s={s} />
+    case 'FINGER_REVEAL':
+      return <ScreenFingerReveal s={s} />
+    case 'FINGER_RESULT':
+      return <ScreenFingerResult s={s} />
     case 'DONE':
       // Terminal for now: hold the last thing that happened until the souvenir (M5).
-      return s.listActs.length > 0 ? <ScreenListReveal s={s} /> : <ScreenMeldResult s={s} />
+      if (s.listActs.length > 0) return <ScreenListReveal s={s} />
+      if (s.finger) return <ScreenFingerResult s={s} />
+      return <ScreenMeldResult s={s} />
     default:
       return <div className="text-2xl uppercase text-fg/50">{s.phase}</div>
   }

@@ -6,6 +6,7 @@ import { GamePicker } from './start/GamePicker'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
+import { FullscreenToggle } from './views/FullscreenToggle'
 
 export default function App() {
   // Mode and game both come from the URL (a shared link carries both) or the two launch
@@ -19,18 +20,27 @@ export default function App() {
     if (mode && game) initNet(mode, game).then(() => setReady(true))
   }, [mode, game])
 
-  if (!mode) {
-    return <ModePicker onPick={(m, bot) => { pendingBot.current = !!bot; setMode(m) }} />
+  return (
+    <>
+      <FullscreenToggle />
+      {renderApp()}
+    </>
+  )
+
+  function renderApp() {
+    if (!mode) {
+      return <ModePicker onPick={(m, bot) => { pendingBot.current = !!bot; setMode(m) }} />
+    }
+    if (!game) {
+      // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
+      // link (location.href + #r=CODE) carries both to the joining device.
+      return <GamePicker onPick={(g) => { stampMode(mode, g, pendingBot.current); setGame(g) }} />
+    }
+    if (!ready) return <Connecting />
+    if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />
+    // Duo and solo share a layout: the board on top, your own controller underneath.
+    return <Duo />
   }
-  if (!game) {
-    // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
-    // link (location.href + #r=CODE) carries both to the joining device.
-    return <GamePicker onPick={(g) => { stampMode(mode, g, pendingBot.current); setGame(g) }} />
-  }
-  if (!ready) return <Connecting />
-  if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />
-  // Duo and solo share a layout: the board on top, your own controller underneath.
-  return <Duo />
 }
 
 function Connecting() {

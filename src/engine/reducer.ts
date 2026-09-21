@@ -1,8 +1,8 @@
-import type { Action, ListAct, MeldResult, MeldRound, PlayerId, SessionState } from './state'
+import type { Action, FingerGame, ListAct, MeldResult, MeldRound, PlayerId, SessionState } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { DURATIONS, LIST, MELD } from './phases'
+import { DURATIONS, FINGER, LIST, MELD } from './phases'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -188,6 +188,56 @@ function finishSession(state: SessionState): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Put a Finger Down
+
+function currentFingerRound(f: FingerGame) {
+  return f.rounds[f.current]
+}
+
+function beginFinger(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const pool = shuffled(makeRng(s.seed ^ 0x9001), s.fingerStatements)
+  const rounds = pool.slice(0, FINGER.rounds).map((statementId, i) => ({
+    index: i + 1,
+    statementId,
+    applies: { A: null, B: null } as Record<PlayerId, boolean | null>,
+  }))
+  s.finger = { rounds, current: 0, fingersLeft: { A: FINGER.startFingers, B: FINGER.startFingers } }
+  s.phase = 'FINGER_ROUND'
+  s.phaseEndsAt = now + DURATIONS.FINGER_ROUND!
+  return s
+}
+
+// A statement nobody answered in time counts as "doesn't apply" for both — an unopened
+// hand, not a forced confession.
+function toFingerReveal(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const f = s.finger!
+  const round = currentFingerRound(f)
+  for (const p of ['A', 'B'] as const) {
+    if (round.applies[p]) f.fingersLeft[p] = Math.max(0, f.fingersLeft[p] - 1)
+  }
+  s.phase = 'FINGER_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.FINGER_REVEAL!
+  return s
+}
+
+// Five statements, then it's over — least fingers down wins, not first to zero.
+function advanceFinger(state: SessionState, now: number): SessionState {
+  const f = state.finger!
+  if (f.current >= FINGER.rounds - 1) {
+    const s = clone(state)
+    s.phase = 'FINGER_RESULT'
+    s.phaseEndsAt = now + DURATIONS.FINGER_RESULT!
+    return s
+  }
+  const s = clone(state)
+  s.finger!.current += 1
+  s.phase = 'FINGER_ROUND'
+  s.phaseEndsAt = now + DURATIONS.FINGER_ROUND!
+  return s
+}
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   switch (action.type) {
     case 'JOIN': {
@@ -195,9 +245,11 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
       if (both && s.phase === 'JOIN') {
-        // No stake to agree on anymore — straight into the first act. 'list' skips
-        // Mind Meld and starts on Shortlist; 'full' and 'meld' both start on Mind Meld.
-        return s.game === 'list' ? beginList(s, now, 'A') : beginMeld(s, now)
+        // No stake to agree on anymore — straight into the first act. 'list' skips to
+        // Shortlist, 'finger' to Put a Finger Down; 'full' and 'meld' start on Mind Meld.
+        if (s.game === 'list') return beginList(s, now, 'A')
+        if (s.game === 'finger') return beginFinger(s, now)
+        return beginMeld(s, now)
       }
       return s
     }
@@ -265,6 +317,18 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       applyOrder(mine, byAuthor, action.order)
       return bothOrdered(mine) ? toReveal(s, now) : s
     }
+    case 'SUBMIT_FINGER': {
+      if (state.phase !== 'FINGER_ROUND') return state
+      const f = state.finger
+      if (!f) return state
+      const round = currentFingerRound(f)
+      if (round.applies[action.player] !== null) return state // no changing your mind
+      const s = clone(state)
+      const sr = currentFingerRound(s.finger!)
+      sr.applies[action.player] = action.applies
+      if (sr.applies.A !== null && sr.applies.B !== null) return toFingerReveal(s, now)
+      return s
+    }
     case 'TIMEOUT': {
       switch (state.phase) {
         case 'MELD_TYPE': return toMeldReveal(state, now)
@@ -275,6 +339,9 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         case 'LIST_SWAP': return beginPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)
         case 'LIST_REVEAL': return afterListReveal(state, now)
+        case 'FINGER_ROUND': return toFingerReveal(state, now)
+        case 'FINGER_REVEAL': return advanceFinger(state, now)
+        case 'FINGER_RESULT': return finishSession(state)
         default: return state
       }
     }

@@ -24,6 +24,7 @@ const SESSION_KEY = 'session'
 
 let seedWords: string[] = []
 let themes: Theme[] = []
+let fingerStatements: string[] = []
 let game: Game = 'full'
 let started = false
 
@@ -41,13 +42,13 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), seedWords, themes, game)
+  return initialState(ensureSessionSeed(), seedWords, themes, game, fingerStatements)
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
 // host's real (seeded) session state has synced. Deliberately does not touch Math.random.
 function placeholderState(): SessionState {
-  return initialState(0, seedWords, themes, game)
+  return initialState(0, seedWords, themes, game, fingerStatements)
 }
 
 export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
@@ -58,6 +59,7 @@ export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
   const packs = await loadPacks()
   seedWords = packs.seedWords
   themes = packs.themes
+  fingerStatements = packs.fingerStatements
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,

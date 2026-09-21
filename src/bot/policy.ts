@@ -112,6 +112,15 @@ export function nextBotAction(
       return { type: 'SUBMIT_ORDER', player: me, order }
     }
 
+    case 'FINGER_ROUND': {
+      const f = s.finger
+      if (!f) return null
+      const round = f.rounds[f.current]
+      if (round.applies[me] !== null) return null
+      // A little more often true than false — a hand that never goes down is no fun.
+      return { type: 'SUBMIT_FINGER', player: me, applies: rng() < 0.55 }
+    }
+
     default:
       return null
   }
@@ -128,6 +137,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'LIST_WRITE': return spread(1500, 4000) // per item
     case 'LIST_SWAP': return spread(3000, 8000)
     case 'LIST_PLACE': return spread(2500, 8000)
+    case 'FINGER_ROUND': return spread(2000, 6000)
     default: return 1000
   }
 }
