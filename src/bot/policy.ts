@@ -14,10 +14,9 @@ export type BotBrain = {
   words: Record<string, string[]>
   nouns: string[]
   items: string[]
-  stakes: string[]
 }
 
-export const EMPTY_BRAIN: BotBrain = { words: {}, nouns: ['thing'], items: ['a thing'], stakes: ['loser makes the tea'] }
+export const EMPTY_BRAIN: BotBrain = { words: {}, nouns: ['thing'], items: ['a thing'] }
 
 const pickFrom = <T,>(rng: () => number, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length)]
 
@@ -59,11 +58,6 @@ export function nextBotAction(
   switch (s.phase) {
     case 'JOIN':
       return s.players[me].connected ? null : { type: 'JOIN', player: me, name: 'BOT' }
-
-    case 'STAKE_SET':
-      // The pair are meant to agree this out loud, so the bot hangs back and only
-      // types one if its human has not (the caller's delay does the hanging back).
-      return s.stake === null ? { type: 'SET_STAKE', text: pickFrom(rng, brain.stakes) } : null
 
     case 'MELD_TYPE': {
       const meld = s.meld
@@ -130,7 +124,6 @@ export function botDelay(s: SessionState, rng: () => number): number {
   const spread = (min: number, max: number) => min + rng() * (max - min)
   switch (s.phase) {
     case 'JOIN': return 400
-    case 'STAKE_SET': return 15000 // let the humans agree first
     case 'MELD_TYPE': return spread(4000, 11000)
     case 'LIST_WRITE': return spread(1500, 4000) // per item
     case 'LIST_SWAP': return spread(3000, 8000)

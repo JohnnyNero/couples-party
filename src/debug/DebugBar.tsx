@@ -12,11 +12,6 @@ export function DebugBar({ s }: { s: SessionState }) {
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[0.7rem] bg-bg/90 border border-fg/20 p-2">
       <button className={btn} onClick={() => dispatch({ type: 'TIMEOUT' })}>skip</button>
-      {s.phase === 'STAKE_SET' && (
-        <button className={btn} onClick={() => dispatch({ type: 'SET_STAKE', text: 'loser makes the tea' })}>
-          set-stake
-        </button>
-      )}
       {s.phase === 'MELD_TYPE' && (
         <>
           <button

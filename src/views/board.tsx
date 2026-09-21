@@ -1,8 +1,6 @@
 import type { SessionState } from '../engine/state'
 import { MELD } from '../engine/phases'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
-import { ScreenStakeSet } from '../screen/phases/ScreenStakeSet'
-import { ScreenStakeReveal } from '../screen/phases/ScreenStakeReveal'
 import { ScreenMeldType } from '../screen/phases/ScreenMeldType'
 import { ScreenMeldReveal } from '../screen/phases/ScreenMeldReveal'
 import { ScreenMeldResult } from '../screen/phases/ScreenMeldResult'
@@ -19,8 +17,6 @@ export function railText(s: SessionState): string {
     return `Act I · Mind Meld · Round ${s.meld.rounds.length} of ${MELD.roundCap}`
   }
   if (s.phase === 'JOIN') return 'Lobby'
-  if (s.phase === 'STAKE_SET') return 'The Stake · Agree the forfeit'
-  if (s.phase === 'STAKE_REVEAL') return 'The Stake'
   if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
     const run = `Act III · Shortlist · ${s.listActs.length} of 2`
     if (s.phase === 'LIST_WRITE') return `${run} · Picking`
@@ -36,10 +32,6 @@ export function BoardStage({ s }: { s: SessionState }) {
   switch (s.phase) {
     case 'JOIN':
       return <ScreenJoin s={s} />
-    case 'STAKE_SET':
-      return <ScreenStakeSet />
-    case 'STAKE_REVEAL':
-      return <ScreenStakeReveal s={s} />
     case 'MELD_TYPE':
       return <ScreenMeldType s={s} />
     case 'MELD_REVEAL':

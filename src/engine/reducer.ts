@@ -6,13 +6,6 @@ import { DURATIONS, LIST, MELD } from './phases'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
-function beginStakeSet(state: SessionState): SessionState {
-  const s = clone(state)
-  s.phase = 'STAKE_SET'
-  s.phaseEndsAt = null // untimed: agree, then type it in
-  return s
-}
-
 function beginMeld(state: SessionState, now: number): SessionState {
   const rng = makeRng(state.seed)
   const a = pick(rng, state.seedWords)
@@ -47,7 +40,7 @@ function isDoubleTimeout(r: MeldRound | undefined): boolean {
 }
 
 // Mind Meld is a co-op warm-up: converging together is its own reward, but it does
-// not touch the single session stake (the competitive acts decide who owes it).
+// not touch the leaderboard (the competitive acts are what score).
 function finalize(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const meld = s.meld!
@@ -202,19 +195,10 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
       if (both && s.phase === 'JOIN') {
-        // 'meld' is a co-op-only game: no forfeit, so no stake to agree first.
-        return s.game === 'meld' ? beginMeld(s, now) : beginStakeSet(s)
+        // No stake to agree on anymore — straight into the first act. 'list' skips
+        // Mind Meld and starts on Shortlist; 'full' and 'meld' both start on Mind Meld.
+        return s.game === 'list' ? beginList(s, now, 'A') : beginMeld(s, now)
       }
-      return s
-    }
-    case 'SET_STAKE': {
-      if (state.phase !== 'STAKE_SET') return state
-      const text = action.text.trim()
-      if (text.length === 0 || state.stake !== null) return state // first non-empty wins
-      const s = clone(state)
-      s.stake = text
-      s.phase = 'STAKE_REVEAL'
-      s.phaseEndsAt = now + DURATIONS.STAKE_REVEAL!
       return s
     }
     case 'SUBMIT_WORD': {
@@ -283,8 +267,6 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
     }
     case 'TIMEOUT': {
       switch (state.phase) {
-        // 'list' skips Mind Meld and goes straight to Shortlist after the stake is set.
-        case 'STAKE_REVEAL': return state.game === 'list' ? beginList(state, now, 'A') : beginMeld(state, now)
         case 'MELD_TYPE': return toMeldReveal(state, now)
         case 'MELD_REVEAL': return advanceReveal(state, now)
         // 'meld' is meld-only: the session ends here instead of moving on to Shortlist.

@@ -27,7 +27,6 @@ const session = (phase: SessionState['phase'], a: ListAct): SessionState => ({
   ...initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss', pool: POOL }]),
   phase,
   players: { A: { name: 'Sam', connected: true }, B: { name: 'Alex', connected: true } },
-  stake: 'loser does the dishes',
   listActs: [a],
 })
 

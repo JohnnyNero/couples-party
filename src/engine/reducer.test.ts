@@ -9,48 +9,19 @@ const bothConnected = () => {
   return s
 }
 
-const bothJoined = () => {
-  // JOIN begins STAKE_SET (untimed); set the stake, then the 4s reveal times out to Act I.
-  let s = bothConnected()
-  s = reduce(s, { type: 'SET_STAKE', text: 'loser does the dishes' }, 1000)
-  s = reduce(s, { type: 'TIMEOUT' }, 1000) // STAKE_REVEAL -> MELD_TYPE
-  return s
-}
+const bothJoined = () => bothConnected() // both joining starts Act I directly now
 
-describe('the stake', () => {
+describe('joining', () => {
   it('stays in JOIN until both connected', () => {
     let s = initialState(1)
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     expect(s.phase).toBe('JOIN')
     expect(s.players.A.connected).toBe(true)
   })
-  it('both joined begins STAKE_SET, untimed, no stake yet', () => {
-    const s = bothConnected()
-    expect(s.phase).toBe('STAKE_SET')
-    expect(s.phaseEndsAt).toBe(null)
-    expect(s.stake).toBe(null)
-    expect(s.meld).toBe(null)
-  })
-  it('SET_STAKE records the trimmed stake and moves to the 4s reveal', () => {
-    let s = bothConnected()
-    s = reduce(s, { type: 'SET_STAKE', text: '  loser cooks dinner  ' }, 2000)
-    expect(s.stake).toBe('loser cooks dinner')
-    expect(s.phase).toBe('STAKE_REVEAL')
-    expect(s.phaseEndsAt).toBe(2000 + 4000)
-  })
-  it('ignores an empty stake, and the first non-empty stake wins', () => {
-    let s = bothConnected()
-    s = reduce(s, { type: 'SET_STAKE', text: '   ' }, 2000)
-    expect(s.phase).toBe('STAKE_SET')
-    expect(s.stake).toBe(null)
-    s = reduce(s, { type: 'SET_STAKE', text: 'first' }, 2000)
-    s = reduce(s, { type: 'SET_STAKE', text: 'second' }, 2000) // ignored — no longer in STAKE_SET
-    expect(s.stake).toBe('first')
-  })
 })
 
 describe('join → act I start', () => {
-  it('begins MELD_TYPE round 1 after the stake reveal, with a seed pair', () => {
+  it('begins MELD_TYPE round 1 once both are connected, with a seed pair', () => {
     const s = bothJoined()
     expect(s.phase).toBe('MELD_TYPE')
     expect(s.phaseEndsAt).toBe(1000 + 20000)
@@ -112,27 +83,25 @@ describe('timeouts and caps', () => {
     expect(s.phase).toBe('MELD_RESULT')
     expect(s.meld?.converged).toBe(false)
   })
-  it('MELD_RESULT timeout opens Act III, and the stake still stands', () => {
+  it('MELD_RESULT timeout opens Act III', () => {
     let s = bothJoined()
     s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'x' }, 1)
     s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'x' }, 1)
     s = reduce(s, { type: 'TIMEOUT' }, 1) // reveal -> result
     s = reduce(s, { type: 'TIMEOUT' }, 1) // result -> Act III, author A
     expect(s.phase).toBe('LIST_WRITE')
-    expect(s.stake).toBe('loser does the dishes') // carries across the whole session
   })
 })
 
-describe('mind meld does not touch the stake (co-op)', () => {
-  it('converging fast leaves the stake untouched', () => {
+describe('mind meld does not touch the leaderboard (co-op)', () => {
+  it('converging fast has no effect on standing', () => {
     let s = bothJoined()
     s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 100)
     s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 100)
     s = reduce(s, { type: 'TIMEOUT' }, 100) // reveal -> result (converged round 1)
     expect(s.phase).toBe('MELD_RESULT')
     expect(s.meld?.converged).toBe(true)
-    expect(s.stake).toBe('loser does the dishes')
-    expect(s.stakeOwedBy).toBe(null)
+    expect(s.listActs).toHaveLength(0)
   })
 })
 
@@ -144,13 +113,11 @@ const THEMES = [
   { id: 't002', text: "seven of {name}'s strongest opinions", pool: POOL },
 ]
 
-// Straight to the top of Act III: both joined, stake set, Act I converged and timed out.
+// Straight to the top of Act III: both joined, Act I converged and timed out.
 const atListWrite = () => {
   let s = initialState(1, undefined, THEMES)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-  s = reduce(s, { type: 'SET_STAKE', text: 'loser does the dishes' }, 1000)
-  s = reduce(s, { type: 'TIMEOUT' }, 1000) // stake reveal -> Act I
   s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 1000)
   s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 1000)
   s = reduce(s, { type: 'TIMEOUT' }, 1000) // meld reveal -> result
@@ -341,17 +308,15 @@ describe('act III · reveal and alternation', () => {
     s = reduce(s, { type: 'TIMEOUT' }, 5000)
     expect(s.phase).toBe('DONE')
     expect(s.phaseEndsAt).toBe(null)
-    expect(s.stakeOwedBy).toBe(null) // the standing is derived, never stored
   })
 })
 
 describe('game selection', () => {
-  it('meld-only: both joining skips straight to MELD_TYPE, no stake at all', () => {
+  it('meld-only: both joining goes straight to MELD_TYPE', () => {
     let s = initialState(1, undefined, [], 'meld')
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     expect(s.phase).toBe('MELD_TYPE')
-    expect(s.stake).toBe(null)
   })
   it('meld-only: the session ends after MELD_RESULT instead of moving to Shortlist', () => {
     let s = initialState(1, undefined, [], 'meld')
@@ -365,14 +330,10 @@ describe('game selection', () => {
     expect(s.phase).toBe('DONE')
     expect(s.listActs).toHaveLength(0)
   })
-  it('list-only: joining still sets a stake, then skips Mind Meld entirely', () => {
+  it('list-only: both joining goes straight to Shortlist, skipping Mind Meld', () => {
     let s = initialState(1, undefined, [], 'list')
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-    expect(s.phase).toBe('STAKE_SET')
-    s = reduce(s, { type: 'SET_STAKE', text: 'loser does the dishes' }, 1000)
-    expect(s.phase).toBe('STAKE_REVEAL')
-    s = reduce(s, { type: 'TIMEOUT' }, 2000) // STAKE_REVEAL -> LIST_WRITE, not MELD_TYPE
     expect(s.phase).toBe('LIST_WRITE')
     expect(s.meld).toBe(null)
   })

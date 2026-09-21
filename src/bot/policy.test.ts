@@ -12,7 +12,6 @@ const BRAIN: BotBrain = {
   },
   nouns: ['window', 'ladder'],
   items: ['the bins', 'cold toast', 'my driving', 'the good mug', 'sunday', 'the aux', 'socks'],
-  stakes: ['loser makes the tea'],
 }
 
 const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
@@ -52,15 +51,6 @@ describe('nextBotAction', () => {
     const joined = reduce(s, { type: 'JOIN', player: 'B', name: 'BOT' }, 1)
     expect(nextBotAction(joined, 'B', BRAIN, rng())).toBe(null)
   })
-  it('sets a stake only while there is none', () => {
-    let s = initialState(1)
-    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1)
-    s = reduce(s, { type: 'JOIN', player: 'B', name: 'BOT' }, 1)
-    expect(nextBotAction(s, 'B', BRAIN, rng())?.type).toBe('SET_STAKE')
-    s = reduce(s, { type: 'SET_STAKE', text: 'dishes' }, 1)
-    s = reduce(s, { type: 'TIMEOUT' }, 1)
-    expect(nextBotAction(s, 'B', BRAIN, rng())?.type).not.toBe('SET_STAKE')
-  })
   it('submits one word per round and then waits', () => {
     const s = running()
     const action = nextBotAction(s, 'B', BRAIN, rng())
@@ -74,9 +64,7 @@ describe('nextBotAction', () => {
 function running(): SessionState {
   let s = initialState(1, undefined, THEMES)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1)
-  s = reduce(s, { type: 'JOIN', player: 'B', name: 'BOT' }, 1)
-  s = reduce(s, { type: 'SET_STAKE', text: 'dishes' }, 1)
-  return reduce(s, { type: 'TIMEOUT' }, 1)
+  return reduce(s, { type: 'JOIN', player: 'B', name: 'BOT' }, 1)
 }
 
 describe('the bot plays a whole session through the real reducer', () => {

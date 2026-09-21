@@ -10,6 +10,9 @@ import { playerName } from '../views/list'
 
 // Shared-screen renderer: the public board on a TV/laptop. Four fixed regions —
 // act rail, stage, pot, clock — that never move; only their contents change.
+// The TV has no identity of its own (it isn't "someone's" device), so it shows the
+// neutral session tally only — the persistent you-vs-them leaderboard lives on the
+// phones, which each know who they belong to.
 export function Screen() {
   const s = useSession()
   const debug = new URLSearchParams(location.search).get('debug') === '1'
@@ -23,7 +26,7 @@ export function Screen() {
         <BoardStage s={s} />
       </div>
       <div className="flex justify-between items-end gap-6 border-t-2 border-fg/80 pt-3">
-        <Stake s={s} />
+        <SessionTally s={s} />
         <div className="text-right shrink-0">
           <div className="text-xs uppercase tracking-widest text-fg/40">Time</div>
           <div className="text-4xl sm:text-5xl leading-none">
@@ -37,19 +40,13 @@ export function Screen() {
   )
 }
 
-function Stake({ s }: { s: SessionState }) {
-  const owed = s.stakeOwedBy ? playerName(s, s.stakeOwedBy) : null
+function SessionTally({ s }: { s: SessionState }) {
+  // Derived from the acts, never stored — see engine/standing.ts.
   const tally = standing(s)
   return (
     <div className="min-w-0">
-      <div className="text-xs uppercase tracking-widest text-fg/40">
-        {owed ? `${owed} does` : 'The forfeit'}
-      </div>
-      <div className="text-lg sm:text-2xl font-bold uppercase tracking-tight truncate">
-        {s.stake ?? '—'}
-      </div>
-      {/* Standing is derived from the acts, never stored — see engine/standing.ts. */}
-      <div className="mt-1 text-sm sm:text-lg uppercase tracking-wide tabular-nums text-fg/60">
+      <div className="text-xs uppercase tracking-widest text-fg/40">This session</div>
+      <div className="mt-1 text-lg sm:text-2xl font-bold uppercase tracking-tight tabular-nums">
         <Side name={playerName(s, 'A')} n={tally.A} ahead={tally.A > tally.B} />
         <span className="text-fg/20 px-2">·</span>
         <Side name={playerName(s, 'B')} n={tally.B} ahead={tally.B > tally.A} />

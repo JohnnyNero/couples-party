@@ -7,17 +7,17 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
       <PickButton
         onClick={() => onPick('full')}
         title="The full session"
-        sub="The stake · Mind Meld · Shortlist, twice over"
+        sub="Mind Meld · Shortlist, twice over"
       />
       <PickButton
         onClick={() => onPick('meld')}
         title="Mind Meld only"
-        sub="Just the co-op warm-up · no stake, nothing on the line"
+        sub="Just the co-op warm-up"
       />
       <PickButton
         onClick={() => onPick('list')}
         title="Shortlist only"
-        sub="Agree a stake, then straight to ranking"
+        sub="Straight to ranking"
       />
     </PickerScreen>
   )

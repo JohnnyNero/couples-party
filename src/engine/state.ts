@@ -13,7 +13,6 @@ export type Game = 'full' | 'meld' | 'list'
 
 export type Phase =
   | 'BOOT' | 'JOIN'
-  | 'STAKE_SET' | 'STAKE_REVEAL'
   | 'MELD_TYPE' | 'MELD_REVEAL' | 'MELD_RESULT'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_WRITE' | 'LIST_SWAP' | 'LIST_PLACE' | 'LIST_REVEAL'
@@ -72,12 +71,6 @@ export type SessionState = {
   phase: Phase
   phaseEndsAt: number | null // absolute epoch ms; null = untimed
   players: Record<PlayerId, { name: string; connected: boolean }>
-  // The single forfeit, agreed out loud and typed in by one player before the match.
-  // It is the stake for the whole session; `stakeOwedBy` records who ends up doing it
-  // (set at the end of the session — null until then; the standing is derived, see
-  // engine/standing.ts, because the spec allows no stored score).
-  stake: string | null
-  stakeOwedBy: PlayerId | null
   meld: MeldResult | null
   gapActs: GapAct[]
   listActs: ListAct[]
@@ -89,7 +82,6 @@ export type SessionState = {
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
-  | { type: 'SET_STAKE'; text: string }
   | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
   // One pick locked at a time, from the theme's pool — so a timeout keeps whatever was
   // already picked.
@@ -112,8 +104,6 @@ export function initialState(
     phase: 'JOIN',
     phaseEndsAt: null,
     players: { A: { name: '', connected: false }, B: { name: '', connected: false } },
-    stake: null,
-    stakeOwedBy: null,
     meld: null,
     gapActs: [],
     listActs: [],

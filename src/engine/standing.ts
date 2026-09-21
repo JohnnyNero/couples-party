@@ -1,11 +1,10 @@
 import type { ListAct, PlayerId, SessionState } from './state'
 import { other } from './state'
 
-// Ruling M3-1: with the pot cut down to one agreed stake, an act outcome awards points
-// on the spec's own numbers, and the player ahead at the end of the session wins — the
-// other one does the forfeit. The tally is NEVER stored: it is derived from the act
-// records here, the same way the spec derived standing from the `forfeits` array. If a
-// number on the board is not one of these, something has gone wrong.
+// An act outcome awards points on the spec's own numbers; the player ahead at the end
+// of the session tops that session's leaderboard entry. The in-session tally is NEVER
+// stored: it is derived from the act records here. If a number on the board is not one
+// of these, something has gone wrong.
 
 export type Standing = Record<PlayerId, number>
 
@@ -31,8 +30,7 @@ export function standing(s: SessionState): Standing {
   return tally
 }
 
-// Who is ahead, or null if level. At the end of the session the other player owes the
-// stake; level means SUDDEN_DEATH (M5).
+// Who is ahead this session, or null if level.
 export function leader(s: SessionState): PlayerId | null {
   const t = standing(s)
   if (t.A === t.B) return null
