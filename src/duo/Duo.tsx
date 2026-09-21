@@ -15,6 +15,10 @@ import { useRecordSession } from '../store/useRecordSession'
 // Phases where the controller is only a waiting state: the board should have the screen
 // to itself rather than sitting in the top 44% with an empty panel beneath it.
 const BOARD_LED = new Set(['MELD_REVEAL', 'MELD_RESULT', 'LIST_REVEAL', 'DONE'])
+// Phases whose board is just a theme line and a small stat, but whose controller is the
+// real interaction (a pool of items, a drag list) — the board takes only what its own
+// content needs instead of a fixed share, so the controller gets the rest.
+const COMPACT_BOARD = new Set(['LIST_WRITE', 'LIST_SWAP', 'LIST_PLACE'])
 
 export function Duo() {
   const s = useSession()
@@ -29,7 +33,11 @@ export function Duo() {
       <div
         className={
           'flex flex-col p-5 ' +
-          (BOARD_LED.has(s.phase) ? 'flex-1 min-h-0' : 'basis-[44%] shrink-0 border-b-4 border-fg/80')
+          (BOARD_LED.has(s.phase)
+            ? 'flex-1 min-h-0'
+            : COMPACT_BOARD.has(s.phase)
+              ? 'shrink-0 border-b-4 border-fg/80'
+              : 'basis-[44%] shrink-0 border-b-4 border-fg/80')
         }
       >
         <div className="flex items-center justify-between text-[0.6rem] uppercase tracking-[0.2em] text-fg/60 pb-2">
@@ -41,7 +49,13 @@ export function Duo() {
             </span>
           </span>
         </div>
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
+        <div
+          className={
+            COMPACT_BOARD.has(s.phase)
+              ? 'py-4 flex items-center justify-center overflow-hidden'
+              : 'flex-1 flex items-center justify-center overflow-hidden'
+          }
+        >
           <BoardStage s={s} />
         </div>
       </div>
