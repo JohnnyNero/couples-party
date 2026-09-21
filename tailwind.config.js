@@ -6,16 +6,17 @@ export default {
       colors: {
         // Three colours only. The accent is used ONLY to mark whose turn it is
         // / what just happened — never for decoration.
-        // Romantic + vibrant: rich berry ground, bright blush ink, electric-rose accent.
-        bg: '#22091e',
-        fg: '#fff0f5',
-        accent: '#ff1f74',
+        // "Warm Blush": warm cream ground, warm-ink text, coral accent.
+        bg: '#fff3ec',
+        fg: '#3b241e',
+        accent: '#ff6f61',
       },
       fontFamily: {
-        // Make Space Grotesk the default everywhere (preflight sets `sans` on html)
-        // as well as the explicit board face.
-        sans: ['"Space Grotesk"', 'Arial', 'sans-serif'],
-        board: ['"Space Grotesk"', 'Arial', 'sans-serif'],
+        // Nunito everywhere by default (preflight sets `sans` on html); `display`
+        // is for headings/titles only — applied screen by screen, not globally.
+        sans: ['Nunito', 'Arial', 'sans-serif'],
+        board: ['Nunito', 'Arial', 'sans-serif'],
+        display: ['"Baloo 2"', 'Nunito', 'Arial', 'sans-serif'],
       },
     },
   },

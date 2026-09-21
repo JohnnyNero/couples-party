@@ -5,10 +5,10 @@
 html, body, #root { height: 100%; }
 
 body {
-  background: #22091e;
-  color: #fff0f5;
+  background: #fff3ec;
+  color: #3b241e;
   margin: 0;
-  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-family: 'Nunito', Arial, sans-serif;
   /* Real, lining, tabular numerals — the results-board look. */
   font-feature-settings: 'tnum' 1, 'lnum' 1;
   -webkit-tap-highlight-color: transparent;
