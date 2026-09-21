@@ -13,7 +13,7 @@ import {
   RPC,
   type PlayerState,
 } from 'playroomkit'
-import type { Action, Game, PlayerId, SessionState, Theme, WaveSpectrum } from '../engine/state'
+import type { Action, DrawPrompt, Game, PlayerId, SessionState, Theme, WaveSpectrum } from '../engine/state'
 import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
@@ -22,10 +22,10 @@ import type { PlayMode } from '../start/mode'
 
 const SESSION_KEY = 'session'
 
-let seedWords: string[] = []
 let themes: Theme[] = []
 let fingerStatements: string[] = []
 let spectrums: WaveSpectrum[] = []
+let drawPrompts: DrawPrompt[] = []
 let game: Game = 'full'
 let started = false
 
@@ -43,13 +43,13 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), seedWords, themes, game, fingerStatements, spectrums)
+  return initialState(ensureSessionSeed(), themes, game, fingerStatements, spectrums, drawPrompts)
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
 // host's real (seeded) session state has synced. Deliberately does not touch Math.random.
 function placeholderState(): SessionState {
-  return initialState(0, seedWords, themes, game, fingerStatements, spectrums)
+  return initialState(0, themes, game, fingerStatements, spectrums, drawPrompts)
 }
 
 export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
@@ -58,10 +58,10 @@ export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
   game = chosenGame
 
   const packs = await loadPacks()
-  seedWords = packs.seedWords
   themes = packs.themes
   fingerStatements = packs.fingerStatements
   spectrums = packs.spectrums
+  drawPrompts = packs.drawPrompts
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,

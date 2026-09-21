@@ -1,16 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
-import { FINGER, WAVE } from './phases'
+import { FINGER, WAVE, DRAW } from './phases'
 
-const bothConnected = () => {
-  let s = initialState(1)
+const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+const THEMES = [
+  { id: 't001', text: 'seven things {name} would struggle to give up', pool: POOL },
+  { id: 't002', text: "seven of {name}'s strongest opinions", pool: POOL },
+]
+
+const bothJoined = (themes = THEMES) => {
+  let s = initialState(1, themes)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
   return s
 }
-
-const bothJoined = () => bothConnected() // both joining starts Act I directly now
 
 describe('joining', () => {
   it('stays in JOIN until both connected', () => {
@@ -22,109 +26,18 @@ describe('joining', () => {
 })
 
 describe('join → act I start', () => {
-  it('begins MELD_TYPE round 1 once both are connected, with a seed pair', () => {
+  it('both joining begins Act III · Shortlist directly, on author A', () => {
     const s = bothJoined()
-    expect(s.phase).toBe('MELD_TYPE')
-    expect(s.phaseEndsAt).toBe(1000 + 20000)
-    expect(s.meld?.rounds.length).toBe(1)
-    expect(s.meld?.seedPair[0]).not.toBe(s.meld?.seedPair[1])
-  })
-})
-
-describe('submitting words', () => {
-  it('records a word and accumulates meldWords, staying in MELD_TYPE until both', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'moon' }, 2000)
-    expect(s.phase).toBe('MELD_TYPE')
-    expect(s.meld?.rounds[0].words.A).toBe('moon')
-    expect(s.meldWords).toContain('moon')
-  })
-  it('non-matching pair → MELD_REVEAL, not converged, then next round', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'moon' }, 2000)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'fork' }, 2500)
-    expect(s.phase).toBe('MELD_REVEAL')
-    expect(s.meld?.rounds[0].converged).toBe(false)
-    s = reduce(s, { type: 'TIMEOUT' }, 6500)
-    expect(s.phase).toBe('MELD_TYPE')
-    expect(s.meld?.rounds.length).toBe(2)
-    expect(s.phaseEndsAt).toBe(6500 + 20000)
-  })
-  it('matching pair → converged reveal → MELD_RESULT with finalWord', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'Cats' }, 2000)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'cat' }, 2100)
-    expect(s.meld?.rounds[0].converged).toBe(true)
-    s = reduce(s, { type: 'TIMEOUT' }, 6100)
-    expect(s.phase).toBe('MELD_RESULT')
-    expect(s.meld?.converged).toBe(true)
-    expect(s.meld?.roundsTaken).toBe(1)
-    expect(s.meld?.finalWord).toBe('Cats')
-  })
-})
-
-describe('timeouts and caps', () => {
-  it('round cap of 7 ends the act unconverged', () => {
-    let s = bothJoined()
-    for (let r = 0; r < 7; r++) {
-      s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: `a${r}` }, 100)
-      s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: `b${r}` }, 100)
-      s = reduce(s, { type: 'TIMEOUT' }, 100) // leave reveal
-    }
-    expect(s.phase).toBe('MELD_RESULT')
-    expect(s.meld?.converged).toBe(false)
-    expect(s.meld?.roundsTaken).toBe(7)
-  })
-  it('two consecutive double-timeouts end the act early', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'TIMEOUT' }, 100) // round 1 type -> reveal (both null)
-    s = reduce(s, { type: 'TIMEOUT' }, 200) // reveal -> round 2 type
-    s = reduce(s, { type: 'TIMEOUT' }, 300) // round 2 type -> reveal (both null)
-    s = reduce(s, { type: 'TIMEOUT' }, 400) // reveal -> should finalize (2 double-timeouts)
-    expect(s.phase).toBe('MELD_RESULT')
-    expect(s.meld?.converged).toBe(false)
-  })
-  it('MELD_RESULT timeout opens Act III', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'x' }, 1)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'x' }, 1)
-    s = reduce(s, { type: 'TIMEOUT' }, 1) // reveal -> result
-    s = reduce(s, { type: 'TIMEOUT' }, 1) // result -> Act III, author A
     expect(s.phase).toBe('LIST_PLACE')
-  })
-})
-
-describe('mind meld does not touch the leaderboard (co-op)', () => {
-  it('converging fast has no effect on standing', () => {
-    let s = bothJoined()
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 100)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 100)
-    s = reduce(s, { type: 'TIMEOUT' }, 100) // reveal -> result (converged round 1)
-    expect(s.phase).toBe('MELD_RESULT')
-    expect(s.meld?.converged).toBe(true)
-    expect(s.listActs).toHaveLength(0)
+    expect(s.phaseEndsAt).toBe(1000 + 15000)
+    expect(s.listActs).toHaveLength(1)
+    expect(s.listActs[0].author).toBe('A')
   })
 })
 
 // ---------------------------------------------------------------- Act III · Shortlist
 
-const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
-const THEMES = [
-  { id: 't001', text: 'seven things {name} would struggle to give up', pool: POOL },
-  { id: 't002', text: "seven of {name}'s strongest opinions", pool: POOL },
-]
-
-// Straight to the top of Act III: both joined, Act I converged and timed out.
-const atListPlace = () => {
-  let s = initialState(1, undefined, THEMES)
-  s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
-  s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-  s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 1000)
-  s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 1000)
-  s = reduce(s, { type: 'TIMEOUT' }, 1000) // meld reveal -> result
-  s = reduce(s, { type: 'TIMEOUT' }, 1000) // meld result -> LIST_PLACE
-  return s
-}
+const atListPlace = bothJoined // 'full' begins directly on Shortlist now
 
 // Places every remaining item, both sides, at the given slots (1..7, in item order).
 // `actual` is the ranker's slots, `predicted` the author's guesses.
@@ -217,12 +130,23 @@ describe('act III · reveal and alternation', () => {
     expect(s.listActs[1].themeId).not.toBe(s.listActs[0].themeId)
     expect(s.listActs[0].displacement).toBe(0) // run 1's record is untouched
   })
-  it('ends the act after the second run', () => {
+  it('a full session carries on into Put a Finger Down after the second run', () => {
     let s = placeAll(atListPlace(), [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
     s = placeAll(s, [7, 6, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 6, 7])
     expect(s.phase).toBe('LIST_REVEAL')
     expect(s.listActs[1].displacement).toBe(24) // the worst read available
+    s = reduce(s, { type: 'TIMEOUT' }, 5000)
+    expect(s.phase).toBe('FINGER_ROUND') // not DONE — 'full' keeps going
+  })
+  it('a standalone Shortlist-only session ends after the second run', () => {
+    let s = initialState(1, THEMES, 'list')
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
+    s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
+    s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
+    expect(s.phase).toBe('LIST_REVEAL')
     s = reduce(s, { type: 'TIMEOUT' }, 5000)
     expect(s.phase).toBe('DONE')
     expect(s.phaseEndsAt).toBe(null)
@@ -230,44 +154,39 @@ describe('act III · reveal and alternation', () => {
 })
 
 describe('game selection', () => {
-  it('meld-only: both joining goes straight to MELD_TYPE', () => {
-    let s = initialState(1, undefined, [], 'meld')
-    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
-    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-    expect(s.phase).toBe('MELD_TYPE')
-  })
-  it('meld-only: the session ends after MELD_RESULT instead of moving to Shortlist', () => {
-    let s = initialState(1, undefined, [], 'meld')
-    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
-    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'A', word: 'same' }, 1000)
-    s = reduce(s, { type: 'SUBMIT_WORD', player: 'B', word: 'same' }, 1000) // converges
-    s = reduce(s, { type: 'TIMEOUT' }, 2000) // MELD_REVEAL -> MELD_RESULT
-    expect(s.phase).toBe('MELD_RESULT')
-    s = reduce(s, { type: 'TIMEOUT' }, 3000) // MELD_RESULT -> DONE, not LIST_WRITE
-    expect(s.phase).toBe('DONE')
-    expect(s.listActs).toHaveLength(0)
-  })
-  it('list-only: both joining goes straight to Shortlist, skipping Mind Meld', () => {
-    let s = initialState(1, undefined, [], 'list')
+  it('list-only: both joining goes straight to Shortlist', () => {
+    let s = initialState(1, [], 'list')
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     expect(s.phase).toBe('LIST_PLACE')
-    expect(s.meld).toBe(null)
+  })
+  it('list-only: the session ends after the second run instead of moving to Put a Finger Down', () => {
+    let s = initialState(1, [], 'list')
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
+    s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
+    s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
+    s = reduce(s, { type: 'TIMEOUT' }, 5000)
+    expect(s.phase).toBe('DONE')
   })
   it('finger-only: both joining goes straight to FINGER_ROUND', () => {
-    let s = initialState(1, undefined, [], 'finger', FINGER_POOL)
+    let s = initialState(1, [], 'finger', FINGER_POOL)
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     expect(s.phase).toBe('FINGER_ROUND')
-    expect(s.meld).toBe(null)
   })
   it('wave-only: both joining goes straight to WAVE_CLUE', () => {
-    let s = initialState(1, undefined, [], 'wave', [], SPECTRUMS)
+    let s = initialState(1, [], 'wave', [], SPECTRUMS)
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     expect(s.phase).toBe('WAVE_CLUE')
-    expect(s.meld).toBe(null)
+  })
+  it('draw-only: both joining goes straight to DRAW_SKETCH', () => {
+    let s = initialState(1, [], 'draw', [], [], DRAW_PROMPTS)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    expect(s.phase).toBe('DRAW_SKETCH')
   })
 })
 
@@ -276,7 +195,7 @@ describe('game selection', () => {
 const FINGER_POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
 const atFingerRound = () => {
-  let s = initialState(1, undefined, [], 'finger', FINGER_POOL)
+  let s = initialState(1, [], 'finger', FINGER_POOL)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
 }
@@ -313,7 +232,7 @@ describe('put a finger down', () => {
     expect(s.phase).toBe('FINGER_REVEAL')
     expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers })
   })
-  it('advances through all five rounds to FINGER_RESULT, then DONE', () => {
+  it('advances through all five rounds to FINGER_RESULT, then DONE (standalone)', () => {
     let s = atFingerRound()
     for (let r = 0; r < FINGER.rounds; r++) {
       s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 1000) // A always confesses
@@ -349,7 +268,7 @@ const SPECTRUMS = [
 ]
 
 const atWaveClue = () => {
-  let s = initialState(1, undefined, [], 'wave', [], SPECTRUMS)
+  let s = initialState(1, [], 'wave', [], SPECTRUMS)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
 }
@@ -408,7 +327,7 @@ describe('wavelength', () => {
     expect(s.phase).toBe('WAVE_REVEAL')
     expect(s.wave?.rounds[0].guess).toBe(50)
   })
-  it('advances through all seven rounds to WAVE_RESULT, then DONE', () => {
+  it('advances through all seven rounds to WAVE_RESULT, then DONE (standalone)', () => {
     let s = atWaveClue()
     for (let r = 0; r < WAVE.rounds; r++) {
       const round = s.wave!.rounds[s.wave!.current]
@@ -420,6 +339,95 @@ describe('wavelength', () => {
       s = reduce(s, { type: 'TIMEOUT' }, 1000)
     }
     expect(s.phase).toBe('WAVE_RESULT')
+    s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    expect(s.phase).toBe('DONE')
+  })
+})
+
+// ---------------------------------------------------------------- Draw Your Love
+
+const DRAW_PROMPTS = [
+  { id: 'd01', text: 'a house' },
+  { id: 'd02', text: 'a duck' },
+  { id: 'd03', text: 'a sunset' },
+]
+
+const atDrawSketch = () => {
+  let s = initialState(1, [], 'draw', [], [], DRAW_PROMPTS)
+  s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+  return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+}
+
+const STROKE = [[0.1, 0.1], [0.9, 0.9]] as [number, number][]
+
+describe('draw your love', () => {
+  it('opens on round 1 of 6, A as drawer, and a 40s clock', () => {
+    const s = atDrawSketch()
+    expect(s.phase).toBe('DRAW_SKETCH')
+    expect(s.phaseEndsAt).toBe(1000 + 40000)
+    expect(s.draw?.current).toBe(0)
+    expect(s.draw?.rounds).toHaveLength(DRAW.rounds)
+    expect(s.draw?.rounds[0].drawer).toBe('A')
+  })
+  it('alternates drawer every round', () => {
+    const s = atDrawSketch()
+    expect(s.draw!.rounds.map((r) => r.drawer)).toEqual(['A', 'B', 'A', 'B', 'A', 'B'])
+  })
+  it('ignores a drawing from the guesser', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', strokes: [STROKE] }, 2000)
+    expect(s.phase).toBe('DRAW_SKETCH')
+    expect(s.draw?.rounds[0].strokes).toHaveLength(0)
+  })
+  it('a drawing from the drawer opens the guess, with the strokes locked', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', strokes: [STROKE] }, 2000)
+    expect(s.phase).toBe('DRAW_GUESS')
+    expect(s.phaseEndsAt).toBe(2000 + 20000)
+    expect(s.draw?.rounds[0].strokes).toEqual([STROKE])
+  })
+  it('ignores a guess from the drawer', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', strokes: [STROKE] }, 2000)
+    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'A', text: 'a house' }, 2500)
+    expect(s.phase).toBe('DRAW_GUESS')
+    expect(s.draw?.rounds[0].guess).toBe(null)
+  })
+  it('a correct guess reveals with correct: true and awards the guesser', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', strokes: [STROKE] }, 2000)
+    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: ' A House ' }, 3000)
+    expect(s.phase).toBe('DRAW_REVEAL')
+    expect(s.phaseEndsAt).toBe(3000 + 6000)
+    expect(s.draw?.rounds[0].guess).toBe('A House')
+    expect(s.draw?.rounds[0].correct).toBe(true)
+  })
+  it('a wrong guess reveals with correct: false', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', strokes: [STROKE] }, 2000)
+    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'a boat' }, 3000)
+    expect(s.draw?.rounds[0].correct).toBe(false)
+  })
+  it('a drawing nobody finishes still lets the round play out, on timeout', () => {
+    let s = atDrawSketch()
+    s = reduce(s, { type: 'TIMEOUT' }, 5000) // sketch -> guess, nothing drawn
+    expect(s.phase).toBe('DRAW_GUESS')
+    expect(s.draw?.rounds[0].strokes).toEqual([])
+    s = reduce(s, { type: 'TIMEOUT' }, 6000) // guess -> reveal, no guess never matches
+    expect(s.phase).toBe('DRAW_REVEAL')
+    expect(s.draw?.rounds[0].correct).toBe(false)
+  })
+  it('advances through all six rounds to DRAW_RESULT, then DONE (standalone)', () => {
+    let s = atDrawSketch()
+    for (let r = 0; r < DRAW.rounds; r++) {
+      const round = s.draw!.rounds[s.draw!.current]
+      s = reduce(s, { type: 'SUBMIT_DRAWING', player: round.drawer, strokes: [STROKE] }, 1000)
+      const guesser = round.drawer === 'A' ? 'B' : 'A'
+      s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: guesser, text: 'whatever' }, 1000)
+      expect(s.phase).toBe('DRAW_REVEAL')
+      s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    }
+    expect(s.phase).toBe('DRAW_RESULT')
     s = reduce(s, { type: 'TIMEOUT' }, 1000)
     expect(s.phase).toBe('DONE')
   })

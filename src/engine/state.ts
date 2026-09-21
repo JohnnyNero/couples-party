@@ -1,39 +1,20 @@
 export type PlayerId = 'A' | 'B'
 
-export const DEFAULT_SEEDS = [
-  'spaghetti', 'handcuffs', 'cathedral', 'lawnmower',
-  'volcano', 'umbrella', 'trombone', 'glacier',
-]
-
 export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // Which acts this session runs. 'full' is the whole night; the rest skip straight to one
 // game, for a shorter session or for testing a single act in isolation.
-export type Game = 'full' | 'meld' | 'list' | 'finger' | 'wave'
+export type Game = 'full' | 'list' | 'finger' | 'wave' | 'draw'
 
 export type Phase =
   | 'BOOT' | 'JOIN'
-  | 'MELD_TYPE' | 'MELD_REVEAL' | 'MELD_RESULT'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_PLACE' | 'LIST_REVEAL'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
+  | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
   | 'DONE' // terminal placeholder until later acts extend the flow
-
-export type MeldRound = {
-  index: number // 1-based
-  words: Record<PlayerId, string | null>
-  converged: boolean
-}
-
-export type MeldResult = {
-  rounds: MeldRound[]
-  roundsTaken: number // 7 = failed
-  converged: boolean
-  finalWord: string | null
-  seedPair: [string, string] // round 1's shown pair (deviation: seeds stored here)
-}
 
 // Full-game types carried now so state.ts is stable; unused fields stay null in M1.
 export type GapRound = {
@@ -96,27 +77,44 @@ export type WaveGame = {
   current: number         // 0-based index into rounds — which one is live
 }
 
+// Draw Your Love: one partner sketches a prompt on their phone (privately, timed); the
+// finished drawing then appears for the other to guess from a free-text answer. Role
+// alternates every round, same shape as Wavelength's psychic/guesser split.
+export type DrawPrompt = { id: string; text: string }
+export type DrawStroke = [number, number][] // points normalized 0..1 within the canvas
+
+export type DrawRound = {
+  index: number // 1-based
+  drawer: PlayerId
+  promptId: string
+  strokes: DrawStroke[]   // [] until the drawer submits (or times out with nothing)
+  guess: string | null
+  correct: boolean | null // set at reveal — the guess matched the prompt
+}
+export type DrawGame = {
+  rounds: DrawRound[]     // exactly DRAW.rounds, prompt + drawer generated up front
+  current: number         // 0-based index into rounds — which one is live
+}
+
 export type SessionState = {
   seed: number
   phase: Phase
   phaseEndsAt: number | null // absolute epoch ms; null = untimed
   players: Record<PlayerId, { name: string; connected: boolean }>
-  meld: MeldResult | null
   gapActs: GapAct[]
   listActs: ListAct[]
   finger: FingerGame | null
   wave: WaveGame | null
-  meldWords: string[] // every word either player typed, incl. misses
-  seedWords: string[]
+  draw: DrawGame | null
   themes: Theme[]
   fingerStatements: string[]
   spectrums: WaveSpectrum[]
+  drawPrompts: DrawPrompt[]
   game: Game
 }
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
-  | { type: 'SUBMIT_WORD'; player: PlayerId; word: string }
   // One item is live at a time. Each side locks a slot on it the instant they tap one —
   // no changing your mind, and a slot already spent on an earlier item can't be reused.
   | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
@@ -125,32 +123,35 @@ export type Action =
   // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.
   | { type: 'SUBMIT_CLUE'; player: PlayerId; text: string }
   | { type: 'SUBMIT_GUESS'; player: PlayerId; value: number }
+  // Draw Your Love: the drawer's finished sketch (empty strokes on a timeout), then the
+  // guesser's one text guess at the prompt.
+  | { type: 'SUBMIT_DRAWING'; player: PlayerId; strokes: DrawStroke[] }
+  | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
 export function initialState(
   seed: number,
-  seedWords: string[] = DEFAULT_SEEDS,
   themes: Theme[] = [],
   game: Game = 'full',
   fingerStatements: string[] = [],
   spectrums: WaveSpectrum[] = [],
+  drawPrompts: DrawPrompt[] = [],
 ): SessionState {
   return {
     seed,
     phase: 'JOIN',
     phaseEndsAt: null,
     players: { A: { name: '', connected: false }, B: { name: '', connected: false } },
-    meld: null,
     gapActs: [],
     listActs: [],
     finger: null,
     wave: null,
-    meldWords: [],
-    seedWords,
+    draw: null,
     themes,
     fingerStatements,
     spectrums,
+    drawPrompts,
     game,
   }
 }

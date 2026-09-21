@@ -35,7 +35,6 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
   const act = currentAct(s)
   const key = [
     s.phase,
-    s.meld?.rounds.length ?? 0,
     s.listActs.length,
     act?.placeIndex ?? 0,
   ].join('|')

@@ -13,7 +13,7 @@ export function PickerScreen({ prompt, children }: { prompt: string; children: R
         {children}
       </div>
       <div className="text-xs uppercase tracking-widest text-fg/30 border-t-2 border-fg/80 pt-3">
-        Greybox · Mind Meld · Shortlist
+        Greybox · a couples game night
       </div>
     </div>
   )

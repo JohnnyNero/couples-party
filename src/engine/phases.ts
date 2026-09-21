@@ -1,9 +1,6 @@
 import type { Phase } from './state'
 
 export const DURATIONS: Partial<Record<Phase, number>> = {
-  MELD_TYPE: 20000,
-  MELD_REVEAL: 4000,
-  MELD_RESULT: 6000,
   LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
   LIST_REVEAL: 15000,
   FINGER_ROUND: 15000,  // read it, think about it, decide privately
@@ -13,10 +10,10 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   WAVE_GUESS: 20000,  // dragging one slider is faster than that
   WAVE_REVEAL: 5000,
   WAVE_RESULT: 6000,
-}
-
-export const MELD = {
-  roundCap: 7,
+  DRAW_SKETCH: 40000, // one phone, one finger, one prompt
+  DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
+  DRAW_REVEAL: 6000,
+  DRAW_RESULT: 6000,
 }
 
 export const LIST = {
@@ -34,4 +31,9 @@ export const WAVE = {
   clueMaxLen: 24,   // a clue, not a sentence
   targetMin: 5,     // kept off the literal poles — a target of 0 or 100 is no puzzle
   targetMax: 95,
+}
+
+export const DRAW = {
+  rounds: 6,        // three prompts each as the drawer
+  guessMaxLen: 30,  // a guess, not a sentence
 }

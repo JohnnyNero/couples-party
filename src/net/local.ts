@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { Action, Game, PlayerId, SessionState, Theme, WaveSpectrum } from '../engine/state'
+import type { Action, DrawPrompt, Game, PlayerId, SessionState, Theme, WaveSpectrum } from '../engine/state'
 import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 
@@ -24,13 +24,13 @@ function set(next: SessionState): void {
 }
 
 export function initLocal(
-  seedWords: string[],
   themes: Theme[],
   game: Game,
   fingerStatements: string[],
   spectrums: WaveSpectrum[],
+  drawPrompts: DrawPrompt[],
 ): void {
-  state = initialState(Math.floor(Math.random() * 1e9), seedWords, themes, game, fingerStatements, spectrums)
+  state = initialState(Math.floor(Math.random() * 1e9), themes, game, fingerStatements, spectrums, drawPrompts)
   // The human takes the first seat the moment the app opens; the bot claims the other.
   state = reduce(state, { type: 'JOIN', player: SOLO_PLAYER, name: 'Player 1' }, Date.now())
   emit()

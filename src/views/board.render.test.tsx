@@ -20,7 +20,7 @@ const act = (over: Partial<ListAct> = {}): ListAct => ({
 })
 
 const session = (phase: SessionState['phase'], a: ListAct): SessionState => ({
-  ...initialState(1, undefined, [{ id: 't001', text: 'seven things {name} would miss', pool: ITEMS }]),
+  ...initialState(1, [{ id: 't001', text: 'seven things {name} would miss', pool: ITEMS }]),
   phase,
   players: { A: { name: 'Sam', connected: true }, B: { name: 'Alex', connected: true } },
   listActs: [a],

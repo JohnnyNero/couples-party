@@ -1,4 +1,4 @@
-import type { FingerGame, ListAct, PlayerId, SessionState, WaveRound } from './state'
+import type { DrawRound, FingerGame, ListAct, PlayerId, SessionState, WaveRound } from './state'
 import { other } from './state'
 
 // An act outcome awards points on the spec's own numbers; the player ahead at the end
@@ -43,6 +43,13 @@ export function waveAward(round: WaveRound): Award {
   return { player: other(round.psychic), points: 1 }
 }
 
+// Draw Your Love: the guesser reads the drawing correctly or they don't — no partial
+// credit, no consolation for a miss, it's a fast, low-stakes round.
+export function drawAward(round: DrawRound): Award {
+  if (round.correct === null) return null
+  return round.correct ? { player: other(round.drawer), points: 2 } : null
+}
+
 export function standing(s: SessionState): Standing {
   const tally: Standing = { A: 0, B: 0 }
   for (const act of s.listActs) {
@@ -54,6 +61,10 @@ export function standing(s: SessionState): Standing {
   for (const round of s.wave?.rounds ?? []) {
     const wAward = waveAward(round)
     if (wAward) tally[wAward.player] += wAward.points
+  }
+  for (const round of s.draw?.rounds ?? []) {
+    const dAward = drawAward(round)
+    if (dAward) tally[dAward.player] += dAward.points
   }
   return tally
 }

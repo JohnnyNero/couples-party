@@ -14,7 +14,7 @@ export async function initNet(mode: PlayMode, game: Game): Promise<void> {
   solo = mode === 'solo'
   if (!solo) return playroom.initNet(mode, game)
   const packs = await loadPacks()
-  initLocal(packs.seedWords, packs.themes, game, packs.fingerStatements, packs.spectrums)
+  initLocal(packs.themes, game, packs.fingerStatements, packs.spectrums, packs.drawPrompts)
 }
 
 export function useSession(): SessionState {

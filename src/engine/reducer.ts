@@ -1,73 +1,11 @@
-import type { Action, FingerGame, ListAct, ListItem, MeldResult, MeldRound, PlayerId, SessionState, WaveGame } from './state'
+import type { Action, DrawGame, DrawStroke, FingerGame, ListAct, ListItem, PlayerId, SessionState, WaveGame } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { DURATIONS, FINGER, LIST, MELD, WAVE } from './phases'
+import { DRAW, DURATIONS, FINGER, LIST, WAVE } from './phases'
 import { lowestFreeSlot, usedSlots } from './list'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
-
-function beginMeld(state: SessionState, now: number): SessionState {
-  const rng = makeRng(state.seed)
-  const a = pick(rng, state.seedWords)
-  let b = pick(rng, state.seedWords)
-  let guard = 0
-  while (b === a && guard++ < 20) b = pick(rng, state.seedWords)
-  const meld: MeldResult = {
-    rounds: [{ index: 1, words: { A: null, B: null }, converged: false }],
-    roundsTaken: 0,
-    converged: false,
-    finalWord: null,
-    seedPair: [a, b],
-  }
-  return { ...clone(state), phase: 'MELD_TYPE', phaseEndsAt: now + DURATIONS.MELD_TYPE!, meld }
-}
-
-function currentRound(meld: MeldResult): MeldRound {
-  return meld.rounds[meld.rounds.length - 1]
-}
-
-function toMeldReveal(state: SessionState, now: number): SessionState {
-  const s = clone(state)
-  const round = currentRound(s.meld!)
-  round.converged = isMatch(round.words.A, round.words.B)
-  s.phase = 'MELD_REVEAL'
-  s.phaseEndsAt = now + DURATIONS.MELD_REVEAL!
-  return s
-}
-
-function isDoubleTimeout(r: MeldRound | undefined): boolean {
-  return !!r && r.words.A === null && r.words.B === null
-}
-
-// Mind Meld is a co-op warm-up: converging together is its own reward, but it does
-// not touch the leaderboard (the competitive acts are what score).
-function finalize(state: SessionState, now: number): SessionState {
-  const s = clone(state)
-  const meld = s.meld!
-  const round = currentRound(meld)
-  meld.roundsTaken = round.index
-  meld.converged = round.converged
-  meld.finalWord = round.converged ? round.words.A : null
-  s.phase = 'MELD_RESULT'
-  s.phaseEndsAt = now + DURATIONS.MELD_RESULT!
-  return s
-}
-
-function advanceReveal(state: SessionState, now: number): SessionState {
-  const meld = state.meld!
-  const round = currentRound(meld)
-  const prev = meld.rounds[meld.rounds.length - 2]
-  const twoDoubleTimeouts = isDoubleTimeout(round) && isDoubleTimeout(prev)
-  if (round.converged || round.index >= MELD.roundCap || twoDoubleTimeouts) {
-    return finalize(state, now)
-  }
-  const s = clone(state)
-  s.meld!.rounds.push({ index: round.index + 1, words: { A: null, B: null }, converged: false })
-  s.phase = 'MELD_TYPE'
-  s.phaseEndsAt = now + DURATIONS.MELD_TYPE!
-  return s
-}
 
 // ---------------------------------------------------------------- Act III · Shortlist
 
@@ -143,12 +81,12 @@ function timeoutPlace(state: SessionState, now: number): SessionState {
   return advancePlace(s, now)
 }
 
-// Act III runs twice, roles swapped. After the second run the session is out of built
-// acts (Act II and the souvenir land in later milestones).
+// Act III runs twice, roles swapped. After the second run, 'full' carries on into the
+// rest of the roster; any standalone game ends here.
 function afterListReveal(state: SessionState, now: number): SessionState {
   const first = state.listActs[0]
   if (state.listActs.length < 2) return beginList(state, now, other(first.author))
-  return finishSession(state)
+  return state.game === 'full' ? beginFinger(state, now) : finishSession(state)
 }
 
 function finishSession(state: SessionState): SessionState {
@@ -274,6 +212,67 @@ function advanceWave(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Draw Your Love
+
+function currentDrawRound(d: DrawGame) {
+  return d.rounds[d.current]
+}
+
+// Generated in full up front — prompt and drawer for every round — the same way Put a
+// Finger Down and Wavelength pre-pick their whole schedule.
+function beginDraw(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const rng = makeRng(s.seed ^ 0xd001)
+  const prompts = shuffled(rng, s.drawPrompts)
+  const rounds = Array.from({ length: DRAW.rounds }, (_, i) => ({
+    index: i + 1,
+    drawer: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
+    promptId: prompts[i % Math.max(prompts.length, 1)]?.id ?? '',
+    strokes: [] as DrawStroke[],
+    guess: null,
+    correct: null,
+  }))
+  s.draw = { rounds, current: 0 }
+  s.phase = 'DRAW_SKETCH'
+  s.phaseEndsAt = now + DURATIONS.DRAW_SKETCH!
+  return s
+}
+
+function toDrawGuess(state: SessionState, now: number, strokes: DrawStroke[]): SessionState {
+  const s = clone(state)
+  currentDrawRound(s.draw!).strokes = strokes
+  s.phase = 'DRAW_GUESS'
+  s.phaseEndsAt = now + DURATIONS.DRAW_GUESS!
+  return s
+}
+
+function toDrawReveal(state: SessionState, now: number, guess: string): SessionState {
+  const s = clone(state)
+  const round = currentDrawRound(s.draw!)
+  const prompt = s.drawPrompts.find((p) => p.id === round.promptId)
+  round.guess = guess
+  round.correct = isMatch(guess, prompt?.text ?? null)
+  s.phase = 'DRAW_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.DRAW_REVEAL!
+  return s
+}
+
+// Six prompts, then it's over — three rounds each as the drawer.
+function advanceDraw(state: SessionState, now: number): SessionState {
+  const d = state.draw!
+  if (d.current >= DRAW.rounds - 1) {
+    const s = clone(state)
+    s.phase = 'DRAW_RESULT'
+    s.phaseEndsAt = now + DURATIONS.DRAW_RESULT!
+    return s
+  }
+  const s = clone(state)
+  s.draw!.current += 1
+  s.phase = 'DRAW_SKETCH'
+  s.phaseEndsAt = now + DURATIONS.DRAW_SKETCH!
+  return s
+}
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   switch (action.type) {
     case 'JOIN': {
@@ -281,23 +280,14 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
       if (both && s.phase === 'JOIN') {
-        // No stake to agree on anymore — straight into the first act. 'list' skips to
-        // Shortlist, 'finger' to Put a Finger Down, 'wave' to Wavelength; 'full' and
-        // 'meld' start on Mind Meld.
+        // Straight into the first act. 'list'/'finger'/'wave'/'draw' skip to that one
+        // game; 'full' runs the whole roster, starting with Shortlist.
         if (s.game === 'list') return beginList(s, now, 'A')
         if (s.game === 'finger') return beginFinger(s, now)
         if (s.game === 'wave') return beginWave(s, now)
-        return beginMeld(s, now)
+        if (s.game === 'draw') return beginDraw(s, now)
+        return beginList(s, now, 'A')
       }
-      return s
-    }
-    case 'SUBMIT_WORD': {
-      if (state.phase !== 'MELD_TYPE') return state
-      const s = clone(state)
-      const round = currentRound(s.meld!)
-      round.words[action.player] = action.word
-      s.meldWords.push(action.word)
-      if (round.words.A !== null && round.words.B !== null) return toMeldReveal(s, now)
       return s
     }
     case 'PLACE_ITEM': {
@@ -348,24 +338,45 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const value = Math.max(0, Math.min(100, Math.round(action.value)))
       return toWaveReveal(state, now, value)
     }
+    case 'SUBMIT_DRAWING': {
+      if (state.phase !== 'DRAW_SKETCH') return state
+      const d = state.draw
+      if (!d) return state
+      const round = currentDrawRound(d)
+      if (action.player !== round.drawer) return state
+      return toDrawGuess(state, now, action.strokes)
+    }
+    case 'SUBMIT_DRAW_GUESS': {
+      if (state.phase !== 'DRAW_GUESS') return state
+      const d = state.draw
+      if (!d) return state
+      const round = currentDrawRound(d)
+      if (action.player !== other(round.drawer) || round.guess !== null) return state
+      const text = action.text.trim().slice(0, DRAW.guessMaxLen)
+      return toDrawReveal(state, now, text)
+    }
     case 'TIMEOUT': {
       switch (state.phase) {
-        case 'MELD_TYPE': return toMeldReveal(state, now)
-        case 'MELD_REVEAL': return advanceReveal(state, now)
-        // 'meld' is meld-only: the session ends here instead of moving on to Shortlist.
-        case 'MELD_RESULT': return state.game === 'meld' ? finishSession(state) : beginList(state, now, 'A')
         case 'LIST_PLACE': return timeoutPlace(state, now)
         case 'LIST_REVEAL': return afterListReveal(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
         case 'FINGER_REVEAL': return advanceFinger(state, now)
-        case 'FINGER_RESULT': return finishSession(state)
+        // 'full' carries on into Wavelength; a standalone game ends here.
+        case 'FINGER_RESULT': return state.game === 'full' ? beginWave(state, now) : finishSession(state)
         // A clue nobody gave still lets the round play out — a blind guess costs nothing
         // it wouldn't have anyway.
         case 'WAVE_CLUE': return toWaveGuess(state, now, currentWaveRound(state.wave!).clue ?? '(no clue)')
         // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
         case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
         case 'WAVE_REVEAL': return advanceWave(state, now)
-        case 'WAVE_RESULT': return finishSession(state)
+        // 'full' carries on into Draw Your Love; a standalone game ends here.
+        case 'WAVE_RESULT': return state.game === 'full' ? beginDraw(state, now) : finishSession(state)
+        // A drawing nobody finished still lets the round play out — sketching nothing.
+        case 'DRAW_SKETCH': return toDrawGuess(state, now, currentDrawRound(state.draw!).strokes)
+        // A guess nobody made just misses — an empty guess never accidentally matches.
+        case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
+        case 'DRAW_REVEAL': return advanceDraw(state, now)
+        case 'DRAW_RESULT': return finishSession(state)
         default: return state
       }
     }

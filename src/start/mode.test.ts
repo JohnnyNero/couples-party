@@ -11,10 +11,10 @@ describe('resolveMode', () => {
 })
 
 describe('resolveGame', () => {
-  it('returns full/meld/list for ?game=…', () => {
+  it('returns full/list/draw for ?game=…', () => {
     expect(resolveGame('?game=full')).toBe('full')
-    expect(resolveGame('?game=meld')).toBe('meld')
     expect(resolveGame('?game=list')).toBe('list')
+    expect(resolveGame('?game=draw')).toBe('draw')
   })
   it('returns null when absent or unknown', () => {
     expect(resolveGame('')).toBe(null)

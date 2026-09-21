@@ -7,12 +7,7 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
       <PickButton
         onClick={() => onPick('full')}
         title="The full session"
-        sub="Mind Meld · Shortlist, twice over"
-      />
-      <PickButton
-        onClick={() => onPick('meld')}
-        title="Mind Meld only"
-        sub="Just the co-op warm-up"
+        sub="Shortlist, Finger Down, Wavelength, Draw Your Love"
       />
       <PickButton
         onClick={() => onPick('list')}
@@ -28,6 +23,11 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
         onClick={() => onPick('wave')}
         title="Wavelength"
         sub="One clue, one dial · read their mind"
+      />
+      <PickButton
+        onClick={() => onPick('draw')}
+        title="Draw Your Love"
+        sub="Sketch it, guess it · six prompts"
       />
     </PickerScreen>
   )

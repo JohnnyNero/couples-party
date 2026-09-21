@@ -11,28 +11,6 @@ export function DebugBar({ s }: { s: SessionState }) {
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[0.7rem] bg-bg/90 border border-fg/20 p-2">
       <button className={btn} onClick={() => dispatch({ type: 'TIMEOUT' })}>skip</button>
-      {s.phase === 'MELD_TYPE' && (
-        <>
-          <button
-            className={btn}
-            onClick={() => {
-              dispatch({ type: 'SUBMIT_WORD', player: 'A', word: 'debugone' })
-              dispatch({ type: 'SUBMIT_WORD', player: 'B', word: 'debugtwo' })
-            }}
-          >
-            fill-both
-          </button>
-          <button
-            className={btn}
-            onClick={() => {
-              dispatch({ type: 'SUBMIT_WORD', player: 'A', word: 'samesame' })
-              dispatch({ type: 'SUBMIT_WORD', player: 'B', word: 'samesame' })
-            }}
-          >
-            converge
-          </button>
-        </>
-      )}
       <ListButtons s={s} btn={btn} />
       {s.phase === 'FINGER_ROUND' && (
         <button
@@ -60,6 +38,30 @@ export function DebugBar({ s }: { s: SessionState }) {
             type: 'SUBMIT_GUESS',
             player: other(s.wave!.rounds[s.wave!.current].psychic),
             value: Math.floor(Math.random() * 101),
+          })}
+        >
+          fill-guess
+        </button>
+      )}
+      {s.phase === 'DRAW_SKETCH' && s.draw && (
+        <button
+          className={btn}
+          onClick={() => dispatch({
+            type: 'SUBMIT_DRAWING',
+            player: s.draw!.rounds[s.draw!.current].drawer,
+            strokes: [[[0.2, 0.2], [0.8, 0.8]]],
+          })}
+        >
+          fill-drawing
+        </button>
+      )}
+      {s.phase === 'DRAW_GUESS' && s.draw && (
+        <button
+          className={btn}
+          onClick={() => dispatch({
+            type: 'SUBMIT_DRAW_GUESS',
+            player: other(s.draw!.rounds[s.draw!.current].drawer),
+            text: 'a guess',
           })}
         >
           fill-guess
