@@ -1,8 +1,8 @@
-import type { Action, FingerGame, ListAct, MeldResult, MeldRound, PlayerId, SessionState } from './state'
+import type { Action, FingerGame, ListAct, MeldResult, MeldRound, PlayerId, SessionState, WaveGame } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { DURATIONS, FINGER, LIST, MELD } from './phases'
+import { DURATIONS, FINGER, LIST, MELD, WAVE } from './phases'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -238,6 +238,72 @@ function advanceFinger(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Wavelength
+
+function currentWaveRound(w: WaveGame) {
+  return w.rounds[w.current]
+}
+
+// Generated in full up front — spectrum, psychic and hidden target for every round —
+// the same way Put a Finger Down pre-picks its five statements, and for the same
+// reason: exactly WAVE.rounds rounds happen, no branching on how any of them go.
+function beginWave(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const rng = makeRng(s.seed ^ 0xa001)
+  const spectrums = shuffled(rng, s.spectrums)
+  const rounds = Array.from({ length: WAVE.rounds }, (_, i) => {
+    const spectrum = spectrums[i % Math.max(spectrums.length, 1)]
+    const span = WAVE.targetMax - WAVE.targetMin
+    return {
+      index: i + 1,
+      psychic: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
+      spectrumId: spectrum?.id ?? '',
+      target: WAVE.targetMin + Math.round(rng() * span),
+      clue: null,
+      guess: null,
+      distance: null,
+    }
+  })
+  s.wave = { rounds, current: 0 }
+  s.phase = 'WAVE_CLUE'
+  s.phaseEndsAt = now + DURATIONS.WAVE_CLUE!
+  return s
+}
+
+function toWaveGuess(state: SessionState, now: number, clue: string): SessionState {
+  const s = clone(state)
+  currentWaveRound(s.wave!).clue = clue
+  s.phase = 'WAVE_GUESS'
+  s.phaseEndsAt = now + DURATIONS.WAVE_GUESS!
+  return s
+}
+
+function toWaveReveal(state: SessionState, now: number, guess: number): SessionState {
+  const s = clone(state)
+  const round = currentWaveRound(s.wave!)
+  round.guess = guess
+  round.distance = Math.abs(round.target - guess)
+  s.phase = 'WAVE_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.WAVE_REVEAL!
+  return s
+}
+
+// Seven rounds, then it's over — the official 2-player co-op variant's own length.
+function advanceWave(state: SessionState, now: number): SessionState {
+  const w = state.wave!
+  if (w.current >= WAVE.rounds - 1) {
+    const s = clone(state)
+    s.phase = 'WAVE_RESULT'
+    s.phaseEndsAt = now + DURATIONS.WAVE_RESULT!
+    return s
+  }
+  const s = clone(state)
+  s.wave!.current += 1
+  s.phase = 'WAVE_CLUE'
+  s.phaseEndsAt = now + DURATIONS.WAVE_CLUE!
+  return s
+}
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   switch (action.type) {
     case 'JOIN': {
@@ -246,9 +312,11 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const both = s.players.A.connected && s.players.B.connected
       if (both && s.phase === 'JOIN') {
         // No stake to agree on anymore — straight into the first act. 'list' skips to
-        // Shortlist, 'finger' to Put a Finger Down; 'full' and 'meld' start on Mind Meld.
+        // Shortlist, 'finger' to Put a Finger Down, 'wave' to Wavelength; 'full' and
+        // 'meld' start on Mind Meld.
         if (s.game === 'list') return beginList(s, now, 'A')
         if (s.game === 'finger') return beginFinger(s, now)
+        if (s.game === 'wave') return beginWave(s, now)
         return beginMeld(s, now)
       }
       return s
@@ -329,6 +397,25 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       if (sr.applies.A !== null && sr.applies.B !== null) return toFingerReveal(s, now)
       return s
     }
+    case 'SUBMIT_CLUE': {
+      if (state.phase !== 'WAVE_CLUE') return state
+      const w = state.wave
+      if (!w) return state
+      const round = currentWaveRound(w)
+      if (action.player !== round.psychic || round.clue !== null) return state
+      const text = action.text.trim().slice(0, WAVE.clueMaxLen)
+      if (text.length === 0) return state
+      return toWaveGuess(state, now, text)
+    }
+    case 'SUBMIT_GUESS': {
+      if (state.phase !== 'WAVE_GUESS') return state
+      const w = state.wave
+      if (!w) return state
+      const round = currentWaveRound(w)
+      if (action.player !== other(round.psychic) || round.guess !== null) return state
+      const value = Math.max(0, Math.min(100, Math.round(action.value)))
+      return toWaveReveal(state, now, value)
+    }
     case 'TIMEOUT': {
       switch (state.phase) {
         case 'MELD_TYPE': return toMeldReveal(state, now)
@@ -342,6 +429,13 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         case 'FINGER_ROUND': return toFingerReveal(state, now)
         case 'FINGER_REVEAL': return advanceFinger(state, now)
         case 'FINGER_RESULT': return finishSession(state)
+        // A clue nobody gave still lets the round play out — a blind guess costs nothing
+        // it wouldn't have anyway.
+        case 'WAVE_CLUE': return toWaveGuess(state, now, currentWaveRound(state.wave!).clue ?? '(no clue)')
+        // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
+        case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
+        case 'WAVE_REVEAL': return advanceWave(state, now)
+        case 'WAVE_RESULT': return finishSession(state)
         default: return state
       }
     }

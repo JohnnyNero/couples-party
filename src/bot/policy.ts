@@ -121,6 +121,22 @@ export function nextBotAction(
       return { type: 'SUBMIT_FINGER', player: me, applies: rng() < 0.55 }
     }
 
+    case 'WAVE_CLUE': {
+      const w = s.wave
+      if (!w) return null
+      const round = w.rounds[w.current]
+      if (round.psychic !== me || round.clue !== null) return null
+      return { type: 'SUBMIT_CLUE', player: me, text: pickFrom(rng, brain.nouns) }
+    }
+
+    case 'WAVE_GUESS': {
+      const w = s.wave
+      if (!w) return null
+      const round = w.rounds[w.current]
+      if (other(round.psychic) !== me || round.guess !== null) return null
+      return { type: 'SUBMIT_GUESS', player: me, value: Math.floor(rng() * 101) }
+    }
+
     default:
       return null
   }
@@ -138,6 +154,8 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'LIST_SWAP': return spread(3000, 8000)
     case 'LIST_PLACE': return spread(2500, 8000)
     case 'FINGER_ROUND': return spread(2000, 6000)
+    case 'WAVE_CLUE': return spread(3000, 9000)
+    case 'WAVE_GUESS': return spread(2000, 7000)
     default: return 1000
   }
 }

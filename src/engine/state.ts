@@ -9,7 +9,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // Which acts this session runs. 'full' is the whole night; the rest skip straight to one
 // game, for a shorter session or for testing a single act in isolation.
-export type Game = 'full' | 'meld' | 'list' | 'finger'
+export type Game = 'full' | 'meld' | 'list' | 'finger' | 'wave'
 
 export type Phase =
   | 'BOOT' | 'JOIN'
@@ -17,6 +17,7 @@ export type Phase =
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_WRITE' | 'LIST_SWAP' | 'LIST_PLACE' | 'LIST_REVEAL'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
+  | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
   | 'DONE' // terminal placeholder until later acts extend the flow
 
@@ -80,6 +81,24 @@ export type FingerGame = {
   fingersLeft: Record<PlayerId, number>
 }
 
+// Wavelength: a spectrum (two opposed poles), a hidden target on it, a one-word clue
+// from that round's psychic, and the other player's guess. Role alternates every round.
+export type WaveSpectrum = { id: string; low: string; high: string }
+
+export type WaveRound = {
+  index: number // 1-based
+  psychic: PlayerId
+  spectrumId: string
+  target: number         // 0..100, hidden from the guesser until reveal
+  clue: string | null
+  guess: number | null   // 0..100
+  distance: number | null // |target - guess|, set at reveal
+}
+export type WaveGame = {
+  rounds: WaveRound[]     // exactly WAVE.rounds, generated up front
+  current: number         // 0-based index into rounds — which one is live
+}
+
 export type SessionState = {
   seed: number
   phase: Phase
@@ -89,10 +108,12 @@ export type SessionState = {
   gapActs: GapAct[]
   listActs: ListAct[]
   finger: FingerGame | null
+  wave: WaveGame | null
   meldWords: string[] // every word either player typed, incl. misses
   seedWords: string[]
   themes: Theme[]
   fingerStatements: string[]
+  spectrums: WaveSpectrum[]
   game: Game
 }
 
@@ -108,6 +129,9 @@ export type Action =
   | { type: 'SUBMIT_ORDER'; player: PlayerId; order: string[] }
   // Put a Finger Down: a private yes/no to the round's statement. No changing your mind.
   | { type: 'SUBMIT_FINGER'; player: PlayerId; applies: boolean }
+  // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.
+  | { type: 'SUBMIT_CLUE'; player: PlayerId; text: string }
+  | { type: 'SUBMIT_GUESS'; player: PlayerId; value: number }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
@@ -117,6 +141,7 @@ export function initialState(
   themes: Theme[] = [],
   game: Game = 'full',
   fingerStatements: string[] = [],
+  spectrums: WaveSpectrum[] = [],
 ): SessionState {
   return {
     seed,
@@ -127,10 +152,12 @@ export function initialState(
     gapActs: [],
     listActs: [],
     finger: null,
+    wave: null,
     meldWords: [],
     seedWords,
     themes,
     fingerStatements,
+    spectrums,
     game,
   }
 }

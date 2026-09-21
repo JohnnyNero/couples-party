@@ -117,4 +117,23 @@ describe('the bot plays a whole session through the real reducer', () => {
     expect(s.finger?.fingersLeft.B).toBeGreaterThanOrEqual(0)
     expect(s.finger?.rounds.every((round) => round.applies.A !== null && round.applies.B !== null)).toBe(true)
   })
+
+  it('also gets a Wavelength session to DONE with all seven rounds resolved', () => {
+    const r = makeRng(17)
+    const spectrums = [{ id: 'w01', low: 'Boring', high: 'Thrilling' }, { id: 'w02', low: 'Cheap', high: 'Expensive' }]
+    let s = initialState(7, undefined, [], 'wave', [], spectrums)
+    let steps = 0
+    while (s.phase !== 'DONE' && steps++ < 400) {
+      const a = nextBotAction(s, 'A', BRAIN, r)
+      const b = nextBotAction(s, 'B', BRAIN, r)
+      const before = s
+      if (a) s = reduce(s, a, steps)
+      if (b) s = reduce(s, b, steps)
+      if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+    }
+    expect(s.phase).toBe('DONE')
+    expect(s.wave?.rounds).toHaveLength(7)
+    expect(s.wave?.rounds.every((round) => round.clue !== null && round.guess !== null)).toBe(true)
+    expect(s.wave?.rounds.every((round) => round.distance !== null)).toBe(true)
+  })
 })

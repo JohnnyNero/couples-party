@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "spectrums": [
+    { "id": "w01", "low": "Waste of time", "high": "Good use of time" },
+    { "id": "w02", "low": "Boring first date", "high": "Unforgettable first date" },
+    { "id": "w03", "low": "Way too spicy", "high": "Not spicy at all" },
+    { "id": "w04", "low": "Underrated", "high": "Overrated" },
+    { "id": "w05", "low": "Forgettable", "high": "Unforgettable" },
+    { "id": "w06", "low": "Cheap date", "high": "Expensive date" },
+    { "id": "w07", "low": "Totally predictable", "high": "Completely shocking" },
+    { "id": "w08", "low": "Not a big deal", "high": "A really big deal" },
+    { "id": "w09", "low": "Instant ick", "high": "Instant crush" },
+    { "id": "w10", "low": "Low effort", "high": "High effort" },
+    { "id": "w11", "low": "Too clingy", "high": "Too distant" },
+    { "id": "w12", "low": "Small talk", "high": "Deep talk" },
+    { "id": "w13", "low": "Guilty pleasure", "high": "Nothing to be ashamed of" },
+    { "id": "w14", "low": "Red flag", "high": "Green flag" },
+    { "id": "w15", "low": "Should stay a secret", "high": "Should be public knowledge" },
+    { "id": "w16", "low": "Overthinking it", "high": "Not thinking about it enough" }
+  ]
+}

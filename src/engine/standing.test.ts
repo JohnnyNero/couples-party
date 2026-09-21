@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { initialState, type FingerGame, type ListAct, type PlayerId } from './state'
-import { listAward, standing, leader, fingerAward } from './standing'
+import { initialState, type FingerGame, type ListAct, type PlayerId, type WaveRound } from './state'
+import { listAward, standing, leader, fingerAward, waveAward } from './standing'
 
 const act = (author: PlayerId, displacement: number | null): ListAct => ({
   author, themeId: 't001', pool: [], items: [], swapDone: true, displacement,
@@ -10,6 +10,10 @@ const withActs = (...acts: ListAct[]) => ({ ...initialState(1), listActs: acts }
 
 const finger = (a: number, b: number): FingerGame => ({
   rounds: [], current: 0, fingersLeft: { A: a, B: b },
+})
+
+const wRound = (psychic: PlayerId, distance: number | null): WaveRound => ({
+  index: 1, psychic, spectrumId: 'w01', target: 50, clue: 'x', guess: 50, distance,
 })
 
 describe('listAward', () => {
@@ -44,6 +48,25 @@ describe('fingerAward', () => {
   })
 })
 
+describe('waveAward', () => {
+  it('awards the psychic on a bullseye, tapering with distance', () => {
+    expect(waveAward(wRound('A', 0))).toEqual({ player: 'A', points: 3 })
+    expect(waveAward(wRound('A', 5))).toEqual({ player: 'A', points: 2 })
+    expect(waveAward(wRound('A', 15))).toEqual({ player: 'A', points: 1 })
+  })
+  it('moves nothing in the middle band', () => {
+    expect(waveAward(wRound('A', 16))).toBe(null)
+    expect(waveAward(wRound('A', 30))).toBe(null)
+  })
+  it('gives the guesser a point on a very wide miss', () => {
+    expect(waveAward(wRound('A', 31))).toEqual({ player: 'B', points: 1 })
+    expect(waveAward(wRound('B', 90))).toEqual({ player: 'A', points: 1 })
+  })
+  it('awards nothing for an unresolved round', () => {
+    expect(waveAward(wRound('A', null))).toBe(null)
+  })
+})
+
 describe('standing', () => {
   it('is zero-zero before anything resolves', () => {
     expect(standing(initialState(1))).toEqual({ A: 0, B: 0 })
@@ -60,5 +83,9 @@ describe('standing', () => {
   it('folds in Put a Finger Down alongside Shortlist', () => {
     const s = { ...withActs(act('A', 0)), finger: finger(1, 4) }
     expect(standing(s)).toEqual({ A: 3, B: 2 }) // A's 3 from Shortlist, B's 2 from fingers
+  })
+  it('sums Wavelength across every round played so far', () => {
+    const s = { ...initialState(1), wave: { rounds: [wRound('A', 0), wRound('B', 5), wRound('A', null)], current: 2 } }
+    expect(standing(s)).toEqual({ A: 3, B: 2 }) // A's bullseye (3), B's close guess (2); round 3 unresolved
   })
 })

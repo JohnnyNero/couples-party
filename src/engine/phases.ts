@@ -11,6 +11,10 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   FINGER_ROUND: 15000,  // read it, think about it, decide privately
   FINGER_REVEAL: 4000,
   FINGER_RESULT: 6000,
+  WAVE_CLUE: 25000,   // the psychic has to come up with a whole clue
+  WAVE_GUESS: 20000,  // dragging one slider is faster than that
+  WAVE_REVEAL: 5000,
+  WAVE_RESULT: 6000,
 }
 
 export const MELD = {
@@ -26,4 +30,11 @@ export const LIST = {
 export const FINGER = {
   rounds: 5,        // five statements, then it's over
   startFingers: 5,  // one hand — every round can matter
+}
+
+export const WAVE = {
+  rounds: 7,        // the official 2-player co-op variant's own length
+  clueMaxLen: 24,   // a clue, not a sentence
+  targetMin: 5,     // kept off the literal poles — a target of 0 or 100 is no puzzle
+  targetMax: 95,
 }

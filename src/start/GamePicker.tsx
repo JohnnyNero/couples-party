@@ -24,6 +24,11 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
         title="Put a Finger Down"
         sub="Five statements · least fingers down wins"
       />
+      <PickButton
+        onClick={() => onPick('wave')}
+        title="Wavelength"
+        sub="One clue, one dial · read their mind"
+      />
     </PickerScreen>
   )
 }

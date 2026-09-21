@@ -46,6 +46,26 @@ export function DebugBar({ s }: { s: SessionState }) {
           fill-both
         </button>
       )}
+      {s.phase === 'WAVE_CLUE' && s.wave && (
+        <button
+          className={btn}
+          onClick={() => dispatch({ type: 'SUBMIT_CLUE', player: s.wave!.rounds[s.wave!.current].psychic, text: 'debug clue' })}
+        >
+          fill-clue
+        </button>
+      )}
+      {s.phase === 'WAVE_GUESS' && s.wave && (
+        <button
+          className={btn}
+          onClick={() => dispatch({
+            type: 'SUBMIT_GUESS',
+            player: other(s.wave!.rounds[s.wave!.current].psychic),
+            value: Math.floor(Math.random() * 101),
+          })}
+        >
+          fill-guess
+        </button>
+      )}
       <span className="px-2 uppercase tracking-wider text-fg/50">{s.phase}</span>
     </div>
   )

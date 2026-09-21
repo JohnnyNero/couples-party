@@ -14,7 +14,13 @@ import { useRecordSession } from '../store/useRecordSession'
 // phones at once off phaseEndsAt, so nothing invents a winner.
 // Phases where the controller is only a waiting state: the board should have the screen
 // to itself rather than sitting in the top 44% with an empty panel beneath it.
-const BOARD_LED = new Set(['MELD_REVEAL', 'MELD_RESULT', 'LIST_REVEAL', 'FINGER_REVEAL', 'FINGER_RESULT', 'DONE'])
+const BOARD_LED = new Set([
+  'MELD_REVEAL', 'MELD_RESULT',
+  'LIST_REVEAL',
+  'FINGER_REVEAL', 'FINGER_RESULT',
+  'WAVE_REVEAL', 'WAVE_RESULT',
+  'DONE',
+])
 // Phases whose board is just a theme line and a small stat, but whose controller is the
 // real interaction (a pool of items, a drag list) — the board takes only what its own
 // content needs instead of a fixed share, so the controller gets the rest.

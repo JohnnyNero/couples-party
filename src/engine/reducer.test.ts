@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
-import { FINGER } from './phases'
+import { FINGER, WAVE } from './phases'
 
 const bothConnected = () => {
   let s = initialState(1)
@@ -345,6 +345,13 @@ describe('game selection', () => {
     expect(s.phase).toBe('FINGER_ROUND')
     expect(s.meld).toBe(null)
   })
+  it('wave-only: both joining goes straight to WAVE_CLUE', () => {
+    let s = initialState(1, undefined, [], 'wave', [], SPECTRUMS)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    expect(s.phase).toBe('WAVE_CLUE')
+    expect(s.meld).toBe(null)
+  })
 })
 
 // ---------------------------------------------------------------- Put a Finger Down
@@ -413,5 +420,90 @@ describe('put a finger down', () => {
     }
     expect(s.phase).toBe('FINGER_RESULT')
     expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers - 2 })
+  })
+})
+
+// ---------------------------------------------------------------- Wavelength
+
+const SPECTRUMS = [
+  { id: 'w01', low: 'Boring', high: 'Thrilling' },
+  { id: 'w02', low: 'Cheap', high: 'Expensive' },
+  { id: 'w03', low: 'Predictable', high: 'Shocking' },
+]
+
+const atWaveClue = () => {
+  let s = initialState(1, undefined, [], 'wave', [], SPECTRUMS)
+  s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+  return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+}
+
+describe('wavelength', () => {
+  it('opens on round 1 of 7, A as psychic, and a 25s clock', () => {
+    const s = atWaveClue()
+    expect(s.phase).toBe('WAVE_CLUE')
+    expect(s.phaseEndsAt).toBe(1000 + 25000)
+    expect(s.wave?.current).toBe(0)
+    expect(s.wave?.rounds).toHaveLength(WAVE.rounds)
+    expect(s.wave?.rounds[0].psychic).toBe('A')
+    expect(s.wave?.rounds[0].target).toBeGreaterThanOrEqual(WAVE.targetMin)
+    expect(s.wave?.rounds[0].target).toBeLessThanOrEqual(WAVE.targetMax)
+  })
+  it('alternates psychic every round', () => {
+    const s = atWaveClue()
+    expect(s.wave!.rounds.map((r) => r.psychic)).toEqual(['A', 'B', 'A', 'B', 'A', 'B', 'A'])
+  })
+  it('ignores a clue from the guesser', () => {
+    let s = atWaveClue()
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'nope' }, 2000)
+    expect(s.phase).toBe('WAVE_CLUE')
+    expect(s.wave?.rounds[0].clue).toBe(null)
+  })
+  it('a clue from the psychic opens the guess, and locks the clue', () => {
+    let s = atWaveClue()
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
+    expect(s.phase).toBe('WAVE_GUESS')
+    expect(s.phaseEndsAt).toBe(2000 + 20000)
+    expect(s.wave?.rounds[0].clue).toBe('ocean')
+  })
+  it('ignores a guess from the psychic', () => {
+    let s = atWaveClue()
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
+    s = reduce(s, { type: 'SUBMIT_GUESS', player: 'A', value: 40 }, 2500)
+    expect(s.phase).toBe('WAVE_GUESS')
+    expect(s.wave?.rounds[0].guess).toBe(null)
+  })
+  it('a guess from the guesser reveals, with distance computed and the value clamped', () => {
+    let s = atWaveClue()
+    const target = s.wave!.rounds[0].target
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
+    s = reduce(s, { type: 'SUBMIT_GUESS', player: 'B', value: 150 }, 3000) // out of range
+    expect(s.phase).toBe('WAVE_REVEAL')
+    expect(s.phaseEndsAt).toBe(3000 + 5000)
+    expect(s.wave?.rounds[0].guess).toBe(100) // clamped to the 0..100 scale
+    expect(s.wave?.rounds[0].distance).toBe(Math.abs(target - 100))
+  })
+  it('a clue nobody gives still lets the round play out, on timeout', () => {
+    let s = atWaveClue()
+    s = reduce(s, { type: 'TIMEOUT' }, 5000) // clue -> guess, no clue given
+    expect(s.phase).toBe('WAVE_GUESS')
+    expect(s.wave?.rounds[0].clue).toBe('(no clue)')
+    s = reduce(s, { type: 'TIMEOUT' }, 6000) // guess -> reveal, defaults to dead centre
+    expect(s.phase).toBe('WAVE_REVEAL')
+    expect(s.wave?.rounds[0].guess).toBe(50)
+  })
+  it('advances through all seven rounds to WAVE_RESULT, then DONE', () => {
+    let s = atWaveClue()
+    for (let r = 0; r < WAVE.rounds; r++) {
+      const round = s.wave!.rounds[s.wave!.current]
+      s = reduce(s, { type: 'SUBMIT_CLUE', player: round.psychic, text: 'clue' }, 1000)
+      const guesser = round.psychic === 'A' ? 'B' : 'A'
+      s = reduce(s, { type: 'SUBMIT_GUESS', player: guesser, value: round.target }, 1000) // dead on
+      expect(s.phase).toBe('WAVE_REVEAL')
+      expect(s.wave!.rounds[s.wave!.current].distance).toBe(0)
+      s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    }
+    expect(s.phase).toBe('WAVE_RESULT')
+    s = reduce(s, { type: 'TIMEOUT' }, 1000)
+    expect(s.phase).toBe('DONE')
   })
 })
