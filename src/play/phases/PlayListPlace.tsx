@@ -27,25 +27,27 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
       <div className="rounded-2xl bg-fg text-bg px-5 py-6 text-xl font-bold uppercase tracking-tight text-center shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
         {item.text}
       </div>
-      <div className="grid grid-cols-4 gap-2.5 flex-1 content-start">
-        {SLOTS.map((n) => {
-          const taken = used.has(n)
-          return (
-            <button
-              key={n}
-              disabled={taken}
-              onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
-              className={
-                'min-h-[64px] rounded-2xl text-2xl font-bold tabular-nums border-2 active:translate-y-px ' +
-                (taken
-                  ? 'border-fg/10 text-fg/20'
-                  : 'border-fg/20 bg-accent text-bg shadow-[3px_3px_0_rgba(0,0,0,0.18)]')
-              }
-            >
-              {n}
-            </button>
-          )
-        })}
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <div className="grid grid-cols-4 gap-3 w-full max-w-sm">
+          {SLOTS.map((n) => {
+            const taken = used.has(n)
+            return (
+              <button
+                key={n}
+                disabled={taken}
+                onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
+                className={
+                  'aspect-square rounded-2xl text-3xl font-bold tabular-nums border-2 active:translate-y-px ' +
+                  (taken
+                    ? 'border-fg/10 text-fg/20'
+                    : 'border-fg/20 bg-accent text-bg shadow-[3px_3px_0_rgba(0,0,0,0.18)]')
+                }
+              >
+                {n}
+              </button>
+            )
+          })}
+        </div>
       </div>
       <div className="text-xs uppercase tracking-wide text-fg/40 text-center">1st down to 7th — tap one, it's locked</div>
     </div>
