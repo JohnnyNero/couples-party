@@ -42,11 +42,6 @@ export default {
           '70%': { transform: 'translateY(1px) scale(1.1)', opacity: '1' },
           '100%': { transform: 'translateY(0) scale(1)' },
         },
-        // A drawn stroke inking itself in (paired with pathLength=1 + dash offset).
-        'draw-in': {
-          from: { strokeDashoffset: '1' },
-          to: { strokeDashoffset: '0' },
-        },
       },
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',

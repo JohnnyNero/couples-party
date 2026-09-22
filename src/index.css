@@ -20,6 +20,15 @@ body {
 /* The whole app is a fixed board — never rubber-band or scroll the page itself. */
 #root { overflow: hidden; }
 
+/* A drawn stroke inking itself in (DrawingCanvas, paired with pathLength=1 so the dash
+   offset is a 0..1 fraction of the stroke). Applied via inline `style` with a per-stroke
+   delay, not a Tailwind utility class, so it's a plain global @keyframes rather than a
+   theme() entry — Tailwind only emits keyframes for ones an actual utility class uses. */
+@keyframes draw-in {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
