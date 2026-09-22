@@ -1,21 +1,18 @@
-import list from '../packs/list.json'
-import finger from '../packs/finger.json'
-import wave from '../packs/wave.json'
-import draw from '../packs/draw.json'
 import type { DrawPrompt, Theme, WaveSpectrum } from './engine/state'
+import { parseContent } from './content'
 
-// Content never lives in code. Everything the engine needs from the packs is loaded
-// once at boot and carried into the session state.
+const CONTENT_URL = `${import.meta.env.BASE_URL}content/game-content.md`
+
+// Content never lives in code — it's one plain-text file (content/game-content.md)
+// anyone can edit directly on GitHub, fetched fresh at boot and parsed into what the
+// engine needs. See parseContent for the format.
 export async function loadPacks(): Promise<{
   themes: Theme[]
   fingerStatements: string[]
   spectrums: WaveSpectrum[]
   drawPrompts: DrawPrompt[]
 }> {
-  return {
-    themes: (list as { themes: Theme[] }).themes,
-    fingerStatements: (finger as { statements: string[] }).statements,
-    spectrums: (wave as { spectrums: WaveSpectrum[] }).spectrums,
-    drawPrompts: (draw as { prompts: DrawPrompt[] }).prompts,
-  }
+  const res = await fetch(CONTENT_URL)
+  const text = await res.text()
+  return parseContent(text)
 }
