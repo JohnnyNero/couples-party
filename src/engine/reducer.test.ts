@@ -55,6 +55,15 @@ const pastIntro = (s: SessionState) =>
 
 const atListPlace = () => pastIntro(bothJoined())
 
+// The reveal has no clock — it is walked item by item. Tap it all the way off the end.
+const tapThroughReveal = (state: SessionState) => {
+  let s = state
+  for (let i = 0; i < 20 && s.phase === 'LIST_REVEAL'; i++) {
+    s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 4000)
+  }
+  return s
+}
+
 // Places every remaining item, both sides, at the given slots (1..7, in item order).
 // `actual` is the ranker's slots, `predicted` the author's guesses.
 const placeAll = (state: SessionState, actual: number[], predicted: number[]) => {
@@ -133,6 +142,46 @@ describe('act III · placement', () => {
   })
 })
 
+describe('act III · the reveal walks item by item', () => {
+  const order = [1, 2, 3, 4, 5, 6, 7]
+  const atReveal = () => placeAll(atListPlace(), order, order)
+
+  it('opens on the first item with no clock — nothing hurries the arguing', () => {
+    const s = atReveal()
+    expect(s.phase).toBe('LIST_REVEAL')
+    expect(s.listActs[0].revealIndex).toBe(0)
+    expect(s.phaseEndsAt).toBe(null)
+  })
+  it('steps one item per tap, from either player', () => {
+    let s = atReveal()
+    s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 4000)
+    expect(s.listActs[0].revealIndex).toBe(1)
+    s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'B' }, 4000)
+    expect(s.listActs[0].revealIndex).toBe(2)
+    expect(s.phase).toBe('LIST_REVEAL')
+  })
+  it('tapping past the last item ends the act rather than running off the end', () => {
+    let s = atReveal()
+    for (let i = 0; i < 6; i++) s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 4000)
+    expect(s.listActs[0].revealIndex).toBe(6) // the seventh and last item
+    expect(s.phase).toBe('LIST_REVEAL')
+    s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 5000)
+    expect(s.phase).toBe('LIST_INTRO') // straight into run 2's theme card
+    expect(s.listActs).toHaveLength(2)
+  })
+  it('ignores a tap from any other phase', () => {
+    const s = atListPlace()
+    expect(reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 2000)).toBe(s)
+  })
+  it('run 2 starts its own reveal back at the first item', () => {
+    let s = tapThroughReveal(atReveal())
+    s = pastIntro(s)
+    s = placeAll(s, order, order)
+    expect(s.listActs[1].revealIndex).toBe(0)
+    expect(s.listActs[0].revealIndex).toBe(6) // run 1's record is untouched
+  })
+})
+
 describe('act III · reveal and alternation', () => {
   it('sums displacement across the seven items', () => {
     const s = placeAll(atListPlace(), [1, 2, 3, 4, 5, 6, 7], [2, 1, 3, 4, 5, 7, 6])
@@ -140,7 +189,7 @@ describe('act III · reveal and alternation', () => {
   })
   it('runs the act again with the roles swapped, on a different theme', () => {
     let s = placeAll(atListPlace(), [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = reduce(s, { type: 'TIMEOUT' }, 4000) // reveal -> run 2
+    s = tapThroughReveal(s) // reveal -> run 2
     expect(s.phase).toBe('LIST_INTRO') // run 2's own theme card
     expect(s.listActs).toHaveLength(2)
     expect(s.listActs[1].author).toBe('B')
@@ -149,11 +198,11 @@ describe('act III · reveal and alternation', () => {
   })
   it('a full session carries on into Put a Finger Down after the second run', () => {
     let s = placeAll(atListPlace(), [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
+    s = tapThroughReveal(s) // run 2 begins
     s = placeAll(s, [7, 6, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 6, 7])
     expect(s.phase).toBe('LIST_REVEAL')
     expect(s.listActs[1].displacement).toBe(24) // the worst read available
-    s = reduce(s, { type: 'TIMEOUT' }, 5000)
+    s = tapThroughReveal(s)
     expect(s.phase).toBe('FINGER_ROUND') // not DONE — 'full' keeps going
   })
   it('a standalone Shortlist-only session ends after the second run', () => {
@@ -161,10 +210,10 @@ describe('act III · reveal and alternation', () => {
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
+    s = tapThroughReveal(s) // run 2 begins
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     expect(s.phase).toBe('LIST_REVEAL')
-    s = reduce(s, { type: 'TIMEOUT' }, 5000)
+    s = tapThroughReveal(s)
     expect(s.phase).toBe('DONE')
     expect(s.phaseEndsAt).toBe(null)
   })
@@ -183,9 +232,9 @@ describe('game selection', () => {
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = reduce(s, { type: 'TIMEOUT' }, 4000) // run 2 begins
+    s = tapThroughReveal(s) // run 2 begins
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = reduce(s, { type: 'TIMEOUT' }, 5000)
+    s = tapThroughReveal(s)
     expect(s.phase).toBe('DONE')
   })
   it('finger-only: both joining goes straight to FINGER_ROUND', () => {

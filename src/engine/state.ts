@@ -43,6 +43,7 @@ export type ListAct = {
   themeId: string
   items: ListItem[]              // exactly 7, drawn at random and revealed one at a time
   placeIndex: number             // 0-based — which item is currently live in LIST_PLACE
+  revealIndex: number            // 0-based — how far the reveal has been tapped through
   displacement: number | null    // 0..24, set at LIST_REVEAL
 }
 
@@ -127,6 +128,9 @@ export type Action =
   // guesser's one text guess at the prompt.
   | { type: 'SUBMIT_DRAWING'; player: PlayerId; strokes: DrawStroke[] }
   | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }
+  // Shortlist's reveal walks the items one at a time, on a tap from either player —
+  // there's no clock on it, so an argument about item four can run as long as it likes.
+  | { type: 'ADVANCE_REVEAL'; player: PlayerId }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 

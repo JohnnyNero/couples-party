@@ -1,55 +1,86 @@
 import type { PlayerId, SessionState } from '../../engine/state'
-import { currentAct, currentItem, usedSlots, SLOTS } from '../../engine/list'
+import { currentAct, currentItem, slotContents, SLOTS } from '../../engine/list'
 import { dispatch } from '../../net'
 import { themeText } from '../../views/list'
-import { PlayWaiting } from './PlayWaiting'
 
-// Items come up one at a time. Tap a slot and it's locked immediately — no dragging, no
-// changing your mind, and a slot already spent on an earlier item can't be reused. The
-// author guesses where the ranker will put it; the ranker gives the real answer.
+// Items come up one at a time. Tap a rank and the item drops into it, so the ladder
+// fills in front of you and the next call is made against the list you've already
+// built rather than from memory. A rank is spent once it holds something — no dragging,
+// no changing your mind. The author guesses where the ranker will put each item; the
+// ranker gives the real answer.
 export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
   const act = currentAct(s)!
   const item = currentItem(act)!
   const byAuthor = me === act.author
   const placed = byAuthor ? item.predictedSlot !== null : item.actualSlot !== null
-  const used = usedSlots(act, byAuthor)
-
-  if (placed) return <PlayWaiting label="Locked in — waiting on them" />
+  const filled = slotContents(act, byAuthor)
 
   return (
-    <div className="h-full flex flex-col p-5 gap-3">
-      <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-1">
-          Item {act.placeIndex + 1} of {SLOTS.length} · {byAuthor ? 'guess where they\'ll rank it' : 'rank it for real'}
+    <div className="h-full flex flex-col p-4 gap-3">
+      <div className="shrink-0">
+        <div className="flex items-baseline justify-between gap-2 text-[0.6rem] uppercase tracking-[0.25em] mb-1">
+          <span className="text-fg/40">Item {act.placeIndex + 1} of {SLOTS.length}</span>
+          <span className="text-accent font-bold shrink-0">
+            {byAuthor ? 'Your guess' : 'For real'}
+          </span>
         </div>
         <div className="text-sm uppercase tracking-wide text-fg/50 truncate">{themeText(s, act)}</div>
       </div>
-      <div className="rounded-2xl bg-fg text-bg px-5 py-6 text-xl font-bold uppercase tracking-tight text-center shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
-        {item.text}
+
+      {/* The item in hand. Once it's placed it's down in the ladder, so the card goes
+          quiet rather than sitting there looking tappable. */}
+      <div
+        className={
+          'shrink-0 rounded-2xl px-4 text-center uppercase tracking-tight ' +
+          (placed
+            ? 'py-2 text-xs font-bold text-fg/35 border-2 border-dashed border-fg/15'
+            : 'py-4 text-xl font-bold bg-fg text-bg shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
+        }
+      >
+        {placed ? 'Locked in — waiting on them' : item.text}
       </div>
-      <div className="flex-1 min-h-0 flex items-center justify-center">
-        <div className="grid grid-cols-4 gap-3 w-full max-w-sm">
-          {SLOTS.map((n) => {
-            const taken = used.has(n)
-            return (
-              <button
-                key={n}
-                disabled={taken}
-                onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
+
+      {/* The rows share out whatever height is left rather than sitting in a clump with
+          dead space under the card — seven fat tap targets, no scrolling. */}
+      <div className="flex-1 min-h-0 flex flex-col gap-1.5">
+        {SLOTS.map((n) => {
+          const sitting = filled.get(n)
+          const isLive = sitting?.id === item.id
+          return (
+            <button
+              key={n}
+              disabled={!!sitting || placed}
+              onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
+              className={
+                'flex-1 min-h-[44px] flex items-center gap-3 rounded-xl border-2 px-3 text-left transition-colors ' +
+                (isLive
+                  ? 'border-accent bg-accent text-bg animate-pop'
+                  : sitting
+                    ? 'border-fg/15 bg-fg/5 text-fg/70'
+                    : placed
+                      ? 'border-fg/10 text-fg/25'
+                      : 'border-fg/20 text-fg active:translate-y-px active:bg-accent/15')
+              }
+            >
+              <span
                 className={
-                  'aspect-square rounded-2xl text-3xl font-bold tabular-nums border-2 active:translate-y-px ' +
-                  (taken
-                    ? 'border-fg/10 text-fg/20'
-                    : 'border-fg/20 bg-accent text-bg shadow-[3px_3px_0_rgba(0,0,0,0.18)]')
+                  'w-7 shrink-0 text-2xl font-bold tabular-nums ' +
+                  (isLive ? 'text-bg' : sitting ? 'text-fg/40' : 'text-accent')
                 }
               >
                 {n}
-              </button>
-            )
-          })}
-        </div>
+              </span>
+              <span className="flex-1 min-w-0 truncate text-sm uppercase tracking-wide">
+                {sitting?.text ?? ''}
+              </span>
+            </button>
+          )
+        })}
       </div>
-      <div className="text-xs uppercase tracking-wide text-fg/40 text-center">1st down to 7th — tap one, it's locked</div>
+
+      <div className="shrink-0 text-xs uppercase tracking-wide text-fg/40 text-center">
+        {placed ? 'They\'re still placing theirs' : '1 is top — tap a rank and it\'s locked'}
+      </div>
     </div>
   )
 }

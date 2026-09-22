@@ -9,10 +9,12 @@ export function AnimatedNumber({
   value,
   from = 0,
   durationMs = 600,
+  delayMs = 0,
 }: {
   value: number
   from?: number
   durationMs?: number
+  delayMs?: number
 }) {
   const [display, setDisplay] = useState(from)
   const shown = useRef<number | null>(null)
@@ -24,10 +26,12 @@ export function AnimatedNumber({
       shown.current = value
       return
     }
-    const startedAt = performance.now()
+    // A delay lets the number wait for whatever is revealing above it, rather than
+    // counting up past a value the screen hasn't shown yet.
+    const startedAt = performance.now() + delayMs
     let raf = 0
     const tick = (now: number) => {
-      const t = Math.min(1, (now - startedAt) / durationMs)
+      const t = Math.min(1, Math.max(0, (now - startedAt) / durationMs))
       const eased = 1 - Math.pow(1 - t, 3) // ease-out cubic
       setDisplay(Math.round(start + (value - start) * eased))
       if (t < 1) raf = requestAnimationFrame(tick)
@@ -35,7 +39,7 @@ export function AnimatedNumber({
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `from`/`durationMs` are fixed per call site
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `from`/`durationMs`/`delayMs` are fixed per call site
   }, [value])
 
   return <>{display}</>

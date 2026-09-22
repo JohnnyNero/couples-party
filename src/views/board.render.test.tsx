@@ -15,6 +15,7 @@ const act = (over: Partial<ListAct> = {}): ListAct => ({
   themeId: 't001',
   items: ITEMS.map((text, i) => ({ id: `A${i}`, text, actualSlot: null, predictedSlot: null })),
   placeIndex: 0,
+  revealIndex: 0,
   displacement: null,
   ...over,
 })
@@ -30,9 +31,13 @@ const session = (phase: SessionState['phase'], a: ListAct): SessionState => ({
 const halfPlaced = () =>
   act({ items: act().items.map((i, n) => (n === 0 ? { ...i, actualSlot: 1 } : i)) })
 
-const revealed = () =>
+// Every item placed, and the reveal tapped all the way to the last one. The ranker put
+// them 1..7; the author guessed one slot later each time, wrapping — so six items are a
+// single place out (1 point each) and the last is miles off.
+const revealed = (revealIndex = 6) =>
   act({
     placeIndex: 6,
+    revealIndex,
     displacement: 4,
     items: act().items.map((i, n) => ({ ...i, actualSlot: n + 1, predictedSlot: ((n + 1) % 7) + 1 })),
   })
@@ -65,11 +70,19 @@ describe('board renders every Act III phase', () => {
     expect(html).toContain('<svg') // the theme's glyph, drawn not fetched
   })
 
-  it('shows the whole list, both columns and the award at the reveal', () => {
+  it('shows the whole list, both columns and the running score once the reveal is walked', () => {
     const html = renderToStaticMarkup(<BoardStage s={session('LIST_REVEAL', revealed())} />)
     for (const text of ITEMS) expect(html).toContain(text)
-    expect(html).toContain('Displacement')
-    expect(html).toContain('Sam +1') // displacement 4 → author takes 1
+    // Sam authored the act, so Alex does the real ranking and Sam does the guessing.
+    expect(html).toContain('Alex ranked')
+    expect(html).toContain('Sam guessed')
+  })
+
+  it('reveals one item at a time, holding the rest back', () => {
+    const html = renderToStaticMarkup(<BoardStage s={session('LIST_REVEAL', revealed(1))} />)
+    expect(html).toContain(ITEMS[0])
+    expect(html).toContain(ITEMS[1])
+    for (const text of ITEMS.slice(2)) expect(html).not.toContain(text)
   })
 })
 
@@ -82,11 +95,16 @@ describe('controllers render for both players', () => {
     }
   })
 
-  it('shows the live item to whichever side has not placed it, and a waiting message to whoever has', () => {
+  it('shows each side its own ladder and never the other side\'s', () => {
+    // B (the ranker) has put the live item in slot 1. A (the author) has placed nothing.
     const s = session('LIST_PLACE', halfPlaced())
-    // B (the ranker) already locked in the live item's real slot.
-    expect(renderToStaticMarkup(<Controller s={s} me="B" />)).not.toContain(ITEMS[0])
-    // A (the author) has not guessed yet.
-    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain(ITEMS[0])
+    const forRanker = renderToStaticMarkup(<Controller s={s} me="B" />)
+    const forAuthor = renderToStaticMarkup(<Controller s={s} me="A" />)
+    // B sees their own placement sitting in the ladder, and is told to wait.
+    expect(forRanker).toContain(ITEMS[0])
+    expect(forRanker).toContain('still placing')
+    // A sees the item to place and an empty ladder — nothing of B's choice leaks across.
+    expect(forAuthor).toContain(ITEMS[0])
+    expect(forAuthor).not.toContain('still placing')
   })
 })

@@ -38,7 +38,7 @@ function beginList(state: SessionState, now: number, author: PlayerId): SessionS
   while (items.length < LIST.items) {
     items.push({ id: `${author}${items.length}`, text: LIST.blank, actualSlot: null, predictedSlot: null })
   }
-  s.listActs.push({ author, themeId, items, placeIndex: 0, displacement: null })
+  s.listActs.push({ author, themeId, items, placeIndex: 0, revealIndex: 0, displacement: null })
   // The theme card first: both phones show the same thing, nobody is asked for
   // anything, and the first item doesn't land on someone still reading the theme.
   s.phase = 'LIST_INTRO'
@@ -53,15 +53,28 @@ function toListPlace(state: SessionState, now: number): SessionState {
   return s
 }
 
-function toReveal(state: SessionState, now: number): SessionState {
+function toReveal(state: SessionState): SessionState {
   const s = clone(state)
   const act = currentList(s)!
   act.displacement = act.items.reduce(
     (sum, i) => sum + Math.abs((i.actualSlot ?? 0) - (i.predictedSlot ?? 0)),
     0,
   )
+  act.revealIndex = 0
   s.phase = 'LIST_REVEAL'
-  s.phaseEndsAt = now + DURATIONS.LIST_REVEAL!
+  // No clock. The reveal goes item by item on a tap, so nothing cuts an argument short.
+  s.phaseEndsAt = null
+  return s
+}
+
+// One tap walks the reveal to the next item, or off the end of the act. Either player
+// can drive it — they're looking at the same list.
+function advanceReveal(state: SessionState, now: number): SessionState {
+  const act = currentList(state)
+  if (!act) return state
+  if (act.revealIndex >= act.items.length - 1) return afterListReveal(state, now)
+  const s = clone(state)
+  currentList(s)!.revealIndex += 1
   return s
 }
 
@@ -73,7 +86,7 @@ const bothPlaced = (item: ListItem): boolean =>
 function advancePlace(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const act = currentList(s)!
-  if (act.placeIndex >= act.items.length - 1) return toReveal(s, now)
+  if (act.placeIndex >= act.items.length - 1) return toReveal(s)
   act.placeIndex += 1
   s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
   return s
@@ -364,11 +377,15 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const text = action.text.trim().slice(0, DRAW.guessMaxLen)
       return toDrawReveal(state, now, text)
     }
+    case 'ADVANCE_REVEAL': {
+      if (state.phase !== 'LIST_REVEAL') return state
+      return advanceReveal(state, now)
+    }
     case 'TIMEOUT': {
       switch (state.phase) {
         case 'LIST_INTRO': return toListPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)
-        case 'LIST_REVEAL': return afterListReveal(state, now)
+        case 'LIST_REVEAL': return advanceReveal(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
         case 'FINGER_REVEAL': return advanceFinger(state, now)
         // 'full' carries on into Wavelength; a standalone game ends here.

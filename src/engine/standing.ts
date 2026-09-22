@@ -1,4 +1,4 @@
-import type { DrawRound, FingerGame, ListAct, PlayerId, SessionState, WaveRound } from './state'
+import type { DrawRound, FingerGame, ListAct, ListItem, PlayerId, SessionState, WaveRound } from './state'
 import { other } from './state'
 
 // An act outcome awards points on the spec's own numbers; the player ahead at the end
@@ -10,15 +10,25 @@ export type Standing = Record<PlayerId, number>
 
 export type Award = { player: PlayerId; points: number } | null
 
-// Spec, Act III scoring: 0 → author 3, 1–4 → author 1, 5–12 → nothing,
-// 13+ → ranker 1 (being read that badly deserves something).
+// Act III scores item by item, to the author — they're the one guessing how they're
+// read. Three for landing on the ranker's exact slot, one for being a single place out,
+// nothing beyond that.
+export function listItemPoints(item: ListItem): number {
+  if (item.actualSlot === null || item.predictedSlot === null) return 0
+  const gap = Math.abs(item.actualSlot - item.predictedSlot)
+  if (gap === 0) return 3
+  if (gap === 1) return 1
+  return 0
+}
+
+// Only the items the reveal has actually walked past count, so the running total on the
+// reveal screen and the leaderboard in the header are the same number — the score climbs
+// as the items turn over instead of landing all at once.
 export function listAward(act: ListAct): Award {
-  const d = act.displacement
-  if (d === null) return null
-  if (d === 0) return { player: act.author, points: 3 }
-  if (d <= 4) return { player: act.author, points: 1 }
-  if (d <= 12) return null
-  return { player: other(act.author), points: 1 }
+  if (act.displacement === null) return null // still being placed
+  const shown = act.items.slice(0, act.revealIndex + 1)
+  const points = shown.reduce((n, item) => n + listItemPoints(item), 0)
+  return points === 0 ? null : { player: act.author, points }
 }
 
 // Put a Finger Down: whoever has more fingers left after five rounds takes it — level

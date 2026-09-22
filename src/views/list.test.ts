@@ -3,7 +3,7 @@ import { initialState, type ListAct } from '../engine/state'
 import { themeText, rankerOf } from './list'
 
 const act: ListAct = {
-  author: 'A', themeId: 't001', items: [], placeIndex: 0, displacement: null,
+  author: 'A', themeId: 't001', items: [], placeIndex: 0, revealIndex: 0, displacement: null,
 }
 
 describe('themeText', () => {

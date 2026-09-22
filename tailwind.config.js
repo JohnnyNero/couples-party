@@ -30,6 +30,13 @@ export default {
           '60%': { transform: 'scale(1.12)', opacity: '1' },
           '100%': { transform: 'scale(1)' },
         },
+        // A value held back behind a delay, then landing — starts fully hidden, unlike
+        // `pop`, so nothing leaks while the delay runs.
+        'reveal-pop': {
+          '0%': { transform: 'scale(0.6)', opacity: '0' },
+          '60%': { transform: 'scale(1.15)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
         // A finger going down.
         'finger-fold': {
           '0%': { transform: 'rotate(0deg) scale(1)' },
@@ -46,6 +53,7 @@ export default {
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',
         pop: 'pop 320ms cubic-bezier(0.34,1.56,0.64,1) both',
+        'reveal-pop': 'reveal-pop 380ms cubic-bezier(0.34,1.56,0.64,1) both',
         'finger-fold': 'finger-fold 420ms ease-in-out both',
         'drop-in': 'drop-in 420ms cubic-bezier(0.34,1.56,0.64,1) both',
       },

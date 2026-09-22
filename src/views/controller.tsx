@@ -2,6 +2,7 @@ import type { PlayerId, SessionState } from '../engine/state'
 import { phaseKey } from './phaseKey'
 import { PlayJoin } from '../play/phases/PlayJoin'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
+import { PlayListReveal } from '../play/phases/PlayListReveal'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
 import { PlayWaveClue } from '../play/phases/PlayWaveClue'
 import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
@@ -29,7 +30,7 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':
-      return <PlayWaiting label="See the board" />
+      return <PlayListReveal s={s} me={me} />
     case 'FINGER_ROUND':
       return <PlayFingerRound s={s} me={me} />
     case 'FINGER_REVEAL':

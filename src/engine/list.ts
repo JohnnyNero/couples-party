@@ -1,4 +1,4 @@
-import type { ListAct, PlayerId, SessionState } from './state'
+import type { ListAct, ListItem, PlayerId, SessionState } from './state'
 import { LIST } from './phases'
 
 // Pure helpers over an Act III record, shared by the reducer and both renderers.
@@ -25,6 +25,17 @@ export function usedSlots(act: ListAct, byAuthor: boolean): Set<number> {
     if (slot !== null) used.add(slot)
   }
   return used
+}
+
+// What one side has parked in each slot so far, keyed by slot number — the ladder on
+// the placing screen is this map rendered top to bottom.
+export function slotContents(act: ListAct, byAuthor: boolean): Map<number, ListItem> {
+  const filled = new Map<number, ListItem>()
+  for (const item of act.items) {
+    const slot = byAuthor ? item.predictedSlot : item.actualSlot
+    if (slot !== null) filled.set(slot, item)
+  }
+  return filled
 }
 
 export function lowestFreeSlot(act: ListAct, byAuthor: boolean): number {

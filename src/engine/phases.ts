@@ -3,7 +3,7 @@ import type { Phase } from './state'
 export const DURATIONS: Partial<Record<Phase, number>> = {
   LIST_INTRO: 4000,   // the theme card, read once before the items start
   LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
-  LIST_REVEAL: 15000,
+  // LIST_REVEAL has no clock: it is tapped through item by item.
   FINGER_ROUND: 15000,  // read it, think about it, decide privately
   FINGER_REVEAL: 4000,
   FINGER_RESULT: 6000,
