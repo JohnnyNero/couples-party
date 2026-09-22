@@ -39,6 +39,7 @@ const revealed = () =>
 
 describe('board renders every Act III phase', () => {
   const cases: Array<[SessionState['phase'], ListAct]> = [
+    ['LIST_INTRO', act()],
     ['LIST_PLACE', halfPlaced()],
     ['LIST_REVEAL', revealed()],
     ['DONE', revealed()],
@@ -51,8 +52,17 @@ describe('board renders every Act III phase', () => {
   })
 
   it('never shows the items on the board while they are still being ranked', () => {
-    const html = renderToStaticMarkup(<BoardStage s={session('LIST_PLACE', halfPlaced())} />)
-    for (const text of ITEMS) expect(html).not.toContain(text)
+    for (const phase of ['LIST_INTRO', 'LIST_PLACE'] as const) {
+      const html = renderToStaticMarkup(<BoardStage s={session(phase, halfPlaced())} />)
+      for (const text of ITEMS) expect(html).not.toContain(text)
+    }
+  })
+
+  it('opens the act on the theme, named after the author, with its own icon', () => {
+    const html = renderToStaticMarkup(<BoardStage s={session('LIST_INTRO', act())} />)
+    expect(html).toContain('seven things Sam would miss')
+    expect(html).not.toContain('{name}')
+    expect(html).toContain('<svg') // the theme's glyph, drawn not fetched
   })
 
   it('shows the whole list, both columns and the award at the reveal', () => {
@@ -64,7 +74,7 @@ describe('board renders every Act III phase', () => {
 })
 
 describe('controllers render for both players', () => {
-  const phases = ['LIST_PLACE', 'LIST_REVEAL'] as const
+  const phases = ['LIST_INTRO', 'LIST_PLACE', 'LIST_REVEAL'] as const
   it.each(phases)('%s renders for author and ranker', (phase) => {
     const a = phase === 'LIST_PLACE' ? halfPlaced() : act()
     for (const me of ['A', 'B'] as const) {

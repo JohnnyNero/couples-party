@@ -2,6 +2,7 @@ import type { SessionState } from '../engine/state'
 import { DRAW, FINGER, WAVE } from '../engine/phases'
 import { phaseKey } from './phaseKey'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
+import { ScreenListIntro } from '../screen/phases/ScreenListIntro'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
 import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
@@ -23,6 +24,7 @@ export function railText(s: SessionState): string {
   if (s.phase === 'JOIN') return 'Lobby'
   if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
     const run = `Act III · Shortlist · ${s.listActs.length} of 2`
+    if (s.phase === 'LIST_INTRO') return `${run} · The theme`
     if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
   }
@@ -33,7 +35,7 @@ export function railText(s: SessionState): string {
     return `Wavelength · Round ${s.wave.rounds[s.wave.current].index} of ${WAVE.rounds}`
   }
   if (s.phase.startsWith('DRAW') && s.draw) {
-    return `Draw Your Love · Round ${s.draw.rounds[s.draw.current].index} of ${DRAW.rounds}`
+    return `Quick Draw · Round ${s.draw.rounds[s.draw.current].index} of ${DRAW.rounds}`
   }
   if (s.phase === 'DONE') return 'That\'s the session'
   return s.phase
@@ -51,6 +53,8 @@ function BoardStageContent({ s }: { s: SessionState }) {
   switch (s.phase) {
     case 'JOIN':
       return <ScreenJoin s={s} />
+    case 'LIST_INTRO':
+      return <ScreenListIntro s={s} />
     case 'LIST_PLACE':
       return <ScreenListPlace s={s} />
     case 'LIST_REVEAL':

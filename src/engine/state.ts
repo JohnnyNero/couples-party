@@ -9,7 +9,7 @@ export type Game = 'full' | 'list' | 'finger' | 'wave' | 'draw'
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
-  | 'LIST_PLACE' | 'LIST_REVEAL'
+  | 'LIST_INTRO' | 'LIST_PLACE' | 'LIST_REVEAL'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
@@ -77,7 +77,7 @@ export type WaveGame = {
   current: number         // 0-based index into rounds — which one is live
 }
 
-// Draw Your Love: one partner sketches a prompt on their phone (privately, timed); the
+// Quick Draw: one partner sketches a prompt on their phone (privately, timed); the
 // finished drawing then appears for the other to guess from a free-text answer. Role
 // alternates every round, same shape as Wavelength's psychic/guesser split.
 export type DrawPrompt = { id: string; text: string }
@@ -123,7 +123,7 @@ export type Action =
   // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.
   | { type: 'SUBMIT_CLUE'; player: PlayerId; text: string }
   | { type: 'SUBMIT_GUESS'; player: PlayerId; value: number }
-  // Draw Your Love: the drawer's finished sketch (empty strokes on a timeout), then the
+  // Quick Draw: the drawer's finished sketch (empty strokes on a timeout), then the
   // guesser's one text guess at the prompt.
   | { type: 'SUBMIT_DRAWING'; player: PlayerId; strokes: DrawStroke[] }
   | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }

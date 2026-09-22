@@ -19,7 +19,9 @@ function sectionFor(heading: string): Section {
     case 'shortlist': return 'shortlist'
     case 'put a finger down': return 'finger'
     case 'wavelength': return 'wavelength'
-    case 'draw your love': return 'draw'
+    // Renamed from 'Draw Your Love'; the old heading still parses so an older
+    // copy of the content file doesn't silently ship a game with no prompts.
+    case 'quick draw': case 'draw your love': return 'draw'
     default: return null
   }
 }

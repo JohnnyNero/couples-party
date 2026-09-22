@@ -24,6 +24,8 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
   switch (s.phase) {
     case 'JOIN':
       return <PlayJoin s={s} me={me} />
+    case 'LIST_INTRO':
+      return <PlayWaiting label="See the board" />
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':

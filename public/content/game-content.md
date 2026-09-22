@@ -11,14 +11,18 @@
   ---------------------------------------------------------------------------
   HOW TO WRITE ENTRIES  (read this before adding any — it is easy to get wrong)
 
+  These are games you play with your partner on the sofa before bed. Keep
+  everything short enough to read at a glance and obvious enough to have an
+  opinion about instantly.
+
   The game gives the SETUP. The players deliver the punchline. If a line is
   already funny on its own, it has done the players' job for them and there is
   nothing left to argue about.
 
   Shortlist items: 2-4 words. A bare thing. No commas, no "that", no "which".
-  All seven items in a theme should be the same shape (all nouns, or all
-  gerunds) so they can be compared at a glance — ranking seven items is 21
-  separate comparisons, so every extra word costs.
+  All items in a theme should be the same shape (all nouns, or all gerunds) so
+  they can be compared at a glance — ranking seven items is 21 separate
+  comparisons, so every extra word costs.
 
       no    the first coffee, before anyone speaks to them
       no    the shower that fogs up the whole flat
@@ -45,7 +49,8 @@
 
 # Shortlist
 
-Seven items are drawn from one theme and ranked. Keep 7+ per theme.
+Seven items are drawn from one theme and ranked. Keep 7+ per theme; 20 means
+the same theme plays differently every time.
 
 ## seven things {name} would struggle to give up
 - coffee
@@ -63,40 +68,55 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - sugar
 - ordering in
 - sex
+- crisps
+- their own bed
+- tea
+- scrolling
+- cheese
 
-## seven of {name}'s strongest opinions
+## seven things {name} will argue about
 - pineapple on pizza
 - tipping
 - horoscopes
 - socks in bed
-- how early to arrive
 - ketchup on eggs
-- toilet paper direction
-- cutting sandwiches
+- toilet roll direction
 - ice in drinks
-- texting speed
 - sharing food
 - room temperature
 - making the bed
 - dogs vs cats
-- public crying
+- queueing
+- who drives
+- film endings
+- the best crisp
+- loading the dishwasher
+- cutting sandwiches
+- tea strength
+- the aisle seat
+- parking
 
-## seven people {name} would call at 3am
-- their mum
-- their dad
-- their best friend
-- their sibling
-- their ex
-- the police
-- a taxi
-- their boss
-- an old friend
-- a locksmith
-- their therapist
-- no one
-- their grandma
-- whoever answers
-- me
+## seven things {name} is genuinely bad at
+- directions
+- reversing
+- waking up
+- keeping secrets
+- saying no
+- spelling
+- maths
+- whistling
+- lying
+- being on time
+- folding things
+- remembering names
+- throwing
+- taking photos
+- cooking rice
+- apologising
+- sitting still
+- packing light
+- phone calls
+- drawing
 
 ## seven of {name}'s small fears
 - unknown numbers
@@ -104,7 +124,6 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - the dentist
 - voice notes
 - being filmed
-- small talk
 - public speaking
 - their own voice
 - running out of battery
@@ -114,6 +133,12 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - heights
 - group photos
 - silence
+- needles
+- deep water
+- spiders
+- lifts
+- doorbells
+- flying
 
 ## seven things {name} always says
 - "two minutes"
@@ -131,6 +156,11 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - "we'll see"
 - "I'm awake"
 - "you choose"
+- "I'm listening"
+- "what's for dinner"
+- "in a minute"
+- "don't worry"
+- "I'll do it later"
 
 ## seven of {name}'s guilty pleasures
 - reality TV
@@ -140,7 +170,7 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - online shopping
 - cancelling plans
 - singing in the car
-- going to bed early
+- early nights
 - sad songs
 - celebrity drama
 - cheap wine
@@ -148,6 +178,11 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - eating in bed
 - romance novels
 - sexting
+- true crime
+- daytime TV
+- leftover cake
+- pretending to be busy
+- long baths
 
 ## seven ways to annoy {name} instantly
 - loud chewing
@@ -165,6 +200,11 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - humming
 - cold hands
 - tickling
+- borrowing their charger
+- touching their food
+- moving their stuff
+- being woken up
+- loud typing
 
 ## seven things {name} is secretly proud of
 - their parking
@@ -182,6 +222,33 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - their dance moves
 - their poker face
 - their flirting
+- their teeth
+- their accent
+- their taste
+- their driving
+- their gift wrapping
+
+## seven things that make {name} happy
+- sunshine
+- dogs
+- fresh sheets
+- a lie-in
+- fresh coffee
+- a full fridge
+- a compliment
+- an empty diary
+- free food
+- a clean kitchen
+- good news
+- holidays
+- live music
+- a good haircut
+- warm bread
+- the sea
+- babies
+- payday
+- a parcel arriving
+- being hugged
 
 ## seven things {name} finds attractive
 - confidence
@@ -199,6 +266,11 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - a nice smile
 - dancing
 - smelling good
+- kindness
+- a good laugh
+- glasses
+- ambition
+- being tall
 
 ## seven of {name}'s turn-offs
 - bad breath
@@ -209,13 +281,40 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 - clinginess
 - constant complaining
 - being cheap
-- lying
+- dishonesty
 - jealousy
 - bad kissing
 - socks on
 - posting everything online
 - bragging
 - mumbling
+- bad manners
+- negativity
+- flakiness
+- bad tipping
+- name dropping
+
+## the best cats, according to {name}
+- a tabby
+- a ginger
+- a black cat
+- a tuxedo
+- a calico
+- a siamese
+- a ragdoll
+- a sphynx
+- a maine coon
+- a persian
+- a kitten
+- a fat cat
+- a stray
+- a farm cat
+- a one-eyed cat
+- a very loud cat
+- an aloof cat
+- a lap cat
+- a scruffy cat
+- a huge fluffy cat
 
 
 # Put a Finger Down
@@ -223,7 +322,7 @@ Seven items are drawn from one theme and ranked. Keep 7+ per theme.
 Five are drawn per session. These are accusations — "you've done this" — not
 anecdotes. Keep them under ten words.
 
-- you've stolen the blanket tonight
+- you've stolen the blanket
 - you've eaten the last one and said nothing
 - you've said "five more minutes" and meant thirty
 - you've texted "k" as a whole reply
@@ -234,7 +333,6 @@ anecdotes. Keep them under ten words.
 - you've left a wet towel on the bed
 - you've scrolled through your phone mid-conversation
 - you've said "I'm not mad" while mad
-- you've googled it instead of asking them
 - you've cancelled plans to stay in
 - you've hidden a snack
 - you've blamed the dog
@@ -259,8 +357,10 @@ anecdotes. Keep them under ten words.
 
 # Wavelength
 
-Seven are drawn per session. Two poles, one or two words each — both ends have
-to be arguable.
+Seven are drawn per session. Two poles, one or two words each. One player sees
+a hidden mark somewhere on the line between them and has to NAME A THING that
+sits at that exact spot — so both ends have to be arguable, and everything in
+between has to be nameable.
 
 - Cold | Hot
 - Underrated | Overrated
@@ -271,7 +371,6 @@ to be arguable.
 - Forgettable | Unforgettable
 - Cringe | Cool
 - Red flag | Green flag
-- Bad kisser | Good kisser
 - Turn-off | Turn-on
 - Childish | Grown up
 - Tame | Wild
@@ -281,30 +380,44 @@ to be arguable.
 - Unromantic | Romantic
 - Rough | Gentle
 - Private | Public
-- Sober only | Drunk only
+- Quiet | Loud
+- Useless | Useful
+- Scary | Comforting
+- Cheap date | Fancy date
 
 
-# Draw Your Love
+# Quick Draw
 
-Six are drawn per session. One image, sketchable in 40 seconds.
+Six are drawn per session. One object, sketchable with a finger in 40 seconds.
+Ordinary things, not couple things — the joke is the drawing, not the prompt.
 
-- your bedhead
-- our first kiss
-- a bad date
-- you asleep
-- our dream house
-- me hungover
-- a romantic dinner
-- you on the phone
-- our future dog
-- a bad haircut
-- you dancing
-- me cooking
-- a perfect Sunday
-- you angry
-- date night
-- you in the shower
-- me flirting
-- our first date
-- you singing
-- me snoring
+- a cat
+- a rocket
+- a birthday cake
+- a bicycle
+- a lighthouse
+- a pineapple
+- an octopus
+- a robot
+- a haunted house
+- a snowman
+- a guitar
+- a hot air balloon
+- a dinosaur
+- a pizza slice
+- an umbrella
+- a tractor
+- a castle
+- a lawnmower
+- a penguin
+- a washing machine
+- a toaster
+- a shopping trolley
+- a hedgehog
+- a windmill
+- a traffic jam
+- a sandcastle
+- a submarine
+- a campfire
+- a spider web
+- a vacuum cleaner

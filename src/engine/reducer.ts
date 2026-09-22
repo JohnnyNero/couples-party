@@ -39,6 +39,15 @@ function beginList(state: SessionState, now: number, author: PlayerId): SessionS
     items.push({ id: `${author}${items.length}`, text: LIST.blank, actualSlot: null, predictedSlot: null })
   }
   s.listActs.push({ author, themeId, items, placeIndex: 0, displacement: null })
+  // The theme card first: both phones show the same thing, nobody is asked for
+  // anything, and the first item doesn't land on someone still reading the theme.
+  s.phase = 'LIST_INTRO'
+  s.phaseEndsAt = now + DURATIONS.LIST_INTRO!
+  return s
+}
+
+function toListPlace(state: SessionState, now: number): SessionState {
+  const s = clone(state)
   s.phase = 'LIST_PLACE'
   s.phaseEndsAt = now + DURATIONS.LIST_PLACE!
   return s
@@ -212,7 +221,7 @@ function advanceWave(state: SessionState, now: number): SessionState {
   return s
 }
 
-// ---------------------------------------------------------------- Draw Your Love
+// ---------------------------------------------------------------- Quick Draw
 
 function currentDrawRound(d: DrawGame) {
   return d.rounds[d.current]
@@ -357,6 +366,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
     }
     case 'TIMEOUT': {
       switch (state.phase) {
+        case 'LIST_INTRO': return toListPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)
         case 'LIST_REVEAL': return afterListReveal(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
@@ -369,7 +379,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
         case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
         case 'WAVE_REVEAL': return advanceWave(state, now)
-        // 'full' carries on into Draw Your Love; a standalone game ends here.
+        // 'full' carries on into Quick Draw; a standalone game ends here.
         case 'WAVE_RESULT': return state.game === 'full' ? beginDraw(state, now) : finishSession(state)
         // A drawing nobody finished still lets the round play out — sketching nothing.
         case 'DRAW_SKETCH': return toDrawGuess(state, now, currentDrawRound(state.draw!).strokes)

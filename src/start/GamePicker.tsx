@@ -7,7 +7,7 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
       <PickButton
         onClick={() => onPick('full')}
         title="The full session"
-        sub="Shortlist, Finger Down, Wavelength, Draw Your Love"
+        sub="Shortlist, Finger Down, Wavelength, Quick Draw"
       />
       <PickButton
         onClick={() => onPick('list')}
@@ -26,7 +26,7 @@ export function GamePicker({ onPick }: { onPick: (g: Game) => void }) {
       />
       <PickButton
         onClick={() => onPick('draw')}
-        title="Draw Your Love"
+        title="Quick Draw"
         sub="Sketch it, guess it · six prompts"
       />
     </PickerScreen>

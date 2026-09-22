@@ -67,16 +67,24 @@ describe('parseContent', () => {
     expect(spectrums).toHaveLength(1)
   })
 
-  it('parses Draw Your Love prompts', () => {
+  it('parses Quick Draw prompts', () => {
     const { drawPrompts } = parseContent(`
-# Draw Your Love
-- our first date
-- the way you dance
+# Quick Draw
+- a lighthouse
+- a shopping trolley
 `)
     expect(drawPrompts).toEqual([
-      { id: 'd01', text: 'our first date' },
-      { id: 'd02', text: 'the way you dance' },
+      { id: 'd01', text: 'a lighthouse' },
+      { id: 'd02', text: 'a shopping trolley' },
     ])
+  })
+
+  it('still parses the old Draw Your Love heading', () => {
+    const { drawPrompts } = parseContent(`
+# Draw Your Love
+- a lighthouse
+`)
+    expect(drawPrompts).toEqual([{ id: 'd01', text: 'a lighthouse' }])
   })
 
   it('ignores prose, blank lines, and headings that are not list items', () => {
@@ -135,7 +143,7 @@ Some commentary in the middle.
 # Wavelength
 - Low | High
 
-# Draw Your Love
+# Quick Draw
 - a prompt
 `)
     expect(parsed.themes).toHaveLength(1)
@@ -178,6 +186,23 @@ describe('the shipped content keeps its shape', () => {
   it('keeps Draw prompts sketchable and Finger Down statements short', () => {
     expect(parsed.drawPrompts.filter((d) => words(d.text) > 5).map((d) => d.text)).toEqual([])
     expect(parsed.fingerStatements.filter((f) => words(f) > 10)).toEqual([])
+  })
+
+  it('names every Shortlist theme after one of the players', () => {
+    const nameless = parsed.themes.filter((t) => !t.text.includes('{name}')).map((t) => t.text)
+    expect(nameless).toEqual([])
+  })
+
+  it('never reuses one Shortlist item across two themes — ranking the same thing twice reads as a bug', () => {
+    const seen = new Map<string, string>()
+    const clashes: string[] = []
+    for (const t of parsed.themes) {
+      for (const item of t.pool) {
+        if (seen.has(item)) clashes.push(`${item} (${seen.get(item)} / ${t.text})`)
+        else seen.set(item, t.text)
+      }
+    }
+    expect(clashes).toEqual([])
   })
 
   it('never repeats an entry inside one list', () => {

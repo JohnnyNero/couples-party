@@ -43,7 +43,7 @@ export function waveAward(round: WaveRound): Award {
   return { player: other(round.psychic), points: 1 }
 }
 
-// Draw Your Love: the guesser reads the drawing correctly or they don't — no partial
+// Quick Draw: the guesser reads the drawing correctly or they don't — no partial
 // credit, no consolation for a miss, it's a fast, low-stakes round.
 export function drawAward(round: DrawRound): Award {
   if (round.correct === null) return null

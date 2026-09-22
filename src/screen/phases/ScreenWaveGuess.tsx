@@ -14,7 +14,7 @@ export function ScreenWaveGuess({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-3xl mx-auto text-center">
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        Round {round.index} of {WAVE.rounds} · {playerName(s, other(round.psychic))} is guessing
+        Round {round.index} of {WAVE.rounds} · {playerName(s, other(round.psychic))} is placing it on the scale
       </div>
       <div className="text-sm sm:text-lg uppercase tracking-wide text-fg/50 mb-2">
         {spectrum.low} <span className="text-fg/30">↔</span> {spectrum.high}

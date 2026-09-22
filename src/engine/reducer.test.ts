@@ -28,20 +28,37 @@ describe('joining', () => {
 describe('join → act I start', () => {
   it('both joining begins Act III · Shortlist directly, on author A', () => {
     const s = bothJoined()
-    expect(s.phase).toBe('LIST_PLACE')
-    expect(s.phaseEndsAt).toBe(1000 + 15000)
+    expect(s.phase).toBe('LIST_INTRO') // the theme card, then the items
+    expect(s.phaseEndsAt).toBe(1000 + 4000)
     expect(s.listActs).toHaveLength(1)
     expect(s.listActs[0].author).toBe('A')
+  })
+  it('the theme card runs out into the first item, on a fresh clock', () => {
+    const s = reduce(bothJoined(), { type: 'TIMEOUT' }, 5000)
+    expect(s.phase).toBe('LIST_PLACE')
+    expect(s.phaseEndsAt).toBe(5000 + 15000)
+    expect(s.listActs[0].placeIndex).toBe(0)
+  })
+  it('nothing can be placed while the theme card is still up', () => {
+    const s = bothJoined()
+    const after = reduce(s, { type: 'PLACE_ITEM', player: s.listActs[0].author, slot: 1 }, 2000)
+    expect(after).toBe(s)
   })
 })
 
 // ---------------------------------------------------------------- Act III · Shortlist
 
-const atListPlace = bothJoined // 'full' begins directly on Shortlist now
+// Every act opens on its theme card; the tests below are about the ranking, so they
+// step past it the same way the host's clock does.
+const pastIntro = (s: SessionState) =>
+  s.phase === 'LIST_INTRO' ? reduce(s, { type: 'TIMEOUT' }, 1000) : s
+
+const atListPlace = () => pastIntro(bothJoined())
 
 // Places every remaining item, both sides, at the given slots (1..7, in item order).
 // `actual` is the ranker's slots, `predicted` the author's guesses.
-const placeAll = (s: SessionState, actual: number[], predicted: number[]) => {
+const placeAll = (state: SessionState, actual: number[], predicted: number[]) => {
+  let s = pastIntro(state)
   const act = s.listActs[s.listActs.length - 1]
   const ranker = act.author === 'A' ? 'B' : 'A'
   for (let i = act.placeIndex; i < act.items.length; i++) {
@@ -124,7 +141,7 @@ describe('act III · reveal and alternation', () => {
   it('runs the act again with the roles swapped, on a different theme', () => {
     let s = placeAll(atListPlace(), [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     s = reduce(s, { type: 'TIMEOUT' }, 4000) // reveal -> run 2
-    expect(s.phase).toBe('LIST_PLACE')
+    expect(s.phase).toBe('LIST_INTRO') // run 2's own theme card
     expect(s.listActs).toHaveLength(2)
     expect(s.listActs[1].author).toBe('B')
     expect(s.listActs[1].themeId).not.toBe(s.listActs[0].themeId)
@@ -158,7 +175,8 @@ describe('game selection', () => {
     let s = initialState(1, [], 'list')
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
-    expect(s.phase).toBe('LIST_PLACE')
+    expect(s.phase).toBe('LIST_INTRO')
+    expect(reduce(s, { type: 'TIMEOUT' }, 2000).phase).toBe('LIST_PLACE')
   })
   it('list-only: the session ends after the second run instead of moving to Put a Finger Down', () => {
     let s = initialState(1, [], 'list')

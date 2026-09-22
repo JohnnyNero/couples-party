@@ -12,7 +12,7 @@ export function ScreenDrawSketch({ s }: { s: SessionState }) {
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
         Round {round.index} of {DRAW.rounds} · {playerName(s, round.drawer)} is drawing
       </div>
-      <div className="text-3xl sm:text-6xl font-bold uppercase tracking-tight">Draw Your Love</div>
+      <div className="text-3xl sm:text-6xl font-bold uppercase tracking-tight">Quick Draw</div>
     </div>
   )
 }

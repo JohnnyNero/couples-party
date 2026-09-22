@@ -12,7 +12,7 @@ export function PlayWaveGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   const guesser = other(round.psychic)
   const [value, setValue] = useState(50)
 
-  if (me !== guesser) return <PlayWaiting label="They're guessing" />
+  if (me !== guesser) return <PlayWaiting label="They're placing it" />
   if (round.guess !== null) return <PlayWaiting label="Locked in — waiting" />
 
   const spectrum = spectrumFor(s, round.spectrumId)
@@ -20,8 +20,12 @@ export function PlayWaveGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col justify-center p-6 gap-5">
       <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-2">Their clue</div>
+        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-2">They named</div>
         <div className="text-2xl font-bold uppercase tracking-tight break-words">"{round.clue}"</div>
+      </div>
+      <div className="text-sm text-fg/70 leading-snug">
+        Slide to where you think that sits on the scale. There's a hidden mark — the
+        closer you land to it, the more you both score.
       </div>
       <div>
         <input
