@@ -2,6 +2,7 @@ import type { SessionState } from '../../engine/state'
 import { waveAward } from '../../engine/standing'
 import { spectrumFor } from '../../views/wave'
 import { WaveBar } from '../../views/WaveBar'
+import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { playerName } from '../../views/list'
 
 export function ScreenWaveReveal({ s }: { s: SessionState }) {
@@ -20,10 +21,11 @@ export function ScreenWaveReveal({ s }: { s: SessionState }) {
         target={round.target}
         guess={round.guess}
         showTarget
+        reveal
       />
       <div className="mt-6 sm:mt-10 flex items-baseline justify-between gap-4">
         <span className="text-lg sm:text-3xl font-bold uppercase tracking-tight">
-          Off by <span className="tabular-nums">{round.distance}</span>
+          Off by <span className="tabular-nums"><AnimatedNumber value={round.distance ?? 0} /></span>
         </span>
         <span className="text-lg sm:text-3xl font-bold uppercase tracking-tight text-accent text-right">
           {award ? `${playerName(s, award.player)} +${award.points}` : 'Nothing moves'}

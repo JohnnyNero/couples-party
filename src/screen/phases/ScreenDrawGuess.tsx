@@ -15,7 +15,7 @@ export function ScreenDrawGuess({ s }: { s: SessionState }) {
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
         Round {round.index} of {DRAW.rounds} · {playerName(s, other(round.drawer))} is guessing
       </div>
-      <DrawingCanvas strokes={round.strokes} />
+      <DrawingCanvas strokes={round.strokes} animate />
       <div className="mt-6 flex items-center justify-center gap-4">
         <Dot on={round.guess !== null} />
       </div>

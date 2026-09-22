@@ -24,7 +24,7 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col justify-center p-6 gap-4">
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">What is it?</div>
-      <DrawingCanvas strokes={round.strokes} />
+      <DrawingCanvas strokes={round.strokes} animate />
       <input
         className="w-full min-h-[56px] text-xl uppercase bg-fg text-bg px-4 outline-none border-b-4 border-accent placeholder:text-bg/30 placeholder:normal-case rounded-t-xl"
         value={text}

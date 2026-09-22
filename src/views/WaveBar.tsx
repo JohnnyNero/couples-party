@@ -6,19 +6,23 @@ export function WaveBar({
   target,
   guess,
   showTarget = false,
+  reveal = false,
 }: {
   low: string
   high: string
   target?: number | null
   guess?: number | null
   showTarget?: boolean
+  // Plays the target's entrance animation — only true for the actual reveal moment,
+  // never the psychic's own private view, where it's just been sitting there.
+  reveal?: boolean
 }) {
   return (
     <div className="w-full">
       <div className="relative h-4 sm:h-5 bg-fg/10 border-2 border-fg/25">
         {showTarget && target != null && (
           <div
-            className="absolute top-0 bottom-0 w-2 bg-accent"
+            className={'absolute top-0 bottom-0 w-2 bg-accent' + (reveal ? ' animate-drop-in' : '')}
             style={{ left: `calc(${target}% - 4px)` }}
           />
         )}

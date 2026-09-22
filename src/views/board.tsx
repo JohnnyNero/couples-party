@@ -1,5 +1,6 @@
 import type { SessionState } from '../engine/state'
 import { DRAW, FINGER, WAVE } from '../engine/phases'
+import { phaseKey } from './phaseKey'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
@@ -39,6 +40,14 @@ export function railText(s: SessionState): string {
 }
 
 export function BoardStage({ s }: { s: SessionState }) {
+  return (
+    <div key={phaseKey(s)} className="w-full animate-fade-up">
+      <BoardStageContent s={s} />
+    </div>
+  )
+}
+
+function BoardStageContent({ s }: { s: SessionState }) {
   switch (s.phase) {
     case 'JOIN':
       return <ScreenJoin s={s} />

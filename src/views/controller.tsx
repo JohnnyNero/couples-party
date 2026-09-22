@@ -1,4 +1,5 @@
 import type { PlayerId, SessionState } from '../engine/state'
+import { phaseKey } from './phaseKey'
 import { PlayJoin } from '../play/phases/PlayJoin'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
@@ -12,6 +13,14 @@ import { PlayWaiting } from '../play/phases/PlayWaiting'
 // renderer (Play, screen mode) and the phones-only renderer (Duo). Shows only this
 // player's own input — never the other player's.
 export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
+  return (
+    <div key={phaseKey(s)} className="h-full w-full animate-fade-up">
+      <ControllerContent s={s} me={me} />
+    </div>
+  )
+}
+
+function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
   switch (s.phase) {
     case 'JOIN':
       return <PlayJoin s={s} me={me} />

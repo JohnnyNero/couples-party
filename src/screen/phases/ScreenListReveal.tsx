@@ -2,6 +2,7 @@ import type { SessionState } from '../../engine/state'
 import { LIST } from '../../engine/phases'
 import { currentAct } from '../../engine/list'
 import { listAward } from '../../engine/standing'
+import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { playerName } from '../../views/list'
 
 const SLOTS: number[] = Array.from({ length: LIST.items }, (_, i) => i + 1)
@@ -29,8 +30,10 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
           return (
             <div
               key={n}
+              style={{ animationDelay: `${(n - 1) * 70}ms` }}
               className={
                 'flex items-baseline gap-2 border-b border-fg/15 py-1 sm:py-2 text-sm sm:text-2xl uppercase ' +
+                'animate-fade-up opacity-0 ' +
                 (hit ? 'text-accent' : 'text-fg/80')
               }
             >
@@ -43,7 +46,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
       </div>
       <div className="mt-4 sm:mt-6 flex items-baseline justify-between gap-4">
         <span className="text-lg sm:text-3xl font-bold uppercase tracking-tight">
-          Displacement <span className="tabular-nums">{act.displacement ?? 0}</span>
+          Displacement <span className="tabular-nums"><AnimatedNumber value={act.displacement ?? 0} /></span>
         </span>
         <span className="text-lg sm:text-3xl font-bold uppercase tracking-tight text-accent text-right">
           {award ? `${playerName(s, award.player)} +${award.points}` : 'Nothing moves'}
