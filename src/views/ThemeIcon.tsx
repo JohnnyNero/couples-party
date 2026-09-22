@@ -57,13 +57,6 @@ const Ghost = svg(
   </>,
 )
 
-const Says = svg(
-  <>
-    <path d="M3.5 4.5h17v11h-9.5L6 20v-4.5H3.5z" />
-    <path d="M8.5 10h.01M12 10h.01M15.5 10h.01" strokeWidth={2.2} />
-  </>,
-)
-
 const Cake = svg(
   <>
     <path d="M4 13.5c2.5-1.6 4.1 1.1 6.4 0 2.3-1.1 3.5 1.2 5.4.3 1.9-.9 2.4-.6 4.2.2" />
@@ -131,7 +124,6 @@ const RULES: [RegExp, Glyph][] = [
   [/attractive|fanc/, Heart],
   [/turn-?off|put.*off/, BrokenHeart],
   [/fear|scare|afraid/, Ghost],
-  [/says|said|phrase/, Says],
   [/guilty|pleasure/, Cake],
   [/annoy|irritat|wind.*up/, Lightning],
   [/argue|argument|opinion|debate/, Argue],

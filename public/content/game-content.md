@@ -140,28 +140,6 @@ the same theme plays differently every time.
 - doorbells
 - flying
 
-## seven things {name} always says
-- "two minutes"
-- "I'm fine"
-- "one more episode"
-- "I'm not tired"
-- "where's my phone"
-- "I told you"
-- "I'm starving"
-- "nearly ready"
-- "I know"
-- "remind me"
-- "last one"
-- "not my fault"
-- "we'll see"
-- "I'm awake"
-- "you choose"
-- "I'm listening"
-- "what's for dinner"
-- "in a minute"
-- "don't worry"
-- "I'll do it later"
-
 ## seven of {name}'s guilty pleasures
 - reality TV
 - gossip
