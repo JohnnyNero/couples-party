@@ -1,4 +1,8 @@
 import { describe, it, expect } from 'vitest'
+// The real shipped file, not a fixture — these tests are worthless unless they
+// read what actually goes live. `?raw` keeps it a plain string import, so no
+// node types are needed just to open a file.
+import shippedContent from '../public/content/game-content.md?raw'
 import { parseContent } from './content'
 
 describe('parseContent', () => {
@@ -139,5 +143,47 @@ Some commentary in the middle.
     expect(parsed.fingerStatements).toHaveLength(2)
     expect(parsed.spectrums).toHaveLength(1)
     expect(parsed.drawPrompts).toHaveLength(1)
+  })
+})
+
+// The shipped content, held to the shape rules in the file's own header. These
+// exist because the content twice drifted into clauses — a trailing "that…" or
+// ", not a similar pillow" is where a writer puts the joke, which is exactly the
+// job the players are supposed to do. Failing loudly beats a written-down rule
+// nobody enforces.
+describe('the shipped content keeps its shape', () => {
+  const parsed = parseContent(shippedContent)
+  const words = (s: string) => s.trim().split(/\s+/).length
+  const shortlist = parsed.themes.flatMap((t) => t.pool)
+
+  it('has enough of everything for every game to draw a full round', () => {
+    expect(parsed.themes.length).toBeGreaterThanOrEqual(2)
+    for (const t of parsed.themes) expect(t.pool.length).toBeGreaterThanOrEqual(7)
+    expect(parsed.fingerStatements.length).toBeGreaterThanOrEqual(5)
+    expect(parsed.spectrums.length).toBeGreaterThanOrEqual(7)
+    expect(parsed.drawPrompts.length).toBeGreaterThanOrEqual(6)
+  })
+
+  it('keeps Shortlist items to a bare thing — four words, no clause', () => {
+    const tooLong = shortlist.filter((i) => words(i) > 4)
+    const clausal = shortlist.filter((i) => i.includes(',') || /\b(that|which)\b/.test(i))
+    expect({ tooLong, clausal }).toEqual({ tooLong: [], clausal: [] })
+  })
+
+  it('keeps Wavelength poles to one or two words', () => {
+    const long = parsed.spectrums.flatMap((s) => [s.low, s.high]).filter((p) => words(p) > 2)
+    expect(long).toEqual([])
+  })
+
+  it('keeps Draw prompts sketchable and Finger Down statements short', () => {
+    expect(parsed.drawPrompts.filter((d) => words(d.text) > 5).map((d) => d.text)).toEqual([])
+    expect(parsed.fingerStatements.filter((f) => words(f) > 10)).toEqual([])
+  })
+
+  it('never repeats an entry inside one list', () => {
+    const dupes = (xs: string[]) => xs.filter((v, i, a) => a.indexOf(v) !== i)
+    for (const t of parsed.themes) expect(dupes(t.pool)).toEqual([])
+    expect(dupes(parsed.fingerStatements)).toEqual([])
+    expect(dupes(parsed.drawPrompts.map((d) => d.text))).toEqual([])
   })
 })
