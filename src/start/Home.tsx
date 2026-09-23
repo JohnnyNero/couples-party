@@ -9,7 +9,10 @@ import { WordAnswer } from '../daily/WordAnswer'
 import { DialCard, type DialScreen } from '../daily/DialCard'
 import { PlayDial } from '../daily/PlayDial'
 import { SetDialClue } from '../daily/SetDialClue'
-import { useDaily, useDailyDial } from '../daily/useDaily'
+import { Top5Card, type Top5Screen } from '../daily/Top5Card'
+import { PlayTop5 } from '../daily/PlayTop5'
+import { SetTop5 } from '../daily/SetTop5'
+import { useDaily, useDailyDial, useDailyTop5 } from '../daily/useDaily'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
@@ -32,8 +35,10 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
   const daily = useDaily()
   const dial = useDailyDial()
+  const top5 = useDailyTop5()
   const [screen, setScreen] = useState<DailyScreen | null>(null)
   const [dialScreen, setDialScreen] = useState<DialScreen | null>(null)
+  const [top5Screen, setTop5Screen] = useState<Top5Screen | null>(null)
   const choose = (t: Tab) => {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
@@ -55,6 +60,13 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   if (dialScreen?.kind === 'answer') {
     return <SetDialClue partner={dialScreen.partner} spectrum={dialScreen.spectrum} onClose={closeDial} />
   }
+  const closeTop5 = () => { setTop5Screen(null); void top5.refresh() }
+  if (top5Screen?.kind === 'play') {
+    return <PlayTop5 puzzle={top5Screen.puzzle} partner={top5Screen.partner} theme={top5Screen.theme} onClose={closeTop5} />
+  }
+  if (top5Screen?.kind === 'answer') {
+    return <SetTop5 partner={top5Screen.partner} theme={top5Screen.theme} items={top5Screen.items} onClose={closeTop5} />
+  }
 
   return (
     <div className="h-full w-full flex flex-col select-none">
@@ -65,7 +77,14 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
       <main className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
         <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
           {tab === 'today'
-            ? <Today onPick={onPick} daily={daily} open={setScreen} dial={dial} openDial={setDialScreen} />
+            ? (
+              <Today
+                onPick={onPick}
+                daily={daily} open={setScreen}
+                dial={dial} openDial={setDialScreen}
+                top5={top5} openTop5={setTop5Screen}
+              />
+            )
             : <Games onPick={onPick} />}
         </div>
       </main>
@@ -83,12 +102,16 @@ function Today({
   open,
   dial,
   openDial,
+  top5,
+  openTop5,
 }: {
   onPick: (g: Game) => void
   daily: ReturnType<typeof useDaily>
   open: (s: DailyScreen) => void
   dial: ReturnType<typeof useDailyDial>
   openDial: (s: DialScreen) => void
+  top5: ReturnType<typeof useDailyTop5>
+  openTop5: (s: Top5Screen) => void
 }) {
   const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
@@ -97,6 +120,7 @@ function Today({
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{date}</div>
       <DailyCard daily={daily} open={open} />
       <DialCard daily={dial} open={openDial} />
+      <Top5Card daily={top5} open={openTop5} />
       <section className="rounded-3xl bg-ink text-paper p-6 shadow-[5px_5px_0_rgba(0,0,0,0.12)]">
         <div className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/50">About five minutes</div>
         <h1 className="font-display text-4xl font-bold tracking-tight mt-1">Tonight</h1>

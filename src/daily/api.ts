@@ -60,6 +60,35 @@ export type DailyDial =
       theirs: DialView | { locked: true } | null
     }
 
+// Top 5: five things from a Shortlist theme, in the order they're offered up to rank
+// (never a secret — you need to see them to rank them). `rank` is the true order,
+// hidden until you've guessed; `guess` is your attempt at it, once made.
+export type Top5View = {
+  id: string
+  forDate: string
+  kind: 'top5'
+  prompt: string // the theme
+  items: string[] // the five, in the fixed day's order — index is "item i" everywhere else
+  rank: number[] | null // rank[k] = index of the item placed at rank k+1; null until solved (or yours)
+  guess: number[] | null // same shape, the solver's attempt
+  exact: number | null // items landed on their exact rank, once guessed
+  near: number | null // items one rank out, once guessed
+  status: 'open' | 'solved'
+}
+
+// Its own card too, alongside Their Word and The Dial — see docs/ROADMAP.md.
+export type DailyTop5 =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string; me: string }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      prompt: string | null
+      mine: Top5View | null
+      theirs: Top5View | { locked: true } | null
+    }
+
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
 // (the migration hasn't been run, or anonymous sign-ins are off) — that's a problem for
 // whoever runs the project, not the person holding the phone.
@@ -123,6 +152,8 @@ function friendly(message: string): string {
   if (/target out of range/.test(message)) return "That mark isn't on the scale."
   if (/1 to 40 characters/.test(message)) return 'One word — up to 40 characters.'
   if (/guess out of range/.test(message)) return "That's off the end of the scale."
+  if (/five items/.test(message)) return 'That needs to be five things.'
+  if (/not a ranking/.test(message)) return 'Every rank, once each.'
   return message
 }
 
@@ -140,4 +171,9 @@ export const api = {
     rpc<void>('set_dial', { p_for_date: forDate, p_prompt: prompt, p_target: target, p_clue: clue }),
   submitDial: (puzzleId: string, guess: number) =>
     rpc<DialView>('submit_dial', { p_puzzle: puzzleId, p_guess: guess }),
+  dailyTop5: (today: string) => rpc<DailyTop5>('daily_top5', { p_today: today }),
+  setTop5: (forDate: string, prompt: string, items: string[], rank: number[]) =>
+    rpc<void>('set_top5', { p_for_date: forDate, p_prompt: prompt, p_items: items, p_rank: rank }),
+  submitTop5: (puzzleId: string, guess: number[]) =>
+    rpc<Top5View>('submit_top5', { p_puzzle: puzzleId, p_guess: guess }),
 }

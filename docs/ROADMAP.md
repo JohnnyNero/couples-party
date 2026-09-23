@@ -37,7 +37,12 @@ Needs, in order:
      slides to guess, once. Reuses Wavelength's own spectrum pool. `payload`/
      `progress` jsonb columns were added to `puzzles` generically enough that Top 5,
      Sketch and Their Numbers can reuse them rather than reshaping the table again.
-   - Top 5 (Shortlist, 5 not 7) — next.
+   - ~~Top 5~~ — done. A daily Shortlist: five items from a theme (the same five, same
+     order, on both phones — day-picked like everything else), ranked for real; your
+     partner guesses the order, once. `{name}` renders as the solver, same convention
+     as Their Word, so the setter is genuinely ranking their honest opinion of their
+     partner — matching what the live game's ranker/author roles actually do, just
+     asynchronous. Reuses the `payload`/`progress` columns 0005 added, unchanged.
    - Sketch (Draw Your Answer, solved async — no one live to judge a near miss, so
      it's an exact match on what you typed, same spirit as Wordle's "ask them why").
    - Their Numbers.

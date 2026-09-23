@@ -29,6 +29,9 @@ SQL Editor → New query → paste the whole file → **Run**.
    next to Their Word (see docs/ROADMAP.md for why it's separate for now). Widens the
    `puzzles.kind` check and adds two jsonb columns (`payload`, `progress`) the later
    puzzle types will reuse; adds `dial_view`, `set_dial`, `submit_dial`, `daily_dial`.
+6. `migrations/0006_top_5.sql` — adds Top 5, a daily Shortlist, its own card too. Widens
+   `puzzles.kind` again; reuses 0005's `payload`/`progress` columns unchanged. Adds
+   `top5_view`, `is_top5_order`, `set_top5`, `submit_top5`, `daily_top5`.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

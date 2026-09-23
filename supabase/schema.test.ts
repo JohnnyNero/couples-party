@@ -5,6 +5,7 @@ import m0002 from './migrations/0002_same_question_same_day.sql?raw'
 import m0003 from './migrations/0003_five_or_six_letters.sql?raw'
 import m0004 from './migrations/0004_streak.sql?raw'
 import m0005 from './migrations/0005_the_dial.sql?raw'
+import m0006 from './migrations/0006_top_5.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -56,6 +57,7 @@ beforeAll(async () => {
   await db.exec(m0003)
   await db.exec(m0004)
   await db.exec(m0005)
+  await db.exec(m0006)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -257,6 +259,78 @@ describe('the dial: a daily wavelength', () => {
   })
   it('cannot call the view helper directly', async () => {
     await expect(as(SAM, `select public.dial_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
+  })
+})
+
+describe('top 5: a daily shortlist', () => {
+  const THEME = "five of Sam's small fears"
+  const ITEMS = ['moths', 'the dark', 'heights', 'bees', 'lifts']
+  let alexView: any // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('shows nothing before either of you has ranked one', async () => {
+    const sam = await call(SAM, 'daily_top5', [today()])
+    expect(sam).toMatchObject({ state: 'paired', prompt: null, mine: null, theirs: null })
+  })
+  it('rejects anything that is not five items or not a ranking of all five', async () => {
+    await expect(call(SAM, 'set_top5', [today(), THEME, ITEMS.slice(0, 4), [0, 1, 2, 3]]))
+      .rejects.toThrow(/five items/)
+    await expect(call(SAM, 'set_top5', [today(), THEME, ITEMS, [0, 1, 2, 3, 3]]))
+      .rejects.toThrow(/not a ranking/)
+    await expect(call(SAM, 'set_top5', [today(), THEME, ITEMS, [0, 1, 2, 3, 5]]))
+      .rejects.toThrow(/not a ranking/)
+  })
+  it('lets Sam rank them, and change it, before Alex has guessed', async () => {
+    await call(SAM, 'set_top5', [today(), THEME, ITEMS, [4, 3, 2, 1, 0]]) // lifts first, moths last
+    // The true order, kept for the rest of this block: moths, the dark, heights, bees,
+    // lifts — most afraid of moths, least of lifts.
+    await call(SAM, 'set_top5', [today(), THEME, ITEMS, [0, 1, 2, 3, 4]])
+    const sam = await call(SAM, 'daily_top5', [today()])
+    expect(sam.prompt).toBe(THEME)
+    expect(sam.mine).toMatchObject({ prompt: THEME, items: ITEMS, status: 'open', guess: null })
+    expect(sam.mine.rank).toEqual([0, 1, 2, 3, 4]) // the setter can always see their own order
+  })
+  it("keeps Sam's order locked away from Alex until Alex has ranked theirs — but the five items themselves aren't a secret", async () => {
+    const alex = await call(ALEX, 'daily_top5', [today()])
+    expect(alex.prompt).toBe(THEME)
+    expect(alex.theirs).toEqual({ locked: true })
+    expect(alex.mine).toBe(null)
+  })
+  it('will not let Alex guess before ranking their own, even calling the server directly', async () => {
+    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}' and kind = 'top5'`)).rows[0].id
+    await expect(call(ALEX, 'submit_top5', [id, [0, 1, 2, 3, 4]])).rejects.toThrow(/answer yours first/)
+  })
+  it("files Alex's ranking under the day's five, whatever Alex's phone sent, and unlocks Sam's — items visible, order not", async () => {
+    await call(ALEX, 'set_top5', [today(), 'Some other theme', ['a', 'b', 'c', 'd', 'e'], [0, 1, 2, 3, 4]])
+    const alex = await call(ALEX, 'daily_top5', [today()])
+    expect(alex.mine).toMatchObject({ prompt: THEME, items: ITEMS })
+    alexView = alex.theirs
+    expect(alexView).toMatchObject({ prompt: THEME, items: ITEMS, status: 'open' })
+    expect(alexView.rank).toBe(null)
+  })
+  it('scores the guess on the server and reveals the order once ranked', async () => {
+    // Sam's true order: moths, the dark, heights, bees, lifts (0,1,2,3,4).
+    // Alex guesses: heights, the dark, moths, lifts, bees (2,1,0,4,3) — "the dark"
+    // lands on the exact rank both gave it (2nd); "bees" and "lifts" are one rank out
+    // each; "moths" and "heights" are two out each, so neither counts.
+    const view = await call(ALEX, 'submit_top5', [alexView.id, [2, 1, 0, 4, 3]])
+    expect(view).toMatchObject({ status: 'solved', rank: [0, 1, 2, 3, 4], guess: [2, 1, 0, 4, 3], exact: 1, near: 2 })
+    await expect(call(SAM, 'set_top5', [today(), THEME, ITEMS, [0, 1, 2, 3, 4]])).rejects.toThrow(/already started/)
+  })
+  it('a repeat guess is a no-op — it just hands back what you already got', async () => {
+    expect(await call(ALEX, 'submit_top5', [alexView.id, [4, 3, 2, 1, 0]])).toMatchObject({ exact: 1, near: 2 })
+  })
+  it('only lets the solver guess — not the setter, not a stranger', async () => {
+    await expect(call(SAM, 'submit_top5', [alexView.id, [0, 1, 2, 3, 4]])).rejects.toThrow(/no such puzzle/)
+    await expect(call(EVE, 'submit_top5', [alexView.id, [0, 1, 2, 3, 4]])).rejects.toThrow(/no such puzzle/)
+  })
+  it('shows Sam how Alex got on, and gives Sam theirs to play', async () => {
+    const sam = await call(SAM, 'daily_top5', [today()])
+    expect(sam.mine).toMatchObject({ status: 'solved', exact: 1, near: 2 })
+    expect(sam.theirs).toMatchObject({ prompt: THEME, items: ITEMS, status: 'open', rank: null })
+  })
+  it('cannot call the view or ordering helpers directly', async () => {
+    await expect(as(SAM, `select public.top5_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
+    await expect(as(SAM, `select public.is_top5_order(array[0,1,2,3,4])`)).rejects.toThrow(/permission/)
   })
 })
 
