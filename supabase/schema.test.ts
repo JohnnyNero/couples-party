@@ -4,6 +4,7 @@ import m0001 from './migrations/0001_pairing_and_daily.sql?raw'
 import m0002 from './migrations/0002_same_question_same_day.sql?raw'
 import m0003 from './migrations/0003_five_or_six_letters.sql?raw'
 import m0004 from './migrations/0004_streak.sql?raw'
+import m0005 from './migrations/0005_the_dial.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -54,6 +55,7 @@ beforeAll(async () => {
   await db.exec(m0002)
   await db.exec(m0003)
   await db.exec(m0004)
+  await db.exec(m0005)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -193,6 +195,68 @@ describe('their word: one question a day, the same for both, solved the same day
     expect(view.patterns).toEqual(['..g..g']) // the O and the Y are both in place
     view = await call(ALEX, 'submit_guess', [view.id, 'Stormy'])
     expect(view).toMatchObject({ status: 'solved', answer: 'stormy' })
+  })
+})
+
+describe('the dial: a daily wavelength', () => {
+  const SPECTRUM = 'Cold | Hot'
+  let alexView: any // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('shows nothing before either of you has set one', async () => {
+    const sam = await call(SAM, 'daily_dial', [today()])
+    expect(sam).toMatchObject({ state: 'paired', prompt: null, mine: null, theirs: null })
+  })
+  it('rejects a target or clue out of range', async () => {
+    await expect(call(SAM, 'set_dial', [today(), SPECTRUM, -1, 'ice'])).rejects.toThrow(/target out of range/)
+    await expect(call(SAM, 'set_dial', [today(), SPECTRUM, 101, 'ice'])).rejects.toThrow(/target out of range/)
+    await expect(call(SAM, 'set_dial', [today(), SPECTRUM, 50, ''])).rejects.toThrow(/1 to 40 characters/)
+  })
+  it('lets Sam set one, and change it, before Alex has guessed', async () => {
+    await call(SAM, 'set_dial', [today(), SPECTRUM, 80, 'a sauna'])
+    await call(SAM, 'set_dial', [today(), SPECTRUM, 82, 'a hot tub'])
+    const sam = await call(SAM, 'daily_dial', [today()])
+    expect(sam.prompt).toBe(SPECTRUM)
+    expect(sam.mine).toMatchObject({ prompt: SPECTRUM, clue: 'a hot tub', status: 'open', guess: null })
+    expect(sam.mine.target).toBe(82) // the setter can always see their own mark
+  })
+  it("keeps Sam's mark locked away from Alex until Alex has set theirs", async () => {
+    const alex = await call(ALEX, 'daily_dial', [today()])
+    expect(alex.prompt).toBe(SPECTRUM)
+    expect(alex.theirs).toEqual({ locked: true })
+    expect(alex.mine).toBe(null)
+  })
+  it('will not let Alex guess before setting their own, even calling the server directly', async () => {
+    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}' and kind = 'dial'`)).rows[0].id
+    await expect(call(ALEX, 'submit_dial', [id, 50])).rejects.toThrow(/answer yours first/)
+  })
+  it("files Alex's mark under the day's spectrum, whatever Alex's phone sent, but Alex's own clue is always visible to Alex", async () => {
+    await call(ALEX, 'set_dial', [today(), 'Some other spectrum', 20, 'a snowman'])
+    const alex = await call(ALEX, 'daily_dial', [today()])
+    expect(alex.mine).toMatchObject({ prompt: SPECTRUM, clue: 'a snowman', target: 20 })
+    alexView = alex.theirs
+    // Unlocked to play — the clue's the hint, so it's visible, but the mark isn't.
+    expect(alexView).toMatchObject({ prompt: SPECTRUM, clue: 'a hot tub', status: 'open' })
+    expect(alexView.target).toBe(null)
+  })
+  it('scores the guess on the server and reveals the mark once placed', async () => {
+    const view = await call(ALEX, 'submit_dial', [alexView.id, 70])
+    expect(view).toMatchObject({ status: 'solved', target: 82, guess: 70, distance: 12 })
+    await expect(call(SAM, 'set_dial', [today(), SPECTRUM, 10, 'ice'])).rejects.toThrow(/already started/)
+  })
+  it('a repeat guess is a no-op — it just hands back what you already got', async () => {
+    expect(await call(ALEX, 'submit_dial', [alexView.id, 5])).toMatchObject({ guess: 70, distance: 12 })
+  })
+  it('only lets the solver guess — not the setter, not a stranger', async () => {
+    await expect(call(SAM, 'submit_dial', [alexView.id, 50])).rejects.toThrow(/no such puzzle/)
+    await expect(call(EVE, 'submit_dial', [alexView.id, 50])).rejects.toThrow(/no such puzzle/)
+  })
+  it('shows Sam how Alex got on, and gives Sam theirs to play', async () => {
+    const sam = await call(SAM, 'daily_dial', [today()])
+    expect(sam.mine).toMatchObject({ status: 'solved', guess: 70, distance: 12 })
+    expect(sam.theirs).toMatchObject({ prompt: SPECTRUM, clue: 'a snowman', status: 'open', target: null })
+  })
+  it('cannot call the view helper directly', async () => {
+    await expect(as(SAM, `select public.dial_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
   })
 })
 

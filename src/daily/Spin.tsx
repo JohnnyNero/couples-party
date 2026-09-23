@@ -1,17 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { makeRng, shuffled } from '../engine/rng'
 
-const SEEN_KEY = 'couples-party:spun'
 const LINE = 76 // px — room for a question on two lines
 
 // Today's question landing like a fruit machine: a reel of other questions spins past
-// and stops on the day's. It plays once per day per phone; after that it's just the
-// question, sitting still.
-export function QuestionSpin({ today, question, pool }: { today: string; question: string; pool: string[] }) {
+// and stops on the day's. It plays once per day per phone, per card — `storageKey`
+// keeps Their Word and The Dial's spins independent, so opening one doesn't burn the
+// other's — after that it's just the question, sitting still.
+export function QuestionSpin({
+  today,
+  question,
+  pool,
+  storageKey = 'couples-party:spun',
+}: {
+  today: string
+  question: string
+  pool: string[]
+  storageKey?: string
+}) {
   // Read once, on mount. Re-reading it every render would see the "seen" mark this
   // very spin writes, and skip straight to the end before it had started.
   const [alreadySeen] = useState(() => {
-    try { return localStorage.getItem(SEEN_KEY) === today } catch { return true }
+    try { return localStorage.getItem(storageKey) === today } catch { return true }
   })
   const reel = useMemo(() => {
     const others = shuffled(makeRng(today.length + pool.length), pool.filter((q) => q !== question))
@@ -22,9 +32,9 @@ export function QuestionSpin({ today, question, pool }: { today: string; questio
   useEffect(() => {
     if (alreadySeen) return
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setLanded(true)))
-    try { localStorage.setItem(SEEN_KEY, today) } catch { /* private mode: it spins every time */ }
+    try { localStorage.setItem(storageKey, today) } catch { /* private mode: it spins every time */ }
     return () => cancelAnimationFrame(id)
-  }, [alreadySeen, today])
+  }, [alreadySeen, today, storageKey])
 
   // Same box as the reel's last line, so the card doesn't shift between the first open
   // of the day and every one after.

@@ -25,6 +25,10 @@ SQL Editor → New query → paste the whole file → **Run**.
 4. `migrations/0004_streak.sql` — adds one function and has `daily()` report a `streak`
    alongside everything else: consecutive days you've both answered, one missed day
    forgiven. No tables change.
+5. `migrations/0005_the_dial.sql` — adds The Dial, a daily Wavelength, as its own card
+   next to Their Word (see docs/ROADMAP.md for why it's separate for now). Widens the
+   `puzzles.kind` check and adds two jsonb columns (`payload`, `progress`) the later
+   puzzle types will reuse; adds `dial_view`, `set_dial`, `submit_dial`, `daily_dial`.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

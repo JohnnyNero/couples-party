@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api, DailyError, type Daily } from './api'
+import { api, DailyError, type Daily, type DailyDial } from './api'
 import { localDate } from './dates'
 
-export type DailyStatus =
+export type DailyStatus<T> =
   | { kind: 'loading' }
   | { kind: 'error'; error: DailyError }
-  | { kind: 'ready'; data: Daily }
+  | { kind: 'ready'; data: T }
 
-// The Today tab's view of the server. It re-reads when the app comes back to the
+// A card's view of the server, whatever it's showing — Today, The Dial, or any daily
+// puzzle that follows the same shape. Re-reads when the app comes back to the
 // foreground (your partner may have set or solved something while it was closed), and
-// polls while you're waiting for them to type the pairing code in.
-export function useDaily() {
-  const [status, setStatus] = useState<DailyStatus>({ kind: 'loading' })
+// polls while unpaired: while you're waiting for them to type the code in, but also
+// while you're single — pairing itself only runs on one card, so every OTHER card's own
+// hook has no other way to notice it just happened.
+function useDailyOf<T extends { state: string }>(fetch: () => Promise<T>) {
+  const [status, setStatus] = useState<DailyStatus<T>>({ kind: 'loading' })
   const alive = useRef(true)
 
   const refresh = useCallback(async () => {
     try {
-      const data = await api.daily(localDate())
+      const data = await fetch()
       if (alive.current) setStatus({ kind: 'ready', data })
     } catch (e) {
       const error = e instanceof DailyError ? e : new DailyError("Couldn't reach the server.", 'offline')
@@ -35,12 +38,20 @@ export function useDaily() {
     }
   }, [refresh])
 
-  const waiting = status.kind === 'ready' && status.data.state === 'waiting'
+  const unpaired = status.kind === 'ready' && (status.data.state === 'waiting' || status.data.state === 'single')
   useEffect(() => {
-    if (!waiting) return
+    if (!unpaired) return
     const id = setInterval(() => void refresh(), 4000)
     return () => clearInterval(id)
-  }, [waiting, refresh])
+  }, [unpaired, refresh])
 
   return { status, refresh }
+}
+
+export function useDaily() {
+  return useDailyOf<Daily>(() => api.daily(localDate()))
+}
+
+export function useDailyDial() {
+  return useDailyOf<DailyDial>(() => api.dailyDial(localDate()))
 }

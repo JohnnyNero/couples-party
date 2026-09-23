@@ -1,4 +1,5 @@
 import { makeRng, shuffled } from '../engine/rng'
+import { dayIndex } from './dates'
 
 // The day's question: the same for both of you (and for every couple, like a daily
 // Wordle), picked from the content file's pool by date. The pool is walked in one fixed
@@ -9,8 +10,7 @@ import { makeRng, shuffled } from '../engine/rng'
 // question. This is only for before anyone has answered.
 export function questionOfTheDay(date: string, pool: string[]): string | null {
   if (pool.length === 0) return null
-  const [y, m, d] = date.split('-').map(Number)
-  const day = Math.round(Date.UTC(y, m - 1, d) / 86_400_000)
+  const day = dayIndex(date)
   const order = shuffled(makeRng(0xc0ffee), pool)
   return order[((day % order.length) + order.length) % order.length]
 }

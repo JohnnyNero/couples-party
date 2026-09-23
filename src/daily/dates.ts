@@ -7,3 +7,11 @@ export function localDate(offsetDays = 0, from: Date = new Date()): string {
   d.setDate(d.getDate() + offsetDays)
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+
+// A "YYYY-MM-DD" as a whole number of days since the epoch — the shared clock every
+// daily-pool picker (questionOfTheDay, dialOfTheDay, …) walks by, so they all agree on
+// what day it is without needing the same seed.
+export function dayIndex(date: string): number {
+  const [y, m, d] = date.split('-').map(Number)
+  return Math.round(Date.UTC(y, m - 1, d) / 86_400_000)
+}

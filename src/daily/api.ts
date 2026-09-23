@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config'
 
-// The daily puzzle's whole server surface: six calls, each a Postgres function defined
-// in supabase/migrations. Nothing here reads a table directly — it can't; see the
+// The daily puzzles' whole server surface, each call a Postgres function defined in
+// supabase/migrations. Nothing here reads a table directly — it can't; see the
 // migration for why.
 
 export type PuzzleView = {
@@ -31,6 +31,33 @@ export type Daily =
       // Consecutive days you've both answered, one missed day forgiven — 0 from a
       // server without migration 0004.
       streak?: number
+    }
+
+// The Dial: today's spectrum (as "Low | High"), a hidden mark on it, and a one-word
+// clue for it. One slide to guess, not six.
+export type DialView = {
+  id: string
+  forDate: string
+  kind: 'dial'
+  prompt: string // the spectrum, e.g. "Cold | Hot"
+  clue: string // always visible — it's the hint, not the secret
+  guess: number | null
+  distance: number | null // |target - guess|, once guessed
+  status: 'open' | 'solved'
+  target: number | null // null until you've guessed, unless it's your own mark
+}
+
+// Its own card, landing independently of Their Word for now — see docs/ROADMAP.md.
+export type DailyDial =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string; me: string }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      prompt: string | null
+      mine: DialView | null
+      theirs: DialView | { locked: true } | null
     }
 
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
@@ -93,6 +120,9 @@ function friendly(message: string): string {
   if (/five or six letters/.test(message)) return 'It has to be five or six letters.'
   if (/^(five|six) letters/.test(message)) return `It has to be ${message.split(' ')[0]} letters.`
   if (/answer yours first/.test(message)) return 'Answer yours first.'
+  if (/target out of range/.test(message)) return "That mark isn't on the scale."
+  if (/1 to 40 characters/.test(message)) return 'One word — up to 40 characters.'
+  if (/guess out of range/.test(message)) return "That's off the end of the scale."
   return message
 }
 
@@ -105,4 +135,9 @@ export const api = {
     rpc<void>('set_word', { p_for_date: forDate, p_prompt: prompt, p_answer: answer }),
   submitGuess: (puzzleId: string, guess: string) =>
     rpc<PuzzleView>('submit_guess', { p_puzzle: puzzleId, p_guess: guess }),
+  dailyDial: (today: string) => rpc<DailyDial>('daily_dial', { p_today: today }),
+  setDial: (forDate: string, prompt: string, target: number, clue: string) =>
+    rpc<void>('set_dial', { p_for_date: forDate, p_prompt: prompt, p_target: target, p_clue: clue }),
+  submitDial: (puzzleId: string, guess: number) =>
+    rpc<DialView>('submit_dial', { p_puzzle: puzzleId, p_guess: guess }),
 }
