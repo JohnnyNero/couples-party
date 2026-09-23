@@ -9,7 +9,7 @@ export type Game = 'full' | 'list' | 'finger' | 'wave' | 'draw'
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
-  | 'LIST_INTRO' | 'LIST_PLACE' | 'LIST_REVEAL'
+  | 'LIST_INTRO' | 'LIST_PLACE' | 'LIST_REVEAL' | 'LIST_RESULT'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
@@ -131,6 +131,9 @@ export type Action =
   // Shortlist's reveal walks the items one at a time, on a tap from either player —
   // there's no clock on it, so an argument about item four can run as long as it likes.
   | { type: 'ADVANCE_REVEAL'; player: PlayerId }
+  // Every game ends on a scoreboard that waits to be tapped — the point of it is to sit
+  // and look at the numbers, so nothing moves it on by itself.
+  | { type: 'CONTINUE'; player: PlayerId }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 

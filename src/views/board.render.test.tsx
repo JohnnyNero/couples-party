@@ -47,13 +47,16 @@ describe('board renders every Act III phase', () => {
     ['LIST_INTRO', act()],
     ['LIST_PLACE', halfPlaced()],
     ['LIST_REVEAL', revealed()],
+    ['LIST_RESULT', revealed()],
     ['DONE', revealed()],
   ]
   it.each(cases)('%s renders and names the act', (phase, a) => {
     const s = session(phase, a)
     const html = renderToStaticMarkup(<BoardStage s={s} />)
     expect(html.length).toBeGreaterThan(0)
-    expect(railText(s)).toMatch(phase === 'DONE' ? /session/i : /Act III/)
+    expect(railText(s)).toMatch(
+      phase === 'DONE' ? /session/i : phase === 'LIST_RESULT' ? /score/i : /Act III/,
+    )
   })
 
   it('never shows the items on the board while they are still being ranked', () => {
@@ -86,8 +89,26 @@ describe('board renders every Act III phase', () => {
   })
 })
 
+describe('the scoreboard between games', () => {
+  it('breaks the night down by game and says what is coming next', () => {
+    const html = renderToStaticMarkup(<BoardStage s={session('LIST_RESULT', revealed())} />)
+    // Six one-place misses: 6 points to Alex, who authored nothing here — Sam authored.
+    expect(html).toContain('Shortlist')
+    expect(html).toContain('Put a Finger Down')
+    expect(html).toContain('Wavelength')
+    expect(html).toContain('Quick Draw')
+    expect(html).toContain('Next up')
+  })
+
+  it('calls the night rather than the next game once there is nothing left', () => {
+    const html = renderToStaticMarkup(<BoardStage s={session('DONE', revealed())} />)
+    expect(html).not.toContain('Next up')
+    expect(html).toMatch(/takes the night|Dead level/)
+  })
+})
+
 describe('controllers render for both players', () => {
-  const phases = ['LIST_INTRO', 'LIST_PLACE', 'LIST_REVEAL'] as const
+  const phases = ['LIST_INTRO', 'LIST_PLACE', 'LIST_REVEAL', 'LIST_RESULT'] as const
   it.each(phases)('%s renders for author and ranker', (phase) => {
     const a = phase === 'LIST_PLACE' ? halfPlaced() : act()
     for (const me of ['A', 'B'] as const) {

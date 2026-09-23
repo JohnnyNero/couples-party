@@ -17,7 +17,7 @@ import { useRecordSession } from '../store/useRecordSession'
 // two devices squeezed onto one.
 const BOARD_ONLY = new Set([
   'JOIN',
-  'LIST_INTRO', 'LIST_REVEAL',
+  'LIST_INTRO', 'LIST_REVEAL', 'LIST_RESULT',
   'FINGER_REVEAL', 'FINGER_RESULT',
   'WAVE_REVEAL', 'WAVE_RESULT',
   'DRAW_REVEAL', 'DRAW_RESULT',

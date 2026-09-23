@@ -1,10 +1,12 @@
 import type { SessionState } from '../engine/state'
 import { DRAW, FINGER, WAVE } from '../engine/phases'
 import { phaseKey } from './phaseKey'
+import { Scoreboard } from './Scoreboard'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
 import { ScreenListIntro } from '../screen/phases/ScreenListIntro'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
+import { ScreenListResult } from '../screen/phases/ScreenListResult'
 import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
 import { ScreenFingerReveal } from '../screen/phases/ScreenFingerReveal'
 import { ScreenFingerResult } from '../screen/phases/ScreenFingerResult'
@@ -20,8 +22,17 @@ import { ScreenDrawResult } from '../screen/phases/ScreenDrawResult'
 // The public "board" content for the current phase, shared by the shared-screen
 // renderer (Screen) and the phones-only renderer (Duo). Holds no logic and shows
 // nothing private — submission dots and counts only, never words in flight.
+const SCOREBOARD_RAIL: Partial<Record<SessionState['phase'], string>> = {
+  LIST_RESULT: 'Shortlist · the score',
+  FINGER_RESULT: 'Put a Finger Down · the score',
+  WAVE_RESULT: 'Wavelength · the score',
+  DRAW_RESULT: 'Quick Draw · the score',
+}
+
 export function railText(s: SessionState): string {
   if (s.phase === 'JOIN') return 'Lobby'
+  const board = SCOREBOARD_RAIL[s.phase]
+  if (board) return board
   if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
     const run = `Act III · Shortlist · ${s.listActs.length} of 2`
     if (s.phase === 'LIST_INTRO') return `${run} · The theme`
@@ -59,6 +70,8 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenListPlace s={s} />
     case 'LIST_REVEAL':
       return <ScreenListReveal s={s} />
+    case 'LIST_RESULT':
+      return <ScreenListResult s={s} />
     case 'FINGER_ROUND':
       return <ScreenFingerRound s={s} />
     case 'FINGER_REVEAL':
@@ -82,11 +95,9 @@ function BoardStageContent({ s }: { s: SessionState }) {
     case 'DRAW_RESULT':
       return <ScreenDrawResult s={s} />
     case 'DONE':
-      // Terminal for now: hold the last thing that happened until the souvenir (M5).
-      if (s.draw) return <ScreenDrawResult s={s} />
-      if (s.wave) return <ScreenWaveResult s={s} />
-      if (s.finger) return <ScreenFingerResult s={s} />
-      return <ScreenListReveal s={s} />
+      // Terminal for now: the same board every game ends on, held up until the souvenir
+      // (M5) gives it somewhere to go.
+      return <Scoreboard s={s} title="That's the night" />
     default:
       return <div className="text-2xl uppercase text-fg/50">{s.phase}</div>
   }

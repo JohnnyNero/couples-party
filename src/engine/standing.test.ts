@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type FingerGame, type ListAct, type ListItem, type PlayerId, type WaveRound } from './state'
-import { listAward, listItemPoints, standing, leader, fingerAward, waveAward } from './standing'
+import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING } from './standing'
 
 // Each pair is one item: [where the ranker put it, where the author guessed].
 const items = (pairs: Array<[number | null, number | null]>): ListItem[] =>
@@ -19,8 +19,19 @@ const act = (
 
 const withActs = (...acts: ListAct[]) => ({ ...initialState(1), listActs: acts })
 
-const finger = (a: number, b: number): FingerGame => ({
-  rounds: [], current: 0, fingersLeft: { A: a, B: b },
+// Each pair is one statement: [did it apply to A, did it apply to B]. A null means that
+// player hasn't answered yet, so the round isn't resolved.
+const finger = (...pairs: Array<[boolean | null, boolean | null]>): FingerGame => ({
+  rounds: pairs.map(([A, B], i) => ({ index: i + 1, statementId: `f${i}`, applies: { A, B } })),
+  current: 0,
+  fingersLeft: {
+    A: 5 - pairs.filter(([A]) => A).length,
+    B: 5 - pairs.filter(([, B]) => B).length,
+  },
+})
+
+const dRound = (drawer: PlayerId, correct: boolean | null) => ({
+  index: 1, drawer, promptId: 'd01', strokes: [], guess: correct === null ? null : 'x', correct,
 })
 
 const wRound = (psychic: PlayerId, distance: number | null): WaveRound => ({
@@ -70,33 +81,71 @@ describe('listAward', () => {
   })
 })
 
-describe('fingerAward', () => {
-  it('awards 2 to whoever has more fingers left', () => {
-    expect(fingerAward(finger(3, 1))).toEqual({ player: 'A', points: 2 })
-    expect(fingerAward(finger(1, 3))).toEqual({ player: 'B', points: 2 })
+describe('fingerPoints', () => {
+  const kept = SCORING.fingerKept
+
+  it('pays every statement you keep your finger up on, and both of you can score', () => {
+    // A admits the first, B admits the second, neither admits the third.
+    expect(fingerPoints(finger([true, false], [false, true], [false, false]))).toEqual({
+      A: kept * 2,
+      B: kept * 2,
+    })
   })
-  it('awards nothing on a level hand, or no game at all', () => {
-    expect(fingerAward(finger(2, 2))).toBe(null)
-    expect(fingerAward(null)).toBe(null)
+  it('pays nothing for a round one of you has not answered yet', () => {
+    expect(fingerPoints(finger([false, null]))).toEqual({ A: 0, B: 0 })
+  })
+  it('pays nothing for a game that never happened', () => {
+    expect(fingerPoints(null)).toEqual({ A: 0, B: 0 })
+  })
+  it('caps out at five statements, so no game can run away with the night', () => {
+    const all: Array<[boolean, boolean]> = [
+      [false, true], [false, true], [false, true], [false, true], [false, true],
+    ]
+    expect(fingerPoints(finger(...all))).toEqual({ A: kept * 5, B: 0 })
   })
 })
 
 describe('waveAward', () => {
-  it('awards the psychic on a bullseye, tapering with distance', () => {
-    expect(waveAward(wRound('A', 0))).toEqual({ player: 'A', points: 3 })
-    expect(waveAward(wRound('A', 5))).toEqual({ player: 'A', points: 2 })
-    expect(waveAward(wRound('A', 15))).toEqual({ player: 'A', points: 1 })
+  it('awards the clue-giver on a bullseye, tapering with distance', () => {
+    expect(waveAward(wRound('A', 0))).toEqual({ player: 'A', points: SCORING.waveBullseye })
+    expect(waveAward(wRound('A', 5))).toEqual({ player: 'A', points: SCORING.waveClose })
+    expect(waveAward(wRound('A', 15))).toEqual({ player: 'A', points: SCORING.waveNear })
   })
   it('moves nothing in the middle band', () => {
     expect(waveAward(wRound('A', 16))).toBe(null)
     expect(waveAward(wRound('A', 30))).toBe(null)
   })
-  it('gives the guesser a point on a very wide miss', () => {
-    expect(waveAward(wRound('A', 31))).toEqual({ player: 'B', points: 1 })
-    expect(waveAward(wRound('B', 90))).toEqual({ player: 'A', points: 1 })
+  it('gives the guesser something back on a very wide miss', () => {
+    expect(waveAward(wRound('A', 31))).toEqual({ player: 'B', points: SCORING.waveConsolation })
+    expect(waveAward(wRound('B', 90))).toEqual({ player: 'A', points: SCORING.waveConsolation })
   })
   it('awards nothing for an unresolved round', () => {
     expect(waveAward(wRound('A', null))).toBe(null)
+  })
+})
+
+// The point of the retune: no single game can quietly decide the night. Every maximum
+// has to stay in the same band, so a change to one of the SCORING numbers that breaks
+// the balance fails here rather than three sessions later.
+describe('the four games are worth about the same', () => {
+  const maxima = {
+    Shortlist: 14 * SCORING.listExact, // 7 items, two acts
+    Wavelength: 7 * SCORING.waveBullseye,
+    'Put a Finger Down': 5 * SCORING.fingerKept,
+    'Quick Draw': 6 * SCORING.drawCorrect,
+  }
+
+  it('tops out within a quarter of each other', () => {
+    const values = Object.values(maxima)
+    const lowest = Math.min(...values)
+    const highest = Math.max(...values)
+    expect({ maxima, spread: highest / lowest }).toEqual({ maxima, spread: expect.any(Number) })
+    expect(highest / lowest).toBeLessThanOrEqual(1.25)
+  })
+  it('keeps a near miss worth less than a hit in every game that has both', () => {
+    expect(SCORING.listNear).toBeLessThan(SCORING.listExact)
+    expect(SCORING.waveNear).toBeLessThan(SCORING.waveClose)
+    expect(SCORING.waveClose).toBeLessThan(SCORING.waveBullseye)
   })
 })
 
@@ -114,11 +163,45 @@ describe('standing', () => {
     expect(leader(withActs(act('A', 2, [[1, 2]]), act('B', 2, [[3, 4]])))).toBe(null)
   })
   it('folds in Put a Finger Down alongside Shortlist', () => {
-    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger(1, 4) }
-    expect(standing(s)).toEqual({ A: 3, B: 2 }) // A's exact hit (3), B's 2 from fingers
+    // A guessed one item exactly; B kept a finger up on the one statement played.
+    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
+    expect(standing(s)).toEqual({ A: SCORING.listExact, B: SCORING.fingerKept })
   })
   it('sums Wavelength across every round played so far', () => {
     const s = { ...initialState(1), wave: { rounds: [wRound('A', 0), wRound('B', 5), wRound('A', null)], current: 2 } }
-    expect(standing(s)).toEqual({ A: 3, B: 2 }) // A's bullseye (3), B's close guess (2); round 3 unresolved
+    // A's bullseye, B's close guess; round 3 is unresolved and pays nothing.
+    expect(standing(s)).toEqual({ A: SCORING.waveBullseye, B: SCORING.waveClose })
+  })
+})
+
+describe('gameScores', () => {
+  it('breaks the total down by game, and says which have been played', () => {
+    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
+    const rows = gameScores(s)
+    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'wave', 'draw'])
+    expect(rows.map((g) => g.played)).toEqual([true, true, false, false])
+    expect(rows[0].points).toEqual({ A: SCORING.listExact, B: 0 })
+    expect(rows[1].points).toEqual({ A: 0, B: SCORING.fingerKept })
+  })
+  it('always sums to the session total', () => {
+    const s = {
+      ...withActs(act('A', 0, [[1, 1], [2, 3]])),
+      finger: finger([true, false], [false, false]),
+      wave: { rounds: [wRound('A', 0), wRound('B', 90)], current: 1 },
+      draw: { rounds: [dRound('A', true), dRound('B', false)], current: 1 },
+    }
+    const total = gameScores(s).reduce(
+      (t, g) => ({ A: t.A + g.points.A, B: t.B + g.points.B }),
+      { A: 0, B: 0 },
+    )
+    expect(total).toEqual(standing(s))
+  })
+})
+
+describe('drawAward', () => {
+  it('pays the guesser for reading the drawing, and nothing for missing it', () => {
+    expect(drawAward(dRound('A', true))).toEqual({ player: 'B', points: SCORING.drawCorrect })
+    expect(drawAward(dRound('A', false))).toBe(null)
+    expect(drawAward(dRound('A', null))).toBe(null)
   })
 })

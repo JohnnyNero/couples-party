@@ -103,13 +103,35 @@ function timeoutPlace(state: SessionState, now: number): SessionState {
   return advancePlace(s, now)
 }
 
-// Act III runs twice, roles swapped. After the second run, 'full' carries on into the
-// rest of the roster; any standalone game ends here.
+// Act III runs twice, roles swapped. After the second run it hands over to its own
+// scoreboard, same as every other game.
 function afterListReveal(state: SessionState, now: number): SessionState {
   const first = state.listActs[0]
   if (state.listActs.length < 2) return beginList(state, now, other(first.author))
-  return state.game === 'full' ? beginFinger(state, now) : finishSession(state)
+  return toScoreboard(state, 'LIST_RESULT')
 }
+
+// Every game ends on one of these, and none of them carries a clock — the whole point
+// is to sit and look at the numbers for as long as you like.
+function toScoreboard(state: SessionState, phase: SessionState['phase']): SessionState {
+  const s = clone(state)
+  s.phase = phase
+  s.phaseEndsAt = null
+  return s
+}
+
+// What a tap on a scoreboard does: into the next game, or the end of the night.
+function afterScoreboard(state: SessionState, now: number): SessionState {
+  if (state.game !== 'full') return finishSession(state)
+  switch (state.phase) {
+    case 'LIST_RESULT': return beginFinger(state, now)
+    case 'FINGER_RESULT': return beginWave(state, now)
+    case 'WAVE_RESULT': return beginDraw(state, now)
+    default: return finishSession(state)
+  }
+}
+
+const SCOREBOARDS = new Set(['LIST_RESULT', 'FINGER_RESULT', 'WAVE_RESULT', 'DRAW_RESULT'])
 
 function finishSession(state: SessionState): SessionState {
   const s = clone(state)
@@ -155,12 +177,7 @@ function toFingerReveal(state: SessionState, now: number): SessionState {
 // Five statements, then it's over — least fingers down wins, not first to zero.
 function advanceFinger(state: SessionState, now: number): SessionState {
   const f = state.finger!
-  if (f.current >= FINGER.rounds - 1) {
-    const s = clone(state)
-    s.phase = 'FINGER_RESULT'
-    s.phaseEndsAt = now + DURATIONS.FINGER_RESULT!
-    return s
-  }
+  if (f.current >= FINGER.rounds - 1) return toScoreboard(state, 'FINGER_RESULT')
   const s = clone(state)
   s.finger!.current += 1
   s.phase = 'FINGER_ROUND'
@@ -221,12 +238,7 @@ function toWaveReveal(state: SessionState, now: number, guess: number): SessionS
 // Seven rounds, then it's over — the official 2-player co-op variant's own length.
 function advanceWave(state: SessionState, now: number): SessionState {
   const w = state.wave!
-  if (w.current >= WAVE.rounds - 1) {
-    const s = clone(state)
-    s.phase = 'WAVE_RESULT'
-    s.phaseEndsAt = now + DURATIONS.WAVE_RESULT!
-    return s
-  }
+  if (w.current >= WAVE.rounds - 1) return toScoreboard(state, 'WAVE_RESULT')
   const s = clone(state)
   s.wave!.current += 1
   s.phase = 'WAVE_CLUE'
@@ -282,12 +294,7 @@ function toDrawReveal(state: SessionState, now: number, guess: string): SessionS
 // Six prompts, then it's over — three rounds each as the drawer.
 function advanceDraw(state: SessionState, now: number): SessionState {
   const d = state.draw!
-  if (d.current >= DRAW.rounds - 1) {
-    const s = clone(state)
-    s.phase = 'DRAW_RESULT'
-    s.phaseEndsAt = now + DURATIONS.DRAW_RESULT!
-    return s
-  }
+  if (d.current >= DRAW.rounds - 1) return toScoreboard(state, 'DRAW_RESULT')
   const s = clone(state)
   s.draw!.current += 1
   s.phase = 'DRAW_SKETCH'
@@ -377,6 +384,10 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const text = action.text.trim().slice(0, DRAW.guessMaxLen)
       return toDrawReveal(state, now, text)
     }
+    case 'CONTINUE': {
+      if (!SCOREBOARDS.has(state.phase)) return state
+      return afterScoreboard(state, now)
+    }
     case 'ADVANCE_REVEAL': {
       if (state.phase !== 'LIST_REVEAL') return state
       return advanceReveal(state, now)
@@ -388,22 +399,21 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         case 'LIST_REVEAL': return advanceReveal(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
         case 'FINGER_REVEAL': return advanceFinger(state, now)
-        // 'full' carries on into Wavelength; a standalone game ends here.
-        case 'FINGER_RESULT': return state.game === 'full' ? beginWave(state, now) : finishSession(state)
+        case 'LIST_RESULT': return afterScoreboard(state, now)
+        case 'FINGER_RESULT': return afterScoreboard(state, now)
         // A clue nobody gave still lets the round play out — a blind guess costs nothing
         // it wouldn't have anyway.
         case 'WAVE_CLUE': return toWaveGuess(state, now, currentWaveRound(state.wave!).clue ?? '(no clue)')
         // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
         case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
         case 'WAVE_REVEAL': return advanceWave(state, now)
-        // 'full' carries on into Quick Draw; a standalone game ends here.
-        case 'WAVE_RESULT': return state.game === 'full' ? beginDraw(state, now) : finishSession(state)
+        case 'WAVE_RESULT': return afterScoreboard(state, now)
         // A drawing nobody finished still lets the round play out — sketching nothing.
         case 'DRAW_SKETCH': return toDrawGuess(state, now, currentDrawRound(state.draw!).strokes)
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
-        case 'DRAW_RESULT': return finishSession(state)
+        case 'DRAW_RESULT': return afterScoreboard(state, now)
         default: return state
       }
     }

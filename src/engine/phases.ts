@@ -3,18 +3,16 @@ import type { Phase } from './state'
 export const DURATIONS: Partial<Record<Phase, number>> = {
   LIST_INTRO: 4000,   // the theme card, read once before the items start
   LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
-  // LIST_REVEAL has no clock: it is tapped through item by item.
+  // LIST_REVEAL has no clock: it is tapped through item by item, and neither do the
+  // four *_RESULT scoreboards — see the CONTINUE action.
   FINGER_ROUND: 15000,  // read it, think about it, decide privately
   FINGER_REVEAL: 4000,
-  FINGER_RESULT: 6000,
   WAVE_CLUE: 25000,   // the psychic has to come up with a whole clue
   WAVE_GUESS: 20000,  // dragging one slider is faster than that
   WAVE_REVEAL: 5000,
-  WAVE_RESULT: 6000,
   DRAW_SKETCH: 40000, // one phone, one finger, one prompt
   DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
   DRAW_REVEAL: 6000,
-  DRAW_RESULT: 6000,
 }
 
 export const LIST = {

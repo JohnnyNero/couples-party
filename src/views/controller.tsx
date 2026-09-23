@@ -3,6 +3,7 @@ import { phaseKey } from './phaseKey'
 import { PlayJoin } from '../play/phases/PlayJoin'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
 import { PlayListReveal } from '../play/phases/PlayListReveal'
+import { PlayContinue } from '../play/phases/PlayContinue'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
 import { PlayWaveClue } from '../play/phases/PlayWaveClue'
 import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
@@ -31,28 +32,27 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':
       return <PlayListReveal s={s} me={me} />
+    case 'LIST_RESULT':
+    case 'FINGER_RESULT':
+    case 'WAVE_RESULT':
+    case 'DRAW_RESULT':
+      return <PlayContinue s={s} me={me} />
     case 'FINGER_ROUND':
       return <PlayFingerRound s={s} me={me} />
     case 'FINGER_REVEAL':
       return <PlayWaiting label="Reveal" />
-    case 'FINGER_RESULT':
-      return <PlayWaiting label="See the board" />
     case 'WAVE_CLUE':
       return <PlayWaveClue s={s} me={me} />
     case 'WAVE_GUESS':
       return <PlayWaveGuess s={s} me={me} />
     case 'WAVE_REVEAL':
       return <PlayWaiting label="Reveal" />
-    case 'WAVE_RESULT':
-      return <PlayWaiting label="See the board" />
     case 'DRAW_SKETCH':
       return <PlayDrawSketch s={s} me={me} />
     case 'DRAW_GUESS':
       return <PlayDrawGuess s={s} me={me} />
     case 'DRAW_REVEAL':
       return <PlayWaiting label="Reveal" />
-    case 'DRAW_RESULT':
-      return <PlayWaiting label="See the board" />
     case 'DONE':
       return <PlayWaiting label="That's the session" />
     default:

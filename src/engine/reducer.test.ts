@@ -56,6 +56,8 @@ const pastIntro = (s: SessionState) =>
 const atListPlace = () => pastIntro(bothJoined())
 
 // The reveal has no clock — it is walked item by item. Tap it all the way off the end.
+const cont = (s: SessionState) => reduce(s, { type: 'CONTINUE', player: 'A' }, 6000)
+
 const tapThroughReveal = (state: SessionState) => {
   let s = state
   for (let i = 0; i < 20 && s.phase === 'LIST_REVEAL'; i++) {
@@ -203,6 +205,8 @@ describe('act III · reveal and alternation', () => {
     expect(s.phase).toBe('LIST_REVEAL')
     expect(s.listActs[1].displacement).toBe(24) // the worst read available
     s = tapThroughReveal(s)
+    expect(s.phase).toBe('LIST_RESULT') // the game's own scoreboard first
+    s = cont(s)
     expect(s.phase).toBe('FINGER_ROUND') // not DONE — 'full' keeps going
   })
   it('a standalone Shortlist-only session ends after the second run', () => {
@@ -214,8 +218,68 @@ describe('act III · reveal and alternation', () => {
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     expect(s.phase).toBe('LIST_REVEAL')
     s = tapThroughReveal(s)
+    expect(s.phase).toBe('LIST_RESULT')
+    s = cont(s)
     expect(s.phase).toBe('DONE')
     expect(s.phaseEndsAt).toBe(null)
+  })
+})
+
+describe('the scoreboard between games', () => {
+  const order = [1, 2, 3, 4, 5, 6, 7]
+  // A keeps every finger up, B puts every one down — so A takes the whole game.
+  const playOutFinger = (state: SessionState) => {
+    let s = state
+    for (let i = 0; i < 20 && s.phase.startsWith('FINGER') && s.phase !== 'FINGER_RESULT'; i++) {
+      if (s.phase === 'FINGER_ROUND') {
+        s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 1000)
+        s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: true }, 1000)
+      } else {
+        s = reduce(s, { type: 'TIMEOUT' }, 2000) // out of the reveal
+      }
+    }
+    return s
+  }
+  const throughShortlist = () => {
+    let s = tapThroughReveal(placeAll(atListPlace(), order, order))
+    s = placeAll(pastIntro(s), order, order)
+    return tapThroughReveal(s)
+  }
+
+  it('every game hands over to a scoreboard, and none of them carries a clock', () => {
+    const s = throughShortlist()
+    expect(s.phase).toBe('LIST_RESULT')
+    expect(s.phaseEndsAt).toBe(null)
+  })
+  it('walks the full roster one tap at a time', () => {
+    // A stocked session, so the roster actually has content to roll on into.
+    let s = initialState(1, THEMES, 'full', FINGER_POOL, SPECTRUMS)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    s = tapThroughReveal(placeAll(pastIntro(s), order, order))
+    s = tapThroughReveal(placeAll(pastIntro(s), order, order))
+    expect(s.phase).toBe('LIST_RESULT')
+    expect(cont(s).phase).toBe('FINGER_ROUND')
+    s = playOutFinger(cont(s))
+    expect(s.phase).toBe('FINGER_RESULT')
+    expect(s.phaseEndsAt).toBe(null)
+    expect(cont(s).phase).toBe('WAVE_CLUE')
+  })
+  it('ignores a tap from a phase that is not a scoreboard', () => {
+    const s = atListPlace()
+    expect(reduce(s, { type: 'CONTINUE', player: 'A' }, 2000)).toBe(s)
+  })
+  it('either player can move it on', () => {
+    const s = throughShortlist()
+    expect(reduce(s, { type: 'CONTINUE', player: 'B' }, 6000).phase).toBe('FINGER_ROUND')
+  })
+  it('ends a standalone game at its own scoreboard rather than rolling on', () => {
+    let s = initialState(1, [], 'finger', FINGER_POOL)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+    s = playOutFinger(s)
+    expect(s.phase).toBe('FINGER_RESULT')
+    expect(cont(s).phase).toBe('DONE') // not on into Wavelength
   })
 })
 
@@ -234,7 +298,7 @@ describe('game selection', () => {
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     s = tapThroughReveal(s) // run 2 begins
     s = placeAll(s, [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
-    s = tapThroughReveal(s)
+    s = cont(tapThroughReveal(s))
     expect(s.phase).toBe('DONE')
   })
   it('finger-only: both joining goes straight to FINGER_ROUND', () => {
