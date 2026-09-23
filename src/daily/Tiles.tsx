@@ -1,6 +1,6 @@
-import { WORD_LENGTH, type Mark } from './wordle'
+import type { Mark } from './wordle'
 
-// One row of five letter tiles. Coloured with the app's own three colours rather than
+// One row of letter tiles — five or six, as long as the answer. Coloured with the app's own three colours rather than
 // Wordle's green and yellow: solid coral is right place, a coral outline is in the word
 // but somewhere else, grey is not in it at all.
 export function TileRow({
@@ -9,19 +9,30 @@ export function TileRow({
   active = false,
   reveal = false,
   size = 'lg',
+  length = 5,
+  optionalFrom,
 }: {
   letters: string
   pattern?: string
   active?: boolean
   reveal?: boolean
   size?: 'lg' | 'sm'
+  length?: number
+  optionalFrom?: number // tiles from here on can be left empty: drawn dashed until used
 }) {
-  const box = size === 'lg' ? 'w-14 h-14 text-3xl' : 'w-7 h-7 text-sm rounded-md'
+  // Six big tiles have to fit a small phone, so they come down a size.
+  // Small tiles sit beside a button on the Today card, so they give way to it: each one
+  // shrinks to fit rather than pushing the button off the edge of a small phone.
+  const box =
+    size === 'sm'
+      ? 'flex-1 min-w-0 max-w-[1.75rem] aspect-square rounded-md ' + (length > 5 ? 'text-xs' : 'text-sm')
+      : length > 5 ? 'w-12 h-12 text-2xl' : 'w-14 h-14 text-3xl'
   return (
-    <div className="flex justify-center gap-1.5">
-      {Array.from({ length: WORD_LENGTH }, (_, i) => {
+    <div className={size === 'sm' ? 'flex gap-1 min-w-0 w-full' : 'flex justify-center gap-1.5'}>
+      {Array.from({ length }, (_, i) => {
         const letter = letters[i] ?? ''
         const mark = pattern?.[i] as Mark | undefined
+        const optional = optionalFrom !== undefined && i >= optionalFrom && !letter
         return (
           <div
             key={i}
@@ -36,9 +47,11 @@ export function TileRow({
                     ? 'bg-fg/15 border-transparent text-fg/60'
                     : letter
                       ? 'border-fg/50 text-fg'
-                      : active
-                        ? 'border-fg/25'
-                        : 'border-fg/10') +
+                      : optional
+                        ? 'border-dashed border-fg/20'
+                        : active
+                          ? 'border-fg/25'
+                          : 'border-fg/10') +
               (reveal && mark ? ' animate-reveal-pop' : '') +
               (letter && !mark ? ' animate-pop' : '')
             }

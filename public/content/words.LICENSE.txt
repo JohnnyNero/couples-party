@@ -1,4 +1,4 @@
-words-5.txt is the five-letter subset of the `word-list` npm package, v4.1.0
+words-5.txt and words-6.txt are the five- and six-letter subsets of the `word-list` npm package, v4.1.0
 (https://github.com/sindresorhus/word-list), itself from
 https://github.com/atebits/Words — used to validate Their Word answers and guesses.
 

@@ -23,7 +23,7 @@ Needs, in order:
 2. ~~Pairing~~ — done: a six-letter code, anonymous sign-in per phone.
    Still to do: use the pairing to drop the room code from Tonight.
 3. ~~Their Word~~ — done. One question a day, the same for both of you (spun in from the
-   content file's pool by date), answered in five letters, and solved the same day.
+   content file's pool by date), answered in five or six letters, and solved the same day.
    Your partner's answer stays locked until you've given yours — enforced on the
    server. Changeable until they start. Scored on the server.
 4. A shared couple streak: a day counts when you've both done the daily, one skip a week.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, DailyError, type PuzzleView } from './api'
 import { Keyboard, TileRow } from './Tiles'
-import { cleanWord, keyStates, loadWords, MAX_GUESSES, WORD_LENGTH } from './wordle'
+import { cleanWord, keyStates, lengthWord, loadWords, MAX_GUESSES } from './wordle'
 
 // Solving the word your partner set. Each guess goes to the server and comes back
 // coloured — the answer itself only arrives once it's solved or all six are used.
@@ -25,6 +25,8 @@ export function WordPlay({
   const [shake, setShake] = useState(false)
   const [words, setWords] = useState<Set<string> | null>(null)
   const done = puzzle.status !== 'open'
+  // Told by the server. Before migration 0003 it didn't say, and every answer was five.
+  const length = puzzle.length ?? 5
 
   useEffect(() => { void loadWords().then(setWords) }, [])
 
@@ -35,8 +37,13 @@ export function WordPlay({
   }
 
   const submit = useCallback(async () => {
-    if (typed.length < WORD_LENGTH) return bounce('Five letters')
-    const list = words ?? (await loadWords()) // never skip the check just because it's still loading
+    if (typed.length < length) return bounce(`${lengthWord(length)} letters`)
+    let list = words
+    try {
+      list ??= await loadWords() // never skip the check just because it's still loading
+    } catch {
+      return bounce("Couldn't load the word list — try again")
+    }
     if (!list.has(typed)) return bounce('Not in the word list')
     setBusy(true)
     setNote(null)
@@ -48,14 +55,14 @@ export function WordPlay({
     } finally {
       setBusy(false)
     }
-  }, [typed, words, puzzle.id])
+  }, [typed, words, puzzle.id, length])
 
   const onKey = useCallback((key: string) => {
     if (done || busy) return
     if (key === 'Enter') void submit()
     else if (key === 'Backspace') setTyped((t) => t.slice(0, -1))
-    else if (/^[a-z]$/i.test(key)) setTyped((t) => cleanWord(t + key))
-  }, [done, busy, submit])
+    else if (/^[a-z]$/i.test(key)) setTyped((t) => cleanWord(t + key, length))
+  }, [done, busy, submit, length])
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
@@ -85,7 +92,7 @@ export function WordPlay({
       <div className="flex-1 min-h-0 flex flex-col justify-center gap-1.5 px-4">
         {rows.map((r, i) => (
           <div key={i} className={r.active && shake ? 'animate-[shake_0.35s]' : ''}>
-            <TileRow letters={r.letters} pattern={r.pattern} active={r.active} reveal={r.last} />
+            <TileRow letters={r.letters} pattern={r.pattern} active={r.active} reveal={r.last} length={length} />
           </div>
         ))}
         <div className="h-6 mt-2 text-center text-sm font-bold text-accent">{note}</div>

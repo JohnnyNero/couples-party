@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import m0001 from './migrations/0001_pairing_and_daily.sql?raw'
 import m0002 from './migrations/0002_same_question_same_day.sql?raw'
+import m0003 from './migrations/0003_five_or_six_letters.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -50,6 +51,7 @@ beforeAll(async () => {
   await db.exec(STUB)
   await db.exec(m0001)
   await db.exec(m0002)
+  await db.exec(m0003)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -61,6 +63,10 @@ describe('the wordle colouring', () => {
     expect(await pat('crane', 'crane')).toBe('ggggg')
     expect(await pat('nacre', 'crane')).toBe('yyyyg')
     expect(await pat('pudgy', 'crane')).toBe('.....')
+  })
+  it('colours six letters just the same', async () => {
+    expect(await pat('cheese', 'coffee')).toBe('g.y..g')
+    expect(await pat('coffee', 'coffee')).toBe('gggggg')
   })
   it('never gives a doubled letter more yellows than the answer has', async () => {
     expect(await pat('sheep', 'bread')).toBe('..g..') // one E in the answer: green, no extra yellow
@@ -111,9 +117,10 @@ describe('their word: one question a day, the same for both, solved the same day
     const sam = await call(SAM, 'daily', [today()])
     expect(sam).toMatchObject({ state: 'paired', question: null, mine: null, theirs: null })
   })
-  it('refuses anything that is not five letters', async () => {
-    await expect(call(SAM, 'set_word', [today(), Q, 'four'])).rejects.toThrow(/five letters/)
-    await expect(call(SAM, 'set_word', [today(), Q, 'sixsix'])).rejects.toThrow(/five letters/)
+  it('refuses anything that is not five or six letters', async () => {
+    await expect(call(SAM, 'set_word', [today(), Q, 'four'])).rejects.toThrow(/five or six letters/)
+    await expect(call(SAM, 'set_word', [today(), Q, 'sevenss'])).rejects.toThrow(/five or six letters/)
+    await expect(call(SAM, 'set_word', [today(), Q, 'ott3r'])).rejects.toThrow(/five or six letters/)
   })
   it('lets Sam answer, and change it, before Alex has started', async () => {
     await call(SAM, 'set_word', [today(), Q, 'Tiger'])
@@ -167,6 +174,20 @@ describe('their word: one question a day, the same for both, solved the same day
   })
   it('starts fresh the next day', async () => {
     expect(await call(SAM, 'daily', [tomorrow()])).toMatchObject({ question: null, mine: null, theirs: null })
+  })
+  it('takes a six-letter answer, tells the solver the length, and holds guesses to it', async () => {
+    await call(SAM, 'set_word', [tomorrow(), 'Your mood as weather', 'stormy'])
+    await call(ALEX, 'set_word', [tomorrow(), 'Your mood as weather', 'sunny'])
+    let view = (await call(ALEX, 'daily', [tomorrow()])).theirs
+    expect(view).toMatchObject({ length: 6, answer: null })
+    expect((await call(SAM, 'daily', [tomorrow()])).theirs).toMatchObject({ length: 5 })
+    await expect(call(ALEX, 'submit_guess', [view.id, 'storm'])).rejects.toThrow(/six letters/)
+    await expect(call(SAM, 'submit_guess', [(await call(SAM, 'daily', [tomorrow()])).theirs.id, 'stormy']))
+      .rejects.toThrow(/five letters/)
+    view = await call(ALEX, 'submit_guess', [view.id, 'cloudy'])
+    expect(view.patterns).toEqual(['..g..g']) // the O and the Y are both in place
+    view = await call(ALEX, 'submit_guess', [view.id, 'Stormy'])
+    expect(view).toMatchObject({ status: 'solved', answer: 'stormy' })
   })
 })
 

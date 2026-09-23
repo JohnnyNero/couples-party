@@ -10,6 +10,7 @@ export type PuzzleView = {
   forDate: string
   kind: 'word'
   prompt: string
+  length?: number // letters in the answer, 5 or 6 — absent from a server without migration 0003
   guesses: string[]
   patterns: string[] // one per guess: 'g' right place, 'y' wrong place, '.' absent
   status: 'open' | 'solved' | 'failed'
@@ -86,7 +87,8 @@ function friendly(message: string): string {
   if (/no such code/.test(message)) return "That code didn't work — check it with them?"
   if (/already paired/.test(message)) return "You're already paired."
   if (/already started/.test(message)) return "They've already started it — too late to change."
-  if (/five letters/.test(message)) return 'It has to be five letters.'
+  if (/five or six letters/.test(message)) return 'It has to be five or six letters.'
+  if (/^(five|six) letters/.test(message)) return `It has to be ${message.split(' ')[0]} letters.`
   if (/answer yours first/.test(message)) return 'Answer yours first.'
   return message
 }

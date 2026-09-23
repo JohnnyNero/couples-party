@@ -49,7 +49,7 @@ export function DailyCard({
       <Card title="Their Word" sub="A daily word puzzle for two">
         <p className="text-sm text-fg/60 mb-4">
           Link your two phones once. Then every day you both answer the same question in
-          five letters, and solve each other's as a Wordle.
+          five or six letters, and solve each other's as a Wordle.
         </p>
         <PairStart onDone={() => void refresh()} />
       </Card>
@@ -82,8 +82,8 @@ export function DailyCard({
         <Step n={1} label="You">
           {mine ? (
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <TileRow letters={mine.answer ?? ''} size="sm" />
+              <div className="flex-1 flex items-center gap-2 min-w-0">
+                <TileRow letters={mine.answer ?? ''} length={mine.answer?.length ?? 5} size="sm" />
               </div>
               {mine.guesses.length === 0 ? (
                 <SmallButton onClick={() => open({ kind: 'answer', partner, template, question })}>Change</SmallButton>
@@ -91,7 +91,7 @@ export function DailyCard({
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-fg/60">Five letters, for {partner} to solve</span>
+              <span className="text-sm text-fg/60">Five or six letters, for {partner} to solve</span>
               <BigButton onClick={() => open({ kind: 'answer', partner, template, question })}>Answer</BigButton>
             </div>
           )}
@@ -131,15 +131,17 @@ export function DailyCard({
 function TheirRow({ puzzle, onPlay }: { puzzle: PuzzleView; onPlay: () => void }) {
   const open = puzzle.status === 'open'
   const last = puzzle.patterns[puzzle.patterns.length - 1]
+  const length = puzzle.length ?? 5
+  const status = open
+    ? puzzle.guesses.length ? `${puzzle.guesses.length} of ${MAX_GUESSES}` : ''
+    : puzzle.status === 'solved' ? `Got it in ${puzzle.guesses.length}` : 'Missed'
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2 min-w-0">
-        <TileRow letters={open ? '' : (puzzle.answer ?? '')} pattern={open ? last : puzzle.status === 'solved' ? 'ggggg' : '.....'} size="sm" />
-        <span className="text-xs uppercase tracking-widest text-fg/50 whitespace-nowrap">
-          {open
-            ? puzzle.guesses.length ? `${puzzle.guesses.length} of ${MAX_GUESSES}` : ''
-            : puzzle.status === 'solved' ? `In ${puzzle.guesses.length}` : 'Missed'}
-        </span>
+      {/* The status sits under the tiles, not beside them — six tiles and a button leave
+          no room across a small phone. */}
+      <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
+        <TileRow letters={open ? '' : (puzzle.answer ?? '')} pattern={open ? last : (puzzle.status === 'solved' ? 'g' : '.').repeat(length)} length={length} size="sm" />
+        {status && <span className="text-[0.6rem] uppercase tracking-widest text-fg/50 whitespace-nowrap">{status}</span>}
       </div>
       {open ? (
         <BigButton onClick={onPlay}>{puzzle.guesses.length ? 'Carry on' : 'Play'}</BigButton>
@@ -162,8 +164,8 @@ function Progress({ puzzle, partner }: { puzzle: PuzzleView; partner: string }) 
           : `${partner} hasn't started yours`
   return (
     <div className="mt-4 pt-3 border-t border-fg/10 flex items-center justify-between gap-3 text-sm text-fg/60">
-      <span>{text}</span>
-      {puzzle.guesses.length > 0 && <TileRow letters="" pattern={puzzle.patterns[puzzle.patterns.length - 1]} size="sm" />}
+      <span className="shrink-0">{text}</span>
+      {puzzle.guesses.length > 0 && <div className="flex-1 min-w-0 flex justify-end"><TileRow letters="" pattern={puzzle.patterns[puzzle.patterns.length - 1]} length={puzzle.patterns[0].length} size="sm" /></div>}
     </div>
   )
 }

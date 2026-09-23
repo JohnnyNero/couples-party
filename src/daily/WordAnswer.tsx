@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, DailyError } from './api'
 import { localDate } from './dates'
 import { Keyboard, TileRow } from './Tiles'
-import { cleanWord, loadWords, WORD_LENGTH } from './wordle'
+import { cleanWord, loadWords, MAX_LENGTH, MIN_LENGTH } from './wordle'
 
-// Answering today's question: five letters on the same keyboard they'll solve it on,
+// Answering today's question: five or six letters on the same keyboard they'll solve it on,
 // checked against the word list so it's something they can actually get.
 export function WordAnswer({
   partner,
@@ -26,10 +26,15 @@ export function WordAnswer({
   useEffect(() => { void loadWords().then(setWords) }, [])
 
   const send = useCallback(async () => {
-    if (typed.length < WORD_LENGTH) return setNote('Five letters')
+    if (typed.length < MIN_LENGTH) return setNote('Five or six letters')
     // Wait for the list rather than skip the check — a quick typist mustn't be able to
     // slip a non-word through before it has loaded.
-    const list = words ?? (await loadWords())
+    let list = words
+    try {
+      list ??= await loadWords()
+    } catch {
+      return setNote("Couldn't load the word list — try again")
+    }
     if (!list.has(typed)) return setNote("Not in the word list — they couldn't guess it")
     setBusy(true)
     setNote(null)
@@ -72,7 +77,7 @@ export function WordAnswer({
 
       {sent ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center animate-fade-up">
-          <TileRow letters={typed} pattern="ggggg" reveal />
+          <TileRow letters={typed} length={typed.length} pattern={'g'.repeat(typed.length)} reveal />
           <div className="text-xl font-bold">Sent.</div>
           <div className="text-fg/60">
             {partner} solves it once they've answered too. You can change it until they start.
@@ -84,8 +89,8 @@ export function WordAnswer({
       ) : (
         <>
           <div className="flex-1 min-h-0 flex flex-col justify-center items-center gap-4 px-4">
-            <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Your answer, in five letters</div>
-            <TileRow letters={typed} active />
+            <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Your answer, in five or six letters</div>
+            <TileRow letters={typed} length={MAX_LENGTH} optionalFrom={MIN_LENGTH} active />
             <div className="h-6 text-sm font-bold text-accent text-center">{note}</div>
           </div>
           <div className="shrink-0 px-2 pb-5">

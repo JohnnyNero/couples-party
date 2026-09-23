@@ -516,31 +516,45 @@ question to talk about with the phone face down. Keep them gentle and short.
 # Their Word
 
 The daily puzzle. One of these comes up each day — the same one for both of you.
-You each answer it in exactly five letters, then solve the other's as a Wordle,
+You each answer it in five or six letters, then solve the other's as a Wordle,
 with the question as the only clue.
 
 "{name}" is your partner — the person who'll solve it — so "The animal {name}
 reminds you of" is about them, and they find out how you see them.
 
-Before adding one, check the answers people would ACTUALLY give are common
-five-letter words. That rules out more than you'd think: seasons (all six
-letters), drinks like tea, wine and beer (three and four), places and names
-(they're not in the word list), and anything that needs a sentence. Keep them
-short. No "right now", no "if you could", nothing sentimental.
+The best ones are open: there's no obvious answer, so a stranger would never get
+it but the person who knows you might. Avoid the ones with only a few answers
+(a coffee order, a favourite season), since they're a coin toss, not a test of
+how well you know each other. Before adding one, check that a few of the answers
+people would really give are five or six letters. Places and names never are,
+because they're not in the word list. Keep them short. No "right now", no
+"if you could", nothing sentimental.
 
 - What you're craving
-- Your go-to takeaway
 - Your comfort food
 - A food you'd never eat
-- Your favourite fruit
 - Your desert island food
-- The best breakfast
-- Your coffee order
-- Your pub order
+- Your go-to snack
+- Your day in one word
+- Tomorrow in one word
+- Your mood as weather
+- What's on your mind
+- The best part of your day
+- A smell you love
+- Your dream job
+- Your dream holiday
+- Your biggest fear
+- What you were in a past life
+- The thing you can't live without
+- Your perfect date
 - The animal {name} reminds you of
 - {name} in one word
-- {name}'s best feature
-- {name}'s most annoying habit
-- What {name} cooks best
 - {name}'s best quality
-- Our perfect night in
+- {name}'s most annoying habit
+- {name}'s guilty pleasure
+- What {name} does when stressed
+- What {name} spends too much on
+- What always makes {name} laugh
+- The colour that suits {name}
+- Something we should do more
+- What we bicker about

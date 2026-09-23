@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import shipped from '../../public/content/words-5.txt?raw'
+import shipped6 from '../../public/content/words-6.txt?raw'
 import { cleanWord, keyStates } from './wordle'
 import { localDate } from './dates'
 
@@ -17,9 +18,10 @@ describe('keyStates', () => {
 })
 
 describe('cleanWord', () => {
-  it('keeps five lower-case letters and nothing else', () => {
+  it('keeps lower-case letters and nothing else, six at most unless told fewer', () => {
     expect(cleanWord(' Hap-py! ')).toBe('happy')
-    expect(cleanWord('abcdefgh')).toBe('abcde')
+    expect(cleanWord('abcdefgh')).toBe('abcdef')
+    expect(cleanWord('abcdefgh', 5)).toBe('abcde')
   })
 })
 
@@ -31,6 +33,19 @@ describe('the shipped word list', () => {
   })
   it('has the everyday words people will actually set', () => {
     for (const w of ['tired', 'happy', 'bored', 'pizza', 'curry', 'chips', 'beach', 'sushi', 'tipsy', 'comfy']) {
+      expect(list.has(w)).toBe(true)
+    }
+  })
+})
+
+describe('the shipped six-letter list', () => {
+  const list = new Set(shipped6.split('\n').filter(Boolean))
+  it('is six-letter lower-case words only', () => {
+    expect([...list].filter((w) => !/^[a-z]{6}$/.test(w))).toEqual([])
+    expect(list.size).toBeGreaterThan(20000)
+  })
+  it('has the everyday words five letters turned away', () => {
+    for (const w of ['coffee', 'crisps', 'cheese', 'stormy', 'grumpy', 'pirate', 'travel', 'dinner', 'cuddly', 'sleepy']) {
       expect(list.has(w)).toBe(true)
     }
   })

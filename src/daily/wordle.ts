@@ -2,8 +2,13 @@
 // answer never reaches the phone until the puzzle's over); these only turn what the
 // server sent back into things to draw.
 
-export const WORD_LENGTH = 5
+// An answer is five letters or six. The solver is told which — it's how many tiles they
+// get — and every guess has to match it.
+export const MIN_LENGTH = 5
+export const MAX_LENGTH = 6
 export const MAX_GUESSES = 6
+
+export const lengthWord = (n: number) => (n === 6 ? 'Six' : 'Five')
 
 export type Mark = 'g' | 'y' | '.'
 
@@ -24,14 +29,23 @@ export function keyStates(guesses: string[], patterns: string[]): Map<string, Ma
   return out
 }
 
-// Just the letters, lower case — what the keyboard and the input field produce.
-export const cleanWord = (s: string) => s.toLowerCase().replace(/[^a-z]/g, '').slice(0, WORD_LENGTH)
+// Just the letters, lower case, no longer than `max` — what the keyboard produces.
+export const cleanWord = (s: string, max = MAX_LENGTH) => s.toLowerCase().replace(/[^a-z]/g, '').slice(0, max)
 
-// The five-letter word list, fetched once when a word screen first needs it.
+// The five- and six-letter word lists as one set, fetched once when a word screen first
+// needs them.
 let words: Promise<Set<string>> | null = null
 export function loadWords(): Promise<Set<string>> {
-  words ??= fetch(`${import.meta.env.BASE_URL}content/words-5.txt`)
-    .then((r) => r.text())
-    .then((t) => new Set(t.split('\n').map((w) => w.trim()).filter((w) => w.length === WORD_LENGTH)))
+  const one = (n: number) =>
+    fetch(`${import.meta.env.BASE_URL}content/words-${n}.txt`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`words-${n}.txt: ${r.status}`)
+        return r.text()
+      })
+      .then((t) => t.split('\n').map((w) => w.trim()).filter((w) => w.length === n))
+  words ??= Promise.all([one(5), one(6)])
+    .then(([five, six]) => new Set([...five, ...six]))
+    // A failed fetch mustn't stick: let the next Enter try again.
+    .catch((e) => { words = null; throw e })
   return words
 }

@@ -20,6 +20,8 @@ SQL Editor → New query → paste the whole file → **Run**.
 2. `migrations/0002_same_question_same_day.sql` — replaces three of those functions:
    one question a day for both of you, solved the same day, locked until you've
    answered yours. No tables change.
+3. `migrations/0003_five_or_six_letters.sql` — replaces four functions so an answer can
+   be five letters or six, and tells the solver which. No tables change.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.
