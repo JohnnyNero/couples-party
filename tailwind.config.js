@@ -17,6 +17,11 @@ export default {
         // to a bright cream slab in a dark room.
         ink: 'rgb(var(--ink) / <alpha-value>)',
         paper: 'rgb(var(--paper) / <alpha-value>)',
+        // Their Word's own three, matching NYT Wordle rather than the app's accent —
+        // see index.css.
+        correct: 'rgb(var(--correct) / <alpha-value>)',
+        present: 'rgb(var(--present) / <alpha-value>)',
+        absent: 'rgb(var(--absent) / <alpha-value>)',
       },
       fontFamily: {
         // Nunito everywhere by default (preflight sets `sans` on html); `display`

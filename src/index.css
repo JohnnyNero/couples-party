@@ -8,12 +8,19 @@ html, body, #root { height: 100%; }
    Day is "Warm Blush". Night is the same three roles, warm and dim — this gets played
    in a dark bedroom, and a cream screen at full brightness is the wrong thing to look
    at before sleep. Night follows the phone's own setting unless someone has picked. */
+/* Their Word borrows NYT Wordle's own three tile colours instead of the app's usual
+   accent — the point is that this one screen should feel like the Wordle people
+   already know. NYT dims them a touch for its own dark theme, so night mode here does
+   the same rather than reusing the day values at low brightness. */
 :root {
   --bg: 255 243 236;
   --fg: 59 36 30;
   --accent: 255 111 97;
   --ink: var(--fg);
   --paper: var(--bg);
+  --correct: 106 170 100;
+  --present: 201 180 88;
+  --absent: 120 124 126;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -23,6 +30,9 @@ html, body, #root { height: 100%; }
     --accent: 255 128 112;
     --ink: 46 34 30;
     --paper: 240 222 210;
+    --correct: 83 141 78;
+    --present: 181 159 59;
+    --absent: 58 58 60;
     color-scheme: dark;
   }
 }
@@ -32,6 +42,9 @@ html, body, #root { height: 100%; }
   --accent: 255 128 112;
   --ink: 46 34 30;
   --paper: 240 222 210;
+  --correct: 83 141 78;
+  --present: 181 159 59;
+  --absent: 58 58 60;
   color-scheme: dark;
 }
 

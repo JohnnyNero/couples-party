@@ -1,8 +1,9 @@
 import type { Mark } from './wordle'
 
-// One row of letter tiles — five or six, as long as the answer. Coloured with the app's own three colours rather than
-// Wordle's green and yellow: solid coral is right place, a coral outline is in the word
-// but somewhere else, grey is not in it at all.
+// One row of letter tiles — five or six, as long as the answer. Coloured to match NYT
+// Wordle rather than the app's usual accent: green is right place, yellow is in the
+// word but somewhere else, grey is not in it at all. This is the one screen in the app
+// where that borrowed palette is the point — everyone already knows what it means.
 export function TileRow({
   letters,
   pattern,
@@ -40,11 +41,11 @@ export function TileRow({
             className={
               `${box} grid place-items-center rounded-lg font-bold uppercase border-2 ` +
               (mark === 'g'
-                ? 'bg-accent border-accent text-bg'
+                ? 'bg-correct border-correct text-white'
                 : mark === 'y'
-                  ? 'bg-accent/15 border-accent text-fg'
+                  ? 'bg-present border-present text-white'
                   : mark === '.'
-                    ? 'bg-fg/15 border-transparent text-fg/60'
+                    ? 'bg-absent border-absent text-white'
                     : letter
                       ? 'border-fg/50 text-fg'
                       : optional
@@ -92,11 +93,11 @@ export function Keyboard({
                   (wide ? 'px-2 text-[0.65rem] tracking-wider flex-[1.5]' : 'flex-1 text-base') +
                   ' ' +
                   (mark === 'g'
-                    ? 'bg-accent text-bg'
+                    ? 'bg-correct text-white'
                     : mark === 'y'
-                      ? 'bg-accent/20 text-fg ring-2 ring-inset ring-accent'
+                      ? 'bg-present text-white'
                       : mark === '.'
-                        ? 'bg-fg/5 text-fg/25'
+                        ? 'bg-absent text-white'
                         : 'bg-fg/10 text-fg')
                 }
               >
