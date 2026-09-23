@@ -74,7 +74,7 @@ export function DailyCard({
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 
   return (
-    <Card title="Their Word" sub="Today's question">
+    <Card title="Their Word" sub="Today's question" corner={<StreakBadge n={d.streak ?? 0} />}>
       <QuestionSpin today={localDate()} question={question} pool={pool.map((q) => renderQuestion(q, partner))} />
 
       <div className="mt-5 flex flex-col gap-3">
@@ -197,14 +197,41 @@ function SmallButton({ onClick, children }: { onClick: () => void; children: Rea
   )
 }
 
-function Card({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
+function Card({
+  title,
+  sub,
+  corner,
+  children,
+}: {
+  title: string
+  sub?: string
+  corner?: ReactNode
+  children: ReactNode
+}) {
   return (
     <section className="rounded-3xl border-2 border-fg/15 p-6">
-      <div className="mb-3">
-        {sub && <div className="text-[0.6rem] uppercase tracking-[0.25em] text-fg/40 mb-1">{sub}</div>}
-        <h2 className="font-display text-3xl font-bold tracking-tight">{title}</h2>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          {sub && <div className="text-[0.6rem] uppercase tracking-[0.25em] text-fg/40 mb-1">{sub}</div>}
+          <h2 className="font-display text-3xl font-bold tracking-tight">{title}</h2>
+        </div>
+        {corner}
       </div>
       {children}
     </section>
+  )
+}
+
+// Consecutive days you've both answered. Quiet on day zero — there's nothing to show
+// off yet, and a badge stuck at 0 would just read as a nag.
+function StreakBadge({ n }: { n: number }) {
+  if (n < 1) return null
+  return (
+    <div className="shrink-0 text-right leading-none">
+      <div className="font-display text-2xl font-bold text-accent tabular-nums">{n}</div>
+      <div className="text-[0.55rem] uppercase tracking-[0.2em] text-fg/40 whitespace-nowrap">
+        day{n === 1 ? '' : 's'} running
+      </div>
+    </div>
   )
 }

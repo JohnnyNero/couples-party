@@ -26,7 +26,9 @@ Needs, in order:
    content file's pool by date), answered in five or six letters, and solved the same day.
    Your partner's answer stays locked until you've given yours — enforced on the
    server. Changeable until they start. Scored on the server.
-4. A shared couple streak: a day counts when you've both done the daily, one skip a week.
+4. ~~A shared couple streak~~ — done. A day counts once you've both answered it (not
+   solved — just answered). Forgives a single missed day; two in a row end it there.
+   Shown as a badge on the Their Word card once it's at least 1.
 5. The other four puzzle types.
 6. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
    own past sessions. Deliberately left for later.

@@ -3,6 +3,7 @@ import { PGlite } from '@electric-sql/pglite'
 import m0001 from './migrations/0001_pairing_and_daily.sql?raw'
 import m0002 from './migrations/0002_same_question_same_day.sql?raw'
 import m0003 from './migrations/0003_five_or_six_letters.sql?raw'
+import m0004 from './migrations/0004_streak.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -52,6 +53,7 @@ beforeAll(async () => {
   await db.exec(m0001)
   await db.exec(m0002)
   await db.exec(m0003)
+  await db.exec(m0004)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -82,6 +84,9 @@ describe('the public API cannot touch the tables', () => {
   })
   it('cannot call the helpers that would reveal an answer', async () => {
     await expect(as(SAM, `select public.wordle_pattern('crane', 'crane')`)).rejects.toThrow(/permission/)
+  })
+  it('cannot call the streak helper directly either', async () => {
+    await expect(as(SAM, `select public.couple_streak(gen_random_uuid(), current_date)`)).rejects.toThrow(/permission/)
   })
 })
 
@@ -188,6 +193,57 @@ describe('their word: one question a day, the same for both, solved the same day
     expect(view.patterns).toEqual(['..g..g']) // the O and the Y are both in place
     view = await call(ALEX, 'submit_guess', [view.id, 'Stormy'])
     expect(view).toMatchObject({ status: 'solved', answer: 'stormy' })
+  })
+})
+
+describe('the shared streak', () => {
+  const ROBIN = '00000000-0000-0000-0000-00000000000f'
+  const JESS = '00000000-0000-0000-0000-000000000010'
+  let coupleId: string
+
+  const dayOffset = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)
+  // Both of you answering is what makes a day count — this writes the two rows
+  // set_word would, straight to the table, so a streak can be built across dates
+  // set_word's own window (a few days either side of today) would otherwise refuse.
+  const bothAnswered = (offset: number) =>
+    db.query(
+      `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
+       values ($1, $2, $3, $4, 'word', 'q', 'otter'), ($1, $3, $2, $4, 'word', 'q', 'otter')`,
+      [coupleId, ROBIN, JESS, dayOffset(offset)],
+    )
+
+  beforeAll(async () => {
+    await db.exec(`insert into auth.users (id) values ('${ROBIN}'), ('${JESS}')`)
+    const code = await call(ROBIN, 'create_couple', ['Robin'])
+    await call(JESS, 'join_couple', [code, 'Jess'])
+    coupleId = (
+      await db.query<{ couple_id: string }>('select couple_id from public.members where user_id = $1', [ROBIN])
+    ).rows[0].couple_id
+  })
+
+  it('is zero for a couple who has never both answered the same day', async () => {
+    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(0)
+  })
+  it('counts today once you have both answered it', async () => {
+    await bothAnswered(0)
+    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(1)
+  })
+  it("doesn't hold today against you before the day is over", async () => {
+    // Asking about tomorrow, before either of you has answered it, still reports
+    // today's streak rather than treating the still-open day as a miss.
+    expect((await call(ROBIN, 'daily', [tomorrow()])).streak).toBe(1)
+  })
+  it('forgives a single missed day, but not two in a row', async () => {
+    // Backward from today: -1 played, -2 missed, -3 and -4 played, -5 and -6 missed,
+    // -7 and -8 played (already out of reach once -5/-6 end the run).
+    for (const offset of [-1, -3, -4, -7, -8]) await bothAnswered(offset)
+    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(4) // today, -1, -3, -4
+  })
+  it('cleans up after itself, so it leaves no puzzles behind for other tests to count', async () => {
+    await call(ROBIN, 'leave_couple')
+    await call(JESS, 'leave_couple') // the couple, and its puzzles, go with the last one out
+    const left = await db.query<{ n: number }>('select count(*)::int as n from public.puzzles where couple_id = $1', [coupleId])
+    expect(left.rows[0].n).toBe(0)
   })
 })
 

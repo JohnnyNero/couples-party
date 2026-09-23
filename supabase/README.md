@@ -22,6 +22,9 @@ SQL Editor → New query → paste the whole file → **Run**.
    answered yours. No tables change.
 3. `migrations/0003_five_or_six_letters.sql` — replaces four functions so an answer can
    be five letters or six, and tells the solver which. No tables change.
+4. `migrations/0004_streak.sql` — adds one function and has `daily()` report a `streak`
+   alongside everything else: consecutive days you've both answered, one missed day
+   forgiven. No tables change.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

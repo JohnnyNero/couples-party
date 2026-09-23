@@ -28,6 +28,9 @@ export type Daily =
       question: string | null
       mine: PuzzleView | null // my answer today, and how they're getting on with it
       theirs: PuzzleView | { locked: true } | null // null: not answered yet; locked: answer yours first
+      // Consecutive days you've both answered, one missed day forgiven — 0 from a
+      // server without migration 0004.
+      streak?: number
     }
 
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
