@@ -13,11 +13,11 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
   const d = s.draw!
   const round = d.rounds[d.current]
   const award = drawAward(round)
-  const canCount = me === round.drawer && !round.correct && !!round.guess
+  const canCount = me === round.drawer && !round.correct && !!round.guess && !!round.answer
   return (
     <div className="w-full max-w-md mx-auto text-center">
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-2 sm:mb-4">
-        {drawQuestion(s, round, null)}
+        {drawQuestion(s, round, me)}
       </div>
       <div className="text-2xl sm:text-4xl font-bold uppercase tracking-tight break-words mb-4">
         {round.answer || '—'}

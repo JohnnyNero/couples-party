@@ -155,3 +155,36 @@ describe('the bot can play Tonight', () => {
     expect(s.draw!.rounds.every((r) => r.answer !== null)).toBe(true)
   })
 })
+
+describe('the bot can play the whole night', () => {
+  it('walks the full roster, every game in order, to DONE', () => {
+    const r = makeRng(8)
+    const list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    let s = initialState(31, 'full', {
+      themes: [
+        { id: 't001', text: 'seven things {name} would miss', pool: list },
+        { id: 't002', text: "seven of {name}'s fears", pool: list },
+      ],
+      likelyStatements: list,
+      fingerStatements: list,
+      mrmrsQuestions: list,
+      spectrums: list.map((x, i) => ({ id: `w${i}`, low: x, high: x.toUpperCase() })),
+      drawPrompts: list.map((x, i) => ({ id: `d${i}`, text: x })),
+      lightsQuestions: ['What made you laugh today?'],
+    })
+    const order: string[] = []
+    let steps = 0
+    while (s.phase !== 'DONE' && steps++ < 3000) {
+      const game = s.phase.split('_')[0]
+      if (order[order.length - 1] !== game) order.push(game)
+      const a = nextBotAction(s, 'A', BRAIN, r)
+      const b = nextBotAction(s, 'B', BRAIN, r)
+      const before = s
+      if (a) s = reduce(s, a, steps)
+      if (b) s = reduce(s, b, steps)
+      if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+    }
+    expect(s.phase).toBe('DONE')
+    expect(order).toEqual(['JOIN', 'LIST', 'LIKELY', 'FINGER', 'WAVE', 'MM', 'DRAW', 'LIGHTS'])
+  })
+})

@@ -17,7 +17,7 @@ export function PlayFingerRound({ s, me }: { s: SessionState; me: PlayerId }) {
         <div className="text-xl font-bold uppercase tracking-tight">{round.statementId}</div>
       </div>
       <button
-        className="w-full min-h-[64px] bg-fg text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px"
+        className="w-full min-h-[64px] bg-ink text-paper text-xl font-bold uppercase tracking-widest active:translate-y-px"
         onClick={() => dispatch({ type: 'SUBMIT_FINGER', player: me, applies: true })}
       >
         Finger down

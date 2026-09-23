@@ -6,10 +6,17 @@ export default {
       colors: {
         // Three colours only. The accent is used ONLY to mark whose turn it is
         // / what just happened — never for decoration.
-        // "Warm Blush": warm cream ground, warm-ink text, coral accent.
-        bg: '#fff3ec',
-        fg: '#3b241e',
-        accent: '#ff6f61',
+        // "Warm Blush" by day: warm cream ground, warm-ink text, coral accent. The
+        // actual values are CSS variables (index.css) so night mode can swap all three
+        // at once; the <alpha-value> form keeps every `text-fg/40` working.
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        fg: 'rgb(var(--fg) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
+        // Not a fourth colour — the inverted surface (dark cards, input fields). By day
+        // it IS fg-on-bg flipped; by night it stays a dark surface instead of flipping
+        // to a bright cream slab in a dark room.
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        paper: 'rgb(var(--paper) / <alpha-value>)',
       },
       fontFamily: {
         // Nunito everywhere by default (preflight sets `sans` on html); `display`

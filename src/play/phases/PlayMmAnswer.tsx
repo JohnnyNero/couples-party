@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { MRMRS } from '../../engine/phases'
@@ -13,7 +13,22 @@ export function PlayMmAnswer({ s, me }: { s: SessionState; me: PlayerId }) {
   const round = g.rounds[g.current]
   const [answer, setAnswer] = useState('')
   const [predict, setPredict] = useState('')
-  if (round.answer[me] !== null) return <PlayWaiting label="Sent — waiting on them" />
+
+  // Typed but not sent is lost when the clock runs out — so send it just before. Your
+  // own answer is the one that matters; a missing guess at theirs just scores nothing.
+  const latest = useRef({ answer, predict })
+  latest.current = { answer, predict }
+  const sent = round.answer[me] !== null
+  useEffect(() => {
+    if (sent || s.phaseEndsAt == null) return
+    const id = setTimeout(() => {
+      const { answer: a, predict: p } = latest.current
+      if (a.trim()) dispatch({ type: 'SUBMIT_MRMRS', player: me, answer: a, predict: p })
+    }, Math.max(0, s.phaseEndsAt - Date.now() - 600))
+    return () => clearTimeout(id)
+  }, [sent, s.phaseEndsAt, me])
+
+  if (sent) return <PlayWaiting label="Sent — waiting on them" />
 
   const them = playerName(s, other(me))
   const ready = answer.trim().length > 0 && predict.trim().length > 0
@@ -22,8 +37,8 @@ export function PlayMmAnswer({ s, me }: { s: SessionState; me: PlayerId }) {
     dispatch({ type: 'SUBMIT_MRMRS', player: me, answer, predict })
   }
   const field =
-    'w-full min-h-[52px] text-lg uppercase bg-fg text-bg px-4 outline-none border-b-4 rounded-t-xl ' +
-    'placeholder:text-bg/30 placeholder:normal-case'
+    'w-full min-h-[52px] text-lg uppercase bg-ink text-paper px-4 outline-none border-b-4 rounded-t-xl ' +
+    'placeholder:text-paper/30 placeholder:normal-case'
 
   return (
     <div className="h-full flex flex-col justify-center p-6 gap-4">

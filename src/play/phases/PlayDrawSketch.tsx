@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { DrawStroke, PlayerId, SessionState } from '../../engine/state'
 import { DRAW } from '../../engine/phases'
 import { dispatch } from '../../net'
@@ -21,7 +21,24 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
   const drawing = useRef(false)
   const boxRef = useRef<HTMLDivElement>(null)
 
-  if (me !== round.drawer) return <PlayWaiting label={`${playerName(s, round.drawer)} is drawing`} />
+  // The answer and the strokes only live on this phone until Done. If the clock runs out
+  // first, the reducer's timeout has nothing to go on and the whole round is wasted — so
+  // just before it does, send what's there. An answer with half a drawing is still a
+  // round; nothing at all isn't.
+  const latest = useRef({ answer, strokes })
+  latest.current = { answer, strokes }
+  const isDrawer = me === round.drawer
+  useEffect(() => {
+    if (!isDrawer || s.phaseEndsAt == null) return
+    const wait = s.phaseEndsAt - Date.now() - 600
+    const id = setTimeout(() => {
+      const { answer: a, strokes: st } = latest.current
+      if (a.trim()) dispatch({ type: 'SUBMIT_DRAWING', player: me, answer: a, strokes: st })
+    }, Math.max(0, wait))
+    return () => clearTimeout(id)
+  }, [isDrawer, s.phaseEndsAt, me])
+
+  if (!isDrawer) return <PlayWaiting label={`${playerName(s, round.drawer)} is drawing`} />
 
   const question = drawQuestion(s, round, me)
 
@@ -36,7 +53,7 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
           they have to guess what you said.
         </div>
         <input
-          className="w-full min-h-[56px] text-xl uppercase bg-fg text-bg px-4 outline-none border-b-4 border-accent placeholder:text-bg/30 placeholder:normal-case rounded-t-xl"
+          className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case rounded-t-xl"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') go() }}

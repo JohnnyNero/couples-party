@@ -9,6 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#fff3ec" />
     <title>Couples Party</title>
+    <script>
+      // Before first paint, so a night-mode phone never flashes cream on the way in.
+      try {
+        var t = localStorage.getItem('couples-party:theme')
+        if (t === 'day' || t === 'night') document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

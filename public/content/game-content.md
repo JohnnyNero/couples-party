@@ -467,12 +467,12 @@ person the answer belongs to decides if the guess counts. Short answers only.
 - The best present you've ever had?
 - Your dream job as a kid?
 - Your go-to drink at the pub?
-- What you'd grab in a fire?
+- What would you grab in a fire?
 - Your favourite smell?
 - The song that always gets you dancing?
 - Your guilty-pleasure TV show?
-- Where you'd live if you could live anywhere?
-- What you'd name a dog?
+- Where would you live if you could live anywhere?
+- What would you call a dog?
 - Your first gig?
 - The chore you hate most?
 - Your perfect pizza topping?

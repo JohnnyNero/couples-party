@@ -4,10 +4,12 @@ import { Dot } from '../../views/Dot'
 import { DrawingCanvas } from '../../views/DrawingCanvas'
 import { playerName } from '../../views/list'
 import { drawQuestion } from '../../views/draw'
+import { useMyPlayerId } from '../../net'
 
 // The finished drawing is public now — everyone in the room can see it. Only the guess
 // itself stays private until the reveal.
 export function ScreenDrawGuess({ s }: { s: SessionState }) {
+  const me = useMyPlayerId()
   const d = s.draw!
   const round = d.rounds[d.current]
   return (
@@ -16,7 +18,7 @@ export function ScreenDrawGuess({ s }: { s: SessionState }) {
         Round {round.index} of {d.rounds.length} · {playerName(s, other(round.drawer))} is guessing
       </div>
       <div className="text-xl sm:text-4xl font-bold uppercase tracking-tight break-words mb-4">
-        {drawQuestion(s, round, null)}
+        {drawQuestion(s, round, me)}
       </div>
       <DrawingCanvas strokes={round.strokes} animate />
       <div className="mt-6 flex items-center justify-center gap-4">

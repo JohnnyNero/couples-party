@@ -2,10 +2,23 @@ import type { ReactNode } from 'react'
 
 // Shared layout for the launch pickers (how to play, what to play): a title bar, a
 // column of choice buttons, and a footer. Pulled out once a second picker needed it.
-export function PickerScreen({ prompt, children }: { prompt: string; children: ReactNode }) {
+export function PickerScreen({
+  prompt,
+  children,
+  onBack,
+}: {
+  prompt: string
+  children: ReactNode
+  onBack?: () => void
+}) {
   return (
     <div className="h-full w-full flex flex-col select-none p-6 sm:p-10">
-      <div className="text-sm sm:text-lg uppercase tracking-[0.25em] text-fg/70 border-b-2 border-fg/80 pb-3">
+      <div className="flex items-center gap-3 text-sm sm:text-lg uppercase tracking-[0.25em] text-fg/70 border-b-2 border-fg/80 pb-3 pr-10">
+        {onBack && (
+          <button onClick={onBack} aria-label="Back" className="-ml-1 px-1 text-fg/60 active:translate-y-px">
+            ←
+          </button>
+        )}
         Couples Party
       </div>
       <div className="flex-1 flex flex-col justify-center gap-4 w-full max-w-xl mx-auto">

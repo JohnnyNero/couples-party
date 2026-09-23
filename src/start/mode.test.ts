@@ -11,10 +11,13 @@ describe('resolveMode', () => {
 })
 
 describe('resolveGame', () => {
-  it('returns full/list/draw for ?game=…', () => {
-    expect(resolveGame('?game=full')).toBe('full')
-    expect(resolveGame('?game=list')).toBe('list')
-    expect(resolveGame('?game=draw')).toBe('draw')
+  it('returns every session type for ?game=…', () => {
+    for (const g of ['full', 'tonight', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw']) {
+      expect(resolveGame(`?game=${g}`)).toBe(g)
+    }
+  })
+  it('will not start a session on Lights Out alone', () => {
+    expect(resolveGame('?game=lights')).toBe(null)
   })
   it('returns null when absent or unknown', () => {
     expect(resolveGame('')).toBe(null)

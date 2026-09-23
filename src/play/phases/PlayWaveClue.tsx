@@ -33,7 +33,7 @@ export function PlayWaveClue({ s, me }: { s: SessionState; me: PlayerId }) {
         All they get is the thing — then they slide to where they reckon it lands.
       </div>
       <input
-        className="w-full min-h-[56px] text-xl uppercase bg-fg text-bg px-4 outline-none border-b-4 border-accent placeholder:text-bg/30 placeholder:normal-case"
+        className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case"
         value={clue}
         onChange={(e) => setClue(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') submit() }}

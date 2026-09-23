@@ -13,11 +13,13 @@ export function resolveMode(search: string): PlayMode | null {
   return m === 'screen' || m === 'duo' || m === 'solo' ? m : null
 }
 
-// Which acts to run this session — rides alongside ?mode= for the same reason (a shared
-// link must agree with the host before either side calls initNet).
+const GAMES: readonly Game[] = ['full', 'tonight', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw']
+
+// Which session to run — rides alongside ?mode= for the same reason (a shared link must
+// agree with the host before either side calls initNet).
 export function resolveGame(search: string): Game | null {
   const g = new URLSearchParams(search).get('game')
-  return g === 'full' || g === 'list' || g === 'finger' || g === 'wave' || g === 'draw' ? g : null
+  return (GAMES as readonly string[]).includes(g ?? '') ? (g as Game) : null
 }
 
 // The bot flag rides in the URL too. A second human joining a bot room is harmless: the

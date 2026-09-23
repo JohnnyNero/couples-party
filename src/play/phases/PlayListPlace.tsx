@@ -34,7 +34,7 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
           'shrink-0 rounded-2xl px-4 text-center uppercase tracking-tight ' +
           (placed
             ? 'py-2 text-xs font-bold text-fg/35 border-2 border-dashed border-fg/15'
-            : 'py-4 text-xl font-bold bg-fg text-bg shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
+            : 'py-4 text-xl font-bold bg-ink text-paper shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
         }
       >
         {placed ? 'Locked in — waiting on them' : item.text}

@@ -553,8 +553,9 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
     case 'COUNT_IT': {
       if (state.phase !== 'DRAW_REVEAL' || !state.draw) return state
       const round = currentDrawRound(state.draw)
-      // Only the drawer can wave a guess through, only once, and only a real guess.
-      if (action.player !== round.drawer || round.correct || !round.guess) return state
+      // Only the drawer can wave a guess through, only once, and only a real guess at a
+      // real answer.
+      if (action.player !== round.drawer || round.correct || !round.guess || !round.answer) return state
       const s = clone(state)
       currentDrawRound(s.draw!).correct = true
       return s

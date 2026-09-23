@@ -30,7 +30,7 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
       </div>
       <DrawingCanvas strokes={round.strokes} animate />
       <input
-        className="w-full min-h-[56px] text-xl uppercase bg-fg text-bg px-4 outline-none border-b-4 border-accent placeholder:text-bg/30 placeholder:normal-case rounded-t-xl"
+        className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case rounded-t-xl"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') submit() }}

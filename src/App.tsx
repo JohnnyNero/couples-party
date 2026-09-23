@@ -1,19 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { initNet, getIsStreamScreen } from './net'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
-import { GamePicker } from './start/GamePicker'
+import { Home } from './start/Home'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
 import { FullscreenToggle } from './views/FullscreenToggle'
 
 export default function App() {
-  // Mode and game both come from the URL (a shared link carries both) or the two launch
-  // pickers in sequence — how you're playing, then what you're playing.
+  // Game and mode both come from the URL (a shared link carries both) or the launch
+  // screens in sequence — what you're playing (the home screen), then how.
   const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
   const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
-  const pendingBot = useRef(false)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -28,13 +27,19 @@ export default function App() {
   )
 
   function renderApp() {
+    if (!game) return <Home onPick={setGame} />
     if (!mode) {
-      return <ModePicker onPick={(m, bot) => { pendingBot.current = !!bot; setMode(m) }} />
-    }
-    if (!game) {
-      // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
-      // link (location.href + #r=CODE) carries both to the joining device.
-      return <GamePicker onPick={(g) => { stampMode(mode, g, pendingBot.current); setGame(g) }} />
+      return (
+        <ModePicker
+          onBack={() => setGame(null)}
+          onPick={(m, bot) => {
+            // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's
+            // share link (location.href + #r=CODE) carries both to the joining device.
+            stampMode(m, game, !!bot)
+            setMode(m)
+          }}
+        />
+      )
     }
     if (!ready) return <Connecting />
     if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />

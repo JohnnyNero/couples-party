@@ -4,9 +4,40 @@
 
 html, body, #root { height: 100%; }
 
+/* The three colour tokens, as bare RGB channels so Tailwind can add alpha to them.
+   Day is "Warm Blush". Night is the same three roles, warm and dim — this gets played
+   in a dark bedroom, and a cream screen at full brightness is the wrong thing to look
+   at before sleep. Night follows the phone's own setting unless someone has picked. */
+:root {
+  --bg: 255 243 236;
+  --fg: 59 36 30;
+  --accent: 255 111 97;
+  --ink: var(--fg);
+  --paper: var(--bg);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="day"]) {
+    --bg: 27 19 17;
+    --fg: 240 222 210;
+    --accent: 255 128 112;
+    --ink: 46 34 30;
+    --paper: 240 222 210;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="night"] {
+  --bg: 27 19 17;
+  --fg: 240 222 210;
+  --accent: 255 128 112;
+  --ink: 46 34 30;
+  --paper: 240 222 210;
+  color-scheme: dark;
+}
+
 body {
-  background: #fff3ec;
-  color: #3b241e;
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
   margin: 0;
   font-family: 'Nunito', Arial, sans-serif;
   /* Real, lining, tabular numerals — the results-board look. */
