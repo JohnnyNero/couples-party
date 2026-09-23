@@ -12,10 +12,17 @@ Each phone becomes an anonymous user the first time it opens the Today tab. No e
 no password; pairing is what links two of them. (If a phone's browser data is cleared,
 it becomes a new person and has to pair again.)
 
-## 2. Run the migration
+## 2. Run the migrations, in order, once each
 
-SQL Editor → New query → paste the whole of `migrations/0001_pairing_and_daily.sql` →
-**Run**. It creates three tables and six functions, and changes nothing else.
+SQL Editor → New query → paste the whole file → **Run**.
+
+1. `migrations/0001_pairing_and_daily.sql` — three tables and six functions.
+2. `migrations/0002_same_question_same_day.sql` — replaces three of those functions:
+   one question a day for both of you, solved the same day, locked until you've
+   answered yours. No tables change.
+
+Run a new one before deploying the app that needs it — the app and the functions
+have to agree on what the daily card looks like.
 
 ## Why the anon key is in the repo
 

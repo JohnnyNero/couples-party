@@ -515,33 +515,34 @@ question to talk about with the phone face down. Keep them gentle and short.
 
 # Their Word
 
-The daily puzzle. You pick one of these, answer it in exactly five letters, and
-tomorrow your partner plays it as a Wordle with the prompt as the clue. Write
-them so a five-letter answer comes easily — moods, food, animals, places,
-colours. They're shown to the solver as "Sam's answer to…", so keep them short.
+The daily puzzle. One of these comes up each day — the same one for both of you.
+You each answer it in exactly five letters, then solve the other's as a Wordle,
+with the question as the only clue.
 
-- How today felt
-- Something you ate today
-- What you want for dinner
-- Your mood right now
-- An animal you'd be today
-- Where you'd rather be
-- A colour for today
-- Something in your bag
-- What you drank today
-- A word for me
+"{name}" is your partner — the person who'll solve it — so "The animal {name}
+reminds you of" is about them, and they find out how you see them.
+
+Before adding one, check the answers people would ACTUALLY give are common
+five-letter words. That rules out more than you'd think: seasons (all six
+letters), drinks like tea, wine and beer (three and four), places and names
+(they're not in the word list), and anything that needs a sentence. Keep them
+short. No "right now", no "if you could", nothing sentimental.
+
 - What you're craving
-- The weather in your head
-- Something that made you smile
-- A fruit you'd be
-- Your energy level, in a word
-- What you'd cook me
-- Something you want to do this weekend
-- A snack you'd kill for
-- Where we should go next
-- A word for your week
-- Something you're looking forward to
-- What you'd be doing with the day off
-- A sound you like
-- A drink for tonight
-- Something on your mind
+- Your go-to takeaway
+- Your comfort food
+- A food you'd never eat
+- Your favourite fruit
+- Your desert island food
+- The best breakfast
+- Your coffee order
+- Your pub order
+- The animal {name} reminds you of
+- {name} in one word
+- {name}'s best feature
+- {name}'s most annoying habit
+- {name} when they're hungry
+- {name} first thing in the morning
+- What {name} cooks best
+- {name}'s best quality
+- Our perfect night in

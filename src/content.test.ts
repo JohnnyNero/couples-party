@@ -208,7 +208,9 @@ describe('the shipped content keeps its shape', () => {
 
   it('gives the daily word puzzle enough prompts to choose from, each short', () => {
     expect(parsed.wordPrompts.length).toBeGreaterThanOrEqual(12)
-    expect(parsed.wordPrompts.filter((t) => words(t) > 8 || /\?$/.test(t))).toEqual([])
+    expect(parsed.wordPrompts.filter((t) => words(t) > 7 || /\?$/.test(t))).toEqual([])
+    // Only {name} — any other brace token would show up on screen as-is.
+    expect(parsed.wordPrompts.filter((t) => /\{(?!name\})/.test(t))).toEqual([])
   })
 
   it('keeps the newer games short enough to read at a glance', () => {

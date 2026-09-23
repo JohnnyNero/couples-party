@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
-import migration from './migrations/0001_pairing_and_daily.sql?raw'
+import m0001 from './migrations/0001_pairing_and_daily.sql?raw'
+import m0002 from './migrations/0002_same_question_same_day.sql?raw'
 
-// The migration run for real, in Postgres compiled to WebAssembly. Supabase's own auth
+// The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
 // every call below is made as the `authenticated` role, the same as a signed-in phone,
 // so the grants and row level security are exercised, not bypassed.
@@ -47,7 +48,8 @@ const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10
 beforeAll(async () => {
   db = new PGlite()
   await db.exec(STUB)
-  await db.exec(migration)
+  await db.exec(m0001)
+  await db.exec(m0002)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -101,50 +103,70 @@ describe('pairing', () => {
   })
 })
 
-describe('their word', () => {
-  it('lets Sam set tomorrow\'s word for Alex, and change it before Alex starts', async () => {
-    await call(SAM, 'set_word', [tomorrow(), 'How today felt', 'Tired'])
-    await call(SAM, 'set_word', [tomorrow(), 'How today felt', 'happy'])
+describe('their word: one question a day, the same for both, solved the same day', () => {
+  const Q = 'The animal {name} reminds you of'
+  let alexView: any // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('shows nothing before either of you has answered', async () => {
     const sam = await call(SAM, 'daily', [today()])
-    expect(sam.setNext).toMatchObject({ prompt: 'How today felt', answer: 'happy', status: 'open' })
+    expect(sam).toMatchObject({ state: 'paired', question: null, mine: null, theirs: null })
   })
   it('refuses anything that is not five letters', async () => {
-    await expect(call(SAM, 'set_word', [tomorrow(), 'x', 'four'])).rejects.toThrow(/five letters/)
-    await expect(call(SAM, 'set_word', [tomorrow(), 'x', 'sixsix'])).rejects.toThrow(/five letters/)
+    await expect(call(SAM, 'set_word', [today(), Q, 'four'])).rejects.toThrow(/five letters/)
+    await expect(call(SAM, 'set_word', [today(), Q, 'sixsix'])).rejects.toThrow(/five letters/)
   })
-  it('hides the answer from Alex while it is open', async () => {
-    const alex = await call(ALEX, 'daily', [tomorrow()]) // it's tomorrow for Alex now
-    expect(alex.toSolve).toMatchObject({ prompt: 'How today felt', status: 'open', guesses: [] })
-    expect(alex.toSolve.answer).toBe(null)
+  it('lets Sam answer, and change it, before Alex has started', async () => {
+    await call(SAM, 'set_word', [today(), Q, 'Tiger'])
+    await call(SAM, 'set_word', [today(), Q, 'otter'])
+    const sam = await call(SAM, 'daily', [today()])
+    expect(sam.question).toBe(Q)
+    expect(sam.mine).toMatchObject({ prompt: Q, answer: 'otter', status: 'open', guesses: [] })
   })
-  it('scores each guess on the server, and reveals the answer when it is over', async () => {
-    const alex = await call(ALEX, 'daily', [tomorrow()])
-    let view = await call(ALEX, 'submit_guess', [alex.toSolve.id, 'party'])
-    expect(view.patterns).toEqual(['yg..g']) // P is in "happy", A and Y are in place
+  it("keeps Sam's answer locked away from Alex until Alex has answered too", async () => {
+    const alex = await call(ALEX, 'daily', [today()])
+    expect(alex.question).toBe(Q) // Alex is told the day's question…
+    expect(alex.theirs).toEqual({ locked: true }) // …and that Sam's answered, but nothing of it
+    expect(alex.mine).toBe(null)
+  })
+  it('will not let Alex guess before answering, even by calling the server directly', async () => {
+    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}'`)).rows[0].id
+    await expect(call(ALEX, 'submit_guess', [id, 'otter'])).rejects.toThrow(/answer yours first/)
+  })
+  it("files Alex's answer under the day's question, whatever Alex's phone sent", async () => {
+    await call(ALEX, 'set_word', [today(), 'Some other question', 'koala'])
+    const alex = await call(ALEX, 'daily', [today()])
+    expect(alex.mine).toMatchObject({ prompt: Q, answer: 'koala' })
+    alexView = alex.theirs
+    expect(alexView).toMatchObject({ prompt: Q, status: 'open', guesses: [] })
+    expect(alexView.answer).toBe(null) // unlocked to play, but still not revealed
+  })
+  it('scores each guess on the server and reveals the answer when it is over', async () => {
+    let view = await call(ALEX, 'submit_guess', [alexView.id, 'tiger'])
+    expect(view.patterns).toEqual(['y..gg']) // the T is in OTTER, just elsewhere; E and R in place
     expect(view.answer).toBe(null)
-    await expect(call(SAM, 'set_word', [tomorrow(), 'x', 'other'])).rejects.toThrow(/already started/)
-    view = await call(ALEX, 'submit_guess', [alex.toSolve.id, 'HAPPY'])
-    expect(view).toMatchObject({ status: 'solved', answer: 'happy', guesses: ['party', 'happy'] })
-    expect(view.patterns).toEqual(['yg..g', 'ggggg'])
+    await expect(call(SAM, 'set_word', [today(), Q, 'panda'])).rejects.toThrow(/already started/)
+    view = await call(ALEX, 'submit_guess', [alexView.id, 'OTTER'])
+    expect(view).toMatchObject({ status: 'solved', answer: 'otter', guesses: ['tiger', 'otter'] })
   })
   it('only lets the solver guess — not the setter, not a stranger', async () => {
-    const alex = await call(ALEX, 'daily', [tomorrow()])
-    await expect(call(SAM, 'submit_guess', [alex.toSolve.id, 'happy'])).rejects.toThrow(/no such puzzle/)
-    await expect(call(EVE, 'submit_guess', [alex.toSolve.id, 'happy'])).rejects.toThrow(/no such puzzle/)
+    await expect(call(SAM, 'submit_guess', [alexView.id, 'otter'])).rejects.toThrow(/no such puzzle/)
+    await expect(call(EVE, 'submit_guess', [alexView.id, 'otter'])).rejects.toThrow(/no such puzzle/)
   })
-  it('fails the puzzle after six wrong guesses', async () => {
-    await call(ALEX, 'set_word', [tomorrow(), 'Something you ate', 'pizza'])
-    const sam = await call(SAM, 'daily', [tomorrow()])
-    let view = sam.toSolve
+  it('shows Sam how Alex got on, and gives Sam theirs to play', async () => {
+    const sam = await call(SAM, 'daily', [today()])
+    expect(sam.mine).toMatchObject({ status: 'solved', guesses: ['tiger', 'otter'] })
+    expect(sam.theirs).toMatchObject({ prompt: Q, status: 'open', answer: null })
+  })
+  it('fails after six wrong guesses', async () => {
+    let view = (await call(SAM, 'daily', [today()])).theirs
     for (const g of ['crane', 'moist', 'blurb', 'fudge', 'kiosk', 'wheat']) {
       view = await call(SAM, 'submit_guess', [view.id, g])
     }
-    expect(view).toMatchObject({ status: 'failed', answer: 'pizza' })
+    expect(view).toMatchObject({ status: 'failed', answer: 'koala' })
     expect(view.guesses).toHaveLength(6)
   })
-  it('shows the setter how their partner got on', async () => {
-    const sam = await call(SAM, 'daily', [tomorrow()])
-    expect(sam.setToday).toMatchObject({ status: 'solved', guesses: ['party', 'happy'] })
+  it('starts fresh the next day', async () => {
+    expect(await call(SAM, 'daily', [tomorrow()])).toMatchObject({ question: null, mine: null, theirs: null })
   })
 })
 

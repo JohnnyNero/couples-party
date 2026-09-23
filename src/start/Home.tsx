@@ -5,9 +5,8 @@ import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
 import { DailyCard, type DailyScreen } from '../daily/DailyCard'
 import { WordPlay } from '../daily/WordPlay'
-import { WordSet } from '../daily/WordSet'
+import { WordAnswer } from '../daily/WordAnswer'
 import { useDaily } from '../daily/useDaily'
-import { localDate } from '../daily/dates'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
@@ -39,24 +38,10 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   // shows what just happened.
   const close = () => { setScreen(null); void daily.refresh() }
   if (screen?.kind === 'play') {
-    const d = daily.status.kind === 'ready' ? daily.status.data : null
-    const theyHaveOneToday = d?.state === 'paired' && !!d.setToday
-    return (
-      <WordPlay
-        puzzle={screen.puzzle}
-        partner={screen.partner}
-        onClose={close}
-        onSetNext={() => setScreen({
-          kind: 'set',
-          partner: screen.partner,
-          forDate: localDate(theyHaveOneToday ? 1 : 0),
-          when: theyHaveOneToday ? 'tomorrow' : 'today',
-        })}
-      />
-    )
+    return <WordPlay puzzle={screen.puzzle} partner={screen.partner} question={screen.question} mine={screen.mine} onClose={close} />
   }
-  if (screen?.kind === 'set') {
-    return <WordSet partner={screen.partner} forDate={screen.forDate} when={screen.when} onClose={close} onDone={close} />
+  if (screen?.kind === 'answer') {
+    return <WordAnswer partner={screen.partner} template={screen.template} question={screen.question} onClose={close} />
   }
 
   return (

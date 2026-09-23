@@ -8,13 +8,15 @@ import { cleanWord, keyStates, loadWords, MAX_GUESSES, WORD_LENGTH } from './wor
 export function WordPlay({
   puzzle: initial,
   partner,
+  question,
+  mine,
   onClose,
-  onSetNext,
 }: {
   puzzle: PuzzleView
   partner: string
+  question: string // rendered for you — it's about you, so it has your name in it
+  mine: string | null // what you answered, for the side-by-side at the end
   onClose: () => void
-  onSetNext?: () => void
 }) {
   const [puzzle, setPuzzle] = useState(initial)
   const [typed, setTyped] = useState('')
@@ -34,7 +36,8 @@ export function WordPlay({
 
   const submit = useCallback(async () => {
     if (typed.length < WORD_LENGTH) return bounce('Five letters')
-    if (words && !words.has(typed)) return bounce('Not in the word list')
+    const list = words ?? (await loadWords()) // never skip the check just because it's still loading
+    if (!list.has(typed)) return bounce('Not in the word list')
     setBusy(true)
     setNote(null)
     try {
@@ -76,7 +79,7 @@ export function WordPlay({
         <div className="min-w-0">
           <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Their Word · from {partner}</div>
           {/* The clue is the whole puzzle — it always shows in full, never truncated. */}
-          <div className="text-lg font-bold leading-tight">{partner}'s answer to “{puzzle.prompt}”</div>
+          <div className="text-lg font-bold leading-tight">{partner}'s answer to “{question}”</div>
         </div>
       </header>
       <div className="flex-1 min-h-0 flex flex-col justify-center gap-1.5 px-4">
@@ -93,12 +96,16 @@ export function WordPlay({
             {puzzle.status === 'solved' ? `Got it in ${puzzle.guesses.length}` : 'Not this time — it was'}
           </div>
           <div className="font-display text-4xl font-bold uppercase tracking-widest text-accent">{puzzle.answer}</div>
-          <div className="text-sm text-fg/60">Ask {partner} why.</div>
-          {onSetNext && (
-            <button onClick={onSetNext} className="mt-2 w-full max-w-sm min-h-[52px] rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
-              Now set one for {partner}
-            </button>
+          {mine && (
+            <div className="text-sm text-fg/60">
+              You said <b className="uppercase tracking-wider text-fg">{mine}</b>
+              {mine === puzzle.answer ? ' — same word!' : ''}
+            </div>
           )}
+          <div className="text-sm text-fg/60">Ask {partner} why.</div>
+          <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-xl border-2 border-fg/20 font-bold uppercase tracking-widest active:translate-y-px">
+            Done
+          </button>
         </div>
       ) : (
         <div className="shrink-0 px-2 pb-5">

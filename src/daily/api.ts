@@ -23,9 +23,10 @@ export type Daily =
       state: 'paired'
       me: string
       partner: string
-      toSolve: PuzzleView | null // the one they set for me
-      setToday: PuzzleView | null // the one I set for them today
-      setNext: PuzzleView | null // the one I've set for them tomorrow
+      // Today's question, once either of you has answered — pinned for the couple.
+      question: string | null
+      mine: PuzzleView | null // my answer today, and how they're getting on with it
+      theirs: PuzzleView | { locked: true } | null // null: not answered yet; locked: answer yours first
     }
 
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
@@ -86,6 +87,7 @@ function friendly(message: string): string {
   if (/already paired/.test(message)) return "You're already paired."
   if (/already started/.test(message)) return "They've already started it — too late to change."
   if (/five letters/.test(message)) return 'It has to be five letters.'
+  if (/answer yours first/.test(message)) return 'Answer yours first.'
   return message
 }
 

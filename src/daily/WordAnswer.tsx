@@ -1,0 +1,98 @@
+import { useCallback, useEffect, useState } from 'react'
+import { api, DailyError } from './api'
+import { localDate } from './dates'
+import { Keyboard, TileRow } from './Tiles'
+import { cleanWord, loadWords, WORD_LENGTH } from './wordle'
+
+// Answering today's question: five letters on the same keyboard they'll solve it on,
+// checked against the word list so it's something they can actually get.
+export function WordAnswer({
+  partner,
+  template,
+  question,
+  onClose,
+}: {
+  partner: string
+  template: string // the question as stored, with {name} — the server keeps this
+  question: string // the same, rendered for you to read
+  onClose: () => void
+}) {
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const [words, setWords] = useState<Set<string> | null>(null)
+  const [sent, setSent] = useState(false)
+
+  useEffect(() => { void loadWords().then(setWords) }, [])
+
+  const send = useCallback(async () => {
+    if (typed.length < WORD_LENGTH) return setNote('Five letters')
+    // Wait for the list rather than skip the check — a quick typist mustn't be able to
+    // slip a non-word through before it has loaded.
+    const list = words ?? (await loadWords())
+    if (!list.has(typed)) return setNote("Not in the word list — they couldn't guess it")
+    setBusy(true)
+    setNote(null)
+    try {
+      await api.setWord(localDate(), template, typed)
+      setSent(true)
+    } catch (e) {
+      setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
+    } finally {
+      setBusy(false)
+    }
+  }, [typed, words, template])
+
+  const onKey = useCallback((key: string) => {
+    if (busy || sent) return
+    setNote(null)
+    if (key === 'Enter') void send()
+    else if (key === 'Backspace') setTyped((t) => t.slice(0, -1))
+    else if (/^[a-z]$/i.test(key)) setTyped((t) => cleanWord(t + key))
+  }, [busy, sent, send])
+
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'Enter' || e.key === 'Backspace' || /^[a-z]$/i.test(e.key)) { e.preventDefault(); onKey(e.key) }
+    }
+    window.addEventListener('keydown', onDown)
+    return () => window.removeEventListener('keydown', onDown)
+  }, [onKey])
+
+  return (
+    <div className="h-full flex flex-col select-none">
+      <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
+        <button onClick={onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
+        <div className="min-w-0">
+          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Their Word · today's question</div>
+          <div className="text-lg font-bold leading-tight">{question}</div>
+        </div>
+      </header>
+
+      {sent ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center animate-fade-up">
+          <TileRow letters={typed} pattern="ggggg" reveal />
+          <div className="text-xl font-bold">Sent.</div>
+          <div className="text-fg/60">
+            {partner} solves it once they've answered too. You can change it until they start.
+          </div>
+          <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
+            Done
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 min-h-0 flex flex-col justify-center items-center gap-4 px-4">
+            <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Your answer, in five letters</div>
+            <TileRow letters={typed} active />
+            <div className="h-6 text-sm font-bold text-accent text-center">{note}</div>
+          </div>
+          <div className="shrink-0 px-2 pb-5">
+            <Keyboard onKey={onKey} disabled={busy} />
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
