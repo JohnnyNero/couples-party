@@ -541,8 +541,6 @@ short. No "right now", no "if you could", nothing sentimental.
 - {name} in one word
 - {name}'s best feature
 - {name}'s most annoying habit
-- {name} when they're hungry
-- {name} first thing in the morning
 - What {name} cooks best
 - {name}'s best quality
 - Our perfect night in
