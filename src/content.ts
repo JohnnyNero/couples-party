@@ -5,9 +5,10 @@ import type { Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
 // requires touching code or JSON syntax. Deliberately forgiving: a stray or malformed
 // line is just skipped rather than breaking the whole file.
 
-export type ParsedContent = Content
+// The daily puzzle's prompts ride in the same file but aren't part of a game session.
+export type ParsedContent = Content & { wordPrompts: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -20,6 +21,7 @@ function sectionFor(heading: string): Section {
     case "who's more likely": case 'whos more likely': case 'who is more likely': return 'likely'
     case 'mr & mrs': case 'mr and mrs': return 'mrmrs'
     case 'lights out': return 'lights'
+    case 'their word': return 'word'
     default: return null
   }
 }
@@ -32,6 +34,7 @@ export function parseContent(text: string): ParsedContent {
   const likelyStatements: string[] = []
   const mrmrsQuestions: string[] = []
   const lightsQuestions: string[] = []
+  const wordPrompts: string[] = []
 
   let section: Section = null
   let currentTheme: Theme | null = null
@@ -84,11 +87,14 @@ export function parseContent(text: string): ParsedContent {
       case 'lights':
         lightsQuestions.push(item)
         break
+      case 'word':
+        wordPrompts.push(item)
+        break
     }
   }
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts,
   }
 }

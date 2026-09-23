@@ -19,11 +19,14 @@ One puzzle per day, on a fixed weekday rotation. The line-up:
 | Their Numbers | — | 5 number questions about themselves | guessing each; closer scores more |
 
 Needs, in order:
-1. A Supabase project (the owner creates it and supplies the URL + anon key).
-2. Pairing: link two phones once, permanently. Also removes the room code from Tonight.
-3. Their Word first, with a word list for validating both the setter's word and guesses.
+1. ~~A Supabase project~~ — done; see `supabase/README.md` for the two dashboard steps.
+2. ~~Pairing~~ — done: a six-letter code, anonymous sign-in per phone.
+   Still to do: use the pairing to drop the room code from Tonight.
+3. ~~Their Word~~ — done. Set for today if they've nothing from you today (so day one
+   works), otherwise tomorrow. Changeable until they start. Scored on the server.
 4. A shared couple streak: a day counts when you've both done the daily, one skip a week.
-5. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
+5. The other four puzzle types.
+6. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
    own past sessions. Deliberately left for later.
 
 ## Done

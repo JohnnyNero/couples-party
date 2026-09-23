@@ -206,6 +206,11 @@ describe('the shipped content keeps its shape', () => {
     expect(bad).toEqual([])
   })
 
+  it('gives the daily word puzzle enough prompts to choose from, each short', () => {
+    expect(parsed.wordPrompts.length).toBeGreaterThanOrEqual(12)
+    expect(parsed.wordPrompts.filter((t) => words(t) > 8 || /\?$/.test(t))).toEqual([])
+  })
+
   it('keeps the newer games short enough to read at a glance', () => {
     // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
     expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])
@@ -254,5 +259,6 @@ describe('the shipped content keeps its shape', () => {
     expect(dupes(parsed.likelyStatements)).toEqual([])
     expect(dupes(parsed.mrmrsQuestions)).toEqual([])
     expect(dupes(parsed.lightsQuestions)).toEqual([])
+    expect(dupes(parsed.wordPrompts)).toEqual([])
   })
 })

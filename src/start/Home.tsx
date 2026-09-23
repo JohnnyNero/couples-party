@@ -3,6 +3,11 @@ import type { Game } from './mode'
 import { GAME_LABELS, roster } from '../engine/roster'
 import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
+import { DailyCard, type DailyScreen } from '../daily/DailyCard'
+import { WordPlay } from '../daily/WordPlay'
+import { WordSet } from '../daily/WordSet'
+import { useDaily } from '../daily/useDaily'
+import { localDate } from '../daily/dates'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
@@ -23,9 +28,35 @@ function loadTab(): Tab {
 
 export function Home({ onPick }: { onPick: (g: Game) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
+  const daily = useDaily()
+  const [screen, setScreen] = useState<DailyScreen | null>(null)
   const choose = (t: Tab) => {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
+  }
+
+  // The puzzle screens take the whole phone; closing one re-reads the day so the card
+  // shows what just happened.
+  const close = () => { setScreen(null); void daily.refresh() }
+  if (screen?.kind === 'play') {
+    const d = daily.status.kind === 'ready' ? daily.status.data : null
+    const theyHaveOneToday = d?.state === 'paired' && !!d.setToday
+    return (
+      <WordPlay
+        puzzle={screen.puzzle}
+        partner={screen.partner}
+        onClose={close}
+        onSetNext={() => setScreen({
+          kind: 'set',
+          partner: screen.partner,
+          forDate: localDate(theyHaveOneToday ? 1 : 0),
+          when: theyHaveOneToday ? 'tomorrow' : 'today',
+        })}
+      />
+    )
+  }
+  if (screen?.kind === 'set') {
+    return <WordSet partner={screen.partner} forDate={screen.forDate} when={screen.when} onClose={close} onDone={close} />
   }
 
   return (
@@ -36,7 +67,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
       </header>
       <main className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
         <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
-          {tab === 'today' ? <Today onPick={onPick} /> : <Games onPick={onPick} />}
+          {tab === 'today' ? <Today onPick={onPick} daily={daily} open={setScreen} /> : <Games onPick={onPick} />}
         </div>
       </main>
       <nav className="shrink-0 border-t border-fg/15 bg-bg grid grid-cols-2 pb-[env(safe-area-inset-bottom)]">
@@ -47,12 +78,21 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   )
 }
 
-function Today({ onPick }: { onPick: (g: Game) => void }) {
+function Today({
+  onPick,
+  daily,
+  open,
+}: {
+  onPick: (g: Game) => void
+  daily: ReturnType<typeof useDaily>
+  open: (s: DailyScreen) => void
+}) {
   const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   return (
     <div className="flex flex-col gap-5 pt-2">
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{date}</div>
+      <DailyCard daily={daily} open={open} />
       <section className="rounded-3xl bg-ink text-paper p-6 shadow-[5px_5px_0_rgba(0,0,0,0.12)]">
         <div className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/50">About five minutes</div>
         <h1 className="font-display text-4xl font-bold tracking-tight mt-1">Tonight</h1>

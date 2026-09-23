@@ -511,3 +511,37 @@ question to talk about with the phone face down. Keep them gentle and short.
 - What's a small win from this week?
 - What are you proud of yourself for?
 - What would a perfect weekend with me look like?
+
+
+# Their Word
+
+The daily puzzle. You pick one of these, answer it in exactly five letters, and
+tomorrow your partner plays it as a Wordle with the prompt as the clue. Write
+them so a five-letter answer comes easily — moods, food, animals, places,
+colours. They're shown to the solver as "Sam's answer to…", so keep them short.
+
+- How today felt
+- Something you ate today
+- What you want for dinner
+- Your mood right now
+- An animal you'd be today
+- Where you'd rather be
+- A colour for today
+- Something in your bag
+- What you drank today
+- A word for me
+- What you're craving
+- The weather in your head
+- Something that made you smile
+- A fruit you'd be
+- Your energy level, in a word
+- What you'd cook me
+- Something you want to do this weekend
+- A snack you'd kill for
+- Where we should go next
+- A word for your week
+- Something you're looking forward to
+- What you'd be doing with the day off
+- A sound you like
+- A drink for tonight
+- Something on your mind
