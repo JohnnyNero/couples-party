@@ -8,7 +8,7 @@ const act: ListAct = {
 
 describe('themeText', () => {
   const base = () => {
-    const s = initialState(1, [{ id: 't001', text: 'seven things {name} would miss', pool: [] }])
+    const s = initialState(1, 'full', { themes: [{ id: 't001', text: 'seven things {name} would miss', pool: [] }] })
     s.players.A.name = 'Sam'
     return s
   }

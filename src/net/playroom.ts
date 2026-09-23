@@ -13,8 +13,8 @@ import {
   RPC,
   type PlayerState,
 } from 'playroomkit'
-import type { Action, DrawPrompt, Game, PlayerId, SessionState, Theme, WaveSpectrum } from '../engine/state'
-import { initialState } from '../engine/state'
+import type { Action, Content, Game, PlayerId, SessionState } from '../engine/state'
+import { EMPTY_CONTENT, initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
 import { assignPlayerId, getPlayerId } from './ids'
@@ -22,10 +22,7 @@ import type { PlayMode } from '../start/mode'
 
 const SESSION_KEY = 'session'
 
-let themes: Theme[] = []
-let fingerStatements: string[] = []
-let spectrums: WaveSpectrum[] = []
-let drawPrompts: DrawPrompt[] = []
+let content: Content = EMPTY_CONTENT
 let game: Game = 'full'
 let started = false
 
@@ -43,13 +40,13 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), themes, game, fingerStatements, spectrums, drawPrompts)
+  return initialState(ensureSessionSeed(), game, content)
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
 // host's real (seeded) session state has synced. Deliberately does not touch Math.random.
 function placeholderState(): SessionState {
-  return initialState(0, themes, game, fingerStatements, spectrums, drawPrompts)
+  return initialState(0, game, content)
 }
 
 export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
@@ -57,11 +54,7 @@ export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
   started = true
   game = chosenGame
 
-  const packs = await loadPacks()
-  themes = packs.themes
-  fingerStatements = packs.fingerStatements
-  spectrums = packs.spectrums
-  drawPrompts = packs.drawPrompts
+  content = await loadPacks()
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,

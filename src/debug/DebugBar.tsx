@@ -12,6 +12,39 @@ export function DebugBar({ s }: { s: SessionState }) {
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[0.7rem] bg-bg/90 border border-fg/20 p-2">
       <button className={btn} onClick={() => dispatch({ type: 'TIMEOUT' })}>skip</button>
       <ListButtons s={s} btn={btn} />
+      {s.phase === 'LIKELY_ROUND' && (
+        <button
+          className={btn}
+          onClick={() => {
+            dispatch({ type: 'PICK_LIKELY', player: 'A', pick: Math.random() < 0.5 ? 'A' : 'B' })
+            dispatch({ type: 'PICK_LIKELY', player: 'B', pick: Math.random() < 0.5 ? 'A' : 'B' })
+          }}
+        >
+          fill-both
+        </button>
+      )}
+      {s.phase === 'MM_ANSWER' && (
+        <button
+          className={btn}
+          onClick={() => {
+            dispatch({ type: 'SUBMIT_MRMRS', player: 'A', answer: 'pizza', predict: 'chips' })
+            dispatch({ type: 'SUBMIT_MRMRS', player: 'B', answer: 'chips', predict: 'curry' })
+          }}
+        >
+          fill-both
+        </button>
+      )}
+      {s.phase === 'MM_JUDGE' && (
+        <button
+          className={btn}
+          onClick={() => {
+            dispatch({ type: 'JUDGE', player: 'A', correct: true })
+            dispatch({ type: 'JUDGE', player: 'B', correct: false })
+          }}
+        >
+          judge-both
+        </button>
+      )}
       {s.phase === 'FINGER_ROUND' && (
         <button
           className={btn}
@@ -49,6 +82,7 @@ export function DebugBar({ s }: { s: SessionState }) {
           onClick={() => dispatch({
             type: 'SUBMIT_DRAWING',
             player: s.draw!.rounds[s.draw!.current].drawer,
+            answer: 'debug',
             strokes: [[[0.2, 0.2], [0.8, 0.8]]],
           })}
         >

@@ -25,10 +25,10 @@ describe('the bot plays a whole session through the real reducer', () => {
   // nothing but bot decisions, the loop has a hole in it the phones would hit too.
   it('reaches DONE without stalling, and nothing it does is illegal', () => {
     const r = makeRng(3)
-    let s = initialState(99, [
+    let s = initialState(99, 'list', { themes: [
       { id: 't001', text: 'seven things {name} would miss', pool: POOL },
       { id: 't002', text: "seven of {name}'s opinions", pool: POOL },
-    ], 'list')
+    ] })
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 800) {
       const a = nextBotAction(s, 'A', BRAIN, r)
@@ -54,7 +54,7 @@ describe('the bot plays a whole session through the real reducer', () => {
 
   it('also gets a Finger Down session to DONE with a real five-round hand', () => {
     const r = makeRng(11)
-    let s = initialState(42, [], 'finger', ['a', 'b', 'c', 'd', 'e', 'f'])
+    let s = initialState(42, 'finger', { fingerStatements: ['a', 'b', 'c', 'd', 'e', 'f'] })
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 200) {
       const a = nextBotAction(s, 'A', BRAIN, r)
@@ -74,7 +74,7 @@ describe('the bot plays a whole session through the real reducer', () => {
   it('also gets a Wavelength session to DONE with all seven rounds resolved', () => {
     const r = makeRng(17)
     const spectrums = [{ id: 'w01', low: 'Boring', high: 'Thrilling' }, { id: 'w02', low: 'Cheap', high: 'Expensive' }]
-    let s = initialState(7, [], 'wave', [], spectrums)
+    let s = initialState(7, 'wave', { spectrums })
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 400) {
       const a = nextBotAction(s, 'A', BRAIN, r)
@@ -93,7 +93,7 @@ describe('the bot plays a whole session through the real reducer', () => {
   it('also gets a Draw Your Love session to DONE with all six rounds resolved', () => {
     const r = makeRng(23)
     const prompts = [{ id: 'd01', text: 'a house' }, { id: 'd02', text: 'a duck' }]
-    let s = initialState(9, [], 'draw', [], [], prompts)
+    let s = initialState(9, 'draw', { drawPrompts: prompts })
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 300) {
       const a = nextBotAction(s, 'A', BRAIN, r)
@@ -110,17 +110,10 @@ describe('the bot plays a whole session through the real reducer', () => {
 
   it('also plays a full session — Shortlist twice, then every other act — start to finish', () => {
     const r = makeRng(29)
-    let s = initialState(
-      123,
-      [
+    let s = initialState(123, 'full', { themes: [
         { id: 't001', text: 'seven things {name} would miss', pool: POOL },
         { id: 't002', text: "seven of {name}'s opinions", pool: POOL },
-      ],
-      'full',
-      ['a', 'b', 'c', 'd', 'e', 'f'],
-      [{ id: 'w01', low: 'Boring', high: 'Thrilling' }, { id: 'w02', low: 'Cheap', high: 'Expensive' }],
-      [{ id: 'd01', text: 'a house' }, { id: 'd02', text: 'a duck' }],
-    )
+      ], fingerStatements: ['a', 'b', 'c', 'd', 'e', 'f'], spectrums: [{ id: 'w01', low: 'Boring', high: 'Thrilling' }, { id: 'w02', low: 'Cheap', high: 'Expensive' }], drawPrompts: [{ id: 'd01', text: 'a house' }, { id: 'd02', text: 'a duck' }] })
     let steps = 0
     while (s.phase !== 'DONE' && steps++ < 1500) {
       const a = nextBotAction(s, 'A', BRAIN, r)
@@ -135,5 +128,30 @@ describe('the bot plays a whole session through the real reducer', () => {
     expect(s.finger?.rounds).toHaveLength(5)
     expect(s.wave?.rounds).toHaveLength(7)
     expect(s.draw?.rounds).toHaveLength(6)
+  })
+})
+
+describe('the bot can play Tonight', () => {
+  it('gets through every new game to DONE with only its own moves and the clock', () => {
+    const r = makeRng(5)
+    let s = initialState(77, 'tonight', {
+      likelyStatements: ['snore', 'burn dinner', 'go viral', 'cry at an advert'],
+      mrmrsQuestions: ['Your comfort meal?', 'Your first gig?'],
+      drawPrompts: [{ id: 'd01', text: 'comfort food' }],
+      lightsQuestions: ['What made you laugh today?'],
+    })
+    let steps = 0
+    while (s.phase !== 'DONE' && steps++ < 400) {
+      const a = nextBotAction(s, 'A', BRAIN, r)
+      const b = nextBotAction(s, 'B', BRAIN, r)
+      const before = s
+      if (a) s = reduce(s, a, steps)
+      if (b) s = reduce(s, b, steps)
+      if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+    }
+    expect(s.phase).toBe('DONE')
+    expect(s.likely!.rounds.every((r) => r.picks.A !== null && r.picks.B !== null)).toBe(true)
+    expect(s.mrmrs!.rounds.every((r) => r.verdict.A !== null && r.verdict.B !== null)).toBe(true)
+    expect(s.draw!.rounds.every((r) => r.answer !== null)).toBe(true)
   })
 })

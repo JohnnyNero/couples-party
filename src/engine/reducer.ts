@@ -1,13 +1,70 @@
-import type { Action, DrawGame, DrawStroke, FingerGame, ListAct, ListItem, PlayerId, SessionState, WaveGame } from './state'
+import type {
+  Action, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  PlayerId, SessionState, WaveGame,
+} from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { DRAW, DURATIONS, FINGER, LIST, WAVE } from './phases'
+import { DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
 import { lowestFreeSlot, usedSlots } from './list'
+import { gameOfPhase, nextGame, roster, roundsFor } from './roster'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
-// ---------------------------------------------------------------- Act III · Shortlist
+const PLAYERS: PlayerId[] = ['A', 'B']
+
+// ---------------------------------------------------------------- The roster
+
+// Start a game by key. Every begin* below returns the session parked on that game's
+// first phase — or, if the content file gave it nothing to play, hands straight on to
+// the next game rather than opening an empty one.
+function beginGame(state: SessionState, now: number, key: GameKey | null): SessionState {
+  switch (key) {
+    case 'list': return beginList(state, now, 'A')
+    case 'likely': return beginLikely(state, now)
+    case 'finger': return beginFinger(state, now)
+    case 'mrmrs': return beginMrMrs(state, now)
+    case 'wave': return beginWave(state, now)
+    case 'draw': return beginDraw(state, now)
+    case 'lights': return beginLights(state, now)
+    default: return finishSession(state)
+  }
+}
+
+function skipTo(state: SessionState, now: number, after: GameKey): SessionState {
+  return beginGame(state, now, nextGame(state, after))
+}
+
+// Every scored game ends on one of these, and none of them carries a clock — the whole
+// point is to sit and look at the numbers for as long as you like.
+function toScoreboard(state: SessionState, phase: SessionState['phase']): SessionState {
+  const s = clone(state)
+  s.phase = phase
+  s.phaseEndsAt = null
+  return s
+}
+
+// The phases that wait for a tap (CONTINUE) instead of a clock.
+const TAP_THROUGH = new Set([
+  'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
+  'LIGHTS_OUT',
+])
+
+// What a tap on a scoreboard does: into the next game in this session's roster, or the
+// end of the night.
+function afterScoreboard(state: SessionState, now: number): SessionState {
+  const current = gameOfPhase(state.phase)
+  return current ? skipTo(state, now, current) : finishSession(state)
+}
+
+function finishSession(state: SessionState): SessionState {
+  const s = clone(state)
+  s.phase = 'DONE'
+  s.phaseEndsAt = null
+  return s
+}
+
+// ---------------------------------------------------------------- Shortlist
 
 function currentList(state: SessionState): ListAct | undefined {
   return state.listActs[state.listActs.length - 1]
@@ -103,40 +160,51 @@ function timeoutPlace(state: SessionState, now: number): SessionState {
   return advancePlace(s, now)
 }
 
-// Act III runs twice, roles swapped. After the second run it hands over to its own
-// scoreboard, same as every other game.
+// Shortlist runs as many acts as the roster asks for, roles swapping each time, then
+// hands over to its own scoreboard.
 function afterListReveal(state: SessionState, now: number): SessionState {
-  const first = state.listActs[0]
-  if (state.listActs.length < 2) return beginList(state, now, other(first.author))
+  const last = currentList(state)!
+  if (state.listActs.length < roundsFor(state, 'list')) return beginList(state, now, other(last.author))
   return toScoreboard(state, 'LIST_RESULT')
 }
 
-// Every game ends on one of these, and none of them carries a clock — the whole point
-// is to sit and look at the numbers for as long as you like.
-function toScoreboard(state: SessionState, phase: SessionState['phase']): SessionState {
+// ---------------------------------------------------------------- Who's More Likely
+
+function beginLikely(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  s.phase = phase
-  s.phaseEndsAt = null
+  const statements = shuffled(makeRng(s.seed ^ 0x11ce), s.likelyStatements)
+    .slice(0, roundsFor(s, 'likely'))
+  if (statements.length === 0) return skipTo(s, now, 'likely')
+  s.likely = {
+    rounds: statements.map((statement, i) => ({
+      index: i + 1,
+      statement,
+      picks: { A: null, B: null },
+    })),
+    current: 0,
+  }
+  s.phase = 'LIKELY_ROUND'
+  s.phaseEndsAt = now + DURATIONS.LIKELY_ROUND!
   return s
 }
 
-// What a tap on a scoreboard does: into the next game, or the end of the night.
-function afterScoreboard(state: SessionState, now: number): SessionState {
-  if (state.game !== 'full') return finishSession(state)
-  switch (state.phase) {
-    case 'LIST_RESULT': return beginFinger(state, now)
-    case 'FINGER_RESULT': return beginWave(state, now)
-    case 'WAVE_RESULT': return beginDraw(state, now)
-    default: return finishSession(state)
-  }
+const currentLikely = (g: LikelyGame) => g.rounds[g.current]
+
+// A name nobody tapped in time stays unpicked — which never counts as agreeing.
+function toLikelyReveal(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.phase = 'LIKELY_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.LIKELY_REVEAL!
+  return s
 }
 
-const SCOREBOARDS = new Set(['LIST_RESULT', 'FINGER_RESULT', 'WAVE_RESULT', 'DRAW_RESULT'])
-
-function finishSession(state: SessionState): SessionState {
+function advanceLikely(state: SessionState, now: number): SessionState {
+  const g = state.likely!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'LIKELY_RESULT')
   const s = clone(state)
-  s.phase = 'DONE'
-  s.phaseEndsAt = null
+  s.likely!.current += 1
+  s.phase = 'LIKELY_ROUND'
+  s.phaseEndsAt = now + DURATIONS.LIKELY_ROUND!
   return s
 }
 
@@ -149,11 +217,12 @@ function currentFingerRound(f: FingerGame) {
 function beginFinger(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const pool = shuffled(makeRng(s.seed ^ 0x9001), s.fingerStatements)
-  const rounds = pool.slice(0, FINGER.rounds).map((statementId, i) => ({
+  const rounds = pool.slice(0, roundsFor(s, 'finger')).map((statementId, i) => ({
     index: i + 1,
     statementId,
     applies: { A: null, B: null } as Record<PlayerId, boolean | null>,
   }))
+  if (rounds.length === 0) return skipTo(s, now, 'finger')
   s.finger = { rounds, current: 0, fingersLeft: { A: FINGER.startFingers, B: FINGER.startFingers } }
   s.phase = 'FINGER_ROUND'
   s.phaseEndsAt = now + DURATIONS.FINGER_ROUND!
@@ -166,7 +235,7 @@ function toFingerReveal(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const f = s.finger!
   const round = currentFingerRound(f)
-  for (const p of ['A', 'B'] as const) {
+  for (const p of PLAYERS) {
     if (round.applies[p]) f.fingersLeft[p] = Math.max(0, f.fingersLeft[p] - 1)
   }
   s.phase = 'FINGER_REVEAL'
@@ -174,14 +243,68 @@ function toFingerReveal(state: SessionState, now: number): SessionState {
   return s
 }
 
-// Five statements, then it's over — least fingers down wins, not first to zero.
+// All the statements, then it's over — least fingers down wins, not first to zero.
 function advanceFinger(state: SessionState, now: number): SessionState {
   const f = state.finger!
-  if (f.current >= FINGER.rounds - 1) return toScoreboard(state, 'FINGER_RESULT')
+  if (f.current >= f.rounds.length - 1) return toScoreboard(state, 'FINGER_RESULT')
   const s = clone(state)
   s.finger!.current += 1
   s.phase = 'FINGER_ROUND'
   s.phaseEndsAt = now + DURATIONS.FINGER_ROUND!
+  return s
+}
+
+// ---------------------------------------------------------------- Mr & Mrs
+
+function beginMrMrs(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const questions = shuffled(makeRng(s.seed ^ 0x3303), s.mrmrsQuestions)
+    .slice(0, roundsFor(s, 'mrmrs'))
+  if (questions.length === 0) return skipTo(s, now, 'mrmrs')
+  s.mrmrs = {
+    rounds: questions.map((question, i) => ({
+      index: i + 1,
+      question,
+      answer: { A: null, B: null },
+      predict: { A: null, B: null },
+      verdict: { A: null, B: null },
+    })),
+    current: 0,
+  }
+  s.phase = 'MM_ANSWER'
+  s.phaseEndsAt = now + DURATIONS.MM_ANSWER!
+  return s
+}
+
+const currentMm = (g: MrMrsGame) => g.rounds[g.current]
+
+// Into the reveal. The easy calls are made for you — a prediction that matches word for
+// word is right, and a blank one (or one about an answer that never came) is wrong — so
+// the only thing left to judge is the "close enough?" in between.
+function toMmJudge(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const round = currentMm(s.mrmrs!)
+  for (const p of PLAYERS) {
+    const guess = round.predict[p]
+    const truth = round.answer[other(p)]
+    if (!guess || !truth) round.verdict[p] = false
+    else if (isMatch(guess, truth)) round.verdict[p] = true
+  }
+  s.phase = 'MM_JUDGE'
+  s.phaseEndsAt = allJudged(round) ? now + DURATIONS.MM_JUDGE! : null
+  return s
+}
+
+const allJudged = (round: MrMrsGame['rounds'][number]) =>
+  round.verdict.A !== null && round.verdict.B !== null
+
+function advanceMm(state: SessionState, now: number): SessionState {
+  const g = state.mrmrs!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'MM_RESULT')
+  const s = clone(state)
+  s.mrmrs!.current += 1
+  s.phase = 'MM_ANSWER'
+  s.phaseEndsAt = now + DURATIONS.MM_ANSWER!
   return s
 }
 
@@ -192,19 +315,20 @@ function currentWaveRound(w: WaveGame) {
 }
 
 // Generated in full up front — spectrum, psychic and hidden target for every round —
-// the same way Put a Finger Down pre-picks its five statements, and for the same
-// reason: exactly WAVE.rounds rounds happen, no branching on how any of them go.
+// the same way Put a Finger Down pre-picks its statements, and for the same reason:
+// exactly the roster's number of rounds happen, no branching on how any of them go.
 function beginWave(state: SessionState, now: number): SessionState {
   const s = clone(state)
+  if (s.spectrums.length === 0) return skipTo(s, now, 'wave')
   const rng = makeRng(s.seed ^ 0xa001)
   const spectrums = shuffled(rng, s.spectrums)
-  const rounds = Array.from({ length: WAVE.rounds }, (_, i) => {
-    const spectrum = spectrums[i % Math.max(spectrums.length, 1)]
+  const rounds = Array.from({ length: roundsFor(s, 'wave') }, (_, i) => {
+    const spectrum = spectrums[i % spectrums.length]
     const span = WAVE.targetMax - WAVE.targetMin
     return {
       index: i + 1,
       psychic: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
-      spectrumId: spectrum?.id ?? '',
+      spectrumId: spectrum.id,
       target: WAVE.targetMin + Math.round(rng() * span),
       clue: null,
       guess: null,
@@ -235,10 +359,9 @@ function toWaveReveal(state: SessionState, now: number, guess: number): SessionS
   return s
 }
 
-// Seven rounds, then it's over — the official 2-player co-op variant's own length.
 function advanceWave(state: SessionState, now: number): SessionState {
   const w = state.wave!
-  if (w.current >= WAVE.rounds - 1) return toScoreboard(state, 'WAVE_RESULT')
+  if (w.current >= w.rounds.length - 1) return toScoreboard(state, 'WAVE_RESULT')
   const s = clone(state)
   s.wave!.current += 1
   s.phase = 'WAVE_CLUE'
@@ -246,22 +369,24 @@ function advanceWave(state: SessionState, now: number): SessionState {
   return s
 }
 
-// ---------------------------------------------------------------- Quick Draw
+// ---------------------------------------------------------------- Draw Your Answer
 
 function currentDrawRound(d: DrawGame) {
   return d.rounds[d.current]
 }
 
-// Generated in full up front — prompt and drawer for every round — the same way Put a
-// Finger Down and Wavelength pre-pick their whole schedule.
+// Generated in full up front — question and drawer for every round. Drawers alternate,
+// so a two-round Tonight is one drawing each.
 function beginDraw(state: SessionState, now: number): SessionState {
   const s = clone(state)
+  if (s.drawPrompts.length === 0) return skipTo(s, now, 'draw')
   const rng = makeRng(s.seed ^ 0xd001)
   const prompts = shuffled(rng, s.drawPrompts)
-  const rounds = Array.from({ length: DRAW.rounds }, (_, i) => ({
+  const rounds = Array.from({ length: roundsFor(s, 'draw') }, (_, i) => ({
     index: i + 1,
     drawer: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
-    promptId: prompts[i % Math.max(prompts.length, 1)]?.id ?? '',
+    promptId: prompts[i % prompts.length].id,
+    answer: null,
     strokes: [] as DrawStroke[],
     guess: null,
     correct: null,
@@ -272,29 +397,31 @@ function beginDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
-function toDrawGuess(state: SessionState, now: number, strokes: DrawStroke[]): SessionState {
+function toDrawGuess(state: SessionState, now: number, answer: string, strokes: DrawStroke[]): SessionState {
   const s = clone(state)
-  currentDrawRound(s.draw!).strokes = strokes
+  const round = currentDrawRound(s.draw!)
+  round.answer = answer
+  round.strokes = strokes
   s.phase = 'DRAW_GUESS'
   s.phaseEndsAt = now + DURATIONS.DRAW_GUESS!
   return s
 }
 
+// Checked against what the drawer SAID they were drawing — their own answer, not a
+// fixed word. A near miss can still be counted by the drawer from the reveal.
 function toDrawReveal(state: SessionState, now: number, guess: string): SessionState {
   const s = clone(state)
   const round = currentDrawRound(s.draw!)
-  const prompt = s.drawPrompts.find((p) => p.id === round.promptId)
   round.guess = guess
-  round.correct = isMatch(guess, prompt?.text ?? null)
+  round.correct = isMatch(guess, round.answer)
   s.phase = 'DRAW_REVEAL'
   s.phaseEndsAt = now + DURATIONS.DRAW_REVEAL!
   return s
 }
 
-// Six prompts, then it's over — three rounds each as the drawer.
 function advanceDraw(state: SessionState, now: number): SessionState {
   const d = state.draw!
-  if (d.current >= DRAW.rounds - 1) return toScoreboard(state, 'DRAW_RESULT')
+  if (d.current >= d.rounds.length - 1) return toScoreboard(state, 'DRAW_RESULT')
   const s = clone(state)
   s.draw!.current += 1
   s.phase = 'DRAW_SKETCH'
@@ -302,21 +429,27 @@ function advanceDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Lights Out
+
+function beginLights(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  if (s.lightsQuestions.length === 0) return skipTo(s, now, 'lights')
+  s.lights = { question: pick(makeRng(s.seed ^ 0x0ff), s.lightsQuestions) }
+  s.phase = 'LIGHTS_OUT'
+  s.phaseEndsAt = null
+  return s
+}
+
+// ---------------------------------------------------------------- reduce
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   switch (action.type) {
     case 'JOIN': {
       const s = clone(state)
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
-      if (both && s.phase === 'JOIN') {
-        // Straight into the first act. 'list'/'finger'/'wave'/'draw' skip to that one
-        // game; 'full' runs the whole roster, starting with Shortlist.
-        if (s.game === 'list') return beginList(s, now, 'A')
-        if (s.game === 'finger') return beginFinger(s, now)
-        if (s.game === 'wave') return beginWave(s, now)
-        if (s.game === 'draw') return beginDraw(s, now)
-        return beginList(s, now, 'A')
-      }
+      // Straight into the first game in this session's roster.
+      if (both && s.phase === 'JOIN') return beginGame(s, now, roster(s.game)[0]?.key ?? null)
       return s
     }
     case 'PLACE_ITEM': {
@@ -336,6 +469,14 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       else mineItem.actualSlot = action.slot
       return bothPlaced(mineItem) ? advancePlace(s, now) : s
     }
+    case 'PICK_LIKELY': {
+      if (state.phase !== 'LIKELY_ROUND' || !state.likely) return state
+      if (currentLikely(state.likely).picks[action.player] !== null) return state // no changing your mind
+      const s = clone(state)
+      const round = currentLikely(s.likely!)
+      round.picks[action.player] = action.pick
+      return round.picks.A !== null && round.picks.B !== null ? toLikelyReveal(s, now) : s
+    }
     case 'SUBMIT_FINGER': {
       if (state.phase !== 'FINGER_ROUND') return state
       const f = state.finger
@@ -346,6 +487,29 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const sr = currentFingerRound(s.finger!)
       sr.applies[action.player] = action.applies
       if (sr.applies.A !== null && sr.applies.B !== null) return toFingerReveal(s, now)
+      return s
+    }
+    case 'SUBMIT_MRMRS': {
+      if (state.phase !== 'MM_ANSWER' || !state.mrmrs) return state
+      if (currentMm(state.mrmrs).answer[action.player] !== null) return state // sent is sent
+      const answer = action.answer.trim().slice(0, MRMRS.maxLen)
+      if (answer.length === 0) return state // your own answer can't be blank
+      const s = clone(state)
+      const round = currentMm(s.mrmrs!)
+      round.answer[action.player] = answer
+      round.predict[action.player] = action.predict.trim().slice(0, MRMRS.maxLen) || null
+      return round.answer.A !== null && round.answer.B !== null ? toMmJudge(s, now) : s
+    }
+    case 'JUDGE': {
+      if (state.phase !== 'MM_JUDGE' || !state.mrmrs) return state
+      // You rule on the prediction ABOUT you, which was made by the other player.
+      const predictor = other(action.player)
+      if (currentMm(state.mrmrs).verdict[predictor] !== null) return state
+      const s = clone(state)
+      const round = currentMm(s.mrmrs!)
+      round.verdict[predictor] = action.correct
+      // Both ruled on: give the result a moment on screen, then move on.
+      if (allJudged(round)) s.phaseEndsAt = now + DURATIONS.MM_JUDGE!
       return s
     }
     case 'SUBMIT_CLUE': {
@@ -373,7 +537,9 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       if (!d) return state
       const round = currentDrawRound(d)
       if (action.player !== round.drawer) return state
-      return toDrawGuess(state, now, action.strokes)
+      const answer = action.answer.trim().slice(0, DRAW.guessMaxLen)
+      if (answer.length === 0) return state // the drawing has to be OF something
+      return toDrawGuess(state, now, answer, action.strokes)
     }
     case 'SUBMIT_DRAW_GUESS': {
       if (state.phase !== 'DRAW_GUESS') return state
@@ -384,8 +550,17 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       const text = action.text.trim().slice(0, DRAW.guessMaxLen)
       return toDrawReveal(state, now, text)
     }
+    case 'COUNT_IT': {
+      if (state.phase !== 'DRAW_REVEAL' || !state.draw) return state
+      const round = currentDrawRound(state.draw)
+      // Only the drawer can wave a guess through, only once, and only a real guess.
+      if (action.player !== round.drawer || round.correct || !round.guess) return state
+      const s = clone(state)
+      currentDrawRound(s.draw!).correct = true
+      return s
+    }
     case 'CONTINUE': {
-      if (!SCOREBOARDS.has(state.phase)) return state
+      if (!TAP_THROUGH.has(state.phase)) return state
       return afterScoreboard(state, now)
     }
     case 'ADVANCE_REVEAL': {
@@ -397,24 +572,39 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         case 'LIST_INTRO': return toListPlace(state, now)
         case 'LIST_PLACE': return timeoutPlace(state, now)
         case 'LIST_REVEAL': return advanceReveal(state, now)
+        case 'LIKELY_ROUND': return toLikelyReveal(state, now)
+        case 'LIKELY_REVEAL': return advanceLikely(state, now)
         case 'FINGER_ROUND': return toFingerReveal(state, now)
         case 'FINGER_REVEAL': return advanceFinger(state, now)
-        case 'LIST_RESULT': return afterScoreboard(state, now)
-        case 'FINGER_RESULT': return afterScoreboard(state, now)
+        // Whatever was typed in time goes to the reveal; a missing answer can't be
+        // guessed at, so the prediction about it simply misses.
+        case 'MM_ANSWER': return toMmJudge(state, now)
+        // Reached either after both rulings (the short linger) or from the debug skip —
+        // anything still unruled on counts as a miss.
+        case 'MM_JUDGE': {
+          const s = clone(state)
+          const round = currentMm(s.mrmrs!)
+          for (const p of PLAYERS) if (round.verdict[p] === null) round.verdict[p] = false
+          return advanceMm(s, now)
+        }
         // A clue nobody gave still lets the round play out — a blind guess costs nothing
         // it wouldn't have anyway.
         case 'WAVE_CLUE': return toWaveGuess(state, now, currentWaveRound(state.wave!).clue ?? '(no clue)')
         // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
         case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
         case 'WAVE_REVEAL': return advanceWave(state, now)
-        case 'WAVE_RESULT': return afterScoreboard(state, now)
-        // A drawing nobody finished still lets the round play out — sketching nothing.
-        case 'DRAW_SKETCH': return toDrawGuess(state, now, currentDrawRound(state.draw!).strokes)
+        // A drawing nobody finished still lets the round play out — sketching nothing,
+        // of nothing, so no guess can match it.
+        case 'DRAW_SKETCH': {
+          const round = currentDrawRound(state.draw!)
+          return toDrawGuess(state, now, round.answer ?? '', round.strokes)
+        }
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
-        case 'DRAW_RESULT': return afterScoreboard(state, now)
-        default: return state
+        // The tap-through phases still answer to TIMEOUT, so the debug skip works on them.
+        default:
+          return TAP_THROUGH.has(state.phase) ? afterScoreboard(state, now) : state
       }
     }
     default:

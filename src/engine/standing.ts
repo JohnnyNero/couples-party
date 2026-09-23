@@ -1,20 +1,26 @@
 import type {
-  DrawRound, FingerGame, FingerRound, Game, ListAct, ListItem, PlayerId, SessionState, WaveRound,
+  DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
+  MrMrsRound, PlayerId, SessionState, WaveRound,
 } from './state'
 import { other } from './state'
+import { GAME_LABELS, roster } from './roster'
 
 // The in-session tally is NEVER stored: it is derived from the act records here. If a
 // number on the board is not one of these, something has gone wrong.
 //
-// Every game is tuned to top out near 40, so any one of them can still turn the night
-// around. Shortlist sets the scale — it pays 3 a hit across 14 items over two acts —
-// and the other three are scaled UP to meet it rather than Shortlist being cut down.
-// Simulated over 60k sessions, a middling pair takes 15–20 out of each game:
+// Every game is tuned to top out near 40 over a full session, so any one of them can
+// still turn the night around. Shortlist sets the scale — it pays 3 a hit across 14 items
+// over two acts — and the others are scaled UP to meet it rather than Shortlist being cut
+// down. Simulated over 60k sessions, a middling pair takes 15–20 out of the original four:
 //
-//     play        Shortlist   Wavelength   Finger   Quick Draw
-//     ok               15.5         17.4     20.0         18.0
-//     good             26.0         23.0     22.0         28.8
-//     maximum            42           42       40           36
+//     play        Shortlist   Wavelength   Finger   Draw
+//     ok               15.5         17.4     20.0    18.0
+//     good             26.0         23.0     22.0    28.8
+//     maximum            42           42       40      36
+//
+// Who's More Likely (6 × 7 = 42) and Mr & Mrs (5 × 8 = 40) were set to the same ceiling.
+// Who's More Likely pays you both when you agree, so it lifts the total without moving
+// the lead — it's the warm-up, not a decider. A test holds every maximum within 25%.
 //
 // Change one of these and the others have to move with it, or the game it belongs to
 // quietly starts deciding the session on its own.
@@ -27,6 +33,8 @@ export const SCORING = {
   waveConsolation: 2, // a miss wide enough that the guesser deserves something
   fingerKept: 8, // per statement you don't put a finger down on
   drawCorrect: 6,
+  likelyAgree: 7, // to each of you, when you named the same person
+  mrmrsRight: 8, // to whoever predicted right, as ruled by the person it was about
 } as const
 
 export type Standing = Record<PlayerId, number>
@@ -53,6 +61,40 @@ export function listAward(act: ListAct): Award {
   const shown = act.items.slice(0, act.revealIndex + 1)
   const points = shown.reduce((n, item) => n + listItemPoints(item), 0)
   return points === 0 ? null : { player: act.author, points }
+}
+
+// ---------------------------------------------------------------- Who's More Likely
+
+// Agreeing is the point — both of you score, or neither does. A round only pays once
+// both names are in, which is also the moment it's revealed, so nothing leaks early.
+export function likelyRoundPoints(round: LikelyRound): number {
+  const { A, B } = round.picks
+  return A !== null && A === B ? SCORING.likelyAgree : 0
+}
+
+export function likelyPoints(g: LikelyGame | null): Standing {
+  const t: Standing = { A: 0, B: 0 }
+  for (const round of g?.rounds ?? []) {
+    const pts = likelyRoundPoints(round)
+    t.A += pts
+    t.B += pts
+  }
+  return t
+}
+
+// ---------------------------------------------------------------- Mr & Mrs
+
+export function mrmrsRoundPoints(round: MrMrsRound, p: PlayerId): number {
+  return round.verdict[p] ? SCORING.mrmrsRight : 0
+}
+
+export function mrmrsPoints(g: MrMrsGame | null): Standing {
+  const t: Standing = { A: 0, B: 0 }
+  for (const round of g?.rounds ?? []) {
+    t.A += mrmrsRoundPoints(round, 'A')
+    t.B += mrmrsRoundPoints(round, 'B')
+  }
+  return t
 }
 
 // ---------------------------------------------------------------- Put a Finger Down
@@ -89,9 +131,10 @@ export function waveAward(round: WaveRound): Award {
   return { player: other(round.psychic), points: SCORING.waveConsolation }
 }
 
-// ---------------------------------------------------------------- Quick Draw
+// ---------------------------------------------------------------- Draw Your Answer
 
-// The guesser reads the drawing or they don't — no partial credit, it's a fast round.
+// The guesser reads the drawing or they don't — no partial credit. A near miss the
+// drawer waves through counts in full.
 export function drawAward(round: DrawRound): Award {
   if (round.correct === null) return null
   return round.correct ? { player: other(round.drawer), points: SCORING.drawCorrect } : null
@@ -100,7 +143,7 @@ export function drawAward(round: DrawRound): Award {
 // ---------------------------------------------------------------- The board
 
 export type GameScore = {
-  key: Exclude<Game, 'full'>
+  key: Exclude<GameKey, 'lights'>
   label: string
   points: Standing
   played: boolean
@@ -114,36 +157,30 @@ const sumAwards = (awards: Award[]): Standing => {
   return t
 }
 
-// Every game's contribution, in playing order — the scoreboard between games is this
-// list, and the session total is just its sum. `played` is false for a game the session
-// hasn't reached (or, in a single-game session, will never reach).
+function pointsFor(s: SessionState, key: GameScore['key']): Standing {
+  switch (key) {
+    case 'list': return sumAwards(s.listActs.map(listAward))
+    case 'likely': return likelyPoints(s.likely)
+    case 'finger': return fingerPoints(s.finger)
+    case 'mrmrs': return mrmrsPoints(s.mrmrs)
+    case 'wave': return sumAwards((s.wave?.rounds ?? []).map(waveAward))
+    case 'draw': return sumAwards((s.draw?.rounds ?? []).map(drawAward))
+  }
+}
+
+function playedYet(s: SessionState, key: GameScore['key']): boolean {
+  return key === 'list' ? s.listActs.length > 0 : s[key] !== null
+}
+
+// Every scored game in THIS session's roster, in playing order — the scoreboard between
+// games is this list, and the session total is just its sum. A Tonight board shows
+// Tonight's games; a single-game session shows one row. `played` is false for a game
+// the night hasn't reached yet.
 export function gameScores(s: SessionState): GameScore[] {
-  return [
-    {
-      key: 'list',
-      label: 'Shortlist',
-      points: sumAwards(s.listActs.map(listAward)),
-      played: s.listActs.length > 0,
-    },
-    {
-      key: 'finger',
-      label: 'Put a Finger Down',
-      points: fingerPoints(s.finger),
-      played: s.finger !== null,
-    },
-    {
-      key: 'wave',
-      label: 'Wavelength',
-      points: sumAwards((s.wave?.rounds ?? []).map(waveAward)),
-      played: s.wave !== null,
-    },
-    {
-      key: 'draw',
-      label: 'Quick Draw',
-      points: sumAwards((s.draw?.rounds ?? []).map(drawAward)),
-      played: s.draw !== null,
-    },
-  ]
+  return roster(s.game)
+    .map((e) => e.key)
+    .filter((key): key is GameScore['key'] => key !== 'lights')
+    .map((key) => ({ key, label: GAME_LABELS[key], points: pointsFor(s, key), played: playedYet(s, key) }))
 }
 
 export function standing(s: SessionState): Standing {

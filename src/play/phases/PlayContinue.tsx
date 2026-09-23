@@ -6,7 +6,7 @@ import { playerName } from '../../views/list'
 // Shared-screen mode only: the board has the scoreboard on it, so the phone is just the
 // hand that moves the night on. In phones-only mode the board is the phone and its own
 // button does this job.
-export function PlayContinue({ s, me }: { s: SessionState; me: PlayerId }) {
+export function PlayContinue({ s, me, label = 'Ready' }: { s: SessionState; me: PlayerId; label?: string }) {
   const t = standing(s)
   return (
     <div className="h-full flex flex-col justify-center p-6 gap-5">
@@ -22,7 +22,7 @@ export function PlayContinue({ s, me }: { s: SessionState; me: PlayerId }) {
         className="w-full min-h-[56px] bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px"
         onClick={() => dispatch({ type: 'CONTINUE', player: me })}
       >
-        Ready
+        {label}
       </button>
       <div className="text-xs uppercase tracking-wide text-fg/40 text-center">
         Either of you can tap — there's no clock on this bit

@@ -5,6 +5,10 @@ import { PlayListPlace } from '../play/phases/PlayListPlace'
 import { PlayListReveal } from '../play/phases/PlayListReveal'
 import { PlayContinue } from '../play/phases/PlayContinue'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
+import { PlayLikelyRound } from '../play/phases/PlayLikelyRound'
+import { PlayMmAnswer } from '../play/phases/PlayMmAnswer'
+import { PlayMmJudge } from '../play/phases/PlayMmJudge'
+import { PlayDrawReveal } from '../play/phases/PlayDrawReveal'
 import { PlayWaveClue } from '../play/phases/PlayWaveClue'
 import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
 import { PlayDrawSketch } from '../play/phases/PlayDrawSketch'
@@ -32,7 +36,19 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':
       return <PlayListReveal s={s} me={me} />
+    case 'LIKELY_ROUND':
+      return <PlayLikelyRound s={s} me={me} />
+    case 'LIKELY_REVEAL':
+      return <PlayWaiting label="Reveal" />
+    case 'MM_ANSWER':
+      return <PlayMmAnswer s={s} me={me} />
+    case 'MM_JUDGE':
+      return <PlayMmJudge s={s} me={me} />
+    case 'LIGHTS_OUT':
+      return <PlayContinue s={s} me={me} label="Goodnight" />
     case 'LIST_RESULT':
+    case 'LIKELY_RESULT':
+    case 'MM_RESULT':
     case 'FINGER_RESULT':
     case 'WAVE_RESULT':
     case 'DRAW_RESULT':
@@ -52,7 +68,7 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'DRAW_GUESS':
       return <PlayDrawGuess s={s} me={me} />
     case 'DRAW_REVEAL':
-      return <PlayWaiting label="Reveal" />
+      return <PlayDrawReveal s={s} me={me} />
     case 'DONE':
       return <PlayWaiting label="That's the session" />
     default:

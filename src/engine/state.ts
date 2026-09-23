@@ -2,17 +2,24 @@ export type PlayerId = 'A' | 'B'
 
 export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
-// Which acts this session runs. 'full' is the whole night; the rest skip straight to one
-// game, for a shorter session or for testing a single act in isolation.
-export type Game = 'full' | 'list' | 'finger' | 'wave' | 'draw'
+// One game in the roster. Lights Out is in here too even though it doesn't score — it's
+// a stop on the night like any other, it just has no points and no scoreboard.
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'lights'
+
+// Which session this is. 'full' is the long night, 'tonight' the five-minute one; a bare
+// game key runs that game on its own. The actual line-up for each lives in roster.ts.
+export type Game = 'full' | 'tonight' | Exclude<GameKey, 'lights'>
 
 export type Phase =
   | 'BOOT' | 'JOIN'
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_INTRO' | 'LIST_PLACE' | 'LIST_REVEAL' | 'LIST_RESULT'
+  | 'LIKELY_ROUND' | 'LIKELY_REVEAL' | 'LIKELY_RESULT'
   | 'FINGER_ROUND' | 'FINGER_REVEAL' | 'FINGER_RESULT'
+  | 'MM_ANSWER' | 'MM_JUDGE' | 'MM_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
+  | 'LIGHTS_OUT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
   | 'DONE' // terminal placeholder until later acts extend the flow
 
@@ -55,7 +62,7 @@ export type FingerRound = {
   applies: Record<PlayerId, boolean | null> // null = hasn't answered yet
 }
 export type FingerGame = {
-  rounds: FingerRound[]        // exactly FINGER.rounds, chosen up front
+  rounds: FingerRound[]        // as many as the roster asks for, chosen up front
   current: number              // 0-based index into rounds — which one is live
   fingersLeft: Record<PlayerId, number>
 }
@@ -74,27 +81,66 @@ export type WaveRound = {
   distance: number | null // |target - guess|, set at reveal
 }
 export type WaveGame = {
-  rounds: WaveRound[]     // exactly WAVE.rounds, generated up front
+  rounds: WaveRound[]     // as many as the roster asks for, generated up front
   current: number         // 0-based index into rounds — which one is live
 }
 
-// Quick Draw: one partner sketches a prompt on their phone (privately, timed); the
-// finished drawing then appears for the other to guess from a free-text answer. Role
-// alternates every round, same shape as Wavelength's psychic/guesser split.
+// Draw Your Answer: the drawer gets a question about themselves ("your comfort food"),
+// privately types their one-word answer, then draws it; the other guesses. Getting it
+// right takes a readable drawing AND knowing them. Role alternates every round.
 export type DrawPrompt = { id: string; text: string }
 export type DrawStroke = [number, number][] // points normalized 0..1 within the canvas
 
 export type DrawRound = {
   index: number // 1-based
   drawer: PlayerId
-  promptId: string
+  promptId: string        // the question, not the answer
+  answer: string | null   // the drawer's own secret answer — what the drawing is OF
   strokes: DrawStroke[]   // [] until the drawer submits (or times out with nothing)
   guess: string | null
-  correct: boolean | null // set at reveal — the guess matched the prompt
+  correct: boolean | null // set at reveal; the drawer can still count a near miss
 }
 export type DrawGame = {
-  rounds: DrawRound[]     // exactly DRAW.rounds, prompt + drawer generated up front
+  rounds: DrawRound[]     // as many as the roster asks for, prompt + drawer up front
   current: number         // 0-based index into rounds — which one is live
+}
+
+// Who's More Likely: one statement, each of you privately taps a name. Agree and you
+// both score — it's the warm-up, so it pays for being on the same page, not for winning.
+export type LikelyRound = {
+  index: number // 1-based
+  statement: string
+  picks: Record<PlayerId, PlayerId | null> // who each of you named; null = not yet
+}
+export type LikelyGame = { rounds: LikelyRound[]; current: number }
+
+// Mr & Mrs: one question about yourselves. Each of you types your own answer AND a
+// prediction of the other's. At the reveal, whoever an answer belongs to rules on the
+// prediction about them — free text never matches exactly, and "close enough?" is the
+// argument the game is for.
+export type MrMrsRound = {
+  index: number // 1-based
+  question: string
+  answer: Record<PlayerId, string | null>   // what each said about themselves
+  predict: Record<PlayerId, string | null>  // each one's guess at the OTHER's answer
+  verdict: Record<PlayerId, boolean | null> // keyed by the PREDICTOR: did they get it?
+}
+export type MrMrsGame = { rounds: MrMrsRound[]; current: number }
+
+// Lights Out: one gentle question to end the night on. No score, no typing — it's there
+// to be talked about with the phone face down.
+export type LightsCard = { question: string }
+
+// Everything the content file provides. Fetched at boot and carried in the session so the
+// host and both phones draw from exactly the same pools.
+export type Content = {
+  themes: Theme[]
+  fingerStatements: string[]
+  spectrums: WaveSpectrum[]
+  drawPrompts: DrawPrompt[]
+  likelyStatements: string[]
+  mrmrsQuestions: string[]
+  lightsQuestions: string[]
 }
 
 export type SessionState = {
@@ -104,15 +150,14 @@ export type SessionState = {
   players: Record<PlayerId, { name: string; connected: boolean }>
   gapActs: GapAct[]
   listActs: ListAct[]
+  likely: LikelyGame | null
   finger: FingerGame | null
+  mrmrs: MrMrsGame | null
   wave: WaveGame | null
   draw: DrawGame | null
-  themes: Theme[]
-  fingerStatements: string[]
-  spectrums: WaveSpectrum[]
-  drawPrompts: DrawPrompt[]
+  lights: LightsCard | null
   game: Game
-}
+} & Content
 
 export type Action =
   | { type: 'JOIN'; player: PlayerId; name: string }
@@ -121,12 +166,21 @@ export type Action =
   | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
   // Put a Finger Down: a private yes/no to the round's statement. No changing your mind.
   | { type: 'SUBMIT_FINGER'; player: PlayerId; applies: boolean }
+  // Who's More Likely: the name each of you taps, privately. No changing your mind.
+  | { type: 'PICK_LIKELY'; player: PlayerId; pick: PlayerId }
+  // Mr & Mrs: your own answer and your prediction of theirs, sent together.
+  | { type: 'SUBMIT_MRMRS'; player: PlayerId; answer: string; predict: string }
+  // Mr & Mrs: rule on the prediction about YOU — was it right?
+  | { type: 'JUDGE'; player: PlayerId; correct: boolean }
   // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.
   | { type: 'SUBMIT_CLUE'; player: PlayerId; text: string }
   | { type: 'SUBMIT_GUESS'; player: PlayerId; value: number }
   // Quick Draw: the drawer's finished sketch (empty strokes on a timeout), then the
   // guesser's one text guess at the prompt.
-  | { type: 'SUBMIT_DRAWING'; player: PlayerId; strokes: DrawStroke[] }
+  | { type: 'SUBMIT_DRAWING'; player: PlayerId; answer: string; strokes: DrawStroke[] }
+  // Draw Your Answer: the drawer counts a guess the auto-match missed ("ramen" for
+  // "noodles"). Only ever turns a miss into a hit, never the other way.
+  | { type: 'COUNT_IT'; player: PlayerId }
   | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }
   // Shortlist's reveal walks the items one at a time, on a tap from either player —
   // there's no clock on it, so an argument about item four can run as long as it likes.
@@ -137,13 +191,20 @@ export type Action =
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
+export const EMPTY_CONTENT: Content = {
+  themes: [],
+  fingerStatements: [],
+  spectrums: [],
+  drawPrompts: [],
+  likelyStatements: [],
+  mrmrsQuestions: [],
+  lightsQuestions: [],
+}
+
 export function initialState(
   seed: number,
-  themes: Theme[] = [],
   game: Game = 'full',
-  fingerStatements: string[] = [],
-  spectrums: WaveSpectrum[] = [],
-  drawPrompts: DrawPrompt[] = [],
+  content: Partial<Content> = {},
 ): SessionState {
   return {
     seed,
@@ -152,13 +213,14 @@ export function initialState(
     players: { A: { name: '', connected: false }, B: { name: '', connected: false } },
     gapActs: [],
     listActs: [],
+    likely: null,
     finger: null,
+    mrmrs: null,
     wave: null,
     draw: null,
-    themes,
-    fingerStatements,
-    spectrums,
-    drawPrompts,
+    lights: null,
     game,
+    ...EMPTY_CONTENT,
+    ...content,
   }
 }

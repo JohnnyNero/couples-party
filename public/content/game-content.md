@@ -3,7 +3,8 @@
   next deploy. No code, no JSON.
 
   Parser rules (everything else on a line is ignored, so notes like this are fine):
-    - "# " starts a game section. Don't rename the four below.
+    - "# " starts a game section. Don't rename the sections below — the game
+      finds its content by the heading.
     - "## " starts a Shortlist theme. Keep "{name}" in it. 7+ items each.
     - "- " is one entry.
     - A Wavelength entry is two poles: "- Low | High".
@@ -364,38 +365,149 @@ between has to be nameable.
 - Cheap date | Fancy date
 
 
-# Quick Draw
+# Draw Your Answer
 
-Six are drawn per session. One object, sketchable with a finger in 40 seconds.
-Ordinary things, not couple things — the joke is the drawing, not the prompt.
+Six are drawn per session. A bare noun phrase — the app puts "Your" in front for
+the drawer and "Sam's" for everyone else, so it has to read right after both.
+The drawer secretly types their real answer, draws it, and the other guesses.
+Pick things that have a drawable answer.
 
-- a cat
-- a rocket
-- a birthday cake
-- a bicycle
-- a lighthouse
-- a pineapple
-- an octopus
-- a robot
-- a haunted house
-- a snowman
-- a guitar
-- a hot air balloon
-- a dinosaur
-- a pizza slice
-- an umbrella
-- a tractor
-- a castle
-- a lawnmower
-- a penguin
-- a washing machine
-- a toaster
-- a shopping trolley
-- a hedgehog
-- a windmill
-- a traffic jam
-- a sandcastle
-- a submarine
-- a campfire
-- a spider web
-- a vacuum cleaner
+- comfort food
+- dream holiday
+- favourite animal
+- worst habit
+- dream car
+- hidden talent
+- biggest fear
+- happy place
+- go-to snack
+- dream pet
+- favourite sport
+- dream job
+- favourite film
+- perfect date
+- favourite drink
+- least favourite chore
+- spirit animal
+- favourite season
+- dream house
+- go-to breakfast
+- most-used app
+- favourite dessert
+- dream superpower
+- celebrity crush
+- favourite body part
+- biggest turn-on
+- favourite position
+- ideal Sunday
+- best holiday ever
+- guilty pleasure
+
+
+# Who's More Likely
+
+Six are drawn in a full session, four in Tonight. Just the end of the sentence —
+the app starts it with "Who's more likely to". You both tap a name in secret and
+score when you agree.
+
+- cry at an advert
+- fall asleep first
+- forget a birthday
+- eat the last slice
+- get lost on holiday
+- win an argument
+- start the argument
+- say sorry first
+- lose their keys
+- send a risky text
+- get a tattoo
+- laugh at a funeral
+- snore
+- binge a whole series in a day
+- burn dinner
+- make the first move
+- fall for a scam
+- go viral
+- quit their job tomorrow
+- steal the covers
+- sing in the shower
+- forget where they parked
+- book a trip on a whim
+- stay up too late
+- flirt with the waiter
+- cry at a wedding
+- skinny dip
+- google their own name
+- keep a secret
+- wake up grumpy
+- talk to strangers
+- survive a horror film
+
+
+# Mr & Mrs
+
+Five are drawn in a full session, two in Tonight. A question about yourself,
+asked to "you". You each type your own answer and guess your partner's; the
+person the answer belongs to decides if the guess counts. Short answers only.
+
+- What would you order from a Chinese takeaway?
+- Your dream holiday destination?
+- The first thing you'd buy if you won the lottery?
+- Your go-to karaoke song?
+- A food you can't stand?
+- Your most-used emoji?
+- Your hidden talent?
+- Your celebrity crush?
+- A film you could watch forever?
+- Your worst habit?
+- Your ideal Sunday?
+- The app you'd delete last?
+- Your comfort meal?
+- Your biggest fear?
+- The best present you've ever had?
+- Your dream job as a kid?
+- Your go-to drink at the pub?
+- What you'd grab in a fire?
+- Your favourite smell?
+- The song that always gets you dancing?
+- Your guilty-pleasure TV show?
+- Where you'd live if you could live anywhere?
+- What you'd name a dog?
+- Your first gig?
+- The chore you hate most?
+- Your perfect pizza topping?
+- The first thing you notice about someone?
+- Your favourite place to be kissed?
+- Your biggest turn-on?
+- The best date we've been on?
+
+
+# Lights Out
+
+One is drawn at the end of the night. No score, nothing to type — just a
+question to talk about with the phone face down. Keep them gentle and short.
+
+- What was the best bit of your day?
+- What are you looking forward to?
+- What's a small thing I do that you love?
+- What's been on your mind this week?
+- Where should we go next?
+- What's a memory of us you keep coming back to?
+- What made you laugh today?
+- What's one thing we should do more of?
+- What would make tomorrow a good day?
+- What did you want to be when you were little?
+- What's the best meal we've had together?
+- What song reminds you of us?
+- When did you first know you liked me?
+- What's something you'd like to try together?
+- What are you grateful for right now?
+- What stressed you out today?
+- If we had tomorrow off, what would we do?
+- What's a habit of mine you secretly like?
+- What's the nicest thing someone said to you lately?
+- What do you miss about when we first met?
+- Where do you see us in five years?
+- What's a small win from this week?
+- What are you proud of yourself for?
+- What would a perfect weekend with me look like?

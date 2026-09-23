@@ -1,5 +1,4 @@
 import type { SessionState } from '../../engine/state'
-import { FINGER } from '../../engine/phases'
 import { fingerRoundPoints } from '../../engine/standing'
 import { Hand } from '../../views/Hand'
 import { playerName } from '../../views/list'
@@ -10,7 +9,7 @@ export function ScreenFingerReveal({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-3xl mx-auto text-center">
       <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        Round {round.index} of {FINGER.rounds}
+        Round {round.index} of {f.rounds.length}
       </div>
       <div className="text-xl sm:text-3xl font-bold uppercase tracking-tight break-words mb-8 sm:mb-12">
         If {round.statementId}

@@ -21,7 +21,7 @@ const act = (over: Partial<ListAct> = {}): ListAct => ({
 })
 
 const session = (phase: SessionState['phase'], a: ListAct): SessionState => ({
-  ...initialState(1, [{ id: 't001', text: 'seven things {name} would miss', pool: ITEMS }]),
+  ...initialState(1, 'full', { themes: [{ id: 't001', text: 'seven things {name} would miss', pool: ITEMS }] }),
   phase,
   players: { A: { name: 'Sam', connected: true }, B: { name: 'Alex', connected: true } },
   listActs: [a],
@@ -55,7 +55,7 @@ describe('board renders every Act III phase', () => {
     const html = renderToStaticMarkup(<BoardStage s={s} />)
     expect(html.length).toBeGreaterThan(0)
     expect(railText(s)).toMatch(
-      phase === 'DONE' ? /session/i : phase === 'LIST_RESULT' ? /score/i : /Act III/,
+      phase === 'DONE' ? /session/i : phase === 'LIST_RESULT' ? /score/i : /Shortlist/,
     )
   })
 
@@ -96,7 +96,9 @@ describe('the scoreboard between games', () => {
     expect(html).toContain('Shortlist')
     expect(html).toContain('Put a Finger Down')
     expect(html).toContain('Wavelength')
-    expect(html).toContain('Quick Draw')
+    expect(html).toContain('Draw Your Answer')
+    expect(html).toContain('More Likely')
+    expect(html).toContain('Mr &amp; Mrs')
     expect(html).toContain('Next up')
   })
 

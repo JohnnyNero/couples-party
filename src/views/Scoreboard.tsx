@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { PlayerId, SessionState } from '../engine/state'
 import { gameScores, standing } from '../engine/standing'
+import { GAME_LABELS, gameOfPhase, nextGame } from '../engine/roster'
 import { dispatch, useMyPlayerId } from '../net'
 import { AnimatedNumber } from './AnimatedNumber'
 import { playerName } from './list'
@@ -25,11 +26,13 @@ export function Scoreboard({
   const me = useMyPlayerId()
   const games = gameScores(s)
   const total = standing(s)
-  const next = games.find((g) => !g.played)
-  // DONE is over whatever is left unplayed — a single-game session and a full one that
-  // ended early both get here with three games still showing as blanks, and neither
-  // should be promising a next game that isn't coming.
-  const over = s.phase === 'DONE' || s.game !== 'full' || !next
+  // What a tap leads to, straight off the roster. DONE leads nowhere, whatever is left
+  // unplayed — a session that ended early shouldn't promise a game that isn't coming.
+  const current = gameOfPhase(s.phase)
+  const next = s.phase === 'DONE' || !current ? null : nextGame(s, current)
+  // Once nothing scored is left, the board calls the night — Lights Out is still to come
+  // after it, but it doesn't change the result.
+  const called = !next || next === 'lights'
   // A TV has nobody to tap it, and once the session is DONE the tap would do nothing.
   const canContinue = me !== null && s.phase !== 'DONE'
 
@@ -115,14 +118,14 @@ export function Scoreboard({
 
       <div className="flex items-center justify-between gap-3">
         <span className="text-[0.6rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 min-w-0 truncate">
-          {over ? verdict(s) : `Next up · ${next!.label}`}
+          {called ? verdict(s) : `Next up · ${GAME_LABELS[next!]}`}
         </span>
         {canContinue && (
           <button
             onClick={() => dispatch({ type: 'CONTINUE', player: me })}
             className="min-h-[48px] px-6 shrink-0 bg-accent text-bg text-base sm:text-xl font-bold uppercase tracking-widest active:translate-y-px rounded-xl"
           >
-            {over ? 'Finish' : 'Ready'}
+            {next === 'lights' ? 'Lights out' : next ? 'Ready' : 'Finish'}
           </button>
         )}
       </div>

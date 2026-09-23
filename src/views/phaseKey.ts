@@ -12,7 +12,9 @@ export function phaseKey(s: SessionState): string {
     s.listActs.length,
     act?.placeIndex ?? 0,
     act?.revealIndex ?? 0,
+    s.likely?.current ?? 0,
     s.finger?.current ?? 0,
+    s.mrmrs?.current ?? 0,
     s.wave?.current ?? 0,
     s.draw?.current ?? 0,
   ].join('|')

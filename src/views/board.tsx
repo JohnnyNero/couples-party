@@ -1,5 +1,5 @@
 import type { SessionState } from '../engine/state'
-import { DRAW, FINGER, WAVE } from '../engine/phases'
+import { GAME_LABELS, gameOfPhase, roundsFor } from '../engine/roster'
 import { phaseKey } from './phaseKey'
 import { Scoreboard } from './Scoreboard'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
@@ -7,6 +7,13 @@ import { ScreenListIntro } from '../screen/phases/ScreenListIntro'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
 import { ScreenListResult } from '../screen/phases/ScreenListResult'
+import { ScreenLikelyRound } from '../screen/phases/ScreenLikelyRound'
+import { ScreenLikelyReveal } from '../screen/phases/ScreenLikelyReveal'
+import { ScreenLikelyResult } from '../screen/phases/ScreenLikelyResult'
+import { ScreenMmAnswer } from '../screen/phases/ScreenMmAnswer'
+import { ScreenMmJudge } from '../screen/phases/ScreenMmJudge'
+import { ScreenMmResult } from '../screen/phases/ScreenMmResult'
+import { ScreenLightsOut } from '../screen/phases/ScreenLightsOut'
 import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
 import { ScreenFingerReveal } from '../screen/phases/ScreenFingerReveal'
 import { ScreenFingerResult } from '../screen/phases/ScreenFingerResult'
@@ -22,34 +29,24 @@ import { ScreenDrawResult } from '../screen/phases/ScreenDrawResult'
 // The public "board" content for the current phase, shared by the shared-screen
 // renderer (Screen) and the phones-only renderer (Duo). Holds no logic and shows
 // nothing private — submission dots and counts only, never words in flight.
-const SCOREBOARD_RAIL: Partial<Record<SessionState['phase'], string>> = {
-  LIST_RESULT: 'Shortlist · the score',
-  FINGER_RESULT: 'Put a Finger Down · the score',
-  WAVE_RESULT: 'Wavelength · the score',
-  DRAW_RESULT: 'Quick Draw · the score',
-}
-
 export function railText(s: SessionState): string {
   if (s.phase === 'JOIN') return 'Lobby'
-  const board = SCOREBOARD_RAIL[s.phase]
-  if (board) return board
-  if (s.phase.startsWith('LIST') && s.listActs.length > 0) {
-    const run = `Act III · Shortlist · ${s.listActs.length} of 2`
+  if (s.phase === 'DONE') return "That's the session"
+  if (s.phase === 'LIGHTS_OUT') return 'Lights out'
+  const key = gameOfPhase(s.phase)
+  if (!key) return s.phase
+  const label = GAME_LABELS[key]
+  if (s.phase.endsWith('_RESULT')) return `${label} · the score`
+  if (key === 'list') {
+    const run = `${label} · ${s.listActs.length} of ${roundsFor(s, 'list')}`
     if (s.phase === 'LIST_INTRO') return `${run} · The theme`
     if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
   }
-  if (s.phase.startsWith('FINGER') && s.finger) {
-    return `Put a Finger Down · Round ${s.finger.rounds[s.finger.current].index} of ${FINGER.rounds}`
-  }
-  if (s.phase.startsWith('WAVE') && s.wave) {
-    return `Wavelength · Round ${s.wave.rounds[s.wave.current].index} of ${WAVE.rounds}`
-  }
-  if (s.phase.startsWith('DRAW') && s.draw) {
-    return `Quick Draw · Round ${s.draw.rounds[s.draw.current].index} of ${DRAW.rounds}`
-  }
-  if (s.phase === 'DONE') return 'That\'s the session'
-  return s.phase
+  const game = key === 'lights' ? null
+    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw }[key]
+  if (!game) return label
+  return `${label} · Round ${game.current + 1} of ${game.rounds.length}`
 }
 
 export function BoardStage({ s }: { s: SessionState }) {
@@ -72,6 +69,20 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenListReveal s={s} />
     case 'LIST_RESULT':
       return <ScreenListResult s={s} />
+    case 'LIKELY_ROUND':
+      return <ScreenLikelyRound s={s} />
+    case 'LIKELY_REVEAL':
+      return <ScreenLikelyReveal s={s} />
+    case 'LIKELY_RESULT':
+      return <ScreenLikelyResult s={s} />
+    case 'MM_ANSWER':
+      return <ScreenMmAnswer s={s} />
+    case 'MM_JUDGE':
+      return <ScreenMmJudge s={s} />
+    case 'MM_RESULT':
+      return <ScreenMmResult s={s} />
+    case 'LIGHTS_OUT':
+      return <ScreenLightsOut s={s} />
     case 'FINGER_ROUND':
       return <ScreenFingerRound s={s} />
     case 'FINGER_REVEAL':

@@ -39,6 +39,30 @@ export function nextBotAction(
       return { type: 'PLACE_ITEM', player: me, slot: lowestFreeSlot(act, byAuthor) }
     }
 
+    case 'LIKELY_ROUND': {
+      const g = s.likely
+      if (!g || g.rounds[g.current].picks[me] !== null) return null
+      return { type: 'PICK_LIKELY', player: me, pick: rng() < 0.5 ? 'A' : 'B' }
+    }
+
+    case 'MM_ANSWER': {
+      const g = s.mrmrs
+      if (!g || g.rounds[g.current].answer[me] !== null) return null
+      return {
+        type: 'SUBMIT_MRMRS',
+        player: me,
+        answer: pickFrom(rng, brain.nouns),
+        predict: pickFrom(rng, brain.nouns),
+      }
+    }
+
+    case 'MM_JUDGE': {
+      // Rules on the prediction about itself — a coin toss, since it has no opinions.
+      const g = s.mrmrs
+      if (!g || g.rounds[g.current].verdict[other(me)] !== null) return null
+      return { type: 'JUDGE', player: me, correct: rng() < 0.5 }
+    }
+
     case 'FINGER_ROUND': {
       const f = s.finger
       if (!f) return null
@@ -70,7 +94,12 @@ export function nextBotAction(
       const round = d.rounds[d.current]
       if (round.drawer !== me) return null
       // A single scribbled stroke — good enough for a testing seat, never a real guess.
-      return { type: 'SUBMIT_DRAWING', player: me, strokes: [[[0.2, 0.2], [0.8, 0.8]]] }
+      return {
+        type: 'SUBMIT_DRAWING',
+        player: me,
+        answer: pickFrom(rng, brain.nouns),
+        strokes: [[[0.2, 0.2], [0.8, 0.8]]],
+      }
     }
 
     case 'DRAW_GUESS': {
@@ -94,7 +123,10 @@ export function botDelay(s: SessionState, rng: () => number): number {
   switch (s.phase) {
     case 'JOIN': return 400
     case 'LIST_PLACE': return spread(1200, 4000) // per item
+    case 'LIKELY_ROUND': return spread(1500, 5000)
     case 'FINGER_ROUND': return spread(2000, 6000)
+    case 'MM_ANSWER': return spread(6000, 15000)
+    case 'MM_JUDGE': return spread(2000, 5000)
     case 'WAVE_CLUE': return spread(3000, 9000)
     case 'WAVE_GUESS': return spread(2000, 7000)
     case 'DRAW_SKETCH': return spread(5000, 15000)

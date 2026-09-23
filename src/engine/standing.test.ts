@@ -31,7 +31,7 @@ const finger = (...pairs: Array<[boolean | null, boolean | null]>): FingerGame =
 })
 
 const dRound = (drawer: PlayerId, correct: boolean | null) => ({
-  index: 1, drawer, promptId: 'd01', strokes: [], guess: correct === null ? null : 'x', correct,
+  index: 1, drawer, promptId: 'd01', answer: 'x', strokes: [], guess: correct === null ? null : 'x', correct,
 })
 
 const wRound = (psychic: PlayerId, distance: number | null): WaveRound => ({
@@ -178,10 +178,11 @@ describe('gameScores', () => {
   it('breaks the total down by game, and says which have been played', () => {
     const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
     const rows = gameScores(s)
-    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'wave', 'draw'])
-    expect(rows.map((g) => g.played)).toEqual([true, true, false, false])
+    // The full roster, in playing order. Lights Out isn't here — it doesn't score.
+    expect(rows.map((g) => g.key)).toEqual(['list', 'likely', 'finger', 'wave', 'mrmrs', 'draw'])
+    expect(rows.map((g) => g.played)).toEqual([true, false, true, false, false, false])
     expect(rows[0].points).toEqual({ A: SCORING.listExact, B: 0 })
-    expect(rows[1].points).toEqual({ A: 0, B: SCORING.fingerKept })
+    expect(rows[2].points).toEqual({ A: 0, B: SCORING.fingerKept })
   })
   it('always sums to the session total', () => {
     const s = {

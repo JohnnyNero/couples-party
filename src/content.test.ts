@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 // node types are needed just to open a file.
 import shippedContent from '../public/content/game-content.md?raw'
 import { parseContent } from './content'
+import { roundsFor } from './engine/roster'
 
 describe('parseContent', () => {
   it('parses a theme with its pool under Shortlist', () => {
@@ -124,6 +125,26 @@ Some commentary in the middle.
     expect(themes[0].pool).toEqual(['real item'])
   })
 
+  it('parses the three newer games and Lights Out', () => {
+    const parsed = parseContent(`
+# Who's More Likely
+- cry at an advert
+# Mr & Mrs
+- Your go-to karaoke song?
+# Lights Out
+- What made you laugh today?
+`)
+    expect(parsed.likelyStatements).toEqual(['cry at an advert'])
+    expect(parsed.mrmrsQuestions).toEqual(['Your go-to karaoke song?'])
+    expect(parsed.lightsQuestions).toEqual(['What made you laugh today?'])
+  })
+
+  it('reads the draw section under its current name and both old ones', () => {
+    for (const heading of ['Draw Your Answer', 'Quick Draw', 'Draw Your Love']) {
+      expect(parseContent(`# ${heading}\n- comfort food`).drawPrompts).toEqual([{ id: 'd01', text: 'comfort food' }])
+    }
+  })
+
   it('parses a realistic multi-section file end to end', () => {
     const parsed = parseContent(`
 # Shortlist
@@ -164,12 +185,32 @@ describe('the shipped content keeps its shape', () => {
   const words = (s: string) => s.trim().split(/\s+/).length
   const shortlist = parsed.themes.flatMap((t) => t.pool)
 
-  it('has enough of everything for every game to draw a full round', () => {
-    expect(parsed.themes.length).toBeGreaterThanOrEqual(2)
+  it('has enough of everything for the longest session to draw from', () => {
+    // Every game needs at least as many entries as the full roster plays of it, or a
+    // session would repeat itself inside one night.
+    const need = (key: Parameters<typeof roundsFor>[1]) => roundsFor({ game: 'full' }, key)
+    expect(parsed.themes.length).toBeGreaterThanOrEqual(need('list'))
     for (const t of parsed.themes) expect(t.pool.length).toBeGreaterThanOrEqual(7)
-    expect(parsed.fingerStatements.length).toBeGreaterThanOrEqual(5)
-    expect(parsed.spectrums.length).toBeGreaterThanOrEqual(7)
-    expect(parsed.drawPrompts.length).toBeGreaterThanOrEqual(6)
+    expect(parsed.likelyStatements.length).toBeGreaterThanOrEqual(need('likely'))
+    expect(parsed.fingerStatements.length).toBeGreaterThanOrEqual(need('finger'))
+    expect(parsed.mrmrsQuestions.length).toBeGreaterThanOrEqual(need('mrmrs'))
+    expect(parsed.spectrums.length).toBeGreaterThanOrEqual(need('wave'))
+    expect(parsed.drawPrompts.length).toBeGreaterThanOrEqual(need('draw'))
+    expect(parsed.lightsQuestions.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('keeps Draw Your Answer prompts as bare phrases the app can put "Your" in front of', () => {
+    const bad = parsed.drawPrompts
+      .map((d) => d.text)
+      .filter((t) => words(t) > 4 || /^(your|my|the|a|an)\b/i.test(t) || /[?.]$/.test(t))
+    expect(bad).toEqual([])
+  })
+
+  it('keeps the newer games short enough to read at a glance', () => {
+    // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
+    expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])
+    expect(parsed.mrmrsQuestions.filter((t) => words(t) > 12)).toEqual([])
+    expect(parsed.lightsQuestions.filter((t) => words(t) > 14)).toEqual([])
   })
 
   it('keeps Shortlist items to a bare thing — four words, no clause', () => {
@@ -210,5 +251,8 @@ describe('the shipped content keeps its shape', () => {
     for (const t of parsed.themes) expect(dupes(t.pool)).toEqual([])
     expect(dupes(parsed.fingerStatements)).toEqual([])
     expect(dupes(parsed.drawPrompts.map((d) => d.text))).toEqual([])
+    expect(dupes(parsed.likelyStatements)).toEqual([])
+    expect(dupes(parsed.mrmrsQuestions)).toEqual([])
+    expect(dupes(parsed.lightsQuestions)).toEqual([])
   })
 })

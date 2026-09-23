@@ -18,6 +18,9 @@ import { useRecordSession } from '../store/useRecordSession'
 const BOARD_ONLY = new Set([
   'JOIN',
   'LIST_INTRO', 'LIST_REVEAL', 'LIST_RESULT',
+  'LIKELY_REVEAL', 'LIKELY_RESULT',
+  'MM_JUDGE', 'MM_RESULT',
+  'LIGHTS_OUT',
   'FINGER_REVEAL', 'FINGER_RESULT',
   'WAVE_REVEAL', 'WAVE_RESULT',
   'DRAW_REVEAL', 'DRAW_RESULT',
