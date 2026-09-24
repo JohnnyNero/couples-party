@@ -558,3 +558,44 @@ because they're not in the word list. Keep them short. No "right now", no
 - The colour that suits {name}
 - Something we should do more
 - What we bicker about
+
+
+# Their Numbers
+
+The daily numbers. Five of these come up each day, the same five for both of you.
+You each answer them about yourself with a whole number, then guess the other's.
+Exactly right is the prize; close counts for something.
+
+Every answer has to be a whole number someone can give without looking anything
+up, and it should be about you, not the two of you. Say what the number counts
+("hours", "out of 10") so nobody's guessing the units. Keep away from weight,
+money and anything with a right answer to be embarrassed about.
+
+- Hours of sleep you'd have tonight, if you could
+- Minutes it takes you to get ready to go out
+- Cups of tea or coffee you have on a normal day
+- Countries you've been to
+- The age you'd happily retire at
+- Out of 10, how much you like mornings
+- Out of 10, how good a driver you are
+- Out of 10, how brave you are with spiders
+- Out of 10, how tidy you are
+- Out of 10, how good a cook you are
+- Out of 10, how competitive you are
+- Out of 10, how much you like surprises
+- Out of 10, how good you are at keeping secrets
+- Out of 10, how much you like camping
+- Out of 10, how much you like your own singing voice
+- Unread messages on your phone right now
+- Pairs of shoes you own
+- Apps on your phone's home screen
+- Times you hit snooze on a bad morning
+- Hours you could go without your phone
+- The age you feel inside
+- Films you'd watch again tonight without complaining
+- Minutes you'd wait for a table before giving up
+- Days you could go without chocolate
+- Hours you'd want in the perfect lie-in
+- Your ideal room temperature, in degrees
+- Tabs open in your phone's browser
+- Minutes you'd happily spend in a hot bath

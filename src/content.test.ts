@@ -213,6 +213,12 @@ describe('the shipped content keeps its shape', () => {
     expect(parsed.wordPrompts.filter((t) => /\{(?!name\})/.test(t))).toEqual([])
   })
 
+  it('gives Their Numbers enough questions, each saying what it counts', () => {
+    expect(parsed.numberQuestions.length).toBeGreaterThanOrEqual(15)
+    expect(parsed.numberQuestions.filter((t) => words(t) > 12 || /\?$/.test(t))).toEqual([])
+    expect(new Set(parsed.numberQuestions).size).toBe(parsed.numberQuestions.length)
+  })
+
   it('keeps the newer games short enough to read at a glance', () => {
     // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
     expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])

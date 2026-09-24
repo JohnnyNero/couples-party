@@ -7,6 +7,7 @@ import m0004 from './migrations/0004_streak.sql?raw'
 import m0005 from './migrations/0005_the_dial.sql?raw'
 import m0006 from './migrations/0006_top_5.sql?raw'
 import m0007 from './migrations/0007_sketch.sql?raw'
+import m0008 from './migrations/0008_their_numbers.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -60,6 +61,7 @@ beforeAll(async () => {
   await db.exec(m0005)
   await db.exec(m0006)
   await db.exec(m0007)
+  await db.exec(m0008)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -385,6 +387,58 @@ describe('sketch: a daily draw your answer', () => {
     await expect(call(EVE, 'submit_sketch', [alexView.id, 'x'])).rejects.toThrow(/no such puzzle/)
     await expect(as(SAM, `select public.sketch_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
     await expect(as(SAM, `select public.sketch_norm('x')`)).rejects.toThrow(/permission/)
+  })
+})
+
+describe('their numbers: five numbers about yourself', () => {
+  const QS = ['Countries you have been to', 'Out of 10, how tidy you are', 'Cups of tea a day', 'Pairs of shoes you own', 'Hours of sleep tonight']
+  let alexView: any // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('marks a guess exact, close (a fifth either way, never under one), or off', async () => {
+    const mark = async (g: number, a: number) =>
+      (await db.query<{ m: string }>('select public.numbers_mark($1, $2) as m', [g, a])).rows[0].m
+    expect(await mark(7, 7)).toBe('exact')
+    expect(await mark(6, 7)).toBe('close') // one out of ten — the floor
+    expect(await mark(5, 7)).toBe('off')
+    expect(await mark(12, 15)).toBe('close') // 3 is a fifth of 15
+    expect(await mark(11, 15)).toBe('off')
+    expect(await mark(1, 0)).toBe('close')
+  })
+  it('refuses anything that is not five questions and five whole numbers', async () => {
+    await expect(call(SAM, 'set_numbers', [today(), QS.slice(0, 4), [1, 2, 3, 4]])).rejects.toThrow(/five questions/)
+    await expect(call(SAM, 'set_numbers', [today(), QS, [1, 2, 3, 4]])).rejects.toThrow(/five whole numbers/)
+    await expect(call(SAM, 'set_numbers', [today(), QS, [1, 2, 3, 4, -1]])).rejects.toThrow(/five whole numbers/)
+    await expect(call(SAM, 'set_numbers', [today(), QS, [1, 2, 3, 4, 10000]])).rejects.toThrow(/five whole numbers/)
+  })
+  it("lets Sam answer and change them, locked from Alex, who can't guess first", async () => {
+    await call(SAM, 'set_numbers', [today(), QS, [1, 1, 1, 1, 1]])
+    await call(SAM, 'set_numbers', [today(), QS, [15, 7, 3, 12, 8]])
+    const sam = await call(SAM, 'daily_numbers', [today()])
+    expect(sam.questions).toEqual(QS)
+    expect(sam.mine).toMatchObject({ questions: QS, answers: [15, 7, 3, 12, 8], status: 'open', guesses: null })
+    expect((await call(ALEX, 'daily_numbers', [today()])).theirs).toEqual({ locked: true })
+    await expect(call(ALEX, 'submit_numbers', [sam.mine.id, [1, 1, 1, 1, 1]])).rejects.toThrow(/answer yours first/)
+  })
+  it("files Alex's answers under the day's five questions, and shows Alex the questions but not Sam's numbers", async () => {
+    await call(ALEX, 'set_numbers', [today(), ['a', 'b', 'c', 'd', 'e'], [2, 5, 1, 30, 7]])
+    const alex = await call(ALEX, 'daily_numbers', [today()])
+    expect(alex.mine.questions).toEqual(QS)
+    alexView = alex.theirs
+    expect(alexView).toMatchObject({ questions: QS, status: 'open', answers: null })
+  })
+  it('marks all five on the server and reveals the answers', async () => {
+    const view = await call(ALEX, 'submit_numbers', [alexView.id, [12, 7, 5, 12, 9]])
+    expect(view).toMatchObject({
+      status: 'solved', answers: [15, 7, 3, 12, 8], guesses: [12, 7, 5, 12, 9],
+      marks: ['close', 'exact', 'off', 'exact', 'close'],
+    })
+    await expect(call(SAM, 'set_numbers', [today(), QS, [1, 1, 1, 1, 1]])).rejects.toThrow(/already started/)
+    expect(await call(ALEX, 'submit_numbers', [alexView.id, [0, 0, 0, 0, 0]])).toMatchObject({ guesses: [12, 7, 5, 12, 9] })
+  })
+  it('only lets the solver guess, and keeps the helpers private', async () => {
+    await expect(call(EVE, 'submit_numbers', [alexView.id, [1, 1, 1, 1, 1]])).rejects.toThrow(/no such puzzle/)
+    await expect(as(SAM, `select public.numbers_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
+    await expect(as(SAM, `select public.numbers_mark(1, 1)`)).rejects.toThrow(/permission/)
   })
 })
 

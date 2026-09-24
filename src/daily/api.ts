@@ -116,6 +116,33 @@ export type DailySketch =
       theirs: SketchView | { locked: true } | null
     }
 
+// Their Numbers: five questions about the setter, their whole-number answers, and the
+// solver's five guesses, each marked exact, close or off. The questions are never
+// hidden; the answers are, until the guesses are in.
+export type NumbersMark = 'exact' | 'close' | 'off'
+export type NumbersView = {
+  id: string
+  forDate: string
+  kind: 'numbers'
+  questions: string[]
+  answers: number[] | null
+  guesses: number[] | null
+  marks: NumbersMark[] | null
+  status: 'open' | 'solved'
+}
+
+export type DailyNumbers =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string; me: string }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      questions: string[] | null // the day's five, once either of you has answered
+      mine: NumbersView | null
+      theirs: NumbersView | { locked: true } | null
+    }
+
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
 // (the migration hasn't been run, or anonymous sign-ins are off) — that's a problem for
 // whoever runs the project, not the person holding the phone.
@@ -183,6 +210,7 @@ function friendly(message: string): string {
   if (/not a ranking/.test(message)) return 'Every rank, once each.'
   if (/1 to 30 characters/.test(message)) return 'A word or two — up to 30 characters.'
   if (/draw something/.test(message)) return 'Draw something first.'
+  if (/five whole numbers/.test(message)) return 'Whole numbers, 0 to 9999, all five.'
   if (/drawing is too big/.test(message)) return "That drawing's too busy to send — undo a few lines."
   return message
 }
@@ -211,4 +239,9 @@ export const api = {
     rpc<void>('set_sketch', { p_for_date: forDate, p_prompt: prompt, p_answer: answer, p_strokes: strokes }),
   submitSketch: (puzzleId: string, guess: string) =>
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
+  dailyNumbers: (today: string) => rpc<DailyNumbers>('daily_numbers', { p_today: today }),
+  setNumbers: (forDate: string, questions: string[], answers: number[]) =>
+    rpc<void>('set_numbers', { p_for_date: forDate, p_questions: questions, p_answers: answers }),
+  submitNumbers: (puzzleId: string, guesses: number[]) =>
+    rpc<NumbersView>('submit_numbers', { p_puzzle: puzzleId, p_guesses: guesses }),
 }

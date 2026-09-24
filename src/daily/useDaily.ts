@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api, DailyError, type Daily, type DailyDial, type DailySketch, type DailyTop5 } from './api'
+import { api, DailyError, type Daily, type DailyDial, type DailyNumbers, type DailySketch, type DailyTop5 } from './api'
 import { localDate } from './dates'
 
 export type DailyStatus<T> =
@@ -62,4 +62,8 @@ export function useDailyTop5() {
 
 export function useDailySketch() {
   return useDailyOf<DailySketch>(() => api.dailySketch(localDate()))
+}
+
+export function useDailyNumbers() {
+  return useDailyOf<DailyNumbers>(() => api.dailyNumbers(localDate()))
 }

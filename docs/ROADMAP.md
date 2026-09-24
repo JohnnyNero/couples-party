@@ -48,7 +48,9 @@ Needs, in order:
      wave a near miss through, so a guess counts once case, punctuation, spacing and
      a leading "a/an/the" are set aside ("tent!" is "A tent") — anything looser is for
      "ask them why". Reuses Draw Your Answer's prompt pool.
-   - Their Numbers.
+   - ~~Their Numbers~~ — done. Five number questions about yourself a day (its own
+     content section), your partner guesses all five at once; each is exact, close
+     (within a fifth of your number, never tighter than one either side) or off.
    - Once all four exist: one migration merges them into a single rotating slot
      (`daily()` picking the day's kind itself, same day-index approach as
      `questionOfTheDay`/`dialOfTheDay`), and the standalone `daily_dial()` (etc.)

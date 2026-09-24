@@ -9,12 +9,16 @@ const CONTENT_URL = `${import.meta.env.BASE_URL}content/game-content.md`
 export async function loadPacks(): Promise<Content> {
   // The daily puzzle's prompts live in the same file but have no place in a game
   // session, which gets broadcast to both phones on every move — so they're left out.
-  const { wordPrompts: _unused, ...content } = parseContent(await fetchContent())
+  const { wordPrompts: _w, numberQuestions: _n, ...content } = parseContent(await fetchContent())
   return content
 }
 
 export async function loadWordPrompts(): Promise<string[]> {
   return parseContent(await fetchContent()).wordPrompts
+}
+
+export async function loadNumberQuestions(): Promise<string[]> {
+  return parseContent(await fetchContent()).numberQuestions
 }
 
 // Both calls above can happen in one visit; the file only needs fetching once.

@@ -6,9 +6,9 @@ import type { Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
 // line is just skipped rather than breaking the whole file.
 
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
-export type ParsedContent = Content & { wordPrompts: string[] }
+export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -22,6 +22,7 @@ function sectionFor(heading: string): Section {
     case 'mr & mrs': case 'mr and mrs': return 'mrmrs'
     case 'lights out': return 'lights'
     case 'their word': return 'word'
+    case 'their numbers': return 'numbers'
     default: return null
   }
 }
@@ -35,6 +36,7 @@ export function parseContent(text: string): ParsedContent {
   const mrmrsQuestions: string[] = []
   const lightsQuestions: string[] = []
   const wordPrompts: string[] = []
+  const numberQuestions: string[] = []
 
   let section: Section = null
   let currentTheme: Theme | null = null
@@ -90,11 +92,14 @@ export function parseContent(text: string): ParsedContent {
       case 'word':
         wordPrompts.push(item)
         break
+      case 'numbers':
+        numberQuestions.push(item)
+        break
     }
   }
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions,
   }
 }
