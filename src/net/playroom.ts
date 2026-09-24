@@ -49,7 +49,7 @@ function placeholderState(): SessionState {
   return initialState(0, game, content)
 }
 
-export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
+export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: string): Promise<void> {
   if (started) return
   started = true
   game = chosenGame
@@ -59,11 +59,16 @@ export async function initNet(mode: PlayMode, chosenGame: Game): Promise<void> {
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,
   // no stream screen). The reducer/host wiring below is identical either way.
-  await insertCoin(
-    mode === 'screen'
-      ? { streamMode: true, maxPlayersPerRoom: 2 }
-      : { maxPlayersPerRoom: 2 },
-  )
+  //
+  // roomCode + skipLobby: a paired couple's own code (see api.coupleCode), so both
+  // phones land in the same room without Playroom's own share-a-link lobby screen —
+  // that's the whole point of already being paired. Unpaired phones get no roomCode
+  // and see Playroom's usual lobby, unchanged.
+  await insertCoin({
+    ...(mode === 'screen' ? { streamMode: true } : {}),
+    maxPlayersPerRoom: 2,
+    ...(roomCode ? { roomCode, skipLobby: true } : {}),
+  })
 
   // Ruling P1: Playroom collects each player's name at join, so JOIN is dispatched
   // automatically here (host-guarded) instead of via a name-entry UI.

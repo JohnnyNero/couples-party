@@ -44,6 +44,11 @@ SQL Editor → New query → paste the whole file → **Run**.
    solve theirs then set tomorrow's. Drops the "answer yours first" lock from the five
    submit functions, adds points (`puzzle_points`, `any_view`), counts the streak by
    solving or setting, and adds `board()`. No tables change.
+11. `migrations/0011_couple_room_code.sql` — a paired couple gets its own persistent
+   `room_code`, so Tonight (and any live session) can join straight into it instead of
+   asking you to share a room code or link. Adds `couples.room_code` (backfilled for
+   existing rows), has `create_couple` set it alongside the pairing code, and adds
+   `my_couple_code()`.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

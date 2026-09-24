@@ -10,6 +10,7 @@ import m0007 from './migrations/0007_sketch.sql?raw'
 import m0008 from './migrations/0008_their_numbers.sql?raw'
 import m0009 from './migrations/0009_streak_any_puzzle.sql?raw'
 import m0010 from './migrations/0010_solve_then_set.sql?raw'
+import m0011 from './migrations/0011_couple_room_code.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -66,6 +67,7 @@ beforeAll(async () => {
   await db.exec(m0008)
   await db.exec(m0009)
   await db.exec(m0010)
+  await db.exec(m0011)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -547,5 +549,20 @@ describe('unpairing', () => {
     await call(ALEX, 'leave_couple')
     const left = await db.query<{ n: number }>('select count(*)::int as n from public.puzzles')
     expect(left.rows[0].n).toBe(0)
+  })
+})
+
+describe('my_couple_code', () => {
+  it("is null before pairing, then a stable room code shared by both of you — distinct from the one-time pairing code", async () => {
+    expect(await call(SAM, 'my_couple_code')).toBe(null)
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    const room = await call(SAM, 'my_couple_code')
+    expect(room).toBeTruthy()
+    expect(room).not.toBe(code) // the pairing code is single-use; this one has to keep working
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    expect(await call(SAM, 'my_couple_code')).toBe(room) // pairing doesn't roll the room code
+    expect(await call(ALEX, 'my_couple_code')).toBe(room) // …and both of you share the same one
+    await call(SAM, 'leave_couple'); await call(ALEX, 'leave_couple')
+    expect(await call(SAM, 'my_couple_code')).toBe(null)
   })
 })

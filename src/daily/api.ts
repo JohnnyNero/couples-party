@@ -264,6 +264,7 @@ export const api = {
   submitSketch: (puzzleId: string, guess: string) =>
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
   board: (today: string) => rpc<Board>('board', { p_today: today }),
+  coupleCode: () => rpc<string | null>('my_couple_code'),
   streak: (today: string) => rpc<number>('streak', { p_today: today }),
   dailyNumbers: (today: string) => rpc<DailyNumbers>('daily_numbers', { p_today: today }),
   setNumbers: (forDate: string, questions: string[], answers: number[]) =>

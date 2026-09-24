@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { initNet, getIsStreamScreen } from './net'
+import { api } from './daily/api'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
 import { Home } from './start/Home'
@@ -16,7 +17,17 @@ export default function App() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (mode && game) initNet(mode, game).then(() => setReady(true))
+    if (!mode || !game) return
+    // Paired phones skip Playroom's own room-code lobby and join straight into their
+    // couple's own room — but only for the ordinary two-phones case, and only when
+    // this load isn't itself a shared link (Playroom's own share link carries the
+    // room to join as "#r=CODE" in the hash, and that must win). A failed lookup
+    // never holds the game up — it just falls back to Playroom's usual lobby.
+    const sharedLink = /(?:^|[#&])r=/.test(window.location.hash)
+    const wantsCode = mode === 'duo' && !sharedLink
+    ;(wantsCode ? api.coupleCode().catch(() => null) : Promise.resolve(null)).then((code) => {
+      initNet(mode, game, code ?? undefined).then(() => setReady(true))
+    })
   }, [mode, game])
 
   return (

@@ -10,9 +10,9 @@ import { SOLO_PLAYER, initLocal, localDispatch, useLocalSession } from './local'
 // always take the same branch on every render.
 let solo = false
 
-export async function initNet(mode: PlayMode, game: Game): Promise<void> {
+export async function initNet(mode: PlayMode, game: Game, roomCode?: string): Promise<void> {
   solo = mode === 'solo'
-  if (!solo) return playroom.initNet(mode, game)
+  if (!solo) return playroom.initNet(mode, game, roomCode)
   initLocal(await loadPacks(), game)
 }
 

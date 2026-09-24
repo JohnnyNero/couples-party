@@ -36,8 +36,12 @@ One puzzle per day, on a fixed weekday rotation. The line-up:
 
 Needs, in order:
 1. ~~A Supabase project~~ — done; see `supabase/README.md` for the two dashboard steps.
-2. ~~Pairing~~ — done: a six-letter code, anonymous sign-in per phone.
-   Still to do: use the pairing to drop the room code from Tonight.
+2. ~~Pairing~~ — done: a six-letter code, anonymous sign-in per phone. ~~Use the pairing
+   to drop the room code from Tonight~~ — done (migration 0011). A paired couple gets
+   its own persistent room code (distinct from the one-time pairing code, which is
+   cleared after use) and "Just two phones" joins straight into it, skipping
+   Playroom's own room-code lobby. Unpaired phones and Playroom's own share links are
+   unaffected.
 3. ~~Their Word~~ — done. One question a day, the same for both of you (spun in from the
    content file's pool by date), answered in five or six letters, and solved the same day.
    Your partner's answer stays locked until you've given yours — enforced on the
