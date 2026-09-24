@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config'
+import type { DrawStroke } from '../engine/state'
 
 // The daily puzzles' whole server surface, each call a Postgres function defined in
 // supabase/migrations. Nothing here reads a table directly — it can't; see the
@@ -89,6 +90,32 @@ export type DailyTop5 =
       theirs: Top5View | { locked: true } | null
     }
 
+// Sketch: a question about the setter ("comfort food"), their drawing of the answer,
+// and three guesses at what they wrote. The drawing is the whole puzzle, so it's never
+// hidden; the answer is, until it's guessed or the guesses run out.
+export type SketchView = {
+  id: string
+  forDate: string
+  kind: 'sketch'
+  prompt: string // bare noun phrase — "Your …" to the setter, "Sam's …" to the solver
+  strokes: DrawStroke[]
+  guesses: string[]
+  status: 'open' | 'solved' | 'failed'
+  answer: string | null
+}
+
+export type DailySketch =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string; me: string }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      prompt: string | null
+      mine: SketchView | null
+      theirs: SketchView | { locked: true } | null
+    }
+
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
 // (the migration hasn't been run, or anonymous sign-ins are off) — that's a problem for
 // whoever runs the project, not the person holding the phone.
@@ -154,6 +181,9 @@ function friendly(message: string): string {
   if (/guess out of range/.test(message)) return "That's off the end of the scale."
   if (/five items/.test(message)) return 'That needs to be five things.'
   if (/not a ranking/.test(message)) return 'Every rank, once each.'
+  if (/1 to 30 characters/.test(message)) return 'A word or two — up to 30 characters.'
+  if (/draw something/.test(message)) return 'Draw something first.'
+  if (/drawing is too big/.test(message)) return "That drawing's too busy to send — undo a few lines."
   return message
 }
 
@@ -176,4 +206,9 @@ export const api = {
     rpc<void>('set_top5', { p_for_date: forDate, p_prompt: prompt, p_items: items, p_rank: rank }),
   submitTop5: (puzzleId: string, guess: number[]) =>
     rpc<Top5View>('submit_top5', { p_puzzle: puzzleId, p_guess: guess }),
+  dailySketch: (today: string) => rpc<DailySketch>('daily_sketch', { p_today: today }),
+  setSketch: (forDate: string, prompt: string, answer: string, strokes: DrawStroke[]) =>
+    rpc<void>('set_sketch', { p_for_date: forDate, p_prompt: prompt, p_answer: answer, p_strokes: strokes }),
+  submitSketch: (puzzleId: string, guess: string) =>
+    rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
 }

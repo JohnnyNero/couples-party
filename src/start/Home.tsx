@@ -12,7 +12,10 @@ import { SetDialClue } from '../daily/SetDialClue'
 import { Top5Card, type Top5Screen } from '../daily/Top5Card'
 import { PlayTop5 } from '../daily/PlayTop5'
 import { SetTop5 } from '../daily/SetTop5'
-import { useDaily, useDailyDial, useDailyTop5 } from '../daily/useDaily'
+import { SketchCard, type SketchScreen } from '../daily/SketchCard'
+import { PlaySketch } from '../daily/PlaySketch'
+import { SetSketch } from '../daily/SetSketch'
+import { useDaily, useDailyDial, useDailySketch, useDailyTop5 } from '../daily/useDaily'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
@@ -36,9 +39,11 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   const daily = useDaily()
   const dial = useDailyDial()
   const top5 = useDailyTop5()
+  const sketch = useDailySketch()
   const [screen, setScreen] = useState<DailyScreen | null>(null)
   const [dialScreen, setDialScreen] = useState<DialScreen | null>(null)
   const [top5Screen, setTop5Screen] = useState<Top5Screen | null>(null)
+  const [sketchScreen, setSketchScreen] = useState<SketchScreen | null>(null)
   const choose = (t: Tab) => {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
@@ -67,6 +72,13 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   if (top5Screen?.kind === 'answer') {
     return <SetTop5 partner={top5Screen.partner} theme={top5Screen.theme} items={top5Screen.items} onClose={closeTop5} />
   }
+  const closeSketch = () => { setSketchScreen(null); void sketch.refresh() }
+  if (sketchScreen?.kind === 'play') {
+    return <PlaySketch puzzle={sketchScreen.puzzle} partner={sketchScreen.partner} prompt={sketchScreen.prompt} onClose={closeSketch} />
+  }
+  if (sketchScreen?.kind === 'answer') {
+    return <SetSketch partner={sketchScreen.partner} prompt={sketchScreen.prompt} onClose={closeSketch} />
+  }
 
   return (
     <div className="h-full w-full flex flex-col select-none">
@@ -83,6 +95,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
                 daily={daily} open={setScreen}
                 dial={dial} openDial={setDialScreen}
                 top5={top5} openTop5={setTop5Screen}
+                sketch={sketch} openSketch={setSketchScreen}
               />
             )
             : <Games onPick={onPick} />}
@@ -104,6 +117,8 @@ function Today({
   openDial,
   top5,
   openTop5,
+  sketch,
+  openSketch,
 }: {
   onPick: (g: Game) => void
   daily: ReturnType<typeof useDaily>
@@ -112,6 +127,8 @@ function Today({
   openDial: (s: DialScreen) => void
   top5: ReturnType<typeof useDailyTop5>
   openTop5: (s: Top5Screen) => void
+  sketch: ReturnType<typeof useDailySketch>
+  openSketch: (s: SketchScreen) => void
 }) {
   const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
@@ -121,6 +138,7 @@ function Today({
       <DailyCard daily={daily} open={open} />
       <DialCard daily={dial} open={openDial} />
       <Top5Card daily={top5} open={openTop5} />
+      <SketchCard daily={sketch} open={openSketch} />
       <section className="rounded-3xl bg-ink text-paper p-6 shadow-[5px_5px_0_rgba(0,0,0,0.12)]">
         <div className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/50">About five minutes</div>
         <h1 className="font-display text-4xl font-bold tracking-tight mt-1">Tonight</h1>

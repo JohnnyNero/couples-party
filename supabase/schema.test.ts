@@ -6,6 +6,7 @@ import m0003 from './migrations/0003_five_or_six_letters.sql?raw'
 import m0004 from './migrations/0004_streak.sql?raw'
 import m0005 from './migrations/0005_the_dial.sql?raw'
 import m0006 from './migrations/0006_top_5.sql?raw'
+import m0007 from './migrations/0007_sketch.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -58,6 +59,7 @@ beforeAll(async () => {
   await db.exec(m0004)
   await db.exec(m0005)
   await db.exec(m0006)
+  await db.exec(m0007)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -331,6 +333,58 @@ describe('top 5: a daily shortlist', () => {
   it('cannot call the view or ordering helpers directly', async () => {
     await expect(as(SAM, `select public.top5_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
     await expect(as(SAM, `select public.is_top5_order(array[0,1,2,3,4])`)).rejects.toThrow(/permission/)
+  })
+})
+
+describe('sketch: a daily draw your answer', () => {
+  const Q = 'comfort food'
+  const STROKES = [[[0.1, 0.1], [0.5, 0.5]], [[0.2, 0.8], [0.9, 0.2]]]
+  let alexView: any // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('forgives case, punctuation, spaces and a leading article — nothing else', async () => {
+    const norm = async (t: string) =>
+      (await db.query<{ n: string }>('select public.sketch_norm($1) as n', [t])).rows[0].n
+    expect(await norm('  Pizza! ')).toBe('pizza')
+    expect(await norm('a Hot Dog')).toBe('hotdog')
+    expect(await norm('The dark')).toBe('dark')
+    expect(await norm('tea')).toBe('tea') // "the" only as a whole word
+    expect(await norm('pizzas')).toBe('pizzas')
+  })
+  it('refuses an empty answer or an empty drawing', async () => {
+    await expect(call(SAM, 'set_sketch', [today(), Q, '  ', JSON.stringify(STROKES)])).rejects.toThrow(/1 to 30/)
+    await expect(call(SAM, 'set_sketch', [today(), Q, 'pasta', '[]'])).rejects.toThrow(/draw something/)
+  })
+  it("lets Sam draw, keeps it locked from Alex, and won't let Alex guess first", async () => {
+    await call(SAM, 'set_sketch', [today(), Q, 'Mac and cheese', JSON.stringify(STROKES)])
+    const sam = await call(SAM, 'daily_sketch', [today()])
+    expect(sam.mine).toMatchObject({ prompt: Q, answer: 'Mac and cheese', strokes: STROKES, status: 'open' })
+    expect((await call(ALEX, 'daily_sketch', [today()])).theirs).toEqual({ locked: true })
+    const id = sam.mine.id
+    await expect(call(ALEX, 'submit_sketch', [id, 'pasta'])).rejects.toThrow(/answer yours first/)
+  })
+  it("shows Alex the drawing once Alex has drawn theirs, but not the answer", async () => {
+    await call(ALEX, 'set_sketch', [today(), 'another question', 'pizza', JSON.stringify(STROKES)])
+    const alex = await call(ALEX, 'daily_sketch', [today()])
+    expect(alex.mine.prompt).toBe(Q) // filed under the day's question
+    alexView = alex.theirs
+    expect(alexView).toMatchObject({ prompt: Q, strokes: STROKES, guesses: [], status: 'open', answer: null })
+  })
+  it('takes forgiving guesses, and reveals the answer once it lands', async () => {
+    let view = await call(ALEX, 'submit_sketch', [alexView.id, 'pasta'])
+    expect(view).toMatchObject({ status: 'open', guesses: ['pasta'], answer: null })
+    await expect(call(SAM, 'set_sketch', [today(), Q, 'soup', JSON.stringify(STROKES)])).rejects.toThrow(/already started/)
+    view = await call(ALEX, 'submit_sketch', [alexView.id, 'mac and CHEESE!'])
+    expect(view).toMatchObject({ status: 'solved', answer: 'Mac and cheese' })
+  })
+  it('fails after three misses', async () => {
+    let view = (await call(SAM, 'daily_sketch', [today()])).theirs
+    for (const g of ['burger', 'chips', 'curry']) view = await call(SAM, 'submit_sketch', [view.id, g])
+    expect(view).toMatchObject({ status: 'failed', answer: 'pizza', guesses: ['burger', 'chips', 'curry'] })
+  })
+  it('only lets the solver guess, and keeps the helpers private', async () => {
+    await expect(call(EVE, 'submit_sketch', [alexView.id, 'x'])).rejects.toThrow(/no such puzzle/)
+    await expect(as(SAM, `select public.sketch_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
+    await expect(as(SAM, `select public.sketch_norm('x')`)).rejects.toThrow(/permission/)
   })
 })
 

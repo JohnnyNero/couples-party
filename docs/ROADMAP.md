@@ -43,8 +43,11 @@ Needs, in order:
      as Their Word, so the setter is genuinely ranking their honest opinion of their
      partner — matching what the live game's ranker/author roles actually do, just
      asynchronous. Reuses the `payload`/`progress` columns 0005 added, unchanged.
-   - Sketch (Draw Your Answer, solved async — no one live to judge a near miss, so
-     it's an exact match on what you typed, same spirit as Wordle's "ask them why").
+   - ~~Sketch~~ — done. A daily Draw Your Answer: answer a question about yourself in
+     a word or two, then draw it; your partner gets three guesses. Nobody's live to
+     wave a near miss through, so a guess counts once case, punctuation, spacing and
+     a leading "a/an/the" are set aside ("tent!" is "A tent") — anything looser is for
+     "ask them why". Reuses Draw Your Answer's prompt pool.
    - Their Numbers.
    - Once all four exist: one migration merges them into a single rotating slot
      (`daily()` picking the day's kind itself, same day-index approach as

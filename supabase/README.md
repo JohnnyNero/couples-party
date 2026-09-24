@@ -32,6 +32,9 @@ SQL Editor → New query → paste the whole file → **Run**.
 6. `migrations/0006_top_5.sql` — adds Top 5, a daily Shortlist, its own card too. Widens
    `puzzles.kind` again; reuses 0005's `payload`/`progress` columns unchanged. Adds
    `top5_view`, `is_top5_order`, `set_top5`, `submit_top5`, `daily_top5`.
+7. `migrations/0007_sketch.sql` — adds Sketch, a daily Draw Your Answer, its own card
+   too. Widens `puzzles.kind` again; no other schema change. Adds `sketch_norm`,
+   `sketch_view`, `set_sketch`, `submit_sketch`, `daily_sketch`.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.
