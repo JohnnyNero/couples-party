@@ -201,7 +201,7 @@ function Tile({
   wide: boolean
   onOpen: (mode: 'play' | 'set') => void
 }) {
-  const { solve, next } = slot
+  const { solve, mine, next } = slot
   const started = !!solve && 'guesses' in solve && Array.isArray(solve.guesses) && solve.guesses.length > 0
   const solved = !!solve && solve.status !== 'open'
   const complete = (solved || !solve) && !!next
@@ -212,7 +212,9 @@ function Tile({
     line = started ? 'Carry on →' : 'Play →'
     mode = 'play'
   } else if (!next) {
-    line = solved ? 'Now set →' : `Set ${partner}'s →`
+    // Nothing set for today yet (day one, or a missed day) → set one for today, so
+    // there's something to play right away, instead of only ever setting for tomorrow.
+    line = !mine ? `Set ${partner}'s for today →` : solved ? 'Now set →' : `Set ${partner}'s →`
     mode = 'set'
   } else {
     line = solved ? 'Done ✓' : 'Sent ✓'
@@ -307,6 +309,12 @@ function PuzzleScreen({
   const { partner, me, kinds } = data
   const tomorrow = localDate(1)
 
+  // Setting for tomorrow is the normal flow — but if nothing's been set for today at
+  // all yet (day one, or a day you both missed), set that one for today instead, so
+  // there's something to play right away. `undefined` here means "today" to every Set…
+  // component below (see e.g. SetDialClue's `forDate` prop).
+  const setDate = (k: Kind): string | undefined => (kinds[k].mine ? tomorrow : undefined)
+
   if (screen.mode === 'play') {
     switch (screen.kind) {
       case 'word': {
@@ -322,28 +330,33 @@ function PuzzleScreen({
 
   switch (screen.kind) {
     case 'word': {
-      const template = kinds.word.next?.prompt ?? questionOfTheDay(tomorrow, pools.words) ?? ''
-      return <WordAnswer partner={partner} template={template} question={renderQuestion(template, partner)} onClose={onClose} forDate={tomorrow} />
+      const date = setDate('word')
+      const template = kinds.word.next?.prompt ?? questionOfTheDay(date ?? localDate(), pools.words) ?? ''
+      return <WordAnswer partner={partner} template={template} question={renderQuestion(template, partner)} onClose={onClose} forDate={date} />
     }
     case 'dial': {
-      const picked = dialOfTheDay(tomorrow, pools.content.spectrums)
+      const date = setDate('dial')
+      const picked = dialOfTheDay(date ?? localDate(), pools.content.spectrums)
       const spectrum = kinds.dial.next?.prompt ?? (picked ? spectrumPrompt(picked) : 'Cold | Hot')
-      return <SetDialClue partner={partner} spectrum={spectrum} onClose={onClose} forDate={tomorrow} />
+      return <SetDialClue partner={partner} spectrum={spectrum} onClose={onClose} forDate={date} />
     }
     case 'top5': {
+      const date = setDate('top5')
       const next = kinds.top5.next
-      const theme = themeOfTheDay(tomorrow, pools.content.themes)
+      const theme = themeOfTheDay(date ?? localDate(), pools.content.themes)
       const title = next?.prompt ?? (theme ? fiveify(renderQuestion(theme.text, partner)) : '')
-      const items = next?.items ?? (theme ? itemsOfTheDay(tomorrow, theme) : [])
-      return <SetTop5 partner={partner} theme={title} items={items} onClose={onClose} forDate={tomorrow} />
+      const items = next?.items ?? (theme ? itemsOfTheDay(date ?? localDate(), theme) : [])
+      return <SetTop5 partner={partner} theme={title} items={items} onClose={onClose} forDate={date} />
     }
     case 'sketch': {
-      const prompt = kinds.sketch.next?.prompt ?? sketchOfTheDay(tomorrow, pools.content.drawPrompts) ?? 'comfort food'
-      return <SetSketch partner={partner} prompt={prompt} onClose={onClose} forDate={tomorrow} />
+      const date = setDate('sketch')
+      const prompt = kinds.sketch.next?.prompt ?? sketchOfTheDay(date ?? localDate(), pools.content.drawPrompts) ?? 'comfort food'
+      return <SetSketch partner={partner} prompt={prompt} onClose={onClose} forDate={date} />
     }
     case 'numbers': {
-      const questions = kinds.numbers.next?.questions ?? numbersOfTheDay(tomorrow, pools.numbers) ?? []
-      return <SetNumbers partner={partner} questions={questions} onClose={onClose} forDate={tomorrow} />
+      const date = setDate('numbers')
+      const questions = kinds.numbers.next?.questions ?? numbersOfTheDay(date ?? localDate(), pools.numbers) ?? []
+      return <SetNumbers partner={partner} questions={questions} onClose={onClose} forDate={date} />
     }
   }
 }

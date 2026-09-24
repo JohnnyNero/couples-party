@@ -80,7 +80,15 @@ Needs, in order:
      planned here, and it needed no migration. Their Word is the fallback: it carries
      pairing, and it's what shows if the day's kind isn't set up on the server yet.
      The streak now counts a day whichever kind it was (migration 0009).
-6. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
+6. ~~Set today's, not just tomorrow's, when nothing's set yet~~ — done. Day one (or a day
+   you both missed) used to only ever let you set for tomorrow, so there was never
+   anything to play until day two. Now the tile offers "Set [partner]'s **for today**"
+   whenever nothing's been set for today at all (`kinds[k].mine` is empty) — same set
+   screens, same server calls, just `forDate` = today instead of tomorrow (the server
+   already allowed it: `set_word` and friends accept anything from two days ago to three
+   ahead). Once something exists for today, the flow is back to normal: solve today's,
+   set tomorrow's. No migration.
+7. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
    own past sessions. Deliberately left for later.
 
 ## Done
