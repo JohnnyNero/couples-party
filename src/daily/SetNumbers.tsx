@@ -8,10 +8,12 @@ export function SetNumbers({
   partner,
   questions,
   onClose,
+  forDate,
 }: {
   partner: string
   questions: string[]
   onClose: () => void
+  forDate?: string // who it's for and when: tomorrow, on the Today board
 }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
@@ -21,21 +23,21 @@ export function SetNumbers({
     setBusy(true)
     setNote(null)
     try {
-      await api.setNumbers(localDate(), questions, answers)
+      await api.setNumbers(forDate ?? localDate(), questions, answers)
       setSent(true)
     } catch (e) {
       setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
     } finally {
       setBusy(false)
     }
-  }, [questions])
+  }, [questions, forDate])
 
   return (
     <div className="h-full flex flex-col select-none">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
         <button onClick={onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
         <div className="min-w-0">
-          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Their Numbers · today's five</div>
+          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">{`Their Numbers · ${forDate ? 'tomorrow' : 'today'}'s five`}</div>
           <div className="text-lg font-bold leading-tight">Your numbers</div>
         </div>
       </header>
@@ -43,7 +45,7 @@ export function SetNumbers({
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center animate-fade-up">
           <div className="text-xl font-bold">Sent.</div>
           <div className="text-fg/60">
-            {partner} guesses them once they've answered theirs. You can change them until they guess.
+            {forDate ? `${partner} gets it tomorrow. You can change it until they start.` : <>{partner} guesses them once they've answered theirs. You can change them until they guess.</>}
           </div>
           <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
             Done

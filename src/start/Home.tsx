@@ -3,12 +3,12 @@ import type { Game } from './mode'
 import { GAME_LABELS, roster } from '../engine/roster'
 import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
-import { TodayPuzzle } from '../daily/TodayPuzzle'
+import { Board } from '../daily/Board'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
-// Today also carries the day's puzzle — one a day, set by your partner, rotating
-// through five kinds.
+// Today also carries the daily puzzles — five a day, each set by your partner the day
+// before — with the scoreboard between you.
 
 type Tab = 'today' | 'games'
 
@@ -52,31 +52,23 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
   const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   return (
-    <div className="flex flex-col gap-5 pt-2">
+    <div className="flex flex-col gap-4 pt-1">
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{date}</div>
-      <TodayPuzzle />
-      <section className="rounded-3xl bg-ink text-paper p-6 shadow-[5px_5px_0_rgba(0,0,0,0.12)]">
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/50">About five minutes</div>
-        <h1 className="font-display text-4xl font-bold tracking-tight mt-1">Tonight</h1>
-        <ol className="mt-4 flex flex-col gap-1.5">
-          {tonight.map((label, i) => (
-            <li key={label} className="flex items-baseline gap-3 text-base">
-              <span className="w-4 text-accent font-bold tabular-nums">{i + 1}</span>
-              <span className={i === tonight.length - 1 ? 'text-paper/60' : ''}>{label}</span>
-            </li>
-          ))}
-        </ol>
+      <Board />
+      <section className="rounded-3xl bg-ink text-paper px-5 py-4 shadow-[4px_4px_0_rgba(0,0,0,0.12)] flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-2xl font-bold tracking-tight leading-none">Tonight</div>
+          <div className="mt-1.5 text-xs text-paper/60 leading-snug">
+            About five minutes · {tonight.join(' · ')}
+          </div>
+        </div>
         <button
           onClick={() => onPick('tonight')}
-          className="mt-6 w-full min-h-[56px] rounded-2xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px"
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-accent text-bg text-base font-bold uppercase tracking-widest active:translate-y-px"
         >
-          Play tonight
+          Play
         </button>
       </section>
-      <p className="text-sm text-fg/50 leading-relaxed">
-        Same shape every night, different questions. A warm-up, something about each
-        other, one drawing each — and a question to turn the light off on.
-      </p>
     </div>
   )
 }

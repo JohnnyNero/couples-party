@@ -2,7 +2,23 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
-## Next: daily puzzles (needs Supabase)
+## Done: the Today board (migration 0010)
+
+The Today tab is a scoreboard and all five daily puzzles as compact tiles, every day.
+Each tile is solve-then-set: solve the one your partner set you for today, then set
+one for them for tomorrow — so there's no "answer yours first" lock any more (what
+you're solving was set yesterday, and what you set can't be swayed by it). Day one,
+or a day they missed, the tile goes straight to setting.
+
+Scoring is you vs your partner, to whoever solves, out of 10 a puzzle (50 a day):
+Their Word 10/8/6/4/3/2 by guesses, The Dial 10 bullseye / 7 within 5 / 4 within 15,
+Top 5 and Their Numbers 2 per exact and 1 per close, Sketch 10/6/3 by guesses.
+Worked out from the puzzles, never stored. `board()` returns the whole screen in one
+call. The streak counts a day once you've both solved one of that day's or set one
+for the next. If the server hasn't got `board()` yet the app falls back to the
+earlier one-a-day slot below.
+
+## Earlier: daily puzzles (needs Supabase)
 
 The home screen's **Today** tab becomes the daily habit: each day you solve a puzzle
 your partner made from an answer they gave yesterday, then set tomorrow's for them.

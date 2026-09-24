@@ -143,6 +143,30 @@ export type DailyNumbers =
       theirs: NumbersView | { locked: true } | null
     }
 
+// The Today board: every kind at once. For each, `solve` is your partner's puzzle for
+// you today, `mine` is yours for them today, `next` is what you've set them for
+// tomorrow. Finished puzzles carry `points` (out of 10) for whoever solved them.
+type Scored = { points: number | null }
+export type BoardKinds = {
+  word: { solve: (PuzzleView & Scored) | null; mine: (PuzzleView & Scored) | null; next: (PuzzleView & Scored) | null }
+  dial: { solve: (DialView & Scored) | null; mine: (DialView & Scored) | null; next: (DialView & Scored) | null }
+  top5: { solve: (Top5View & Scored) | null; mine: (Top5View & Scored) | null; next: (Top5View & Scored) | null }
+  sketch: { solve: (SketchView & Scored) | null; mine: (SketchView & Scored) | null; next: (SketchView & Scored) | null }
+  numbers: { solve: (NumbersView & Scored) | null; mine: (NumbersView & Scored) | null; next: (NumbersView & Scored) | null }
+}
+export type Board =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string; me: string }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      kinds: BoardKinds
+      today: { me: number; them: number }
+      total: { me: number; them: number }
+      streak: number
+    }
+
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
 // (the migration hasn't been run, or anonymous sign-ins are off) — that's a problem for
 // whoever runs the project, not the person holding the phone.
@@ -239,6 +263,7 @@ export const api = {
     rpc<void>('set_sketch', { p_for_date: forDate, p_prompt: prompt, p_answer: answer, p_strokes: strokes }),
   submitSketch: (puzzleId: string, guess: string) =>
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
+  board: (today: string) => rpc<Board>('board', { p_today: today }),
   streak: (today: string) => rpc<number>('streak', { p_today: today }),
   dailyNumbers: (today: string) => rpc<DailyNumbers>('daily_numbers', { p_today: today }),
   setNumbers: (forDate: string, questions: string[], answers: number[]) =>

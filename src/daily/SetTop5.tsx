@@ -9,11 +9,13 @@ export function SetTop5({
   theme,
   items,
   onClose,
+  forDate,
 }: {
   partner: string
   theme: string
   items: string[] // the five, in the fixed day's order
   onClose: () => void
+  forDate?: string // who it's for and when: tomorrow, on the Today board
 }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
@@ -23,21 +25,21 @@ export function SetTop5({
     setBusy(true)
     setNote(null)
     try {
-      await api.setTop5(localDate(), theme, items, order)
+      await api.setTop5(forDate ?? localDate(), theme, items, order)
       setSent(true)
     } catch (e) {
       setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
     } finally {
       setBusy(false)
     }
-  }, [theme, items])
+  }, [theme, items, forDate])
 
   return (
     <div className="h-full flex flex-col select-none">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
         <button onClick={onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
         <div className="min-w-0">
-          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Top 5 · today's five</div>
+          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">{`Top 5 · ${forDate ? 'tomorrow' : 'today'}'s five`}</div>
           <div className="text-lg font-bold leading-tight">{theme}</div>
         </div>
       </header>
@@ -46,8 +48,8 @@ export function SetTop5({
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center animate-fade-up">
           <div className="text-xl font-bold">Sent.</div>
           <div className="text-fg/60">
-            {partner} guesses your order once they've ranked yours to unlock it. You can
-            change it until they guess.
+            {forDate ? `${partner} gets it tomorrow. You can change it until they start.` : <>{partner} guesses your order once they've ranked yours to unlock it. You can
+            change it until they guess.</>}
           </div>
           <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
             Done

@@ -11,11 +11,13 @@ export function WordAnswer({
   template,
   question,
   onClose,
+  forDate,
 }: {
   partner: string
   template: string // the question as stored, with {name} — the server keeps this
   question: string // the same, rendered for you to read
   onClose: () => void
+  forDate?: string // who it's for and when: tomorrow, on the Today board
 }) {
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
@@ -39,14 +41,14 @@ export function WordAnswer({
     setBusy(true)
     setNote(null)
     try {
-      await api.setWord(localDate(), template, typed)
+      await api.setWord(forDate ?? localDate(), template, typed)
       setSent(true)
     } catch (e) {
       setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
     } finally {
       setBusy(false)
     }
-  }, [typed, words, template])
+  }, [typed, words, template, forDate])
 
   const onKey = useCallback((key: string) => {
     if (busy || sent) return
@@ -70,7 +72,7 @@ export function WordAnswer({
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
         <button onClick={onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
         <div className="min-w-0">
-          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Their Word · today's question</div>
+          <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">{`Their Word · ${forDate ? 'tomorrow' : 'today'}'s question`}</div>
           <div className="text-lg font-bold leading-tight">{question}</div>
         </div>
       </header>
@@ -80,7 +82,7 @@ export function WordAnswer({
           <TileRow letters={typed} length={typed.length} pattern={'g'.repeat(typed.length)} reveal />
           <div className="text-xl font-bold">Sent.</div>
           <div className="text-fg/60">
-            {partner} solves it once they've answered too. You can change it until they start.
+            {forDate ? `${partner} gets it tomorrow. You can change it until they start.` : <>{partner} solves it once they've answered too. You can change it until they start.</>}
           </div>
           <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
             Done

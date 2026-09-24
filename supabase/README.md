@@ -40,6 +40,10 @@ SQL Editor → New query → paste the whole file → **Run**.
    `is_five_numbers`, `numbers_view`, `set_numbers`, `submit_numbers`, `daily_numbers`.
 9. `migrations/0009_streak_any_puzzle.sql` — the streak counts a day whichever puzzle
    it was, now that Today rotates through all five; adds `streak()`. No tables change.
+10. `migrations/0010_solve_then_set.sql` — the Today board: all five puzzles a day,
+   solve theirs then set tomorrow's. Drops the "answer yours first" lock from the five
+   submit functions, adds points (`puzzle_points`, `any_view`), counts the streak by
+   solving or setting, and adds `board()`. No tables change.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

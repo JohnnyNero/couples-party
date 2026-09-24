@@ -9,6 +9,7 @@ import m0006 from './migrations/0006_top_5.sql?raw'
 import m0007 from './migrations/0007_sketch.sql?raw'
 import m0008 from './migrations/0008_their_numbers.sql?raw'
 import m0009 from './migrations/0009_streak_any_puzzle.sql?raw'
+import m0010 from './migrations/0010_solve_then_set.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -64,6 +65,7 @@ beforeAll(async () => {
   await db.exec(m0007)
   await db.exec(m0008)
   await db.exec(m0009)
+  await db.exec(m0010)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -150,10 +152,6 @@ describe('their word: one question a day, the same for both, solved the same day
     expect(alex.theirs).toEqual({ locked: true }) // …and that Sam's answered, but nothing of it
     expect(alex.mine).toBe(null)
   })
-  it('will not let Alex guess before answering, even by calling the server directly', async () => {
-    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}'`)).rows[0].id
-    await expect(call(ALEX, 'submit_guess', [id, 'otter'])).rejects.toThrow(/answer yours first/)
-  })
   it("files Alex's answer under the day's question, whatever Alex's phone sent", async () => {
     await call(ALEX, 'set_word', [today(), 'Some other question', 'koala'])
     const alex = await call(ALEX, 'daily', [today()])
@@ -233,10 +231,6 @@ describe('the dial: a daily wavelength', () => {
     expect(alex.theirs).toEqual({ locked: true })
     expect(alex.mine).toBe(null)
   })
-  it('will not let Alex guess before setting their own, even calling the server directly', async () => {
-    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}' and kind = 'dial'`)).rows[0].id
-    await expect(call(ALEX, 'submit_dial', [id, 50])).rejects.toThrow(/answer yours first/)
-  })
   it("files Alex's mark under the day's spectrum, whatever Alex's phone sent, but Alex's own clue is always visible to Alex", async () => {
     await call(ALEX, 'set_dial', [today(), 'Some other spectrum', 20, 'a snowman'])
     const alex = await call(ALEX, 'daily_dial', [today()])
@@ -301,10 +295,6 @@ describe('top 5: a daily shortlist', () => {
     expect(alex.theirs).toEqual({ locked: true })
     expect(alex.mine).toBe(null)
   })
-  it('will not let Alex guess before ranking their own, even calling the server directly', async () => {
-    const id = (await db.query<{ id: string }>(`select id from public.puzzles where setter = '${SAM}' and kind = 'top5'`)).rows[0].id
-    await expect(call(ALEX, 'submit_top5', [id, [0, 1, 2, 3, 4]])).rejects.toThrow(/answer yours first/)
-  })
   it("files Alex's ranking under the day's five, whatever Alex's phone sent, and unlocks Sam's — items visible, order not", async () => {
     await call(ALEX, 'set_top5', [today(), 'Some other theme', ['a', 'b', 'c', 'd', 'e'], [0, 1, 2, 3, 4]])
     const alex = await call(ALEX, 'daily_top5', [today()])
@@ -358,13 +348,11 @@ describe('sketch: a daily draw your answer', () => {
     await expect(call(SAM, 'set_sketch', [today(), Q, '  ', JSON.stringify(STROKES)])).rejects.toThrow(/1 to 30/)
     await expect(call(SAM, 'set_sketch', [today(), Q, 'pasta', '[]'])).rejects.toThrow(/draw something/)
   })
-  it("lets Sam draw, keeps it locked from Alex, and won't let Alex guess first", async () => {
+  it("lets Sam draw, keeps it locked from Alex, for now", async () => {
     await call(SAM, 'set_sketch', [today(), Q, 'Mac and cheese', JSON.stringify(STROKES)])
     const sam = await call(SAM, 'daily_sketch', [today()])
     expect(sam.mine).toMatchObject({ prompt: Q, answer: 'Mac and cheese', strokes: STROKES, status: 'open' })
     expect((await call(ALEX, 'daily_sketch', [today()])).theirs).toEqual({ locked: true })
-    const id = sam.mine.id
-    await expect(call(ALEX, 'submit_sketch', [id, 'pasta'])).rejects.toThrow(/answer yours first/)
   })
   it("shows Alex the drawing once Alex has drawn theirs, but not the answer", async () => {
     await call(ALEX, 'set_sketch', [today(), 'another question', 'pizza', JSON.stringify(STROKES)])
@@ -412,14 +400,13 @@ describe('their numbers: five numbers about yourself', () => {
     await expect(call(SAM, 'set_numbers', [today(), QS, [1, 2, 3, 4, -1]])).rejects.toThrow(/five whole numbers/)
     await expect(call(SAM, 'set_numbers', [today(), QS, [1, 2, 3, 4, 10000]])).rejects.toThrow(/five whole numbers/)
   })
-  it("lets Sam answer and change them, locked from Alex, who can't guess first", async () => {
+  it("lets Sam answer and change them, locked from Alex for now", async () => {
     await call(SAM, 'set_numbers', [today(), QS, [1, 1, 1, 1, 1]])
     await call(SAM, 'set_numbers', [today(), QS, [15, 7, 3, 12, 8]])
     const sam = await call(SAM, 'daily_numbers', [today()])
     expect(sam.questions).toEqual(QS)
     expect(sam.mine).toMatchObject({ questions: QS, answers: [15, 7, 3, 12, 8], status: 'open', guesses: null })
     expect((await call(ALEX, 'daily_numbers', [today()])).theirs).toEqual({ locked: true })
-    await expect(call(ALEX, 'submit_numbers', [sam.mine.id, [1, 1, 1, 1, 1]])).rejects.toThrow(/answer yours first/)
   })
   it("files Alex's answers under the day's five questions, and shows Alex the questions but not Sam's numbers", async () => {
     await call(ALEX, 'set_numbers', [today(), ['a', 'b', 'c', 'd', 'e'], [2, 5, 1, 30, 7]])
@@ -444,20 +431,21 @@ describe('their numbers: five numbers about yourself', () => {
   })
 })
 
-describe('the shared streak', () => {
+describe('the board: solve theirs, then set tomorrow', () => {
   const ROBIN = '00000000-0000-0000-0000-00000000000f'
   const JESS = '00000000-0000-0000-0000-000000000010'
   let coupleId: string
 
   const dayOffset = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)
-  // Both of you answering is what makes a day count — this writes the two rows
-  // set_word would, straight to the table, so a streak can be built across dates
-  // set_word's own window (a few days either side of today) would otherwise refuse.
-  const bothAnswered = (offset: number) =>
+  const tomorrowDate = () => dayOffset(1)
+  // Rows as the setter would leave them, straight into the table so a history can be
+  // built across dates the set_* functions' own window wouldn't allow.
+  const put = (setter: string, solver: string, offset: number, kind: string, extra: Record<string, unknown> = {}) =>
     db.query(
-      `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
-       values ($1, $2, $3, $4, 'word', 'q', 'otter'), ($1, $3, $2, $4, 'word', 'q', 'otter')`,
-      [coupleId, ROBIN, JESS, dayOffset(offset)],
+      `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer, guesses, status, payload, progress)
+       values ($1, $2, $3, $4, $5, 'q', $6, $7, $8, $9, $10)`,
+      [coupleId, setter, solver, dayOffset(offset), kind, extra.answer ?? '', extra.guesses ?? [],
+       extra.status ?? 'open', extra.payload ?? null, extra.progress ?? null],
     )
 
   beforeAll(async () => {
@@ -469,50 +457,84 @@ describe('the shared streak', () => {
     ).rows[0].couple_id
   })
 
-  it('is zero for a couple who has never both answered the same day', async () => {
-    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(0)
+  it('starts empty: nothing to solve, nothing set, no points', async () => {
+    const b = await call(ROBIN, 'board', [today()])
+    expect(b).toMatchObject({ state: 'paired', me: 'Robin', partner: 'Jess', today: { me: 0, them: 0 }, total: { me: 0, them: 0 }, streak: 0 })
+    expect(Object.keys(b.kinds).sort()).toEqual(['dial', 'numbers', 'sketch', 'top5', 'word'])
+    expect(b.kinds.word).toEqual({ solve: null, mine: null, next: null })
   })
-  it('counts today once you have both answered it', async () => {
-    await bothAnswered(0)
-    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(1)
+  it("sets tomorrow's for the partner, shown as next", async () => {
+    await call(ROBIN, 'set_word', [tomorrowDate(), 'Your comfort food', 'pasta'])
+    const b = await call(ROBIN, 'board', [today()])
+    expect(b.kinds.word.next).toMatchObject({ answer: 'pasta', status: 'open' })
+    // …and Jess sees nothing of it until it's tomorrow.
+    expect((await call(JESS, 'board', [today()])).kinds.word.solve).toBe(null)
+    expect((await call(JESS, 'board', [tomorrowDate()])).kinds.word.solve).toMatchObject({ answer: null, status: 'open', length: 5 })
   })
-  it("doesn't hold today against you before the day is over", async () => {
-    // Asking about tomorrow, before either of you has answered it, still reports
-    // today's streak rather than treating the still-open day as a miss.
-    expect((await call(ROBIN, 'daily', [tomorrow()])).streak).toBe(1)
+  it("lets you solve theirs without having set anything first — there's no lock any more", async () => {
+    await call(JESS, 'set_dial', [today(), 'Cold | Hot', 40, 'soup'])
+    const dial = (await call(ROBIN, 'board', [today()])).kinds.dial.solve
+    expect(dial).toMatchObject({ clue: 'soup', target: null, points: null })
+    const v = await call(ROBIN, 'submit_dial', [dial.id, 43])
+    expect(v).toMatchObject({ distance: 3 })
   })
-  it('forgives a single missed day, but not two in a row', async () => {
-    // Backward from today: -1 played, -2 missed, -3 and -4 played, -5 and -6 missed,
-    // -7 and -8 played (already out of reach once -5/-6 end the run).
-    for (const offset of [-1, -3, -4, -7, -8]) await bothAnswered(offset)
-    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(4) // today, -1, -3, -4
+  it('scores each kind out of 10, to whoever solved it', async () => {
+    const pts = async (row: Record<string, unknown>, kind: string) => {
+      await put(JESS, ROBIN, -30, kind, row)
+      const r = await db.query<{ n: number }>(
+        `select public.puzzle_points(p) as n from public.puzzles p where couple_id = $1 and for_date = $2 and kind = $3`,
+        [coupleId, dayOffset(-30), kind])
+      await db.query(`delete from public.puzzles where couple_id = $1 and for_date = $2`, [coupleId, dayOffset(-30)])
+      return r.rows[0].n
+    }
+    expect(await pts({ status: 'solved', guesses: ['otter'] }, 'word')).toBe(10)
+    expect(await pts({ status: 'solved', guesses: ['a', 'b', 'c'] }, 'word')).toBe(6)
+    expect(await pts({ status: 'failed', guesses: ['a', 'b', 'c', 'd', 'e', 'f'] }, 'word')).toBe(0)
+    expect(await pts({ status: 'solved', progress: { distance: 0 } }, 'dial')).toBe(10)
+    expect(await pts({ status: 'solved', progress: { distance: 12 } }, 'dial')).toBe(4)
+    expect(await pts({ status: 'solved', progress: { distance: 40 } }, 'dial')).toBe(0)
+    expect(await pts({ status: 'solved', progress: { exact: 3, near: 2 } }, 'top5')).toBe(8)
+    expect(await pts({ status: 'solved', progress: { guesses: ['a', 'b'] } }, 'sketch')).toBe(6)
+    expect(await pts({ status: 'failed', progress: { guesses: ['a', 'b', 'c'] } }, 'sketch')).toBe(0)
+    expect(await pts({ status: 'solved', progress: { marks: ['exact', 'close', 'off', 'exact', 'exact'] } }, 'numbers')).toBe(7)
+    expect(await pts({ status: 'open' }, 'word')).toBe(0)
   })
-  it('counts a day whichever puzzle it was — but only when both of you answered the same one', async () => {
-    const both = (offset: number, kind: string) =>
-      db.query(
-        `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
-         values ($1, $2, $3, $4, $5, 'q', ''), ($1, $3, $2, $4, $5, 'q', '')`,
-        [coupleId, ROBIN, JESS, dayOffset(offset), kind],
-      )
-    // -5 and -6 were the misses that ended the run at 4. Fill them with other kinds.
-    await both(-5, 'dial')
-    await both(-6, 'numbers')
-    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(8) // today back to -8, -2 forgiven
-    expect(await call(JESS, 'streak', [today()])).toBe(8)
-    // One of each kind on the same day isn't a day you both did.
-    await db.query(
-      `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
-       values ($1, $2, $3, $4, 'sketch', 'q', ''), ($1, $3, $2, $4, 'top5', 'q', '')`,
-      [coupleId, ROBIN, JESS, dayOffset(-2)],
-    )
-    expect(await call(JESS, 'streak', [today()])).toBe(8)
+  it("adds up today's and all-time points for each of you", async () => {
+    await put(ROBIN, JESS, -3, 'word', { status: 'solved', guesses: ['a', 'b'] }) // Jess: 8
+    const b = await call(ROBIN, 'board', [today()])
+    expect(b.today).toEqual({ me: 7, them: 0 }) // Robin's dial, 3 away
+    expect(b.total).toEqual({ me: 7, them: 8 })
+    expect(b.kinds.dial.solve.points).toBe(7)
+    expect((await call(JESS, 'board', [today()])).kinds.dial.mine).toMatchObject({ points: 7, target: 40 })
   })
-  it('is zero for someone who is not paired', async () => {
+  it('counts a streak day once you have both done something — solved that day, or set for the next', async () => {
+    // Today: Robin solved Jess's dial, and set tomorrow's word. Jess set today's dial,
+    // which is "set for the next day" on yesterday.
+    expect(await call(ROBIN, 'streak', [today()])).toBe(0) // Jess hasn't done anything *today*
+    await call(JESS, 'set_word', [tomorrowDate(), 'Your comfort food', 'tacos'])
+    expect(await call(ROBIN, 'streak', [today()])).toBe(1)
+    // A day back with both setting for today counts too; a gap of one is forgiven.
+    await put(ROBIN, JESS, 0, 'top5') // Robin had set one for today, too
+    expect(await call(ROBIN, 'streak', [today()])).toBe(2) // yesterday (both set for today) + today
+    await put(ROBIN, JESS, -2, 'sketch')
+    await put(JESS, ROBIN, -2, 'sketch')
+    expect(await call(ROBIN, 'streak', [today()])).toBe(3) // -3 counts; -2 missed, forgiven
+    await put(ROBIN, JESS, -3, 'numbers')
+    await put(JESS, ROBIN, -3, 'numbers')
+    await put(ROBIN, JESS, -5, 'dial')
+    await put(JESS, ROBIN, -5, 'dial')
+    // today, -1, -3 (both set for -2), -4 (both set for -3), -5 missed, -6 (both set for -5)
+    expect(await call(ROBIN, 'streak', [today()])).toBe(5)
+  })
+  it('is zero for someone who is not paired, and keeps the helpers private', async () => {
     expect(await call(EVE, 'streak', [today()])).toBe(0)
+    expect(await call(EVE, 'board', [today()])).toEqual({ state: 'single' })
+    await expect(as(ROBIN, `select public.puzzle_points(null::public.puzzles)`)).rejects.toThrow(/permission/)
+    await expect(as(ROBIN, `select public.any_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
   })
   it('cleans up after itself, so it leaves no puzzles behind for other tests to count', async () => {
     await call(ROBIN, 'leave_couple')
-    await call(JESS, 'leave_couple') // the couple, and its puzzles, go with the last one out
+    await call(JESS, 'leave_couple')
     const left = await db.query<{ n: number }>('select count(*)::int as n from public.puzzles where couple_id = $1', [coupleId])
     expect(left.rows[0].n).toBe(0)
   })

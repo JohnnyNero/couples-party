@@ -13,10 +13,12 @@ export function SetSketch({
   partner,
   prompt,
   onClose,
+  forDate,
 }: {
   partner: string
   prompt: string
   onClose: () => void
+  forDate?: string // who it's for and when: tomorrow, on the Today board
 }) {
   const [answer, setAnswer] = useState('')
   const [drawingNow, setDrawingNow] = useState(false)
@@ -30,20 +32,20 @@ export function SetSketch({
     setBusy(true)
     setNote(null)
     try {
-      await api.setSketch(localDate(), prompt, answer.trim(), compactStrokes(strokes))
+      await api.setSketch(forDate ?? localDate(), prompt, answer.trim(), compactStrokes(strokes))
       setSent(true)
     } catch (e) {
       setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
     } finally {
       setBusy(false)
     }
-  }, [strokes, prompt, answer])
+  }, [strokes, prompt, answer, forDate])
 
   const header = (
     <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
       <button onClick={drawingNow && !sent ? () => setDrawingNow(false) : onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
       <div className="min-w-0">
-        <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">Sketch · today's question</div>
+        <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">{`Sketch · ${forDate ? 'tomorrow' : 'today'}'s question`}</div>
         <div className="text-lg font-bold leading-tight">{yours(prompt)}</div>
       </div>
     </header>
@@ -56,7 +58,7 @@ export function SetSketch({
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center animate-fade-up">
           <div className="text-xl font-bold">Sent.</div>
           <div className="text-fg/60">
-            {partner} gets three guesses once they've drawn theirs. You can change it until they start.
+            {forDate ? `${partner} gets it tomorrow. You can change it until they start.` : <>{partner} gets three guesses once they've drawn theirs. You can change it until they start.</>}
           </div>
           <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
             Done
