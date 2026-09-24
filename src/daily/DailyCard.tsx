@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { PuzzleView } from './api'
 import { api } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
@@ -20,9 +20,11 @@ export type DailyScreen =
 export function DailyCard({
   daily,
   open,
+  corner,
 }: {
   daily: ReturnType<typeof useDaily>
   open: (screen: DailyScreen) => void
+  corner?: ReactNode // the streak from the slot; falls back to daily()'s own
 }) {
   const { status, refresh } = daily
   const [pool, setPool] = useState<string[]>([])
@@ -75,7 +77,7 @@ export function DailyCard({
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 
   return (
-    <Card title="Their Word" sub="Today's question" corner={<StreakBadge n={d.streak ?? 0} />}>
+    <Card title="Their Word" sub="Today's question" corner={corner ?? <StreakBadge n={d.streak ?? 0} />}>
       <QuestionSpin today={localDate()} question={question} pool={pool.map((q) => renderQuestion(q, partner))} />
 
       <div className="mt-5 flex flex-col gap-3">
@@ -173,7 +175,7 @@ function Progress({ puzzle, partner }: { puzzle: PuzzleView; partner: string }) 
 
 // Consecutive days you've both answered. Quiet on day zero — there's nothing to show
 // off yet, and a badge stuck at 0 would just read as a nag.
-function StreakBadge({ n }: { n: number }) {
+export function StreakBadge({ n }: { n: number }) {
   if (n < 1) return null
   return (
     <div className="shrink-0 text-right leading-none">

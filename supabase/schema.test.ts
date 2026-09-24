@@ -8,6 +8,7 @@ import m0005 from './migrations/0005_the_dial.sql?raw'
 import m0006 from './migrations/0006_top_5.sql?raw'
 import m0007 from './migrations/0007_sketch.sql?raw'
 import m0008 from './migrations/0008_their_numbers.sql?raw'
+import m0009 from './migrations/0009_streak_any_puzzle.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -62,6 +63,7 @@ beforeAll(async () => {
   await db.exec(m0006)
   await db.exec(m0007)
   await db.exec(m0008)
+  await db.exec(m0009)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -484,6 +486,29 @@ describe('the shared streak', () => {
     // -7 and -8 played (already out of reach once -5/-6 end the run).
     for (const offset of [-1, -3, -4, -7, -8]) await bothAnswered(offset)
     expect((await call(ROBIN, 'daily', [today()])).streak).toBe(4) // today, -1, -3, -4
+  })
+  it('counts a day whichever puzzle it was — but only when both of you answered the same one', async () => {
+    const both = (offset: number, kind: string) =>
+      db.query(
+        `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
+         values ($1, $2, $3, $4, $5, 'q', ''), ($1, $3, $2, $4, $5, 'q', '')`,
+        [coupleId, ROBIN, JESS, dayOffset(offset), kind],
+      )
+    // -5 and -6 were the misses that ended the run at 4. Fill them with other kinds.
+    await both(-5, 'dial')
+    await both(-6, 'numbers')
+    expect((await call(ROBIN, 'daily', [today()])).streak).toBe(8) // today back to -8, -2 forgiven
+    expect(await call(JESS, 'streak', [today()])).toBe(8)
+    // One of each kind on the same day isn't a day you both did.
+    await db.query(
+      `insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer)
+       values ($1, $2, $3, $4, 'sketch', 'q', ''), ($1, $3, $2, $4, 'top5', 'q', '')`,
+      [coupleId, ROBIN, JESS, dayOffset(-2)],
+    )
+    expect(await call(JESS, 'streak', [today()])).toBe(8)
+  })
+  it('is zero for someone who is not paired', async () => {
+    expect(await call(EVE, 'streak', [today()])).toBe(0)
   })
   it('cleans up after itself, so it leaves no puzzles behind for other tests to count', async () => {
     await call(ROBIN, 'leave_couple')

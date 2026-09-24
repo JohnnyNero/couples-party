@@ -38,6 +38,8 @@ SQL Editor → New query → paste the whole file → **Run**.
 8. `migrations/0008_their_numbers.sql` — adds Their Numbers, its own card too. Widens
    `puzzles.kind` to all five kinds; no other schema change. Adds `numbers_mark`,
    `is_five_numbers`, `numbers_view`, `set_numbers`, `submit_numbers`, `daily_numbers`.
+9. `migrations/0009_streak_any_puzzle.sql` — the streak counts a day whichever puzzle
+   it was, now that Today rotates through all five; adds `streak()`. No tables change.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

@@ -3,27 +3,12 @@ import type { Game } from './mode'
 import { GAME_LABELS, roster } from '../engine/roster'
 import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
-import { DailyCard, type DailyScreen } from '../daily/DailyCard'
-import { WordPlay } from '../daily/WordPlay'
-import { WordAnswer } from '../daily/WordAnswer'
-import { DialCard, type DialScreen } from '../daily/DialCard'
-import { PlayDial } from '../daily/PlayDial'
-import { SetDialClue } from '../daily/SetDialClue'
-import { Top5Card, type Top5Screen } from '../daily/Top5Card'
-import { PlayTop5 } from '../daily/PlayTop5'
-import { SetTop5 } from '../daily/SetTop5'
-import { SketchCard, type SketchScreen } from '../daily/SketchCard'
-import { PlaySketch } from '../daily/PlaySketch'
-import { SetSketch } from '../daily/SetSketch'
-import { NumbersCard, type NumbersScreen } from '../daily/NumbersCard'
-import { PlayNumbers } from '../daily/PlayNumbers'
-import { SetNumbers } from '../daily/SetNumbers'
-import { useDaily, useDailyDial, useDailyNumbers, useDailySketch, useDailyTop5 } from '../daily/useDaily'
+import { TodayPuzzle } from '../daily/TodayPuzzle'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
-// Today is where the daily puzzles will live too once there's a server to pass them
-// between your phones.
+// Today also carries the day's puzzle — one a day, set by your partner, rotating
+// through five kinds.
 
 type Tab = 'today' | 'games'
 
@@ -39,57 +24,9 @@ function loadTab(): Tab {
 
 export function Home({ onPick }: { onPick: (g: Game) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
-  const daily = useDaily()
-  const dial = useDailyDial()
-  const top5 = useDailyTop5()
-  const sketch = useDailySketch()
-  const numbers = useDailyNumbers()
-  const [screen, setScreen] = useState<DailyScreen | null>(null)
-  const [dialScreen, setDialScreen] = useState<DialScreen | null>(null)
-  const [top5Screen, setTop5Screen] = useState<Top5Screen | null>(null)
-  const [sketchScreen, setSketchScreen] = useState<SketchScreen | null>(null)
-  const [numbersScreen, setNumbersScreen] = useState<NumbersScreen | null>(null)
   const choose = (t: Tab) => {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
-  }
-
-  // The puzzle screens take the whole phone; closing one re-reads the day so the card
-  // shows what just happened.
-  const close = () => { setScreen(null); void daily.refresh() }
-  if (screen?.kind === 'play') {
-    return <WordPlay puzzle={screen.puzzle} partner={screen.partner} question={screen.question} mine={screen.mine} onClose={close} />
-  }
-  if (screen?.kind === 'answer') {
-    return <WordAnswer partner={screen.partner} template={screen.template} question={screen.question} onClose={close} />
-  }
-  const closeDial = () => { setDialScreen(null); void dial.refresh() }
-  if (dialScreen?.kind === 'play') {
-    return <PlayDial puzzle={dialScreen.puzzle} partner={dialScreen.partner} spectrum={dialScreen.spectrum} onClose={closeDial} />
-  }
-  if (dialScreen?.kind === 'answer') {
-    return <SetDialClue partner={dialScreen.partner} spectrum={dialScreen.spectrum} onClose={closeDial} />
-  }
-  const closeTop5 = () => { setTop5Screen(null); void top5.refresh() }
-  if (top5Screen?.kind === 'play') {
-    return <PlayTop5 puzzle={top5Screen.puzzle} partner={top5Screen.partner} theme={top5Screen.theme} onClose={closeTop5} />
-  }
-  if (top5Screen?.kind === 'answer') {
-    return <SetTop5 partner={top5Screen.partner} theme={top5Screen.theme} items={top5Screen.items} onClose={closeTop5} />
-  }
-  const closeSketch = () => { setSketchScreen(null); void sketch.refresh() }
-  if (sketchScreen?.kind === 'play') {
-    return <PlaySketch puzzle={sketchScreen.puzzle} partner={sketchScreen.partner} prompt={sketchScreen.prompt} onClose={closeSketch} />
-  }
-  if (sketchScreen?.kind === 'answer') {
-    return <SetSketch partner={sketchScreen.partner} prompt={sketchScreen.prompt} onClose={closeSketch} />
-  }
-  const closeNumbers = () => { setNumbersScreen(null); void numbers.refresh() }
-  if (numbersScreen?.kind === 'play') {
-    return <PlayNumbers puzzle={numbersScreen.puzzle} partner={numbersScreen.partner} onClose={closeNumbers} />
-  }
-  if (numbersScreen?.kind === 'answer') {
-    return <SetNumbers partner={numbersScreen.partner} questions={numbersScreen.questions} onClose={closeNumbers} />
   }
 
   return (
@@ -100,18 +37,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
       </header>
       <main className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
         <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
-          {tab === 'today'
-            ? (
-              <Today
-                onPick={onPick}
-                daily={daily} open={setScreen}
-                dial={dial} openDial={setDialScreen}
-                top5={top5} openTop5={setTop5Screen}
-                sketch={sketch} openSketch={setSketchScreen}
-                numbers={numbers} openNumbers={setNumbersScreen}
-              />
-            )
-            : <Games onPick={onPick} />}
+          {tab === 'today' ? <Today onPick={onPick} /> : <Games onPick={onPick} />}
         </div>
       </main>
       <nav className="shrink-0 border-t border-fg/15 bg-bg grid grid-cols-2 pb-[env(safe-area-inset-bottom)]">
@@ -122,41 +48,13 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   )
 }
 
-function Today({
-  onPick,
-  daily,
-  open,
-  dial,
-  openDial,
-  top5,
-  openTop5,
-  sketch,
-  openSketch,
-  numbers,
-  openNumbers,
-}: {
-  onPick: (g: Game) => void
-  daily: ReturnType<typeof useDaily>
-  open: (s: DailyScreen) => void
-  dial: ReturnType<typeof useDailyDial>
-  openDial: (s: DialScreen) => void
-  top5: ReturnType<typeof useDailyTop5>
-  openTop5: (s: Top5Screen) => void
-  sketch: ReturnType<typeof useDailySketch>
-  openSketch: (s: SketchScreen) => void
-  numbers: ReturnType<typeof useDailyNumbers>
-  openNumbers: (s: NumbersScreen) => void
-}) {
+function Today({ onPick }: { onPick: (g: Game) => void }) {
   const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   return (
     <div className="flex flex-col gap-5 pt-2">
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{date}</div>
-      <DailyCard daily={daily} open={open} />
-      <DialCard daily={dial} open={openDial} />
-      <Top5Card daily={top5} open={openTop5} />
-      <SketchCard daily={sketch} open={openSketch} />
-      <NumbersCard daily={numbers} open={openNumbers} />
+      <TodayPuzzle />
       <section className="rounded-3xl bg-ink text-paper p-6 shadow-[5px_5px_0_rgba(0,0,0,0.12)]">
         <div className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/50">About five minutes</div>
         <h1 className="font-display text-4xl font-bold tracking-tight mt-1">Tonight</h1>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { SketchView } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
@@ -22,9 +22,11 @@ export const theirs = (prompt: string, name: string) => `${name}'s ${prompt}`
 export function SketchCard({
   daily,
   open,
+  corner,
 }: {
   daily: ReturnType<typeof useDailySketch>
   open: (screen: SketchScreen) => void
+  corner?: ReactNode // the streak, shown whichever puzzle is up
 }) {
   const { status, refresh } = daily
   const [pool, setPool] = useState<DrawPrompt[]>([])
@@ -56,7 +58,7 @@ export function SketchCard({
   const theirsOpen = theirsRaw && !('locked' in theirsRaw) ? theirsRaw : null
 
   return (
-    <Card title="Sketch" sub="Today's question">
+    <Card title="Sketch" sub="Today's question" corner={corner}>
       <QuestionSpin
         today={localDate()}
         question={yours(prompt)}

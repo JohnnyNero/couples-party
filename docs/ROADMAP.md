@@ -26,9 +26,9 @@ Needs, in order:
    content file's pool by date), answered in five or six letters, and solved the same day.
    Your partner's answer stays locked until you've given yours — enforced on the
    server. Changeable until they start. Scored on the server.
-4. ~~A shared couple streak~~ — done. A day counts once you've both answered it (not
-   solved — just answered). Forgives a single missed day; two in a row end it there.
-   Shown as a badge on the Their Word card once it's at least 1.
+4. ~~A shared couple streak~~ — done. A day counts once you've both answered that day's
+   puzzle, whatever kind (not solved, just answered). Forgives a single missed day;
+   two in a row end it there. Shown as a badge on the day's card once it's at least 1.
 5. The other four puzzle types — in progress, one at a time, each landing as its own
    standing card next to Their Word rather than the final rotation (below) until all
    four exist:
@@ -51,11 +51,15 @@ Needs, in order:
    - ~~Their Numbers~~ — done. Five number questions about yourself a day (its own
      content section), your partner guesses all five at once; each is exact, close
      (within a fifth of your number, never tighter than one either side) or off.
-   - Once all four exist: one migration merges them into a single rotating slot
-     (`daily()` picking the day's kind itself, same day-index approach as
-     `questionOfTheDay`/`dialOfTheDay`), and the standalone `daily_dial()` (etc.)
-     RPCs retire. Not before then — a partial rotation would leave real nights with
-     nothing to play.
+   - ~~One rotating slot~~ — done. The Today tab shows one daily puzzle, walking all
+     five kinds a day at a time (src/daily/rotation.ts: Their Word, The Dial, Top 5,
+     Sketch, Their Numbers). The day's kind is worked out from the date on each phone,
+     the same way the questions are, so both agree without asking the server, and each
+     kind keeps its own server functions (`daily_dial` and the rest) rather than
+     folding them into `daily()`. That turned out to be simpler than the merge
+     planned here, and it needed no migration. Their Word is the fallback: it carries
+     pairing, and it's what shows if the day's kind isn't set up on the server yet.
+     The streak now counts a day whichever kind it was (migration 0009).
 6. Fallback puzzles for a day your partner didn't set one — possibly recycled from your
    own past sessions. Deliberately left for later.
 

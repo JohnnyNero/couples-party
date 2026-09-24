@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { NumbersMark, NumbersView } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
@@ -15,9 +15,11 @@ export type NumbersScreen =
 export function NumbersCard({
   daily,
   open,
+  corner,
 }: {
   daily: ReturnType<typeof useDailyNumbers>
   open: (screen: NumbersScreen) => void
+  corner?: ReactNode // the streak, shown whichever puzzle is up
 }) {
   const { status, refresh } = daily
   const [pool, setPool] = useState<string[]>([])
@@ -49,7 +51,7 @@ export function NumbersCard({
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 
   return (
-    <Card title="Their Numbers" sub="Today's five">
+    <Card title="Their Numbers" sub="Today's five" corner={corner}>
       <ul className="flex flex-col gap-1 text-sm text-fg/70">
         {questions.map((q) => <li key={q}>· {q}</li>)}
       </ul>

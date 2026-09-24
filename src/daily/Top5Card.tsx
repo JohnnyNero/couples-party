@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Top5View } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
@@ -18,9 +18,11 @@ export type Top5Screen =
 export function Top5Card({
   daily,
   open,
+  corner,
 }: {
   daily: ReturnType<typeof useDailyTop5>
   open: (screen: Top5Screen) => void
+  corner?: ReactNode // the streak, shown whichever puzzle is up
 }) {
   const { status, refresh } = daily
   const [themes, setThemes] = useState<Theme[]>([])
@@ -55,7 +57,7 @@ export function Top5Card({
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 
   return (
-    <Card title="Top 5" sub="Today's five">
+    <Card title="Top 5" sub="Today's five" corner={corner}>
       <QuestionSpin
         today={localDate()}
         question={theme}

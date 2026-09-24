@@ -239,6 +239,7 @@ export const api = {
     rpc<void>('set_sketch', { p_for_date: forDate, p_prompt: prompt, p_answer: answer, p_strokes: strokes }),
   submitSketch: (puzzleId: string, guess: string) =>
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
+  streak: (today: string) => rpc<number>('streak', { p_today: today }),
   dailyNumbers: (today: string) => rpc<DailyNumbers>('daily_numbers', { p_today: today }),
   setNumbers: (forDate: string, questions: string[], answers: number[]) =>
     rpc<void>('set_numbers', { p_for_date: forDate, p_questions: questions, p_answers: answers }),

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { DialView } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
@@ -19,9 +19,11 @@ export type DialScreen =
 export function DialCard({
   daily,
   open,
+  corner,
 }: {
   daily: ReturnType<typeof useDailyDial>
   open: (screen: DialScreen) => void
+  corner?: ReactNode // the streak, shown whichever puzzle is up
 }) {
   const { status, refresh } = daily
   const [spectrums, setSpectrums] = useState<WaveSpectrum[]>([])
@@ -60,7 +62,7 @@ export function DialCard({
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 
   return (
-    <Card title="The Dial" sub="Today's spectrum">
+    <Card title="The Dial" sub="Today's spectrum" corner={corner}>
       <QuestionSpin
         today={localDate()}
         question={spectrum}
