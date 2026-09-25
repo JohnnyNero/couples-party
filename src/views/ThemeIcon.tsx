@@ -116,9 +116,86 @@ const Star = svg(
   </>,
 )
 
+const Bath = svg(
+  <>
+    <path d="M3 12.5h18v1.5a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5z" />
+    <path d="M7 19l-1 2M17 19l1 2" />
+    <path d="M5 12.5V6.2a2.2 2.2 0 0 1 4.3-.7" />
+    <circle cx="11.5" cy="9.3" r="1" />
+    <circle cx="14.6" cy="7.6" r="1.3" />
+    <circle cx="17.6" cy="9.8" r="0.8" />
+  </>,
+)
+
+const Plate = svg(
+  <>
+    <circle cx="12" cy="12" r="4.8" />
+    <path d="M3 3v4.5M4.5 3v4.5M6 3v4.5M3 7.5a1.5 1.5 0 0 0 3 0M4.5 9v12" />
+    <path d="M20 21V3c-1.6 1.2-2 3.8-2 6.5 0 1.4.9 2.5 2 2.5" />
+  </>,
+)
+
+const NoFood = svg(
+  <>
+    <circle cx="12" cy="12" r="9.3" />
+    <circle cx="12" cy="12" r="4.3" />
+    <path d="m5.4 5.4 13.2 13.2" />
+  </>,
+)
+
+const Briefcase = svg(
+  <>
+    <rect x="3" y="7.5" width="18" height="12.5" rx="2" />
+    <path d="M9 7.5v-2A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5v2" />
+    <path d="M3 13h18" />
+    <path d="M11 12h2v2h-2z" />
+  </>,
+)
+
+const Calendar = svg(
+  <>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+    <path d="M3.5 9.5h17M8 3v4M16 3v4" />
+    <path d="M10 13h.01M14 13h.01" strokeWidth={2.2} />
+    <path d="M9.6 15.6c1.3 1.4 3.5 1.4 4.8 0" />
+  </>,
+)
+
+const Perfume = svg(
+  <>
+    <rect x="5" y="10" width="11" height="11" rx="3" />
+    <path d="M8.5 10V7.5h4V10" />
+    <rect x="8" y="4.5" width="5" height="3" rx="0.6" />
+    <path d="M16 5.5c1-.7 1-1.6 0-2.3M18.6 6.8c1.6-1.2 1.6-3 0-4.2" />
+  </>,
+)
+
+const Bag = svg(
+  <>
+    <path d="M5 8h14l-1 12.5H6z" />
+    <path d="M9 10.5v-4a3 3 0 0 1 6 0v4" />
+  </>,
+)
+
+const Bed = svg(
+  <>
+    <path d="M2.5 19.5V7M2.5 15.5h19v4M21.5 15.5v-3a3 3 0 0 0-3-3h-8v6" />
+    <circle cx="6.6" cy="12.4" r="1.8" />
+    <path d="M15 3.5h3l-3 3h3" />
+  </>,
+)
+
 // First match wins, so the specific patterns have to sit above the loose ones.
 const RULES: [RegExp, Glyph][] = [
   [/\bcats?\b/, Cat],
+  [/unwind|relax/, Bath],
+  [/never eat|won't eat/, NoFood],
+  [/\beat\b|foods?\b/, Plate],
+  [/\bjobs?\b|career/, Briefcase],
+  [/free day|day off/, Calendar],
+  [/smells?|scent/, Perfume],
+  [/spends?|money|\bbuy/, Bag],
+  [/\bbed\b/, Bed],
   [/happy|joy/, Sun],
   [/proud/, Trophy],
   [/attractive|fanc/, Heart],
