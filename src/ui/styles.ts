@@ -16,3 +16,7 @@ export const btnOutline = `${btnBase} border-2 border-fg bg-card text-fg`
 
 // Small caps labels above things.
 export const eyebrow = 'text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50'
+
+// A text box: white card, ink edge, coral when you're in it.
+export const field =
+  'w-full min-h-[56px] rounded-2xl border-2 border-fg bg-card px-4 text-xl font-bold outline-none focus:border-pa placeholder:text-fg/30 placeholder:font-semibold disabled:opacity-60'

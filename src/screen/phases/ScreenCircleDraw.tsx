@@ -1,24 +1,19 @@
 import type { SessionState } from '../../engine/state'
-import { Dot } from '../../views/Dot'
-import { playerName } from '../../views/list'
+import { WhoIsIn } from '../../ui/kit'
 
 export function ScreenCircleDraw({ s }: { s: SessionState }) {
   const c = s.circle!
   const round = c.rounds[c.current]
   return (
-    <div className="w-full max-w-3xl mx-auto text-center">
-      <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        Perfect Circle{c.bestOf > 1 ? ` · round ${round.index}` : ''}
+    <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
+      <svg viewBox="0 0 100 100" className="w-32 h-32 sm:w-48 sm:h-48 text-fg/25" aria-hidden="true">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="6 6" />
+      </svg>
+      <div>
+        <div className="font-display text-4xl sm:text-6xl font-extrabold leading-tight">Draw a perfect circle</div>
+        <div className="mt-1 text-base sm:text-xl text-fg/60">One go each · lift your finger to send it</div>
       </div>
-      <div className="text-3xl sm:text-6xl font-bold uppercase tracking-tight">Draw a perfect circle</div>
-      <div className="mt-2 sm:mt-4 text-sm sm:text-xl text-fg/60">One go each · lift your finger to send it</div>
-      <div className="mt-6 sm:mt-10 flex justify-center gap-8">
-        {(['A', 'B'] as const).map((p) => (
-          <span key={p} className="flex items-center gap-2 text-sm sm:text-xl uppercase tracking-wide">
-            <Dot on={round.drawn[p] !== null} /> {playerName(s, p)}
-          </span>
-        ))}
-      </div>
+      <WhoIsIn s={s} done={{ A: round.drawn.A !== null, B: round.drawn.B !== null }} big waiting={() => 'Drawing…'} />
     </div>
   )
 }

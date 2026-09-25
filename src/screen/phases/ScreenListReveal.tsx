@@ -4,6 +4,8 @@ import { listItemPoints } from '../../engine/standing'
 import { dispatch, useMyPlayerId } from '../../net'
 import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { themeText, playerName, rankerOf } from '../../views/list'
+import { Avatar, inkOf } from '../../ui/Avatar'
+import { card } from '../../ui/styles'
 
 // The reveal walks the items in the order they were handed out, one tap at a time. Each
 // new row shows the ranker's real slot first and the guess a beat later — the pause is
@@ -25,30 +27,33 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-3">
-      <div className="text-[0.6rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 text-center truncate">
+      <div className="font-display text-xl sm:text-3xl font-extrabold text-center leading-tight text-balance">
         {themeText(s, act)}
       </div>
 
-      <div className="flex text-[0.55rem] sm:text-[0.7rem] uppercase tracking-[0.2em] text-fg/40">
-        <span className="flex-1 min-w-0" />
-        <span className="w-[4.5rem] sm:w-28 text-center shrink-0">{playerName(s, ranker)} ranked</span>
-        <span className="w-[5.5rem] sm:w-32 text-center shrink-0">{playerName(s, act.author)} guessed</span>
-      </div>
-
-      <div className="border-t-2 border-fg/80">
+      <section className={card + ' px-4 py-2'}>
+        <div className="flex items-center py-1.5 text-xs sm:text-base font-extrabold">
+          <span className="flex-1 min-w-0" />
+          <span className={'w-[4.5rem] sm:w-28 shrink-0 flex items-center justify-center gap-1 ' + inkOf(ranker)}>
+            <Avatar p={ranker} name={playerName(s, ranker)} size="sm" /> ranked
+          </span>
+          <span className={'w-[5.5rem] sm:w-32 shrink-0 flex items-center justify-center gap-1 ' + inkOf(act.author)}>
+            <Avatar p={act.author} name={playerName(s, act.author)} size="sm" /> guessed
+          </span>
+        </div>
         {shown.map((item, i) => (
           <Row key={item.id} item={item} live={i === act.revealIndex} />
         ))}
         {/* The items still to come, as empty ruled lines — you can see how much is left. */}
         {act.items.slice(act.revealIndex + 1).map((item) => (
-          <div key={item.id} className="border-b border-fg/10 py-1.5 sm:py-2.5 h-[2.1rem] sm:h-[3rem]" />
+          <div key={item.id} className="border-t border-fg/10 h-[2.4rem] sm:h-[3.2rem]" />
         ))}
-      </div>
+      </section>
 
       <div className="flex items-center justify-between gap-3">
-        <span className="text-base sm:text-2xl font-bold uppercase tracking-tight">
+        <span className="font-display text-xl sm:text-3xl font-extrabold">
           {playerName(s, act.author)}{' '}
-          <span className="text-accent tabular-nums">
+          <span className={'tabular-nums ' + inkOf(act.author)}>
             <AnimatedNumber
               value={total}
               from={total - listItemPoints(act.items[act.revealIndex])}
@@ -59,7 +64,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
         {canAdvance && (
           <button
             onClick={() => dispatch({ type: 'ADVANCE_REVEAL', player: me })}
-            className="min-h-[48px] px-5 bg-accent text-bg text-base sm:text-xl font-bold uppercase tracking-widest active:translate-y-px rounded-xl"
+            className="min-h-[52px] px-6 rounded-2xl bg-fg text-bg font-display text-lg sm:text-2xl font-extrabold active:translate-y-px"
           >
             {last ? 'Done' : 'Next item'}
           </button>
@@ -75,14 +80,14 @@ function Row({ item, live }: { item: ListItem; live: boolean }) {
   return (
     <div
       className={
-        'flex items-center border-b border-fg/15 py-1.5 sm:py-2.5 text-sm sm:text-2xl uppercase ' +
-        (live ? 'text-fg' : 'text-fg/45')
+        'flex items-center border-t border-fg/10 h-[2.4rem] sm:h-[3.2rem] text-sm sm:text-2xl font-bold ' +
+        (live ? 'text-fg' : 'text-fg/55')
       }
     >
       <span className="flex-1 min-w-0 truncate pr-2">{item.text}</span>
       <span
         className={
-          'w-[4.5rem] sm:w-28 text-center shrink-0 font-bold tabular-nums ' +
+          'w-[4.5rem] sm:w-28 text-center shrink-0 font-display text-lg sm:text-3xl font-extrabold tabular-nums ' +
           (live ? 'animate-drop-in' : '')
         }
       >
@@ -91,15 +96,16 @@ function Row({ item, live }: { item: ListItem; live: boolean }) {
       <span
         style={live ? { animationDelay: '550ms' } : undefined}
         className={
-          'w-[5.5rem] sm:w-32 text-center shrink-0 font-bold tabular-nums ' +
-          (exact ? 'text-accent ' : '') +
+          'w-[5.5rem] sm:w-32 text-center shrink-0 font-display text-lg sm:text-3xl font-extrabold tabular-nums ' +
           (live ? 'animate-reveal-pop' : '')
         }
       >
         {item.predictedSlot ?? '—'}
-        <span className="text-xs sm:text-lg font-bold ml-1.5 text-accent">
-          {points > 0 ? `+${points}` : ''}
-        </span>
+        {points > 0 && (
+          <span className={'ml-1.5 align-middle inline-block rounded-full px-1.5 text-[0.7rem] sm:text-base font-extrabold ' + (exact ? 'bg-sage-soft text-sage-ink' : 'bg-tan-soft text-tan-ink')}>
+            +{points}
+          </span>
+        )}
       </span>
     </div>
   )

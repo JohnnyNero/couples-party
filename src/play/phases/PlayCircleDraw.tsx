@@ -4,6 +4,8 @@ import { dispatch } from '../../net'
 import { DrawingStrokes } from '../../views/DrawingCanvas'
 import { playerName } from '../../views/list'
 import { other } from '../../engine/state'
+import { inkOf } from '../../ui/Avatar'
+import { Waiting } from '../../ui/kit'
 
 // One circle, one go: lifting your finger sends it. The pad is square so a circle stays
 // a circle once it's scaled to 0..1 — on a 4:3 pad it would be scored as an oval.
@@ -28,13 +30,11 @@ export function PlayCircleDraw({ s, me }: { s: SessionState; me: PlayerId }) {
 
   if (sent) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 gap-5 text-center">
-        <div className="w-full max-w-[16rem] aspect-square bg-fg/5 border-2 border-fg/25 rounded-2xl text-fg">
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+        <div className={'w-full max-w-[14rem] aspect-square bg-card border-2 border-fg/20 rounded-3xl ' + inkOf(me)}>
           <DrawingStrokes strokes={[sent]} />
         </div>
-        <div className="text-lg uppercase tracking-wide text-fg/55">
-          Sent · waiting for {playerName(s, other(me))}
-        </div>
+        <div className="h-40"><Waiting title="Sent" sub={`Waiting for ${playerName(s, other(me))}`} /></div>
       </div>
     )
   }
@@ -66,13 +66,10 @@ export function PlayCircleDraw({ s, me }: { s: SessionState; me: PlayerId }) {
   }
 
   return (
-    <div className="h-full flex flex-col p-5 gap-3">
-      <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-1">
-          Perfect Circle{c.bestOf > 1 ? ` · round ${round.index}` : ''}
-        </div>
-        <div className="text-xl font-bold uppercase tracking-tight">Draw a perfect circle</div>
-        <div className="text-sm text-fg/60">One go — lifting your finger sends it</div>
+    <div className="h-full flex flex-col px-5 pb-6 gap-3">
+      <div className="text-center">
+        <div className="font-display text-3xl font-extrabold leading-tight">Draw a perfect circle</div>
+        <div className="text-sm font-bold text-fg/55">One go — lifting your finger sends it</div>
       </div>
       {/* The pad is the largest square that fits, whichever way the phone is held. */}
       <div className="flex-1 min-h-0 flex items-center justify-center" style={{ containerType: 'size' }}>
@@ -83,7 +80,7 @@ export function PlayCircleDraw({ s, me }: { s: SessionState; me: PlayerId }) {
           onPointerUp={end}
           onPointerCancel={end}
           style={{ width: 'min(100cqw, 100cqh)', height: 'min(100cqw, 100cqh)' }}
-          className="bg-fg/5 border-2 border-fg/25 rounded-2xl touch-none overflow-hidden text-fg"
+          className={'bg-card border-2 border-fg rounded-3xl touch-none overflow-hidden shadow-[4px_4px_0_rgba(0,0,0,0.12)] ' + inkOf(me)}
         >
           <DrawingStrokes strokes={stroke.length ? [stroke] : []} />
         </div>

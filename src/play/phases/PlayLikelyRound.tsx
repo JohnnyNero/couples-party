@@ -14,8 +14,8 @@ export function PlayLikelyRound({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col justify-center p-6 gap-4">
       <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-2">Who's more likely to</div>
-        <div className="text-2xl font-bold uppercase tracking-tight break-words">{round.statement}?</div>
+        <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50 mb-2">Who's more likely to</div>
+        <div className="text-2xl font-display font-extrabold leading-tight break-words">{round.statement}?</div>
       </div>
       {[me, other(me)].map((p, i) => (
         <button

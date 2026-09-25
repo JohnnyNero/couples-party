@@ -14,5 +14,5 @@ export function Clock({ phaseEndsAt }: { phaseEndsAt: number | null }) {
 
   const secs = phaseEndsAt == null ? null : Math.max(0, Math.ceil((phaseEndsAt - Date.now()) / 1000))
   const low = secs !== null && secs <= 5
-  return <span className={'tabular-nums font-bold ' + (low ? 'text-accent' : '')}>{secs === null ? ' ' : secs}</span>
+  return <span className={'tabular-nums font-bold ' + (low ? 'text-pa-ink' : '')}>{secs === null ? ' ' : secs}</span>
 }

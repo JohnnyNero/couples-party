@@ -14,8 +14,8 @@ export function ScreenFillerResult({ s, kind }: { s: SessionState; kind: 'circle
       s={s}
       title={kind === 'circle' ? 'Perfect Circle · done' : 'Stop the Clock · done'}
       flourish={
-        <div className="mt-2 text-xl sm:text-3xl font-bold uppercase tracking-tight animate-pop">
-          {winner ? `${playerName(s, winner)} +${FILLER.winPoints}` : 'Nobody takes it'}
+        <div className="mt-2 inline-block rounded-full bg-sage-soft text-sage-ink px-4 py-1 font-display text-lg sm:text-2xl font-extrabold animate-pop">
+          {winner ? `${playerName(s, winner)} wins it · +${FILLER.winPoints}` : 'Nobody takes it'}
         </div>
       }
     />

@@ -15,13 +15,15 @@ export function ScreenClockReady({ s }: { s: SessionState }) {
   }, [])
   return (
     <div className="w-full max-w-3xl mx-auto text-center">
-      <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        {live.decider ? 'Dead level · closest takes the night' : `Stop the Clock · round ${round.index}`}
-      </div>
-      <div className="text-3xl sm:text-6xl font-bold uppercase tracking-tight">Stop at {seconds(round.targetMs, 1)}</div>
-      <div className="mt-2 sm:mt-4 text-sm sm:text-xl text-fg/60">{hideHint(round.hideAfterMs)}</div>
-      <div key={left} className="mt-6 sm:mt-10 font-display text-7xl sm:text-9xl font-bold text-accent animate-pop tabular-nums">
-        {left}
+      {live.decider && (
+        <div className="mb-2 font-display text-2xl sm:text-4xl font-extrabold text-pa-ink">Dead level! Closest takes the night</div>
+      )}
+      <div className="font-display text-4xl sm:text-6xl font-extrabold">Stop at {seconds(round.targetMs, 1)}</div>
+      <div className="mt-1 sm:mt-3 text-base sm:text-xl text-fg/60">{hideHint(round.hideAfterMs)}</div>
+      <div className="mt-8 sm:mt-12 flex justify-center">
+        <span key={left} className="w-36 h-36 sm:w-52 sm:h-52 rounded-full bg-pa text-white border-2 border-fg shadow-[5px_5px_0_rgba(0,0,0,0.15)] inline-flex items-center justify-center font-display text-8xl sm:text-9xl font-extrabold animate-pop tabular-nums">
+          <span className="translate-y-[0.06em]">{left}</span>
+        </span>
       </div>
     </div>
   )

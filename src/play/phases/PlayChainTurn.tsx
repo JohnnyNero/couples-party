@@ -6,6 +6,8 @@ import { Clock } from '../../screen/Clock'
 import { ChainTrail } from '../../views/ChainTrail'
 import { aLetter, rejectText } from '../../views/chain'
 import { playerName } from '../../views/list'
+import { Avatar, inkOf } from '../../ui/Avatar'
+import { btnAccent, eyebrow, field } from '../../ui/styles'
 
 // Your turn: one box, the letter you need, and the clock. A word that doesn't pass
 // comes back with the reason and stays in the box to fix — the clock doesn't wait.
@@ -20,22 +22,24 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
   const reject = round.reject && round.reject.player === round.turn ? round.reject : null
 
   return (
-    <div className="h-full flex flex-col p-5 gap-4">
-      <div className="flex items-baseline justify-between gap-3">
+    <div className="h-full flex flex-col px-5 pb-6 gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Word Chain · round {round.index} of {g.rounds.length}</div>
-          <div className="text-xl font-bold uppercase tracking-tight truncate">{round.category}</div>
+          <div className={eyebrow}>Category</div>
+          <div className="font-display text-2xl font-extrabold leading-tight truncate">{round.category}</div>
         </div>
-        <div className="font-display text-4xl font-bold tabular-nums shrink-0"><Clock phaseEndsAt={s.phaseEndsAt} /></div>
+        <div className={'shrink-0 w-14 h-14 rounded-full border-2 border-fg bg-card inline-flex items-center justify-center font-display text-2xl ' + (mine ? '' : 'opacity-50')}>
+          <Clock phaseEndsAt={s.phaseEndsAt} />
+        </div>
       </div>
-      <div className="py-2"><ChainTrail round={round} max={5} /></div>
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"><ChainTrail round={round} max={5} /></div>
       {mine ? (
-        <div className="flex flex-col gap-3">
-          <div className="text-center text-lg uppercase tracking-wide">
-            Your go · you need {aLetter(round.need)}
+        <div className="flex flex-col gap-2.5">
+          <div className="text-center font-display text-2xl font-extrabold">
+            Your go · you need <span className={inkOf(me)}>{aLetter(round.need)}</span>
           </div>
           <input
-            className="w-full min-h-[56px] text-2xl bg-ink text-paper px-4 outline-none border-b-4 border-accent rounded-t-xl"
+            className={field + ' text-2xl'}
             value={word}
             onChange={(e) => setWord(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send() }}
@@ -47,22 +51,20 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
             autoCorrect="off"
             enterKeyHint="go"
           />
-          <div className="h-5 text-sm font-bold text-accent text-center">
+          <div className="h-5 text-sm font-bold text-pa-ink text-center">
             {reject && rejectText(reject, round.need, round.category)}
           </div>
-          <button
-            className="w-full min-h-[52px] rounded-xl bg-accent text-bg text-lg font-bold uppercase tracking-widest active:translate-y-px"
-            onClick={send}
-          >
+          <button className={btnAccent} onClick={send}>
             Go
           </button>
         </div>
       ) : (
-        <div className="text-center">
-          <div className="text-lg uppercase tracking-wide text-fg/60">
+        <div className="pb-10 text-center">
+          <div className="flex items-center justify-center gap-2 font-display text-2xl font-extrabold text-fg/70">
+            <Avatar p={round.turn} name={playerName(s, round.turn)} size="md" className="animate-pulse" />
             {playerName(s, round.turn)} needs {aLetter(round.need)}
           </div>
-          {reject && <div className="mt-2 text-sm text-fg/45">{rejectText(reject, round.need, round.category)}</div>}
+          {reject && <div className="mt-2 text-sm font-bold text-fg/50">{rejectText(reject, round.need, round.category)}</div>}
         </div>
       )}
     </div>

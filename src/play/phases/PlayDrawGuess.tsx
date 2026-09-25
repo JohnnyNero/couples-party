@@ -5,6 +5,8 @@ import { DRAW } from '../../engine/phases'
 import { dispatch } from '../../net'
 import { DrawingCanvas } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
+import { playerName } from '../../views/list'
+import { btnAccent, eyebrow, field } from '../../ui/styles'
 import { PlayWaiting } from './PlayWaiting'
 
 export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
@@ -13,8 +15,8 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   const guesser = other(round.drawer)
   const [text, setText] = useState('')
 
-  if (me !== guesser) return <PlayWaiting label="They're guessing" />
-  if (round.guess !== null) return <PlayWaiting label="Locked in — waiting" />
+  if (me !== guesser) return <PlayWaiting label={`${playerName(s, guesser)} is guessing`} sub="Don’t give it away." />
+  if (round.guess !== null) return <PlayWaiting label="Locked in" sub="Let’s see…" />
 
   const submit = () => {
     const t = text.trim()
@@ -23,28 +25,29 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   }
 
   return (
-    <div className="h-full flex flex-col justify-center p-6 gap-4">
-      <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-1">What did they say?</div>
-        <div className="text-xl font-bold uppercase tracking-tight break-words">{drawQuestion(s, round, me)}</div>
+    <div className="h-full flex flex-col px-5 pb-6">
+      <div className="flex-1 flex flex-col justify-center gap-4">
+        <div>
+          <div className={eyebrow + ' text-accent-ink'}>What did {playerName(s, round.drawer)} say?</div>
+          <div className="mt-1 font-display text-2xl font-extrabold leading-tight break-words">{drawQuestion(s, round, me)}</div>
+        </div>
+        <DrawingCanvas strokes={round.strokes} animate />
       </div>
-      <DrawingCanvas strokes={round.strokes} animate />
-      <input
-        className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case rounded-t-xl"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
-        maxLength={DRAW.guessMaxLen}
-        placeholder="your guess"
-        autoFocus
-        autoComplete="off"
-      />
-      <button
-        className="w-full min-h-[56px] rounded-xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px"
-        onClick={submit}
-      >
-        Lock in my guess
-      </button>
+      <div className="flex flex-col gap-2.5 pt-3">
+        <input
+          className={field}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
+          maxLength={DRAW.guessMaxLen}
+          placeholder="your guess"
+          autoFocus
+          autoComplete="off"
+        />
+        <button className={btnAccent} onClick={submit} disabled={text.trim().length === 0}>
+          Lock in my guess
+        </button>
+      </div>
     </div>
   )
 }

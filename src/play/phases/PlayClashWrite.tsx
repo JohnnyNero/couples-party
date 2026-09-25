@@ -5,6 +5,8 @@ import { CLASH } from '../../engine/phases'
 import { startsRight } from '../../engine/clash'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
+import { LetterTile, Waiting } from '../../ui/kit'
+import { btnAccent } from '../../ui/styles'
 
 // Six boxes, one letter. Enter jumps to the next box; nothing leaves the phone until
 // Done — or, if the clock gets there first, whatever's typed is sent just before it.
@@ -26,22 +28,15 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
   }, [sent, s.phaseEndsAt, me])
 
   if (sent) {
-    return (
-      <div className="h-full flex items-center justify-center p-8 text-center">
-        <div className="text-lg uppercase tracking-wide text-fg/55">Sent · waiting for {playerName(s, other(me))}</div>
-      </div>
-    )
+    return <Waiting title="Sent" sub={round.answers[other(me)] !== null ? 'Revealing…' : `Waiting for ${playerName(s, other(me))}`} />
   }
 
   const set = (i: number, v: string) => setAnswers((prev) => prev.map((a, j) => (j === i ? v : a)))
   return (
-    <div className="h-full flex flex-col p-5 gap-3 overflow-y-auto">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Category Clash · round {round.index}</div>
-          <div className="text-sm text-fg/60">Everything starts with…</div>
-        </div>
-        <div className="font-display text-6xl font-bold text-accent leading-none">{round.letter}</div>
+    <div className="h-full flex flex-col px-5 pb-6 gap-3 overflow-y-auto">
+      <div className="flex items-center gap-3">
+        <LetterTile letter={round.letter} />
+        <div className="font-display text-xl font-bold leading-tight">Everything starts with {round.letter}</div>
       </div>
       <div className="flex flex-col gap-2">
         {round.categories.map((cat, i) => {
@@ -49,12 +44,12 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
           const bad = v.trim() !== '' && !startsRight(v, round.letter)
           return (
             <label key={i} className="block">
-              <span className="block text-[0.65rem] uppercase tracking-[0.2em] text-fg/50 mb-0.5">{cat}</span>
+              <span className="block text-sm font-extrabold text-fg/70 mb-1">{cat}</span>
               <input
                 ref={(el) => { boxes.current[i] = el }}
                 className={
-                  'w-full min-h-[44px] text-lg bg-ink text-paper px-3 outline-none border-b-4 rounded-t-lg ' +
-                  (bad ? 'border-fg/30' : 'border-accent')
+                  'w-full min-h-[48px] rounded-xl border-2 bg-card px-3 text-lg font-bold outline-none placeholder:text-fg/25 ' +
+                  (bad ? 'border-fg/25 text-fg/50 line-through decoration-2' : v.trim() ? 'border-fg focus:border-pa' : 'border-fg/40 focus:border-pa')
                 }
                 value={v}
                 onChange={(e) => set(i, e.target.value)}
@@ -75,7 +70,7 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
         })}
       </div>
       <button
-        className="w-full min-h-[52px] mt-1 rounded-xl bg-accent text-bg text-lg font-bold uppercase tracking-widest active:translate-y-px"
+        className={btnAccent + ' shrink-0 mt-1'}
         onClick={() => dispatch({ type: 'SUBMIT_CLASH', player: me, answers })}
       >
         Done

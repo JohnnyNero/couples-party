@@ -3,6 +3,9 @@ import { clockRoundWinner, roundWins } from '../../engine/fillers'
 import { FILLER } from '../../engine/phases'
 import { liveClock, seconds } from '../../views/fillers'
 import { playerName } from '../../views/list'
+import { Avatar, inkOf } from '../../ui/Avatar'
+import { Pips } from '../../ui/kit'
+import { card, eyebrow } from '../../ui/styles'
 
 export function ScreenClockReveal({ s }: { s: SessionState }) {
   const live = liveClock(s)!
@@ -15,7 +18,7 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
     : 'Dead heat · go again'
   return (
     <div className="w-full max-w-2xl mx-auto text-center">
-      <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-4 sm:mb-6">
+      <div className={eyebrow + ' mb-4 sm:mb-6'}>
         Target {seconds(round.targetMs)}
       </div>
       <div className="grid grid-cols-2 gap-4 sm:gap-8">
@@ -25,25 +28,23 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
           const off = t - round.targetMs
           const won = winner === p
           return (
-            <div key={p} className={'rounded-2xl border-2 px-3 py-4 sm:py-6 ' + (won ? 'border-accent' : 'border-fg/20')}>
-              <div className={'text-sm sm:text-xl font-bold uppercase tracking-tight truncate ' + (won ? 'text-accent' : 'text-fg/70')}>
-                {playerName(s, p)}
+            <div key={p} className={(won ? card : 'rounded-3xl border-2 border-fg/15') + ' px-3 py-4 sm:py-6 flex flex-col items-center gap-1'}>
+              <div className="flex items-center gap-2 font-display text-lg sm:text-2xl font-extrabold truncate">
+                <Avatar p={p} name={playerName(s, p)} size="sm" /> {playerName(s, p)}
               </div>
-              <div className={'font-display text-4xl sm:text-6xl font-bold tabular-nums ' + (won ? 'text-accent' : '')}>
+              <div className={'font-display text-4xl sm:text-6xl font-extrabold tabular-nums animate-reveal-pop ' + (won ? inkOf(p) : 'text-fg/60')}>
                 {missed ? '—' : seconds(t)}
               </div>
-              <div className="text-xs sm:text-base uppercase tracking-wide text-fg/50 tabular-nums">
+              <div className="text-sm sm:text-lg font-bold text-fg/50 tabular-nums">
                 {missed ? 'no tap' : `${off >= 0 ? '+' : '−'}${(Math.abs(off) / 1000).toFixed(2)} s`}
               </div>
             </div>
           )
         })}
       </div>
-      <div className="mt-5 sm:mt-8 text-xl sm:text-4xl font-bold uppercase tracking-tight animate-pop">{headline}</div>
+      <div className="mt-5 sm:mt-8 font-display text-3xl sm:text-5xl font-extrabold leading-tight animate-pop">{headline}</div>
       {!live.decider && (
-        <div className="mt-2 text-xs sm:text-base uppercase tracking-[0.2em] text-fg/50 tabular-nums">
-          {playerName(s, 'A')} {wins.A} · {playerName(s, 'B')} {wins.B} · first to {Math.ceil(g.bestOf / 2)}
-        </div>
+        <div className="mt-3"><Pips s={s} wins={wins} need={Math.ceil(g.bestOf / 2)} /></div>
       )}
     </div>
   )

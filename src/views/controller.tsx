@@ -39,7 +39,7 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'INTRO':
       return <PlayIntro s={s} me={me} />
     case 'LIST_INTRO':
-      return <PlayWaiting label="See the board" />
+      return <PlayWaiting label="Eyes on the board" />
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
     case 'LIST_REVEAL':
@@ -47,7 +47,7 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'LIKELY_ROUND':
       return <PlayLikelyRound s={s} me={me} />
     case 'LIKELY_REVEAL':
-      return <PlayWaiting label="Reveal" />
+      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'MM_ANSWER':
       return <PlayMmAnswer s={s} me={me} />
     case 'MM_JUDGE':
@@ -75,20 +75,20 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayCircleDraw s={s} me={me} />
     case 'CLOCK_READY':
     case 'DECIDER_READY':
-      return <PlayWaiting label="Get ready…" />
+      return <PlayWaiting label="Get ready…" sub="Your Stop button is coming." />
     case 'CLOCK_RUN':
     case 'DECIDER_RUN':
       return <PlayClockRun s={s} me={me} />
     case 'FINGER_ROUND':
       return <PlayFingerRound s={s} me={me} />
     case 'FINGER_REVEAL':
-      return <PlayWaiting label="Reveal" />
+      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'WAVE_CLUE':
       return <PlayWaveClue s={s} me={me} />
     case 'WAVE_GUESS':
       return <PlayWaveGuess s={s} me={me} />
     case 'WAVE_REVEAL':
-      return <PlayWaiting label="Reveal" />
+      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'DRAW_SKETCH':
       return <PlayDrawSketch s={s} me={me} />
     case 'DRAW_GUESS':
@@ -96,8 +96,8 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'DRAW_REVEAL':
       return <PlayDrawReveal s={s} me={me} />
     case 'DONE':
-      return <PlayWaiting label="That's the session" />
+      return <PlayWaiting label="That’s the night" sub="Thanks for playing." />
     default:
-      return <PlayWaiting label="See the board" />
+      return <PlayWaiting label="Eyes on the board" />
   }
 }

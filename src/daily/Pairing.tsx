@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api, DailyError } from './api'
+import { field } from '../ui/styles'
 
 const NAME_KEY = 'couples-party:name'
 const savedName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
@@ -31,12 +32,11 @@ export function PairStart({ onDone }: { onDone: () => void }) {
     }
   }
 
-  const input =
-    'w-full min-h-[52px] rounded-xl bg-fg/5 border-2 border-fg/15 px-4 text-lg outline-none focus:border-accent'
+  const input = field
   return (
     <div className="flex flex-col gap-3">
       <label className="flex flex-col gap-1.5">
-        <span className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/50">Your name</span>
+        <span className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Your name</span>
         <input className={input} value={name} onChange={(e) => setName(e.target.value)} maxLength={24} autoComplete="given-name" />
       </label>
       {mode === 'choose' ? (
@@ -44,14 +44,14 @@ export function PairStart({ onDone }: { onDone: () => void }) {
           <button
             disabled={busy}
             onClick={() => run(() => api.createCouple(name.trim()))}
-            className="min-h-[52px] rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-50"
+            className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
           >
             Start
           </button>
           <button
             disabled={busy}
             onClick={() => { setMode('join'); setError(null) }}
-            className="min-h-[52px] rounded-xl border-2 border-fg/25 font-bold uppercase tracking-widest active:translate-y-px"
+            className="min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px"
           >
             I have a code
           </button>
@@ -59,7 +59,7 @@ export function PairStart({ onDone }: { onDone: () => void }) {
       ) : (
         <>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/50">Their code</span>
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Their code</span>
             <input
               className={input + ' uppercase tracking-[0.4em] font-bold text-center'}
               value={code}
@@ -71,20 +71,20 @@ export function PairStart({ onDone }: { onDone: () => void }) {
             />
           </label>
           <div className="grid grid-cols-[auto_1fr] gap-2">
-            <button onClick={() => setMode('choose')} className="min-h-[52px] px-4 rounded-xl border-2 border-fg/15 text-fg/60 active:translate-y-px">
+            <button onClick={() => setMode('choose')} className="min-h-[52px] px-4 rounded-2xl border-2 border-fg/15 font-bold text-fg/60 active:translate-y-px">
               Back
             </button>
             <button
               disabled={busy || code.length !== 6}
               onClick={() => run(() => api.joinCouple(code, name.trim()))}
-              className="min-h-[52px] rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-50"
+              className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
             >
               Pair
             </button>
           </div>
         </>
       )}
-      {error && <div className="text-sm text-accent">{error}</div>}
+      {error && <div className="text-sm text-accent-ink">{error}</div>}
     </div>
   )
 }
@@ -98,15 +98,15 @@ export function PairWaiting({ code, onCancel }: { code: string; onCancel: () => 
   return (
     <div className="flex flex-col items-center gap-3 text-center">
       <div className="text-sm text-fg/60">Get them to tap <b>I have a code</b> and type:</div>
-      <div className="font-display text-5xl font-bold tracking-[0.2em] text-accent tabular-nums">{code}</div>
-      <div className="text-xs uppercase tracking-[0.25em] text-fg/40 animate-pulse">Waiting for them…</div>
+      <div className="rounded-2xl border-2 border-fg bg-card px-5 py-2 font-display text-5xl font-extrabold tracking-[0.18em] text-pa-ink tabular-nums shadow-[4px_4px_0_rgba(0,0,0,0.12)]">{code}</div>
+      <div className="text-sm font-bold text-fg/50 animate-pulse">Waiting for them…</div>
       <div className="flex gap-2 w-full mt-1">
-        <button onClick={share} className="flex-1 min-h-[48px] rounded-xl border-2 border-fg/25 font-bold uppercase tracking-widest active:translate-y-px">
+        <button onClick={share} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
           Send it
         </button>
         <button
           onClick={async () => { await api.leaveCouple().catch(() => {}); onCancel() }}
-          className="px-4 min-h-[48px] rounded-xl text-fg/50 active:translate-y-px"
+          className="px-4 min-h-[48px] rounded-2xl font-bold text-fg/50 active:translate-y-px"
         >
           Cancel
         </button>

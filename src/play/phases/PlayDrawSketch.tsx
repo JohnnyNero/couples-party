@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { DrawStroke, PlayerId, SessionState } from '../../engine/state'
 import { DRAW } from '../../engine/phases'
 import { dispatch } from '../../net'
-import { CANVAS_ASPECT, DrawingStrokes } from '../../views/DrawingCanvas'
+import { CANVAS_ASPECT, DrawingStrokes, PAPER } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
+import { btnAccent, btnOutline, eyebrow, field } from '../../ui/styles'
+import { PromptCard } from '../../ui/kit'
 import { PlayWaiting } from './PlayWaiting'
 
 // Two steps on the drawer's phone. First the answer — typed, private, one word — because
@@ -38,37 +40,36 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
     return () => clearTimeout(id)
   }, [isDrawer, s.phaseEndsAt, me])
 
-  if (!isDrawer) return <PlayWaiting label={`${playerName(s, round.drawer)} is drawing`} />
+  if (!isDrawer) return <PlayWaiting label={`${playerName(s, round.drawer)} is drawing`} sub="No peeking." />
 
   const question = drawQuestion(s, round, me)
 
   if (!drawingNow) {
     const go = () => { if (answer.trim()) setDrawingNow(true) }
     return (
-      <div className="h-full flex flex-col justify-center p-6 gap-4">
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">Your question</div>
-        <div className="text-3xl font-bold uppercase tracking-tight break-words">{question}</div>
-        <div className="text-sm text-fg/70 leading-snug">
-          Answer it for real, in a word or two — only you see this. Then you draw it, and
-          they have to guess what you said.
+      <div className="h-full flex flex-col px-5 pb-6">
+        <div className="flex-1 flex flex-col justify-center gap-4">
+          <PromptCard over="Your question" size="md">{question}</PromptCard>
+          <div className="text-sm text-fg/70 leading-snug">
+            Answer it for real, in a word or two — only you see this. Then you draw it, and
+            they have to guess what you said.
+          </div>
         </div>
-        <input
-          className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case rounded-t-xl"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') go() }}
-          maxLength={DRAW.guessMaxLen}
-          placeholder="your answer"
-          autoFocus
-          autoComplete="off"
-        />
-        <button
-          className="w-full min-h-[56px] rounded-xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-40"
-          onClick={go}
-          disabled={!answer.trim()}
-        >
-          Now draw it
-        </button>
+        <div className="flex flex-col gap-2.5">
+          <input
+            className={field}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') go() }}
+            maxLength={DRAW.guessMaxLen}
+            placeholder="your answer"
+            autoFocus
+            autoComplete="off"
+          />
+          <button className={btnAccent} onClick={go} disabled={!answer.trim()}>
+            Now draw it
+          </button>
+        </div>
       </div>
     )
   }
@@ -93,13 +94,11 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
   function end() { drawing.current = false }
 
   return (
-    <div className="h-full flex flex-col p-5 gap-3">
+    <div className="h-full flex flex-col px-5 pb-6 gap-3">
       <div>
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mb-1 truncate">
-          {question} · no words, no letters
-        </div>
-        <div className="text-xl font-bold uppercase tracking-tight">
-          Drawing: <span className="text-accent">{answer.trim()}</span>
+        <div className={eyebrow + ' truncate'}>{question} · no words, no letters</div>
+        <div className="font-display text-2xl font-extrabold leading-tight">
+          Drawing: <span className="text-accent-ink">{answer.trim()}</span>
         </div>
       </div>
       <div className="flex-1 min-h-0 flex items-center justify-center">
@@ -109,21 +108,21 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
           onPointerMove={move}
           onPointerUp={end}
           onPointerCancel={end}
-          className={`w-full ${CANVAS_ASPECT} bg-fg/5 border-2 border-fg/25 rounded-2xl touch-none relative overflow-hidden text-fg`}
+          className={`w-full ${CANVAS_ASPECT} ${PAPER} touch-none relative`}
         >
           <DrawingStrokes strokes={strokes} />
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <button
-          className="flex-1 min-h-[48px] rounded-xl border-2 border-fg/30 uppercase tracking-widest active:translate-y-px disabled:opacity-30"
+          className={btnOutline + ' !w-auto flex-1'}
           onClick={() => setStrokes((prev) => prev.slice(0, -1))}
           disabled={strokes.length === 0}
         >
           Undo
         </button>
         <button
-          className="flex-[2] min-h-[48px] rounded-xl bg-accent text-bg text-lg font-bold uppercase tracking-widest active:translate-y-px"
+          className={btnAccent + ' !w-auto flex-[2]'}
           onClick={() => dispatch({ type: 'SUBMIT_DRAWING', player: me, answer, strokes })}
         >
           Done

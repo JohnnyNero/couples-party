@@ -32,10 +32,10 @@ export function RankFive({
           left to place, whether or not onDone has been acted on yet. */}
       <div
         className={
-          'shrink-0 rounded-2xl px-4 text-center uppercase tracking-tight ' +
+          'shrink-0 rounded-2xl px-4 text-center ' +
           (done
             ? 'py-2 text-xs font-bold text-fg/35 border-2 border-dashed border-fg/15'
-            : 'py-4 text-lg font-bold bg-ink text-paper animate-pop')
+            : 'py-4 font-display text-2xl font-extrabold leading-tight bg-fg text-bg shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
         }
       >
         {done ? 'All ranked' : items[current]}
@@ -54,16 +54,16 @@ export function RankFive({
               className={
                 'min-h-[44px] flex items-center gap-3 rounded-xl border-2 px-3 text-left transition-colors ' +
                 (isLive
-                  ? 'border-accent bg-accent text-bg animate-pop'
+                  ? 'border-accent bg-pa text-white animate-pop'
                   : filled !== null
                     ? 'border-fg/15 bg-fg/5 text-fg/70'
-                    : 'border-fg/20 text-fg active:translate-y-px active:bg-accent/15')
+                    : 'border-fg/20 text-fg active:translate-y-px active:bg-pa-soft')
               }
             >
-              <span className={'w-6 shrink-0 text-xl font-bold tabular-nums ' + (isLive ? 'text-bg' : filled !== null ? 'text-fg/40' : 'text-accent')}>
+              <span className={'w-6 shrink-0 text-xl font-bold tabular-nums ' + (isLive ? 'text-bg' : filled !== null ? 'text-fg/40' : 'text-accent-ink')}>
                 {n}
               </span>
-              <span className="flex-1 min-w-0 truncate text-sm uppercase tracking-wide">
+              <span className="flex-1 min-w-0 truncate text-sm font-bold">
                 {filled !== null ? items[filled] : ''}
               </span>
             </button>

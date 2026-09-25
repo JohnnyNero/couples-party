@@ -38,7 +38,7 @@ export function DailyCard({
       <Card title="Their Word">
         <div className="text-sm text-fg/60">{status.error.message}</div>
         {status.error.kind !== 'setup' && (
-          <button onClick={() => void refresh()} className="mt-3 text-sm uppercase tracking-widest text-accent font-bold">
+          <button onClick={() => void refresh()} className="mt-3 text-sm uppercase tracking-widest text-accent-ink font-bold">
             Try again
           </button>
         )}
@@ -179,7 +179,7 @@ export function StreakBadge({ n }: { n: number }) {
   if (n < 1) return null
   return (
     <div className="shrink-0 text-right leading-none">
-      <div className="font-display text-2xl font-bold text-accent tabular-nums">{n}</div>
+      <div className="font-display text-2xl font-bold text-accent-ink tabular-nums">{n}</div>
       <div className="text-[0.55rem] uppercase tracking-[0.2em] text-fg/40 whitespace-nowrap">
         day{n === 1 ? '' : 's'} running
       </div>

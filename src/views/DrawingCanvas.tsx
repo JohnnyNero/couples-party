@@ -3,6 +3,8 @@ import type { DrawStroke } from '../engine/state'
 // A fixed aspect ratio everywhere a drawing appears — the sketch pad and every later
 // display of the finished result — so nothing looks stretched between the two.
 export const CANVAS_ASPECT = 'aspect-[4/3]'
+// The sheet it's drawn on: a white card with an ink edge, same as the pad.
+export const PAPER = 'bg-card border-2 border-fg rounded-3xl overflow-hidden text-fg shadow-[4px_4px_0_rgba(0,0,0,0.12)]'
 
 export function DrawingStrokes({ strokes, animate = false }: { strokes: DrawStroke[]; animate?: boolean }) {
   return (
@@ -35,7 +37,7 @@ export function DrawingStrokes({ strokes, animate = false }: { strokes: DrawStro
 // already been seen once, so it renders plainly.
 export function DrawingCanvas({ strokes, animate = false }: { strokes: DrawStroke[]; animate?: boolean }) {
   return (
-    <div className={`w-full ${CANVAS_ASPECT} bg-fg/5 border-2 border-fg/25 rounded-2xl overflow-hidden text-fg`}>
+    <div className={`w-full ${CANVAS_ASPECT} ${PAPER}`}>
       <DrawingStrokes strokes={strokes} animate={animate} />
     </div>
   )

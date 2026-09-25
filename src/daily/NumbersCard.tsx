@@ -33,7 +33,7 @@ export function NumbersCard({
     return (
       <Card title="Their Numbers">
         <div className="text-sm text-fg/60">{status.error.message}</div>
-        <button onClick={() => void refresh()} className="mt-3 text-sm uppercase tracking-widest text-accent font-bold">
+        <button onClick={() => void refresh()} className="mt-3 text-sm uppercase tracking-widest text-accent-ink font-bold">
           Try again
         </button>
       </Card>

@@ -167,7 +167,7 @@ describe('the fillers and the tiebreaker', () => {
     expect(last.phase).toBe('CLASH_RESULT') // the night's last game
     expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('Dead level!')
     const decider = walk((x) => x.phase === 'DECIDER_READY')
-    expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('closest takes the night')
+    expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('Closest takes the night')
     expect(railText(decider)).toBe('Tiebreaker · sudden death')
     const reveal = walk((x) => x.phase === 'DECIDER_REVEAL')
     expect(renderToStaticMarkup(<BoardStage s={reveal} />)).toContain('Dead heat')

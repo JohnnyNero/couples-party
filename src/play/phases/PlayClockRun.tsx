@@ -37,26 +37,24 @@ export function PlayClockRun({ s, me }: { s: SessionState; me: PlayerId }) {
 
   const visible = elapsed < round.hideAfterMs
   return (
-    <div className="h-full flex flex-col p-5 gap-4 select-none">
+    <div className="h-full flex flex-col px-5 pb-6 gap-4 select-none">
       <div className="text-center">
-        <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">
-          {live.decider ? 'Tiebreaker · closest takes the night' : `Stop the Clock · round ${round.index}`}
-        </div>
-        <div className="text-2xl font-bold uppercase tracking-tight">Stop at {seconds(round.targetMs, 1)}</div>
+        {live.decider && <div className="text-sm font-extrabold text-pa-ink">Tiebreaker · closest takes the night</div>}
+        <div className="font-display text-3xl font-extrabold">Stop at {seconds(round.targetMs, 1)}</div>
       </div>
-      <div className="text-center font-display text-6xl font-bold tabular-nums">
-        {done ? <span className="text-fg/40 text-3xl uppercase tracking-widest">Locked in</span>
-          : visible ? (elapsed / 1000).toFixed(2) : <span className="text-fg/25">?.??</span>}
+      <div className="text-center font-display text-7xl font-extrabold tabular-nums leading-none">
+        {done ? <span className="text-fg/40 text-4xl">Locked in</span>
+          : visible ? (elapsed / 1000).toFixed(2) : <span className="text-fg/20">?.??</span>}
       </div>
       <button
         onPointerDown={stop}
         disabled={done}
-        className="flex-1 min-h-[10rem] rounded-3xl bg-accent text-bg text-5xl font-bold uppercase tracking-widest active:scale-[0.98] disabled:opacity-30 touch-none"
+        className={'flex-1 min-h-[10rem] rounded-[2rem] border-2 border-fg font-display text-6xl font-extrabold active:scale-[0.98] disabled:opacity-30 touch-none shadow-[5px_5px_0_rgba(0,0,0,0.15)] ' + (me === 'A' ? 'bg-pa text-white' : 'bg-pb text-white')}
       >
         Stop
       </button>
       {done && (
-        <div className="text-center text-sm uppercase tracking-wide text-fg/50">
+        <div className="text-center text-sm font-bold text-fg/55">
           Waiting for {playerName(s, other(me))}
         </div>
       )}

@@ -4,6 +4,8 @@ import { other } from '../../engine/state'
 import { MRMRS } from '../../engine/phases'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
+import { Avatar, inkOf } from '../../ui/Avatar'
+import { btnAccent, field } from '../../ui/styles'
 import { PlayWaiting } from './PlayWaiting'
 
 // Two answers on one screen: yours, then your guess at theirs. Both go at once, so you
@@ -28,52 +30,50 @@ export function PlayMmAnswer({ s, me }: { s: SessionState; me: PlayerId }) {
     return () => clearTimeout(id)
   }, [sent, s.phaseEndsAt, me])
 
-  if (sent) return <PlayWaiting label="Sent — waiting on them" />
+  const them = other(me)
+  if (sent) return <PlayWaiting label="Both sent" sub={round.answer[them] !== null ? 'Revealing…' : `Waiting for ${playerName(s, them)}`} />
 
-  const them = playerName(s, other(me))
+  const theirName = playerName(s, them)
   const ready = answer.trim().length > 0 && predict.trim().length > 0
   const send = () => {
     if (!ready) return
     dispatch({ type: 'SUBMIT_MRMRS', player: me, answer, predict })
   }
-  const field =
-    'w-full min-h-[52px] text-lg uppercase bg-ink text-paper px-4 outline-none border-b-4 rounded-t-xl ' +
-    'placeholder:text-paper/30 placeholder:normal-case'
 
   return (
-    <div className="h-full flex flex-col justify-center p-6 gap-4">
-      <div className="text-2xl font-bold uppercase tracking-tight break-words">{round.question}</div>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/50">Your answer</span>
-        <input
-          className={field + ' border-fg/40'}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          maxLength={MRMRS.maxLen}
-          placeholder="be honest"
-          autoFocus
-          autoComplete="off"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[0.65rem] uppercase tracking-[0.3em] text-accent font-bold">
-          What will {them} say?
-        </span>
-        <input
-          className={field + ' border-accent'}
-          value={predict}
-          onChange={(e) => setPredict(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') send() }}
-          maxLength={MRMRS.maxLen}
-          placeholder={`${them}'s answer`}
-          autoComplete="off"
-        />
-      </label>
-      <button
-        className="w-full min-h-[56px] rounded-xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-40"
-        onClick={send}
-        disabled={!ready}
-      >
+    <div className="h-full flex flex-col px-5 pb-6">
+      <div className="flex-1 flex flex-col justify-center gap-5">
+        <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{round.question}</div>
+        <label className="flex flex-col gap-1.5">
+          <span className="flex items-center gap-2 text-sm font-extrabold">
+            <Avatar p={me} name={playerName(s, me)} size="sm" /> Your answer
+          </span>
+          <input
+            className={field}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            maxLength={MRMRS.maxLen}
+            placeholder="be honest"
+            autoFocus
+            autoComplete="off"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className={'flex items-center gap-2 text-sm font-extrabold ' + inkOf(them)}>
+            <Avatar p={them} name={theirName} size="sm" /> What will {theirName} say?
+          </span>
+          <input
+            className={field + ' focus:!border-pb'}
+            value={predict}
+            onChange={(e) => setPredict(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') send() }}
+            maxLength={MRMRS.maxLen}
+            placeholder={`${theirName}’s answer`}
+            autoComplete="off"
+          />
+        </label>
+      </div>
+      <button className={btnAccent} onClick={send} disabled={!ready}>
         Send both
       </button>
     </div>

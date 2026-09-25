@@ -2,6 +2,7 @@ import type { PlayerId, SessionState } from '../../engine/state'
 import { currentAct, currentItem, slotContents, SLOTS } from '../../engine/list'
 import { dispatch } from '../../net'
 import { themeText } from '../../views/list'
+import { eyebrow } from '../../ui/styles'
 
 // Items come up one at a time. Tap a rank and the item drops into it, so the ladder
 // fills in front of you and the next call is made against the list you've already
@@ -16,25 +17,25 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
   const filled = slotContents(act, byAuthor)
 
   return (
-    <div className="h-full flex flex-col p-4 gap-3">
+    <div className="h-full flex flex-col px-4 pb-4 gap-3">
       <div className="shrink-0">
-        <div className="flex items-baseline justify-between gap-2 text-[0.6rem] uppercase tracking-[0.25em] mb-1">
-          <span className="text-fg/40">Item {act.placeIndex + 1} of {SLOTS.length}</span>
-          <span className="text-accent font-bold shrink-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className={eyebrow}>Item {act.placeIndex + 1} of {SLOTS.length}</span>
+          <span className="shrink-0 rounded-full bg-pa-soft text-pa-ink px-2.5 py-0.5 text-xs font-extrabold">
             {byAuthor ? 'Your guess' : 'For real'}
           </span>
         </div>
-        <div className="text-sm uppercase tracking-wide text-fg/50 truncate">{themeText(s, act)}</div>
+        <div className="mt-0.5 font-display text-lg font-bold leading-tight truncate">{themeText(s, act)}</div>
       </div>
 
       {/* The item in hand. Once it's placed it's down in the ladder, so the card goes
           quiet rather than sitting there looking tappable. */}
       <div
         className={
-          'shrink-0 rounded-2xl px-4 text-center uppercase tracking-tight ' +
+          'shrink-0 rounded-2xl px-4 text-center ' +
           (placed
-            ? 'py-2 text-xs font-bold text-fg/35 border-2 border-dashed border-fg/15'
-            : 'py-4 text-xl font-bold bg-ink text-paper shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
+            ? 'py-2 text-sm font-bold text-fg/45 border-2 border-dashed border-fg/15'
+            : 'py-4 font-display text-2xl font-extrabold leading-tight bg-fg text-bg shadow-[4px_4px_0_rgba(0,0,0,0.18)] animate-pop')
         }
       >
         {placed ? 'Locked in — waiting on them' : item.text}
@@ -52,25 +53,25 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
               disabled={!!sitting || placed}
               onClick={() => dispatch({ type: 'PLACE_ITEM', player: me, slot: n })}
               className={
-                'flex-1 min-h-[44px] flex items-center gap-3 rounded-xl border-2 px-3 text-left transition-colors ' +
+                'flex-1 min-h-[44px] flex items-center gap-3 rounded-2xl border-2 px-3 text-left transition-colors ' +
                 (isLive
-                  ? 'border-accent bg-accent text-bg animate-pop'
+                  ? 'border-pa bg-pa text-white animate-pop'
                   : sitting
-                    ? 'border-fg/15 bg-fg/5 text-fg/70'
+                    ? 'border-fg/10 bg-fg/5 text-fg/70'
                     : placed
                       ? 'border-fg/10 text-fg/25'
-                      : 'border-fg/20 text-fg active:translate-y-px active:bg-accent/15')
+                      : 'border-fg/25 bg-card text-fg active:translate-y-px active:bg-pa-soft active:border-pa')
               }
             >
               <span
                 className={
-                  'w-7 shrink-0 text-2xl font-bold tabular-nums ' +
-                  (isLive ? 'text-bg' : sitting ? 'text-fg/40' : 'text-accent')
+                  'w-7 shrink-0 font-display text-2xl font-extrabold tabular-nums ' +
+                  (isLive ? 'text-white' : sitting ? 'text-fg/40' : 'text-pa-ink')
                 }
               >
                 {n}
               </span>
-              <span className="flex-1 min-w-0 truncate text-sm uppercase tracking-wide">
+              <span className="flex-1 min-w-0 truncate text-sm font-bold">
                 {sitting?.text ?? ''}
               </span>
             </button>
@@ -78,7 +79,7 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
         })}
       </div>
 
-      <div className="shrink-0 text-xs uppercase tracking-wide text-fg/40 text-center">
+      <div className="shrink-0 text-xs font-bold text-fg/50 text-center">
         {placed ? 'They\'re still placing theirs' : '1 is top — tap a rank and it\'s locked'}
       </div>
     </div>

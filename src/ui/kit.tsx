@@ -18,7 +18,8 @@ export function PromptCard({ over, children, size = 'lg', className = '' }: { ov
 }
 
 // Who's answered, as the two of you: a faded avatar until you're in, then a tick.
-export function WhoIsIn({ s, done, big = false }: { s: SessionState; done: Record<PlayerId, boolean>; big?: boolean }) {
+// `waiting` names what each is doing until then ("predicts", "drawing…").
+export function WhoIsIn({ s, done, big = false, waiting }: { s: SessionState; done: Record<PlayerId, boolean>; big?: boolean; waiting?: (p: PlayerId) => string }) {
   return (
     <div className={'flex justify-center ' + (big ? 'gap-10' : 'gap-6')}>
       {(['A', 'B'] as PlayerId[]).map((p) => (
@@ -31,7 +32,7 @@ export function WhoIsIn({ s, done, big = false }: { s: SessionState; done: Recor
               </span>
             )}
           </span>
-          <span className={done[p] ? inkOf(p) : ''}>{done[p] ? 'In' : 'Thinking…'}</span>
+          <span className={done[p] ? inkOf(p) : ''}>{done[p] ? 'In' : waiting ? waiting(p) : 'Thinking…'}</span>
         </span>
       ))}
     </div>
@@ -68,6 +69,57 @@ export function Waiting({ title, sub }: { title: string; sub?: string }) {
       </div>
       <div className="font-display text-2xl font-bold leading-tight">{title}</div>
       {sub && <div className="text-sm text-fg/60">{sub}</div>}
+    </div>
+  )
+}
+
+// Something one of you said, as a speech bubble beside your avatar — a clue, a guess.
+export function Said({ s, p, children, big = false }: { s: SessionState; p: PlayerId; children: ReactNode; big?: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-2.5 min-w-0">
+      <Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} />
+      <div className={'min-w-0 break-words rounded-2xl border-2 border-fg bg-card px-4 py-2 font-display font-extrabold leading-tight ' + (big ? 'text-3xl sm:text-5xl' : 'text-2xl')}>
+        “{children}”
+      </div>
+    </div>
+  )
+}
+
+// One of you, busy: their avatar and what they're up to ("Guessing…"), or done.
+export function Doing({ s, p, finished, busy, done, big = false }: { s: SessionState; p: PlayerId; finished: boolean; busy: string; done: string; big?: boolean }) {
+  const isDone = finished
+  return (
+    <div className={'flex items-center justify-center gap-2 font-bold ' + (big ? 'text-xl' : 'text-base') + (isDone ? ' ' + inkOf(p) : ' text-fg/60')}>
+      <Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} className={isDone ? '' : 'animate-pulse'} />
+      {isDone ? done : busy}
+    </div>
+  )
+}
+
+// The round's letter, as a chunky tile.
+export function LetterTile({ letter, size = 'md' }: { letter: string; size?: 'sm' | 'md' | 'lg' }) {
+  const box = { sm: 'w-12 h-12 text-3xl rounded-xl', md: 'w-16 h-16 text-5xl rounded-2xl', lg: 'w-28 h-28 sm:w-36 sm:h-36 text-8xl sm:text-9xl rounded-3xl' }[size]
+  return (
+    <span className={'shrink-0 inline-flex items-center justify-center bg-pa text-white font-display font-extrabold leading-none border-2 border-fg shadow-[3px_3px_0_rgba(0,0,0,0.15)] animate-pop ' + box}>
+      <span className="translate-y-[0.06em]">{letter}</span>
+    </span>
+  )
+}
+
+// Best-of rounds as pips: each of you, a row of dots filling in your colour.
+export function Pips({ s, wins, need }: { s: SessionState; wins: Record<PlayerId, number>; need: number }) {
+  return (
+    <div className="flex justify-center gap-8">
+      {(['A', 'B'] as PlayerId[]).map((p) => (
+        <span key={p} className="flex items-center gap-2 text-sm sm:text-lg font-bold">
+          <Avatar p={p} name={playerName(s, p)} size="sm" />
+          <span className="flex gap-1">
+            {Array.from({ length: need }, (_, i) => (
+              <span key={i} className={'w-3 h-3 rounded-full ' + (i < wins[p] ? (p === 'A' ? 'bg-pa' : 'bg-pb') : 'bg-fg/15')} />
+            ))}
+          </span>
+        </span>
+      ))}
     </div>
   )
 }

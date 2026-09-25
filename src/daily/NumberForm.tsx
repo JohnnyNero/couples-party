@@ -25,7 +25,7 @@ export function NumberForm({
             inputMode="numeric"
             pattern="[0-9]*"
             aria-label={q}
-            className="w-20 shrink-0 min-h-[44px] rounded-xl bg-ink text-paper text-center text-xl font-bold tabular-nums outline-none border-b-4 border-accent"
+            className="w-20 shrink-0 min-h-[44px] rounded-xl border-2 border-fg bg-card text-center text-xl font-bold tabular-nums outline-none focus:border-pa"
             value={values[i]}
             onChange={(e) => {
               const v = e.target.value.replace(/\D/g, '').slice(0, 4)
@@ -36,7 +36,7 @@ export function NumberForm({
         </label>
       ))}
       <button
-        className="mt-1 w-full min-h-[56px] rounded-xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-40"
+        className="mt-1 w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px disabled:opacity-40"
         onClick={() => onSubmit(values.map(Number))}
         disabled={!ready || busy}
       >

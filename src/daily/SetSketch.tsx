@@ -43,10 +43,10 @@ export function SetSketch({
 
   const header = (
     <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
-      <button onClick={drawingNow && !sent ? () => setDrawingNow(false) : onClose} aria-label="Back" className="text-2xl text-fg/60 px-1 active:translate-y-px">←</button>
+      <button onClick={drawingNow && !sent ? () => setDrawingNow(false) : onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
       <div className="min-w-0">
-        <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40">{`Sketch · ${forDate ? 'tomorrow' : 'today'}'s question`}</div>
-        <div className="text-lg font-bold leading-tight">{yours(prompt)}</div>
+        <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">{`Sketch · ${forDate ? 'tomorrow' : 'today'}'s question`}</div>
+        <div className="font-display text-xl font-extrabold leading-tight">{yours(prompt)}</div>
       </div>
     </header>
   )
@@ -60,7 +60,7 @@ export function SetSketch({
           <div className="text-fg/60">
             {forDate ? `${partner} gets it tomorrow. You can change it until they start.` : <>{partner} gets three guesses once they've drawn theirs. You can change it until they start.</>}
           </div>
-          <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-xl bg-accent text-bg font-bold uppercase tracking-widest active:translate-y-px">
+          <button onClick={onClose} className="mt-2 min-h-[52px] px-10 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px">
             Done
           </button>
         </div>
@@ -79,7 +79,7 @@ export function SetSketch({
             three goes at guessing what you wrote.
           </div>
           <input
-            className="w-full min-h-[56px] text-xl uppercase bg-ink text-paper px-4 outline-none border-b-4 border-accent placeholder:text-paper/30 placeholder:normal-case rounded-t-xl"
+            className="w-full min-h-[56px] rounded-2xl border-2 border-fg bg-card px-4 text-xl font-bold outline-none focus:border-pa placeholder:text-fg/30 placeholder:font-semibold disabled:opacity-60"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') go() }}
@@ -89,7 +89,7 @@ export function SetSketch({
             autoComplete="off"
           />
           <button
-            className="w-full min-h-[56px] rounded-xl bg-accent text-bg text-xl font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-40"
+            className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px disabled:opacity-40"
             onClick={go}
             disabled={!answer.trim()}
           >
@@ -104,24 +104,24 @@ export function SetSketch({
     <div className="h-full flex flex-col select-none">
       {header}
       <div className="flex-1 min-h-0 flex flex-col gap-3 px-5 pb-5">
-        <div className="text-xl font-bold uppercase tracking-tight">
-          Drawing: <span className="text-accent">{answer.trim()}</span>
+        <div className="text-xl font-display font-extrabold leading-tight">
+          Drawing: <span className="text-accent-ink">{answer.trim()}</span>
           <span className="block text-[0.6rem] tracking-[0.3em] text-fg/40 font-normal mt-1">No words, no letters</span>
         </div>
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <SketchPad strokes={strokes} onChange={setStrokes} disabled={busy} />
         </div>
-        <div className="h-5 text-sm font-bold text-accent text-center">{note}</div>
+        <div className="h-5 text-sm font-bold text-accent-ink text-center">{note}</div>
         <div className="flex gap-2">
           <button
-            className="flex-1 min-h-[48px] rounded-xl border-2 border-fg/30 uppercase tracking-widest active:translate-y-px disabled:opacity-30"
+            className="flex-1 min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px disabled:opacity-30"
             onClick={() => setStrokes((prev) => prev.slice(0, -1))}
             disabled={strokes.length === 0 || busy}
           >
             Undo
           </button>
           <button
-            className="flex-[2] min-h-[48px] rounded-xl bg-accent text-bg text-lg font-bold uppercase tracking-widest active:translate-y-px disabled:opacity-50"
+            className="flex-[2] min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
             onClick={() => void send()}
             disabled={busy}
           >

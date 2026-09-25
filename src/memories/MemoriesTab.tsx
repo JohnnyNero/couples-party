@@ -41,7 +41,7 @@ export function MemoriesTab() {
           ? "Memories needs the latest database update (migration 0012)."
           : status.error.message}
         {status.error.kind !== 'setup' && (
-          <button onClick={load} className="mt-3 block mx-auto text-sm uppercase tracking-widest text-accent font-bold">Try again</button>
+          <button onClick={load} className="mt-3 block mx-auto text-sm uppercase tracking-widest text-accent-ink font-bold">Try again</button>
         )}
       </Empty>
     )
@@ -202,7 +202,7 @@ function SessionCard({ m }: { m: SessionMemory }) {
             <Part title="Category Clash">
               {m.clash.map((r, i) => (
                 <div key={i} className="text-sm py-1">
-                  <b className="text-accent">{r.letter}</b>{' '}
+                  <b className="text-accent-ink">{r.letter}</b>{' '}
                   {r.rows.map((row) => `${row.category}: ${row.answers.A || '—'} / ${row.answers.B || '—'}`).join(' · ')}
                 </div>
               ))}
@@ -232,7 +232,7 @@ function SessionCard({ m }: { m: SessionMemory }) {
 function Part({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <div className="text-[0.6rem] uppercase tracking-[0.3em] text-fg/40 mb-1">{title}</div>
+      <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50 mb-1">{title}</div>
       {children}
     </div>
   )
