@@ -1,11 +1,13 @@
 import type {
-  Action, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
+import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
 import { gameOfPhase, nextGame, roster, roundsFor } from './roster'
 
@@ -19,6 +21,8 @@ const PLAYERS: PlayerId[] = ['A', 'B']
 // first phase — or, if the content file gave it nothing to play, hands straight on to
 // the next game rather than opening an empty one.
 function beginGame(state: SessionState, now: number, key: GameKey | null): SessionState {
+  // The scored games are done: a level night gets its tiebreaker before Lights Out.
+  if ((key === 'lights' || key === null) && needsDecider(state)) return beginDecider(state, now)
   switch (key) {
     case 'list': return beginList(state, now, 'A')
     case 'likely': return beginLikely(state, now)
@@ -26,6 +30,8 @@ function beginGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'mrmrs': return beginMrMrs(state, now)
     case 'wave': return beginWave(state, now)
     case 'draw': return beginDraw(state, now)
+    case 'circle': return beginCircle(state, now)
+    case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
     default: return finishSession(state)
   }
@@ -47,7 +53,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'LIGHTS_OUT',
+  'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -429,6 +435,129 @@ function advanceDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Perfect Circle
+
+function newCircleRound(index: number) {
+  return { index, drawn: { A: null, B: null }, score: { A: null, B: null } }
+}
+
+function beginCircle(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.circle = { rounds: [newCircleRound(1)], current: 0, bestOf: roundsFor(s, 'circle') }
+  s.phase = 'CIRCLE_DRAW'
+  s.phaseEndsAt = now + DURATIONS.CIRCLE_DRAW!
+  return s
+}
+
+// Scored by the host from what was drawn; a circle that never came in is an empty one.
+function toCircleReveal(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const round = s.circle!.rounds[s.circle!.current]
+  for (const p of PLAYERS) {
+    round.drawn[p] ??= []
+    round.score[p] = circleScore(round.drawn[p])
+  }
+  s.phase = 'CIRCLE_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.CIRCLE_REVEAL!
+  return s
+}
+
+function advanceCircle(state: SessionState, now: number): SessionState {
+  if (fillerOver({ kind: 'circle', game: state.circle! })) return toScoreboard(state, 'CIRCLE_RESULT')
+  const s = clone(state)
+  const c = s.circle!
+  c.rounds.push(newCircleRound(c.rounds.length + 1))
+  c.current = c.rounds.length - 1
+  s.phase = 'CIRCLE_DRAW'
+  s.phaseEndsAt = now + DURATIONS.CIRCLE_DRAW!
+  return s
+}
+
+// ---------------------------------------------------------------- Stop the Clock
+
+// The same clock runs two things: the filler (s.clock) and a level night's tiebreaker
+// (s.decider). Each has its own phases, so the screens can tell them apart.
+type ClockField = 'clock' | 'decider'
+const CLOCK_PHASES = {
+  clock: { ready: 'CLOCK_READY', run: 'CLOCK_RUN', reveal: 'CLOCK_REVEAL' },
+  decider: { ready: 'DECIDER_READY', run: 'DECIDER_RUN', reveal: 'DECIDER_REVEAL' },
+} as const
+
+function clockFieldOf(phase: SessionState['phase']): ClockField | null {
+  if (phase.startsWith('CLOCK_')) return 'clock'
+  if (phase.startsWith('DECIDER_')) return 'decider'
+  return null
+}
+
+// Seeded per round, so a replayed dead heat gets a fresh target.
+function newClockRound(s: SessionState, field: ClockField, index: number): ClockRound {
+  const rng = makeRng((s.seed ^ (field === 'clock' ? 0xc10c : 0xdec1)) + index * 7919)
+  const tenths = (CLOCK.targetMax - CLOCK.targetMin) / 100
+  const targetMs = CLOCK.targetMin + 100 * Math.floor(rng() * (tenths + 1))
+  const hideAfterMs = field === 'decider' ? CLOCK.deciderHideAfter : (CLOCK.hideAfter[index - 1] ?? 0)
+  return { index, targetMs, hideAfterMs, stopped: { A: null, B: null } }
+}
+
+function toClockReady(s: SessionState, now: number, field: ClockField): SessionState {
+  s.phase = CLOCK_PHASES[field].ready
+  s.phaseEndsAt = now + DURATIONS[CLOCK_PHASES[field].ready]!
+  return s
+}
+
+function beginClock(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.clock = { rounds: [newClockRound(s, 'clock', 1)], current: 0, bestOf: roundsFor(s, 'clock') }
+  return toClockReady(s, now, 'clock')
+}
+
+function beginDecider(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.decider = { rounds: [newClockRound(s, 'decider', 1)], current: 0, bestOf: 1 }
+  return toClockReady(s, now, 'decider')
+}
+
+// Long enough for a tap at twice the target, plus a margin for the phone that got the
+// start a moment late.
+function toClockRun(state: SessionState, now: number, field: ClockField): SessionState {
+  const s = clone(state)
+  const g = s[field]!
+  s.phase = CLOCK_PHASES[field].run
+  s.phaseEndsAt = now + 2 * g.rounds[g.current].targetMs + CLOCK.graceMs
+  return s
+}
+
+// No tap is the furthest miss there is.
+function toClockReveal(state: SessionState, now: number, field: ClockField): SessionState {
+  const s = clone(state)
+  const g = s[field]!
+  const round = g.rounds[g.current]
+  for (const p of PLAYERS) round.stopped[p] ??= 2 * round.targetMs
+  s.phase = CLOCK_PHASES[field].reveal
+  s.phaseEndsAt = now + DURATIONS[CLOCK_PHASES[field].reveal]!
+  return s
+}
+
+function nextClockRound(state: SessionState, now: number, field: ClockField): SessionState {
+  const s = clone(state)
+  const g = s[field]!
+  g.rounds.push(newClockRound(s, field, g.rounds.length + 1))
+  g.current = g.rounds.length - 1
+  return toClockReady(s, now, field)
+}
+
+function advanceClock(state: SessionState, now: number, field: ClockField): SessionState {
+  const g = state[field]!
+  if (field === 'clock') {
+    if (fillerOver({ kind: 'clock', game: g })) return toScoreboard(state, 'CLOCK_RESULT')
+    return nextClockRound(state, now, field)
+  }
+  // The tiebreaker: sudden death, replayed on a dead heat — but not forever.
+  const decided = clockRoundWinner(g.rounds[g.current]) !== null
+  if (!decided && g.rounds.length < CLOCK.deciderMaxRounds) return nextClockRound(state, now, field)
+  const endsOnLights = roster(state.game, state.night).some((e) => e.key === 'lights')
+  return beginGame(state, now, endsOnLights ? 'lights' : null)
+}
+
 // ---------------------------------------------------------------- Lights Out
 
 function beginLights(state: SessionState, now: number): SessionState {
@@ -560,6 +689,26 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       currentDrawRound(s.draw!).correct = true
       return s
     }
+    case 'SUBMIT_CIRCLE': {
+      if (state.phase !== 'CIRCLE_DRAW' || !state.circle) return state
+      const round = state.circle.rounds[state.circle.current]
+      if (round.drawn[action.player] !== null) return state // one go
+      const s = clone(state)
+      const mine = s.circle!.rounds[s.circle!.current]
+      mine.drawn[action.player] = keepCircle(action.strokes)
+      return mine.drawn.A !== null && mine.drawn.B !== null ? toCircleReveal(s, now) : s
+    }
+    case 'STOP_CLOCK': {
+      const field = clockFieldOf(state.phase)
+      if (!field || state.phase !== CLOCK_PHASES[field].run) return state
+      const g = state[field]!
+      const round = g.rounds[g.current]
+      if (round.stopped[action.player] !== null) return state // one tap
+      const s = clone(state)
+      const mine = s[field]!.rounds[s[field]!.current]
+      mine.stopped[action.player] = Math.round(Math.min(2 * round.targetMs, Math.max(0, action.elapsedMs)))
+      return mine.stopped.A !== null && mine.stopped.B !== null ? toClockReveal(s, now, field) : s
+    }
     case 'CONTINUE': {
       if (!TAP_THROUGH.has(state.phase)) return state
       return afterScoreboard(state, now)
@@ -603,6 +752,14 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
+        case 'CIRCLE_DRAW': return toCircleReveal(state, now)
+        case 'CIRCLE_REVEAL': return advanceCircle(state, now)
+        case 'CLOCK_READY': return toClockRun(state, now, 'clock')
+        case 'CLOCK_RUN': return toClockReveal(state, now, 'clock')
+        case 'CLOCK_REVEAL': return advanceClock(state, now, 'clock')
+        case 'DECIDER_READY': return toClockRun(state, now, 'decider')
+        case 'DECIDER_RUN': return toClockReveal(state, now, 'decider')
+        case 'DECIDER_REVEAL': return advanceClock(state, now, 'decider')
         // The tap-through phases still answer to TIMEOUT, so the debug skip works on them.
         default:
           return TAP_THROUGH.has(state.phase) ? afterScoreboard(state, now) : state

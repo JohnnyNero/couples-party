@@ -19,6 +19,12 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   DRAW_SKETCH: 50000, // decide your answer, then draw it with one finger
   DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
   DRAW_REVEAL: 8000,  // long enough for the drawer to wave through a near miss
+  CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
+  CIRCLE_REVEAL: 6000,
+  CLOCK_READY: 3000,  // the target, then 3-2-1 (CLOCK_RUN's length depends on the target)
+  CLOCK_REVEAL: 4500,
+  DECIDER_READY: 3000,
+  DECIDER_REVEAL: 5000,
 }
 
 // Round counts are NOT here — they depend on the session, and live in roster.ts.
@@ -44,4 +50,25 @@ export const MRMRS = {
 
 export const DRAW = {
   guessMaxLen: 30,  // a guess, not a sentence
+}
+
+export const FILLER = {
+  winPoints: 5,     // to whoever wins a filler: matters in a close night, never swings a big one
+  deciderPoints: 1, // the tiebreaker only has to break the tie
+}
+
+export const CIRCLE = {
+  minRadius: 0.2,   // of the (square) canvas — a tiny scribble can't win
+  minSweep: 330,    // degrees the line has to go round its centre
+  maxPoints: 300,   // what's kept of a stroke, so the session stays small on the wire
+}
+
+export const CLOCK = {
+  targetMin: 5000,  // targets are 5.0 s to 10.0 s, in tenths
+  targetMax: 10000,
+  hideAfter: [3000, 1000], // round 1 shows the clock for 3 s, round 2 for 1 s, later ones never
+  deciderHideAfter: 1000,
+  deadHeatMs: 10,   // closer than this is a dead heat, and the round is played again
+  graceMs: 1500,    // on top of 2 × target before the host calls time
+  deciderMaxRounds: 3,
 }

@@ -14,8 +14,10 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     // Who's More Likely is parked for now: it pays you both for agreeing, and every other
     // game is you against each other. It still runs on its own (?game=likely).
     { key: 'finger', rounds: 5 },
+    { key: 'circle', rounds: 1 }, // a filler after every second game
     { key: 'wave', rounds: 7 },
     { key: 'mrmrs', rounds: 5 },
+    { key: 'clock', rounds: 3 }, // best of 3
     { key: 'draw', rounds: 6 },
     { key: 'lights', rounds: 1 },
   ],
@@ -28,6 +30,9 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   mrmrs: [{ key: 'mrmrs', rounds: 5 }],
   wave: [{ key: 'wave', rounds: 7 }],
   draw: [{ key: 'draw', rounds: 6 }],
+  // A filler on its own is a best of 5.
+  circle: [{ key: 'circle', rounds: 5 }],
+  clock: [{ key: 'clock', rounds: 5 }],
 }
 
 // Tonight: quick games before bed, then a question to turn the light off on. The
@@ -42,12 +47,22 @@ const TONIGHT_POOL: RosterEntry[] = [
   { key: 'draw', rounds: 2 }, // one drawing each
 ]
 
+// One quick filler after the second game, Stop the Clock and Perfect Circle in turn.
+const TONIGHT_FILLERS: RosterEntry[] = [
+  { key: 'clock', rounds: 3 },
+  { key: 'circle', rounds: 1 },
+]
+
+const mod = (a: number, n: number) => ((a % n) + n) % n
+
 function tonight(night: number): RosterEntry[] {
   const n = TONIGHT_POOL.length
   const skip = Math.max(0, n - TONIGHT_GAMES)
-  const first = ((night % n) + n) % n
+  const first = mod(night, n)
   const out = new Set(Array.from({ length: skip }, (_, i) => (first + i) % n))
-  return [...TONIGHT_POOL.filter((_, i) => !out.has(i)), { key: 'lights', rounds: 1 }]
+  const games = TONIGHT_POOL.filter((_, i) => !out.has(i))
+  const filler = TONIGHT_FILLERS[mod(night, TONIGHT_FILLERS.length)]
+  return [...games.slice(0, 2), filler, ...games.slice(2), { key: 'lights', rounds: 1 }]
 }
 
 // `night` only matters to Tonight: the day number the host started the session on
@@ -77,6 +92,8 @@ export function gameOfPhase(phase: Phase): GameKey | null {
   if (phase.startsWith('MM_')) return 'mrmrs'
   if (phase.startsWith('WAVE_')) return 'wave'
   if (phase.startsWith('DRAW_')) return 'draw'
+  if (phase.startsWith('CIRCLE_')) return 'circle'
+  if (phase.startsWith('CLOCK_')) return 'clock'
   if (phase === 'LIGHTS_OUT') return 'lights'
   return null
 }
@@ -88,5 +105,7 @@ export const GAME_LABELS: Record<GameKey, string> = {
   mrmrs: 'Mr & Mrs',
   wave: 'Wavelength',
   draw: 'Draw Your Answer',
+  circle: 'Perfect Circle',
+  clock: 'Stop the Clock',
   lights: 'Lights Out',
 }

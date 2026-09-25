@@ -2,6 +2,17 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
+## Done: fillers and the tiebreaker (new-games spec, step 1)
+
+Two 30-second head-to-head fillers slot in between games: **Perfect Circle** (draw one
+circle; the host scores roundness from the points) and **Stop the Clock** (tap when a
+hidden clock hits the target; each phone times itself, so lag can't affect it). One
+filler plays after Tonight's second game, alternating nightly, and there are two in the
+full session. A filler pays a flat 5 to its winner, only once it's over. Each is playable
+on its own as a best of 5. A multi-game night that ends level goes to a sudden-death
+Stop the Clock before Lights Out, worth 1 point. Next: Category Clash, then Word Chain
+(spec: the "New Games Spec" doc).
+
 ## Done: the Today board (migration 0010)
 
 The Today tab is a scoreboard and all five daily puzzles as compact tiles, every day.

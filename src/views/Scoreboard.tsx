@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { PlayerId, SessionState } from '../engine/state'
-import { gameScores, standing } from '../engine/standing'
+import { gameScores, needsDecider, standing } from '../engine/standing'
 import { GAME_LABELS, gameOfPhase, nextGame } from '../engine/roster'
 import { dispatch, useMyPlayerId } from '../net'
 import { AnimatedNumber } from './AnimatedNumber'
@@ -33,6 +33,8 @@ export function Scoreboard({
   // Once nothing scored is left, the board calls the night — Lights Out is still to come
   // after it, but it doesn't change the result.
   const called = !next || next === 'lights'
+  // A level night doesn't end level: the tap goes to a tiebreaker first.
+  const decider = called && s.phase !== 'DONE' && needsDecider(s)
   // A TV has nobody to tap it, and once the session is DONE the tap would do nothing.
   const canContinue = me !== null && s.phase !== 'DONE'
 
@@ -118,14 +120,14 @@ export function Scoreboard({
 
       <div className="flex items-center justify-between gap-3">
         <span className="text-[0.6rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 min-w-0 truncate">
-          {called ? verdict(s) : `Next up · ${GAME_LABELS[next!]}`}
+          {decider ? 'Dead level · tiebreaker next' : called ? verdict(s) : `Next up · ${GAME_LABELS[next!]}`}
         </span>
         {canContinue && (
           <button
             onClick={() => dispatch({ type: 'CONTINUE', player: me })}
             className="min-h-[48px] px-6 shrink-0 bg-accent text-bg text-base sm:text-xl font-bold uppercase tracking-widest active:translate-y-px rounded-xl"
           >
-            {next === 'lights' ? 'Lights out' : next ? 'Ready' : 'Finish'}
+            {decider ? 'Tiebreaker' : next === 'lights' ? 'Lights out' : next ? 'Ready' : 'Finish'}
           </button>
         )}
       </div>

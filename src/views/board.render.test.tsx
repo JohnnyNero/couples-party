@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { initialState, type ListAct, type SessionState } from '../engine/state'
 import { BoardStage, railText } from './board'
 import { Controller } from './controller'
+import { reduce } from '../engine/reducer'
 
 // Static renders of every Act III phase. Two things are being checked: that no renderer
 // reaches through a null, and — the load-bearing one — that the board never shows the
@@ -129,5 +130,54 @@ describe('controllers render for both players', () => {
     // A sees the item to place and an empty ladder — nothing of B's choice leaks across.
     expect(forAuthor).toContain(ITEMS[0])
     expect(forAuthor).not.toContain('still placing')
+  })
+})
+
+describe('the fillers and the tiebreaker', () => {
+  // Tonight on night 0 with only Lights Out to draw on: the Stop the Clock filler plays,
+  // nobody taps, and the night is left level.
+  const walk = (until: (s: SessionState) => boolean) => {
+    let s = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'] }, 0)
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
+    for (let i = 0; i < 60 && !until(s); i++) {
+      s = s.phase.endsWith('_RESULT') ? reduce(s, { type: 'CONTINUE', player: 'A' }, i * 1000) : reduce(s, { type: 'TIMEOUT' }, i * 1000)
+    }
+    return s
+  }
+  it('renders every Stop the Clock phase, board and phone, without reaching through a null', () => {
+    for (const phase of ['CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT'] as const) {
+      const s = walk((x) => x.phase === phase)
+      expect(s.phase).toBe(phase)
+      expect(renderToStaticMarkup(<BoardStage s={s} />)).toBeTruthy()
+      expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toBeTruthy()
+      expect(railText(s)).toMatch(/Stop the Clock/)
+    }
+  })
+  it('says a level night goes to a tiebreaker, then plays it as sudden death', () => {
+    // The last scored game's scoreboard, still level at 0–0.
+    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], drawPrompts: [{ id: 'd1', text: 'dream pet' }] }, 0)
+    last = reduce(last, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
+    last = reduce(last, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
+    for (let i = 0; i < 60 && last.phase !== 'DRAW_RESULT'; i++) {
+      last = last.phase.endsWith('_RESULT') ? reduce(last, { type: 'CONTINUE', player: 'A' }, i * 1000) : reduce(last, { type: 'TIMEOUT' }, i * 1000)
+    }
+    expect(last.phase).toBe('DRAW_RESULT')
+    expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('tiebreaker next')
+    const decider = walk((x) => x.phase === 'DECIDER_READY')
+    expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('closest takes the night')
+    expect(railText(decider)).toBe('Tiebreaker · sudden death')
+    const reveal = walk((x) => x.phase === 'DECIDER_REVEAL')
+    expect(renderToStaticMarkup(<BoardStage s={reveal} />)).toContain('Dead heat')
+  })
+  it('renders every Perfect Circle phase', () => {
+    let s = initialState(1, 'circle', {})
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
+    s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
+    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('Draw a perfect circle')
+    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain('lifting your finger sends it')
+    s = reduce(s, { type: 'TIMEOUT' }, 20000)
+    expect(s.phase).toBe('CIRCLE_REVEAL')
+    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('Dead level')
   })
 })

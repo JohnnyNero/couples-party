@@ -110,6 +110,30 @@ export function nextBotAction(
       return { type: 'SUBMIT_DRAW_GUESS', player: me, text: pickFrom(rng, brain.nouns) }
     }
 
+    case 'CIRCLE_DRAW': {
+      const c = s.circle
+      if (!c || c.rounds[c.current].drawn[me] !== null) return null
+      // A wobbly hand-drawn circle, so it wins some and loses some.
+      const wobble = 0.02 + rng() * 0.12
+      const phase = rng() * Math.PI * 2
+      const stroke: [number, number][] = Array.from({ length: 61 }, (_, i) => {
+        const a = (i / 60) * 2 * Math.PI
+        const r = 0.35 * (1 + wobble * Math.sin(a * 3 + phase))
+        return [0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a)]
+      })
+      return { type: 'SUBMIT_CIRCLE', player: me, strokes: [stroke] }
+    }
+
+    case 'CLOCK_RUN':
+    case 'DECIDER_RUN': {
+      const g = s.phase === 'CLOCK_RUN' ? s.clock : s.decider
+      if (!g) return null
+      const round = g.rounds[g.current]
+      if (round.stopped[me] !== null) return null
+      // Within about 15% either side of the target.
+      return { type: 'STOP_CLOCK', player: me, elapsedMs: round.targetMs * (0.85 + rng() * 0.3) }
+    }
+
     default:
       return null
   }
@@ -131,6 +155,14 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'WAVE_GUESS': return spread(2000, 7000)
     case 'DRAW_SKETCH': return spread(5000, 15000)
     case 'DRAW_GUESS': return spread(2000, 7000)
+    case 'CIRCLE_DRAW': return spread(2000, 6000)
+    case 'CLOCK_RUN':
+    case 'DECIDER_RUN': {
+      // Taps at about the moment it claims to, so the dots fill at a believable time.
+      const g = s.phase === 'CLOCK_RUN' ? s.clock : s.decider
+      const target = g ? g.rounds[g.current].targetMs : 7000
+      return target * (0.85 + rng() * 0.3)
+    }
     default: return 1000
   }
 }

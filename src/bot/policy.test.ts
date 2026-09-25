@@ -194,6 +194,7 @@ describe('the bot can play the whole night', () => {
       if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
     }
     expect(s.phase).toBe('DONE')
-    expect(order).toEqual(['JOIN', 'LIST', 'FINGER', 'WAVE', 'MM', 'DRAW', 'LIGHTS'])
+    // The tiebreaker only turns up on a level night, which depends on the bot's luck.
+    expect(order.filter((g) => g !== 'DECIDER')).toEqual(['JOIN', 'LIST', 'FINGER', 'CIRCLE', 'WAVE', 'MM', 'CLOCK', 'DRAW', 'LIGHTS'])
   })
 })

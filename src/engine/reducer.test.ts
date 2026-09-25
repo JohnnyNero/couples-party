@@ -269,7 +269,7 @@ describe('the scoreboard between games', () => {
     s = playOutFinger(cont(s))
     expect(s.phase).toBe('FINGER_RESULT')
     expect(s.phaseEndsAt).toBe(null)
-    expect(cont(s).phase).toBe('WAVE_CLUE')
+    expect(cont(s).phase).toBe('CIRCLE_DRAW') // the filler between Finger Down and Wavelength
   })
   it('ignores a tap from a phase that is not a scoreboard', () => {
     const s = atListPlace()

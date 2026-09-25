@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -19,6 +19,9 @@ export type Phase =
   | 'MM_ANSWER' | 'MM_JUDGE' | 'MM_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
+  | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
+  | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
+  | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
   | 'LIGHTS_OUT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
   | 'DONE' // terminal placeholder until later acts extend the flow
@@ -127,6 +130,29 @@ export type MrMrsRound = {
 }
 export type MrMrsGame = { rounds: MrMrsRound[]; current: number }
 
+// Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
+// the round. Only the longest stroke is kept — that's the circle; the rest is noise.
+export type CircleRound = {
+  index: number // 1-based
+  drawn: Record<PlayerId, DrawStroke | null> // null = not in yet
+  score: Record<PlayerId, number | null>     // 0..100, one decimal, set at the reveal
+}
+// `bestOf` is the roster's round count: 1 between games, 5 played on its own. Ends as
+// soon as someone has won a majority of it.
+export type CircleGame = { rounds: CircleRound[]; current: number; bestOf: number }
+
+// Stop the Clock, a filler — and the tiebreaker on a level night. A clock starts on each
+// phone, disappears after `hideAfterMs`, and each of you taps when you think it has
+// reached the target. Each phone times itself and sends only the elapsed time, so
+// network lag never reaches the result.
+export type ClockRound = {
+  index: number // 1-based
+  targetMs: number
+  hideAfterMs: number // 0 = never shown
+  stopped: Record<PlayerId, number | null> // elapsed ms; a miss is recorded as 2 × target
+}
+export type ClockGame = { rounds: ClockRound[]; current: number; bestOf: number }
+
 // Lights Out: one gentle question to end the night on. No score, no typing — it's there
 // to be talked about with the phone face down.
 export type LightsCard = { question: string }
@@ -156,6 +182,9 @@ export type SessionState = {
   wave: WaveGame | null
   draw: DrawGame | null
   lights: LightsCard | null
+  circle: CircleGame | null
+  clock: ClockGame | null
+  decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
   game: Game
   night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
 } & Content
@@ -189,6 +218,11 @@ export type Action =
   // Every game ends on a scoreboard that waits to be tapped — the point of it is to sit
   // and look at the numbers, so nothing moves it on by itself.
   | { type: 'CONTINUE'; player: PlayerId }
+  // Perfect Circle: your one circle, sent the moment your finger lifts.
+  | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
+  // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
+  // tapped, in ms.
+  | { type: 'STOP_CLOCK'; player: PlayerId; elapsedMs: number }
   | { type: 'TIMEOUT' }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
@@ -221,6 +255,9 @@ export function initialState(
     wave: null,
     draw: null,
     lights: null,
+    circle: null,
+    clock: null,
+    decider: null,
     game,
     night,
     ...EMPTY_CONTENT,

@@ -119,15 +119,16 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('plays the four quick head-to-head games, then Lights Out', () => {
-    for (const night of [0, 1, 2, 3, 4, -3]) {
-      expect(roster('tonight', night).map((e) => e.key)).toEqual(['finger', 'wave', 'mrmrs', 'draw', 'lights'])
+  it('plays the four head-to-head games with a filler after the second, then Lights Out', () => {
+    for (const night of [0, 1, 2, 3, -3]) {
+      const filler = ((night % 2) + 2) % 2 === 0 ? 'clock' : 'circle'
+      expect(roster('tonight', night).map((e) => e.key)).toEqual(['finger', 'wave', filler, 'mrmrs', 'draw', 'lights'])
     }
   })
-  it('runs its line-up in order and ends on Lights Out', () => {
-    let s = start('tonight')
+  const playThrough = (state: SessionState) => {
+    let s = state
     const seen: string[] = []
-    for (let i = 0; i < 200 && s.phase !== 'DONE'; i++) {
+    for (let i = 0; i < 300 && s.phase !== 'DONE'; i++) {
       if (!seen.includes(s.phase)) seen.push(s.phase)
       if (s.phase.endsWith('_RESULT') || s.phase === 'LIGHTS_OUT') s = cont(s)
       else if (s.phase === 'DRAW_SKETCH') {
@@ -135,27 +136,36 @@ describe('tonight', () => {
         s = reduce(s, { type: 'SUBMIT_DRAWING', player: drawer, answer: 'noodles', strokes: [] }, 1000 * i)
       } else s = reduce(s, { type: 'TIMEOUT' }, 1000 * i)
     }
+    return { s, seen }
+  }
+  it('runs its line-up in order, breaks a level night, and ends on Lights Out', () => {
+    const { s, seen } = playThrough(start('tonight'))
     expect(s.phase).toBe('DONE')
     // No finger statements or spectrums in this content, so those two are skipped.
+    // Nobody taps and nobody scores, so the night is level and goes to a tiebreaker.
     expect(seen).toEqual([
+      'CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT',
       'MM_ANSWER', 'MM_JUDGE', 'MM_RESULT',
       'DRAW_SKETCH', 'DRAW_GUESS', 'DRAW_REVEAL', 'DRAW_RESULT',
+      'DECIDER_READY', 'DECIDER_RUN', 'DECIDER_REVEAL',
       'LIGHTS_OUT',
     ])
+    expect(s.clock?.rounds).toHaveLength(5) // best of 3, both dead heats replayed
     expect(s.mrmrs?.rounds).toHaveLength(2)
     expect(s.draw?.rounds.map((r) => r.drawer)).toEqual(['A', 'B']) // one drawing each
+    expect(s.decider?.rounds).toHaveLength(3) // sudden death gives up after three dead heats
     expect(s.lights?.question).toBe('What made you laugh today?')
   })
   it('skips a game the content file gave nothing to, rather than opening it empty', () => {
     const s = start('tonight')
-    expect(s.phase).toBe('MM_ANSWER')
+    expect(s.phase).toBe('CLOCK_READY') // finger and wave had nothing, the filler needs nothing
     expect(s.finger).toBe(null)
     expect(s.wave).toBe(null)
   })
-  it('goes straight to the end if there is nothing to end on', () => {
-    let s = start('tonight', { lightsQuestions: [] })
-    expect(s.phase).toBe('DONE') // nothing in any of Tonight's pools
-    s = start('tonight', { ...CONTENT, lightsQuestions: [] })
-    expect(s.phase).toBe('MM_ANSWER')
+  it('still plays the filler with no content at all, then ends without Lights Out', () => {
+    const { s, seen } = playThrough(start('tonight', { lightsQuestions: [] }))
+    expect(s.phase).toBe('DONE')
+    expect(seen[0]).toBe('CLOCK_READY')
+    expect(seen).not.toContain('LIGHTS_OUT')
   })
 })

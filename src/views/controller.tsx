@@ -14,6 +14,8 @@ import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
 import { PlayDrawSketch } from '../play/phases/PlayDrawSketch'
 import { PlayDrawGuess } from '../play/phases/PlayDrawGuess'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
+import { PlayCircleDraw } from '../play/phases/PlayCircleDraw'
+import { PlayClockRun } from '../play/phases/PlayClockRun'
 
 // This player's private controller for the current phase, shared by the phone
 // renderer (Play, screen mode) and the phones-only renderer (Duo). Shows only this
@@ -52,7 +54,17 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'FINGER_RESULT':
     case 'WAVE_RESULT':
     case 'DRAW_RESULT':
+    case 'CIRCLE_RESULT':
+    case 'CLOCK_RESULT':
       return <PlayContinue s={s} me={me} />
+    case 'CIRCLE_DRAW':
+      return <PlayCircleDraw s={s} me={me} />
+    case 'CLOCK_READY':
+    case 'DECIDER_READY':
+      return <PlayWaiting label="Get ready…" />
+    case 'CLOCK_RUN':
+    case 'DECIDER_RUN':
+      return <PlayClockRun s={s} me={me} />
     case 'FINGER_ROUND':
       return <PlayFingerRound s={s} me={me} />
     case 'FINGER_REVEAL':

@@ -10,11 +10,13 @@ export function AnimatedNumber({
   from = 0,
   durationMs = 600,
   delayMs = 0,
+  format,
 }: {
   value: number
   from?: number
   durationMs?: number
   delayMs?: number
+  format?: (n: number) => string
 }) {
   const [display, setDisplay] = useState(from)
   const shown = useRef<number | null>(null)
@@ -42,5 +44,5 @@ export function AnimatedNumber({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `from`/`durationMs`/`delayMs` are fixed per call site
   }, [value])
 
-  return <>{display}</>
+  return <>{format ? format(display) : display}</>
 }

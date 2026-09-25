@@ -13,7 +13,7 @@ export function resolveMode(search: string): PlayMode | null {
   return m === 'screen' || m === 'duo' || m === 'solo' ? m : null
 }
 
-const GAMES: readonly Game[] = ['full', 'tonight', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw']
+const GAMES: readonly Game[] = ['full', 'tonight', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw', 'circle', 'clock']
 
 // Which session to run — rides alongside ?mode= for the same reason (a shared link must
 // agree with the host before either side calls initNet).

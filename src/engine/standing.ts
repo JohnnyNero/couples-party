@@ -4,6 +4,8 @@ import type {
 } from './state'
 import { other } from './state'
 import { GAME_LABELS, roster } from './roster'
+import { FILLER } from './phases'
+import { clockRoundWinner, fillerOver, fillerWinner, type Filler } from './fillers'
 
 // The in-session tally is NEVER stored: it is derived from the act records here. If a
 // number on the board is not one of these, something has gone wrong.
@@ -142,8 +144,35 @@ export function drawAward(round: DrawRound): Award {
 
 // ---------------------------------------------------------------- The board
 
+// ---------------------------------------------------------------- the fillers
+
+// A flat prize to whoever wins the filler, however many rounds it took — and only once
+// it's over, so leading a best of 5 after one round isn't worth the whole prize.
+export function fillerPoints(f: Filler | null): Standing {
+  const t: Standing = { A: 0, B: 0 }
+  if (!f || !fillerOver(f)) return t
+  const w = fillerWinner(f)
+  if (w) t[w] = FILLER.winPoints
+  return t
+}
+
+// The tiebreaker pays the one round that broke the tie.
+export function deciderPoints(s: SessionState): Standing {
+  const t: Standing = { A: 0, B: 0 }
+  for (const round of s.decider?.rounds ?? []) {
+    const w = clockRoundWinner(round)
+    if (w) {
+      t[w] = FILLER.deciderPoints
+      break
+    }
+  }
+  return t
+}
+
+// ---------------------------------------------------------------- The board
+
 export type GameScore = {
-  key: Exclude<GameKey, 'lights'>
+  key: Exclude<GameKey, 'lights'> | 'decider'
   label: string
   points: Standing
   played: boolean
@@ -157,7 +186,7 @@ const sumAwards = (awards: Award[]): Standing => {
   return t
 }
 
-function pointsFor(s: SessionState, key: GameScore['key']): Standing {
+function pointsFor(s: SessionState, key: Exclude<GameKey, 'lights'>): Standing {
   switch (key) {
     case 'list': return sumAwards(s.listActs.map(listAward))
     case 'likely': return likelyPoints(s.likely)
@@ -165,10 +194,12 @@ function pointsFor(s: SessionState, key: GameScore['key']): Standing {
     case 'mrmrs': return mrmrsPoints(s.mrmrs)
     case 'wave': return sumAwards((s.wave?.rounds ?? []).map(waveAward))
     case 'draw': return sumAwards((s.draw?.rounds ?? []).map(drawAward))
+    case 'circle': return fillerPoints(s.circle && { kind: 'circle', game: s.circle })
+    case 'clock': return fillerPoints(s.clock && { kind: 'clock', game: s.clock })
   }
 }
 
-function playedYet(s: SessionState, key: GameScore['key']): boolean {
+function playedYet(s: SessionState, key: Exclude<GameKey, 'lights'>): boolean {
   return key === 'list' ? s.listActs.length > 0 : s[key] !== null
 }
 
@@ -177,10 +208,22 @@ function playedYet(s: SessionState, key: GameScore['key']): boolean {
 // Tonight's games; a single-game session shows one row. `played` is false for a game
 // the night hasn't reached yet.
 export function gameScores(s: SessionState): GameScore[] {
-  return roster(s.game, s.night)
+  const rows: GameScore[] = roster(s.game, s.night)
     .map((e) => e.key)
-    .filter((key): key is GameScore['key'] => key !== 'lights')
+    .filter((key): key is Exclude<GameKey, 'lights'> => key !== 'lights')
     .map((key) => ({ key, label: GAME_LABELS[key], points: pointsFor(s, key), played: playedYet(s, key) }))
+  // Only there once a level night has needed it.
+  if (s.decider) rows.push({ key: 'decider', label: 'Tiebreaker', points: deciderPoints(s), played: true })
+  return rows
+}
+
+// A night of several games that finishes level goes to a tiebreaker before Lights Out —
+// once. A single game played on its own can end level; that's just a draw.
+export function needsDecider(s: SessionState): boolean {
+  if (s.game !== 'full' && s.game !== 'tonight') return false
+  if (s.decider !== null) return false
+  const t = standing(s)
+  return t.A === t.B
 }
 
 export function standing(s: SessionState): Standing {

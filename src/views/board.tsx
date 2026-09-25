@@ -25,6 +25,12 @@ import { ScreenDrawSketch } from '../screen/phases/ScreenDrawSketch'
 import { ScreenDrawGuess } from '../screen/phases/ScreenDrawGuess'
 import { ScreenDrawReveal } from '../screen/phases/ScreenDrawReveal'
 import { ScreenDrawResult } from '../screen/phases/ScreenDrawResult'
+import { ScreenCircleDraw } from '../screen/phases/ScreenCircleDraw'
+import { ScreenCircleReveal } from '../screen/phases/ScreenCircleReveal'
+import { ScreenFillerResult } from '../screen/phases/ScreenFillerResult'
+import { ScreenClockReady } from '../screen/phases/ScreenClockReady'
+import { ScreenClockRun } from '../screen/phases/ScreenClockRun'
+import { ScreenClockReveal } from '../screen/phases/ScreenClockReveal'
 
 // The public "board" content for the current phase, shared by the shared-screen
 // renderer (Screen) and the phones-only renderer (Duo). Holds no logic and shows
@@ -33,6 +39,7 @@ export function railText(s: SessionState): string {
   if (s.phase === 'JOIN') return 'Lobby'
   if (s.phase === 'DONE') return "That's the session"
   if (s.phase === 'LIGHTS_OUT') return 'Lights out'
+  if (s.phase.startsWith('DECIDER_')) return 'Tiebreaker · sudden death'
   const key = gameOfPhase(s.phase)
   if (!key) return s.phase
   const label = GAME_LABELS[key]
@@ -42,6 +49,11 @@ export function railText(s: SessionState): string {
     if (s.phase === 'LIST_INTRO') return `${run} · The theme`
     if (s.phase === 'LIST_PLACE') return `${run} · Ranking`
     return `${run} · Reveal`
+  }
+  if (key === 'circle' || key === 'clock') {
+    const f = s[key]
+    if (!f || f.bestOf === 1) return label
+    return `${label} · Round ${f.current + 1} · best of ${f.bestOf}`
   }
   const game = key === 'lights' ? null
     : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw }[key]
@@ -105,6 +117,23 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenDrawReveal s={s} />
     case 'DRAW_RESULT':
       return <ScreenDrawResult s={s} />
+    case 'CIRCLE_DRAW':
+      return <ScreenCircleDraw s={s} />
+    case 'CIRCLE_REVEAL':
+      return <ScreenCircleReveal s={s} />
+    case 'CIRCLE_RESULT':
+      return <ScreenFillerResult s={s} kind="circle" />
+    case 'CLOCK_READY':
+    case 'DECIDER_READY':
+      return <ScreenClockReady s={s} />
+    case 'CLOCK_RUN':
+    case 'DECIDER_RUN':
+      return <ScreenClockRun s={s} />
+    case 'CLOCK_REVEAL':
+    case 'DECIDER_REVEAL':
+      return <ScreenClockReveal s={s} />
+    case 'CLOCK_RESULT':
+      return <ScreenFillerResult s={s} kind="clock" />
     case 'DONE':
       // Terminal for now: the same board every game ends on, held up until the souvenir
       // (M5) gives it somewhere to go.
