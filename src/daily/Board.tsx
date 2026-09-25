@@ -14,6 +14,7 @@ import { PlaySketch } from './PlaySketch'
 import { PlayTop5 } from './PlayTop5'
 import { questionOfTheDay, renderQuestion } from './question'
 import { useIdeas } from '../ideas/store'
+import { refreshProfile } from '../profile/store'
 import { SetDialClue } from './SetDialClue'
 import { SetNumbers } from './SetNumbers'
 import { SetSketch } from './SetSketch'
@@ -54,6 +55,10 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   }, [])
 
   const { status, refresh } = board
+  // Pairing (or unpairing) shows up here first, on the poll — let the profile, and so
+  // every avatar and the header, catch up straight away.
+  const pairState = status.kind === 'ready' ? status.data.state : null
+  useEffect(() => { if (pairState) void refreshProfile() }, [pairState])
   useEffect(() => {
     // `stale` is the board as it was when the solve closed — wait for the refetch.
     if (!thenSet || status === thenSet.stale) return
@@ -92,7 +97,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
     )
   }
   if (d.state === 'waiting') {
-    return <Card title="Pair your phones"><PairWaiting code={d.code} onCancel={() => void refresh()} /></Card>
+    return <Card title="Pair your phones"><PairWaiting code={d.code} me={d.me} onCancel={() => void refresh()} /></Card>
   }
 
   const close = (then?: Kind) => {

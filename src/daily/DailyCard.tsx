@@ -61,7 +61,7 @@ export function DailyCard({
   if (d.state === 'waiting') {
     return (
       <Card title="Pair your phones">
-        <PairWaiting code={d.code} onCancel={() => void refresh()} />
+        <PairWaiting code={d.code} me={d.me} onCancel={() => void refresh()} />
       </Card>
     )
   }

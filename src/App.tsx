@@ -8,6 +8,8 @@ import { api } from './daily/api'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
 import { Home } from './start/Home'
+import { Invite } from './start/Invite'
+import { readInvite } from './start/invite'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
@@ -19,6 +21,8 @@ export default function App() {
   const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
   const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
   const [ready, setReady] = useState(false)
+  // An invite link (?pair=CODE&from=Name) opens on its own welcome page first.
+  const [invite, setInvite] = useState(() => readInvite(window.location.search))
   useThemeSync()
 
   useEffect(() => {
@@ -44,6 +48,7 @@ export default function App() {
   )
 
   function renderApp() {
+    if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
     if (!game) return <Home onPick={setGame} />
     if (!mode) {
       return (
