@@ -1,51 +1,33 @@
-import type { SessionState } from '../../engine/state'
+import type { PlayerId, SessionState } from '../../engine/state'
 import { fingerRoundPoints } from '../../engine/standing'
-import { Hand } from '../../views/Hand'
+import { Avatar, inkOf } from '../../ui/Avatar'
+import { Hand } from '../../ui/kit'
+import { eyebrow } from '../../ui/styles'
 import { playerName } from '../../views/list'
 
 export function ScreenFingerReveal({ s }: { s: SessionState }) {
   const f = s.finger!
   const round = f.rounds[f.current]
   return (
-    <div className="w-full max-w-3xl mx-auto text-center">
-      <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        Round {round.index} of {f.rounds.length}
+    <div className="w-full max-w-2xl mx-auto text-center flex flex-col gap-7">
+      <div>
+        <div className={eyebrow}>Put a finger down if…</div>
+        <div className="mt-2 font-display text-2xl sm:text-4xl font-extrabold leading-tight break-words">{round.statementId}</div>
       </div>
-      <div className="text-xl sm:text-3xl font-bold uppercase tracking-tight break-words mb-8 sm:mb-12">
-        If {round.statementId}
+      <div className="grid grid-cols-2 gap-4">
+        {(['A', 'B'] as PlayerId[]).map((p) => {
+          const down = round.applies[p]
+          const pts = fingerRoundPoints(round, p)
+          return (
+            <div key={p} className={'rounded-3xl border-2 px-3 py-5 flex flex-col items-center gap-2 ' + (down ? 'border-fg/15' : 'border-fg bg-card')}>
+              <Avatar p={p} name={playerName(s, p)} />
+              <div className="font-display text-xl sm:text-3xl font-extrabold">{down ? 'Finger down' : 'Kept it up'}</div>
+              <Hand fingers={f.fingersLeft[p]} p={p} />
+              <div className={'h-7 font-display text-2xl font-extrabold animate-pop ' + inkOf(p)}>{pts > 0 ? `+${pts}` : ''}</div>
+            </div>
+          )
+        })}
       </div>
-      <div className="flex justify-center gap-10 sm:gap-20">
-        <Side
-          name={playerName(s, 'A')}
-          applies={round.applies.A}
-          fingers={f.fingersLeft.A}
-          points={fingerRoundPoints(round, 'A')}
-        />
-        <Side
-          name={playerName(s, 'B')}
-          applies={round.applies.B}
-          fingers={f.fingersLeft.B}
-          points={fingerRoundPoints(round, 'B')}
-        />
-      </div>
-    </div>
-  )
-}
-
-function Side({
-  name, applies, fingers, points,
-}: { name: string; applies: boolean | null; fingers: number; points: number }) {
-  return (
-    <div>
-      <div className="text-[0.6rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 mb-2 sm:mb-3">{name}</div>
-      <div className="text-lg sm:text-2xl font-bold uppercase tracking-tight mb-1">
-        {applies ? 'Finger down' : 'Stays up'}
-      </div>
-      {/* Every statement pays now, so the score moves here rather than once at the end. */}
-      <div className="h-6 sm:h-8 text-base sm:text-2xl font-bold text-accent tabular-nums animate-pop">
-        {points > 0 ? `+${points}` : ''}
-      </div>
-      <Hand fingers={fingers} />
     </div>
   )
 }

@@ -100,13 +100,13 @@ describe('the scoreboard between games', () => {
     expect(html).toContain('Draw Your Answer')
     expect(html).not.toContain('More Likely') // parked — see roster.ts
     expect(html).toContain('Mr &amp; Mrs')
-    expect(html).toContain('Next up')
+    expect(html).toContain('Up next')
   })
 
   it('calls the night rather than the next game once there is nothing left', () => {
     const html = renderToStaticMarkup(<BoardStage s={session('DONE', revealed())} />)
-    expect(html).not.toContain('Next up')
-    expect(html).toMatch(/takes the night|Dead level/)
+    expect(html).not.toContain('Up next')
+    expect(html).toMatch(/takes the night|Neck and neck/)
   })
 })
 
@@ -165,7 +165,7 @@ describe('the fillers and the tiebreaker', () => {
       last = last.phase.endsWith('_RESULT') ? reduce(last, { type: 'CONTINUE', player: 'A' }, i * 1000) : reduce(last, { type: 'TIMEOUT' }, i * 1000)
     }
     expect(last.phase).toBe('CLASH_RESULT') // the night's last game
-    expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('tiebreaker next')
+    expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('Dead level!')
     const decider = walk((x) => x.phase === 'DECIDER_READY')
     expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('closest takes the night')
     expect(railText(decider)).toBe('Tiebreaker · sudden death')

@@ -1,18 +1,21 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import type { PlayerId, SessionState } from '../engine/state'
+import { type ReactNode } from 'react'
+import type { GameKey, PlayerId, SessionState } from '../engine/state'
 import { gameScores, needsDecider, standing } from '../engine/standing'
 import { GAME_LABELS, gameOfPhase, nextGame } from '../engine/roster'
 import { dispatch, useMyPlayerId } from '../net'
 import { AnimatedNumber } from './AnimatedNumber'
 import { playerName } from './list'
+import { leaderboardView } from './leaderboardView'
+import { Avatar, inkOf } from '../ui/Avatar'
+import { GameGlyph } from '../ui/GameIcon'
+import { card, eyebrow } from '../ui/styles'
 
-// The card that closes every game. It isn't just this game's score — the point of it is
-// the shape of the whole night so far, which is why the per-game rows stay on screen
-// with the games still to come showing as blanks.
+// The card that closes every game. Not just this game's score — the shape of the whole
+// night so far: the two of you head to head, every game's points, what's next.
 //
 // Nothing moves it on by itself. Either player taps when they've both finished looking.
 
-const ORDER: Array<PlayerId> = ['A', 'B']
+const ORDER: PlayerId[] = ['A', 'B']
 
 export function Scoreboard({
   s,
@@ -37,106 +40,118 @@ export function Scoreboard({
   const decider = called && s.phase !== 'DONE' && needsDecider(s)
   // A TV has nobody to tap it, and once the session is DONE the tap would do nothing.
   const canContinue = me !== null && s.phase !== 'DONE'
-
-  // Bars are drawn from zero on mount and grown to width one frame later, so the growth
-  // is a plain CSS transition rather than a keyframe that would need a fixed end width.
-  const [grown, setGrown] = useState(false)
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setGrown(true))
-    return () => cancelAnimationFrame(id)
-  }, [])
-
-  const top = Math.max(total.A, total.B, 1)
+  const lead: PlayerId | null = total.A === total.B ? null : total.A > total.B ? 'A' : 'B'
 
   return (
-    <div className="w-full max-w-lg mx-auto flex flex-col gap-4 sm:gap-6">
+    <div className="w-full max-w-md mx-auto flex flex-col gap-4">
       <div className="text-center">
-        <div className="text-[0.6rem] sm:text-xs uppercase tracking-[0.3em] text-fg/40">{title}</div>
+        <div className={eyebrow}>{title}</div>
+        <div className="mt-1 font-display text-[1.9rem] sm:text-5xl font-extrabold leading-tight">
+          {headline(s, lead, called)}
+        </div>
         {flourish}
       </div>
 
-      {/* The totals, as two bars against each other. */}
-      <div className="flex flex-col gap-2.5">
-        {ORDER.map((p, i) => {
-          const them = total[p === 'A' ? 'B' : 'A']
-          // Level is not the same as losing: neither bar should go flat grey on a draw.
-          const ahead = total[p] >= them
+      <section className={card + ' px-5 py-5 flex items-end justify-around'}>
+        {ORDER.map((p, i) => (
+          <div key={p} className="flex flex-col items-center gap-1.5">
+            <span className={'h-6 ' + (lead === p ? 'animate-pop' : 'invisible')} aria-hidden={lead !== p}>
+              <Crown />
+            </span>
+            <Avatar p={p} name={playerName(s, p)} size="lg" />
+            <span className={'font-display text-5xl font-extrabold leading-none tabular-nums ' + inkOf(p)}>
+              <AnimatedNumber value={total[p]} durationMs={900} delayMs={i * 140} />
+            </span>
+            <span className="text-sm font-extrabold">{playerName(s, p)}</span>
+          </div>
+        )).reduce<ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, <Vs key="vs" />, el]), [])}
+      </section>
+
+      <section className="flex flex-col">
+        {games.map((g, i) => {
+          const isNext = g.key === next
           return (
-            <div key={p} className="flex items-center gap-3">
-              <span
-                className={
-                  'w-[5.5rem] sm:w-32 shrink-0 text-sm sm:text-xl font-bold uppercase tracking-tight truncate ' +
-                  (ahead ? 'text-accent' : 'text-fg/70')
-                }
-              >
-                {playerName(s, p)}
-              </span>
-              <span className="flex-1 min-w-0 h-8 sm:h-11 bg-fg/5 rounded-lg overflow-hidden">
-                <span
-                  className={'block h-full rounded-lg ' + (ahead ? 'bg-accent' : 'bg-fg/25')}
-                  style={{
-                    width: grown ? `${Math.max(4, (total[p] / top) * 100)}%` : '0%',
-                    transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 140}ms`,
-                  }}
-                />
-              </span>
-              <span className="w-10 sm:w-14 shrink-0 text-right text-xl sm:text-3xl font-bold tabular-nums">
-                <AnimatedNumber value={total[p]} durationMs={900} delayMs={i * 140} />
-              </span>
+            <div
+              key={g.key}
+              style={{ animationDelay: `${250 + i * 60}ms` }}
+              className={'flex items-center gap-2.5 py-2 px-1 border-b border-fg/10 last:border-0 animate-fade-up ' + (g.played ? '' : 'text-fg/40')}
+            >
+              <GameGlyph game={g.key === 'decider' ? 'clock' : (g.key as GameKey)} className={'w-5 h-5 shrink-0 ' + (g.played ? 'text-accent-ink' : '')} />
+              <span className="flex-1 min-w-0 truncate text-sm font-bold">{g.label}</span>
+              {g.played ? (
+                ORDER.map((p) => (
+                  <span key={p} className={'w-9 text-right font-display text-base font-extrabold tabular-nums ' + inkOf(p)}>
+                    {g.points[p]}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs font-extrabold">{isNext ? 'next' : ''}</span>
+              )}
             </div>
           )
         })}
-      </div>
+      </section>
 
-      {/* Where those totals came from, and what's still to come. */}
-      <div className="border-t border-fg/15">
-        {games.map((g, i) => (
-          <div
-            key={g.key}
-            style={{ animationDelay: `${300 + i * 80}ms` }}
-            className={
-              'flex items-baseline gap-2 border-b border-fg/10 py-1 sm:py-1.5 animate-fade-up ' +
-              'text-[0.7rem] sm:text-base uppercase tracking-wide ' +
-              (g.played ? 'text-fg/60' : 'text-fg/25')
-            }
-          >
-            <span className="flex-1 min-w-0 truncate">{g.label}</span>
-            {ORDER.map((p) => (
-              <span
-                key={p}
-                className={
-                  'w-9 sm:w-12 text-right shrink-0 tabular-nums font-bold ' +
-                  (g.played && g.points[p] >= g.points[p === 'A' ? 'B' : 'A'] && g.points[p] > 0
-                    ? 'text-accent'
-                    : '')
-                }
-              >
-                {g.played ? g.points[p] : '·'}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
+      {s.phase === 'DONE' && me && <AllTime s={s} me={me} />}
 
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[0.6rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 min-w-0 truncate">
-          {decider ? 'Dead level · tiebreaker next' : called ? verdict(s) : `Next up · ${GAME_LABELS[next!]}`}
-        </span>
-        {canContinue && (
+      {canContinue && (
+        called ? (
           <button
             onClick={() => dispatch({ type: 'CONTINUE', player: me })}
-            className="min-h-[48px] px-6 shrink-0 bg-accent text-bg text-base sm:text-xl font-bold uppercase tracking-widest active:translate-y-px rounded-xl"
+            className="w-full min-h-[56px] rounded-2xl bg-fg text-bg font-display text-xl font-extrabold active:translate-y-px"
           >
-            {decider ? 'Tiebreaker' : next === 'lights' ? 'Lights out' : next ? 'Ready' : 'Finish'}
+            {decider ? 'Tiebreaker!' : next === 'lights' ? 'Lights out' : 'Finish'}
           </button>
-        )}
-      </div>
+        ) : (
+          <section className="rounded-3xl bg-ink text-paper px-4 py-3.5 flex items-center gap-3">
+            <span className="shrink-0 w-11 h-11 rounded-2xl bg-accent/20 text-accent inline-flex items-center justify-center">
+              <GameGlyph game={next!} className="w-6 h-6" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[0.65rem] uppercase tracking-[0.18em] font-extrabold text-paper/60">Up next</div>
+              <div className="font-display text-xl font-extrabold leading-tight truncate">{GAME_LABELS[next!]}</div>
+            </div>
+            <button
+              onClick={() => dispatch({ type: 'CONTINUE', player: me })}
+              className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+            >
+              Ready
+            </button>
+          </section>
+        )
+      )}
+      {!canContinue && s.phase !== 'DONE' && !called && (
+        <div className="text-center text-sm font-bold text-fg/50">Up next · {GAME_LABELS[next!]}</div>
+      )}
     </div>
   )
 }
 
-function verdict(s: SessionState): string {
-  const t = standing(s)
-  if (t.A === t.B) return 'Dead level'
-  return `${playerName(s, t.A > t.B ? 'A' : 'B')} takes the night`
+function headline(s: SessionState, lead: PlayerId | null, called: boolean): string {
+  if (called && needsDecider(s) && s.phase !== 'DONE') return 'Dead level!'
+  if (!lead) return 'Neck and neck'
+  const name = playerName(s, lead)
+  return called ? `${name} takes the night` : `${name} is ahead`
+}
+
+function Vs() {
+  return <span className="mb-10 font-display text-base font-extrabold text-fg/25">vs</span>
+}
+
+function Crown() {
+  return (
+    <svg viewBox="0 0 24 18" className="w-7 h-5" fill="#F2B544" stroke="rgb(var(--fg))" strokeWidth={1.6} strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 16L2 5l5 4 5-7 5 7 5-4-1 11z" />
+    </svg>
+  )
+}
+
+// The longer run, on this phone: this week, and every night you've played.
+function AllTime({ s, me }: { s: SessionState; me: PlayerId }) {
+  const v = leaderboardView(s, me)
+  return (
+    <div className="text-center text-xs font-bold text-fg/55 tabular-nums">
+      This week {v.you} {v.weekly.you} – {v.weekly.them} {v.them} · All time {v.allTime.you} – {v.allTime.them}
+    </div>
+  )
 }

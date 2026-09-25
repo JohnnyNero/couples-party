@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { card } from '../ui/styles'
 
 // The shared shell every daily-puzzle card is built from — Their Word, The Dial, and
 // whatever follows them — so a new one looks and behaves like the others for free.
@@ -15,7 +16,7 @@ export function Card({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-3xl border-2 border-fg/15 p-6">
+    <section className={card + ' p-6'}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           {sub && <div className="text-[0.6rem] uppercase tracking-[0.25em] text-fg/40 mb-1">{sub}</div>}

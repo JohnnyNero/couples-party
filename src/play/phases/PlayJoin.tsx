@@ -2,11 +2,21 @@
 // name) the moment a phone connects, so this phone view never collects a name and
 // never shows a JOIN button — it only reflects connection state back to the player.
 import type { PlayerId, SessionState } from '../../engine/state'
-import { PlayWaiting } from './PlayWaiting'
+import { other } from '../../engine/state'
+import { Avatar } from '../../ui/Avatar'
 
 export function PlayJoin({ s, me }: { s: SessionState; me: PlayerId }) {
   const player = s.players[me]
-  if (!player.connected) return <PlayWaiting label="CONNECTING…" />
-  const name = player.name || me
-  return <PlayWaiting label={`YOU'RE IN, ${name.toUpperCase()} — WAITING FOR THE OTHER PLAYER`} />
+  const them = s.players[other(me)]
+  return (
+    <div className="h-full flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <Avatar p={me} name={player.name || '?'} size="xl" />
+      <div className="font-display text-3xl font-extrabold leading-tight">
+        {player.connected ? `You're in, ${player.name || me}` : 'Connecting…'}
+      </div>
+      <div className="text-sm text-fg/60 animate-pulse">
+        {them.connected ? 'Starting…' : 'Waiting for your partner to join'}
+      </div>
+    </div>
+  )
 }

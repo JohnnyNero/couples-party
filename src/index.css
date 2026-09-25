@@ -21,6 +21,18 @@ html, body, #root { height: 100%; }
   --correct: 106 170 100;
   --present: 201 180 88;
   --absent: 120 124 126;
+  --accent-ink: 184 64 47;
+  --card: 255 255 255;
+  --pa: 224 82 63;
+  --pa-ink: 184 64 47;
+  --pa-soft: 255 225 218;
+  --pb: 62 99 200;
+  --pb-ink: 52 81 158;
+  --pb-soft: 227 233 251;
+  --tan-soft: 244 236 208;
+  --tan-ink: 122 99 32;
+  --sage-soft: 230 243 228;
+  --sage-ink: 62 122 56;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -33,6 +45,18 @@ html, body, #root { height: 100%; }
     --correct: 83 141 78;
     --present: 181 159 59;
     --absent: 58 58 60;
+    --accent-ink: 255 154 140;
+    --card: 42 31 28;
+    --pa: 232 102 85;
+    --pa-ink: 255 154 140;
+    --pa-soft: 66 38 33;
+    --pb: 91 127 224;
+    --pb-ink: 157 180 242;
+    --pb-soft: 34 42 68;
+    --tan-soft: 56 48 28;
+    --tan-ink: 226 200 120;
+    --sage-soft: 32 52 34;
+    --sage-ink: 150 206 140;
     color-scheme: dark;
   }
 }
@@ -45,6 +69,18 @@ html, body, #root { height: 100%; }
   --correct: 83 141 78;
   --present: 181 159 59;
   --absent: 58 58 60;
+  --accent-ink: 255 154 140;
+  --card: 42 31 28;
+  --pa: 232 102 85;
+  --pa-ink: 255 154 140;
+  --pa-soft: 66 38 33;
+  --pb: 91 127 224;
+  --pb-ink: 157 180 242;
+  --pb-soft: 34 42 68;
+  --tan-soft: 56 48 28;
+  --tan-ink: 226 200 120;
+  --sage-soft: 32 52 34;
+  --sage-ink: 150 206 140;
   color-scheme: dark;
 }
 

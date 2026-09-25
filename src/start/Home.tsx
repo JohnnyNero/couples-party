@@ -1,17 +1,18 @@
 import { useState, type ReactNode } from 'react'
 import type { Game } from './mode'
+import type { GameKey } from '../engine/state'
 import { GAME_LABELS, roster } from '../engine/roster'
-import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
 import { Board } from '../daily/Board'
+import { useBoard } from '../daily/useDaily'
 import { dayIndex, localDate } from '../daily/dates'
 import { MemoriesTab } from '../memories/MemoriesTab'
+import { GameIcon, GameGlyph } from '../ui/GameIcon'
+import { card, eyebrow } from '../ui/styles'
 
-// The front door. Three tabs: Today, which is the nightly habit — one short session —
-// Games, for when you've got longer or want one thing, and Memories, everything you've
-// played together so far.
-// Today also carries the daily puzzles — five a day, each set by your partner the day
-// before — with the scoreboard between you.
+// The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
+// session — Games, for when you've got longer or want one thing, and Memories,
+// everything you've played together so far.
 
 type Tab = 'today' | 'games' | 'memories'
 
@@ -35,16 +36,12 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
 
   return (
     <div className="h-full w-full flex flex-col select-none">
-      <header className="shrink-0 flex items-center justify-between gap-3 px-6 pt-5 pb-3 pr-14">
-        <div className="font-display text-2xl font-bold tracking-tight">Couples Party</div>
-        <ThemeToggle />
-      </header>
-      <main className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
+      <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
         <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
-          {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <MemoriesTab />}
+          {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <Memories />}
         </div>
       </main>
-      <nav className="shrink-0 border-t border-fg/15 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
+      <nav className="shrink-0 border-t border-fg/10 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === 'today'} onClick={() => choose('today')} label="Today" icon={<MoonIcon />} />
         <TabButton active={tab === 'games'} onClick={() => choose('games')} label="Games" icon={<GridIcon />} />
         <TabButton active={tab === 'memories'} onClick={() => choose('memories')} label="Memories" icon={<BookIcon />} />
@@ -53,55 +50,180 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   )
 }
 
+// Each tab's own title, with the theme toggle (and anything else) on the right.
+function TabHeader({ over, title, sub, right }: { over?: string; title: string; sub?: string; right?: ReactNode }) {
+  return (
+    <header className="flex items-start justify-between gap-3 mb-4 pr-10">
+      <div className="min-w-0">
+        {over && <div className={eyebrow}>{over}</div>}
+        <h1 className="font-display text-[1.9rem] font-extrabold leading-[1.05] tracking-tight">{title}</h1>
+        {sub && <div className="mt-0.5 text-sm text-fg/60">{sub}</div>}
+      </div>
+      <div className="shrink-0 flex items-center gap-2">
+        {right}
+        <ThemeToggle />
+      </div>
+    </header>
+  )
+}
+
 function Today({ onPick }: { onPick: (g: Game) => void }) {
-  const tonight = roster('tonight', dayIndex(localDate())).map((e) => GAME_LABELS[e.key])
+  const board = useBoard()
+  const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   return (
-    <div className="flex flex-col gap-4 pt-1">
-      <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{date}</div>
-      <Board />
-      <section className="rounded-3xl bg-ink text-paper px-5 py-4 shadow-[4px_4px_0_rgba(0,0,0,0.12)] flex items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-2xl font-bold tracking-tight leading-none">Tonight</div>
-          <div className="mt-1.5 text-xs text-paper/60 leading-snug">
-            About ten minutes · {tonight.join(' · ')}
-          </div>
-        </div>
-        <button
-          onClick={() => onPick('tonight')}
-          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-accent text-bg text-base font-bold uppercase tracking-widest active:translate-y-px"
-        >
-          Play
-        </button>
-      </section>
+    <div className="flex flex-col gap-4">
+      <TabHeader
+        over={date}
+        title={paired ? `Hey ${paired.me} & ${paired.partner}` : 'Couples Party'}
+        right={paired && paired.streak > 0 ? <Streak n={paired.streak} /> : null}
+      />
+      <Board board={board} />
+      <TonightCard onPlay={() => onPick('tonight')} />
     </div>
   )
 }
 
-const GAME_BLURBS: Partial<Record<Exclude<Game, 'full' | 'tonight'>, string>> = {
-  list: 'Rank seven things for them · they guess your order',
-  finger: 'Five confessions · keep your hand up',
-  mrmrs: 'Your answer, and your guess at theirs',
-  wave: 'Name a thing on a scale · they find the spot',
-  draw: 'Answer about yourself, then draw it',
-  clash: 'One letter, six categories · unique answers score',
-  chain: 'Name things in turn · the last letter starts the next',
-  circle: 'One circle each · the rounder one wins',
-  clock: 'Stop a hidden clock on the second',
+function Streak({ n }: { n: number }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-pa-soft text-pa-ink px-2.5 py-1.5 text-xs font-extrabold whitespace-nowrap">
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3c1 3 4.5 4.5 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.2 1.6 1 2.6 2 2.6 0-3.2-.8-4.6.5-7.1z" />
+      </svg>
+      {n}-day streak
+    </span>
+  )
 }
+
+// Tonight's line-up as icons, fillers marked out, and one big button.
+function TonightCard({ onPlay }: { onPlay: () => void }) {
+  const lineup = roster('tonight', dayIndex(localDate())).filter((e) => e.key !== 'lights')
+  const games = lineup.filter((e) => e.key !== 'circle' && e.key !== 'clock').length
+  return (
+    <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex flex-col gap-3.5 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-display text-[1.75rem] font-extrabold leading-none">Tonight</div>
+          <div className="mt-1 text-sm text-paper/65">About 10 minutes · {games} games and a filler</div>
+        </div>
+        <GameGlyph game="lights" className="w-7 h-7 text-accent" />
+      </div>
+      <div className="flex gap-2">
+        {lineup.map((e) => {
+          const filler = e.key === 'circle' || e.key === 'clock'
+          return (
+            <div
+              key={e.key}
+              className={
+                'flex-1 min-w-0 flex flex-col items-center gap-1 rounded-2xl py-2 ' +
+                (filler ? 'bg-accent/20 text-accent' : 'bg-paper/[0.08] text-paper')
+              }
+            >
+              <GameGlyph game={e.key} className="w-[22px] h-[22px]" />
+              <span className={'text-[0.62rem] font-bold truncate max-w-full px-1 ' + (filler ? '' : 'text-paper/75')}>
+                {SHORT[e.key]}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      <button
+        onClick={onPlay}
+        className="w-full min-h-[52px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold tracking-wide active:translate-y-px"
+      >
+        Play tonight
+      </button>
+    </section>
+  )
+}
+
+const SHORT: Record<GameKey, string> = {
+  list: 'Shortlist', likely: 'Likely', finger: 'Finger', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
+  draw: 'Draw', clash: 'Clash', chain: 'Chain', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
+}
+
+type Pick = { key: Exclude<Game, 'full' | 'tonight'>; blurb: string; meta: string }
+
+const HEAD_TO_HEAD: Pick[] = [
+  { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },
+  { key: 'finger', blurb: 'Five confessions. Keep your hand up.', meta: '5 rounds · 3 min' },
+  { key: 'wave', blurb: 'Name a thing on a scale. They find the spot.', meta: '7 rounds · 6 min' },
+  { key: 'mrmrs', blurb: 'Your answer, and your guess at theirs.', meta: '5 rounds · 5 min' },
+  { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '6 rounds · 7 min' },
+  { key: 'clash', blurb: 'One letter, six categories. Unique answers score.', meta: '3 rounds · 5 min' },
+  { key: 'chain', blurb: 'Name things in turn. The last letter starts the next.', meta: '4 rounds · 4 min' },
+]
+const FILLERS: Pick[] = [
+  { key: 'circle', blurb: 'The rounder one wins', meta: 'Best of 5' },
+  { key: 'clock', blurb: 'Closest tap wins', meta: 'Best of 5' },
+]
 
 function Games({ onPick }: { onPick: (g: Game) => void }) {
   return (
-    <div className="flex flex-col gap-3 pt-2">
-      <PickButton
-        onClick={() => onPick('full')}
-        title="The full session"
-        sub="Every game, then lights out · about 40 minutes"
-      />
-      <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mt-3 mb-1">Or just one</div>
-      {(Object.entries(GAME_BLURBS) as Array<[keyof typeof GAME_BLURBS, string]>).map(([g, blurb]) => (
-        <PickButton key={g} onClick={() => onPick(g)} title={GAME_LABELS[g]} sub={blurb} />
-      ))}
+    <div className="flex flex-col gap-4">
+      <TabHeader title="Games" sub="Every one of them is you against each other." />
+      <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>
+          <div className="mt-1 text-sm text-paper/65">Every game and both fillers · about 40 min</div>
+        </div>
+        <button
+          onClick={() => onPick('full')}
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+        >
+          Play
+        </button>
+      </section>
+
+      <div className={eyebrow + ' mt-1'}>Head to head</div>
+      <div className="grid grid-cols-2 gap-3">
+        {HEAD_TO_HEAD.map((g, i) => {
+          const wide = i === HEAD_TO_HEAD.length - 1 && HEAD_TO_HEAD.length % 2 === 1
+          return (
+            <button
+              key={g.key}
+              onClick={() => onPick(g.key)}
+              className={
+                card + ' text-left p-4 flex active:translate-y-px ' +
+                (wide ? 'col-span-2 items-center gap-3' : 'flex-col gap-2')
+              }
+            >
+              <GameIcon game={g.key} />
+              <div className={wide ? 'flex-1 min-w-0' : 'contents'}>
+                <div className="font-display text-[1.05rem] font-bold leading-tight">{GAME_LABELS[g.key]}</div>
+                <div className="text-xs text-fg/60 leading-snug">{g.blurb}</div>
+              </div>
+              <div className={'text-[0.7rem] font-extrabold text-fg/45 ' + (wide ? 'text-right shrink-0' : '')}>{g.meta}</div>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className={eyebrow + ' mt-1'}>Quick fillers · 30 seconds</div>
+      <div className="grid grid-cols-2 gap-3">
+        {FILLERS.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => onPick(g.key)}
+            className="text-left rounded-3xl border-2 border-dashed border-fg/30 px-4 py-3 flex items-center gap-3 active:translate-y-px"
+          >
+            <GameGlyph game={g.key} className="w-7 h-7 shrink-0 text-accent-ink" />
+            <div className="min-w-0">
+              <div className="font-display text-base font-bold leading-tight">{GAME_LABELS[g.key]}</div>
+              <div className="text-[0.7rem] text-fg/55">{g.blurb}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Memories() {
+  return (
+    <div className="flex flex-col">
+      <TabHeader title="Memories" sub="Every night you've played together." />
+      <MemoriesTab />
     </div>
   )
 }
@@ -112,8 +234,8 @@ function TabButton({ active, onClick, label, icon }: { active: boolean; onClick:
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={
-        'min-h-[60px] flex flex-col items-center justify-center gap-0.5 text-[0.65rem] uppercase tracking-[0.2em] font-bold ' +
-        (active ? 'text-accent' : 'text-fg/40')
+        'min-h-[60px] flex flex-col items-center justify-center gap-0.5 text-[0.68rem] uppercase tracking-[0.14em] font-extrabold ' +
+        (active ? 'text-accent-ink' : 'text-fg/40')
       }
     >
       {icon}
@@ -124,7 +246,7 @@ function TabButton({ active, onClick, label, icon }: { active: boolean; onClick:
 
 const iconProps = {
   viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor',
-  strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true,
+  strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true,
 }
 
 function MoonIcon() {
@@ -136,7 +258,6 @@ function BookIcon() {
     <svg {...iconProps}>
       <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
       <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z" />
-      <path d="M12 7.2c-.9-1-2.6-.6-2.6.8 0 1.3 2.6 2.8 2.6 2.8s2.6-1.5 2.6-2.8c0-1.4-1.7-1.8-2.6-.8z" />
     </svg>
   )
 }

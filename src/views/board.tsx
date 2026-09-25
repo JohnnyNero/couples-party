@@ -3,6 +3,7 @@ import { GAME_LABELS, gameOfPhase, roundsFor } from '../engine/roster'
 import { phaseKey } from './phaseKey'
 import { Scoreboard } from './Scoreboard'
 import { ScreenJoin } from '../screen/phases/ScreenJoin'
+import { ScreenIntro } from '../screen/phases/ScreenIntro'
 import { ScreenListIntro } from '../screen/phases/ScreenListIntro'
 import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
 import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
@@ -77,6 +78,8 @@ function BoardStageContent({ s }: { s: SessionState }) {
   switch (s.phase) {
     case 'JOIN':
       return <ScreenJoin s={s} />
+    case 'INTRO':
+      return <ScreenIntro s={s} />
     case 'LIST_INTRO':
       return <ScreenListIntro s={s} />
     case 'LIST_PLACE':

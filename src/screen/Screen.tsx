@@ -1,64 +1,26 @@
-import type { SessionState } from '../engine/state'
 import { useSession } from '../net'
-import { Clock } from './Clock'
 import { DebugBar } from '../debug/DebugBar'
 import { Bot } from '../bot/Bot'
 import { resolveBot } from '../start/mode'
-import { BoardStage, railText } from '../views/board'
-import { standing } from '../engine/standing'
-import { playerName } from '../views/list'
+import { BoardStage } from '../views/board'
+import { GameHeader } from '../views/GameHeader'
 
-// Shared-screen renderer: the public board on a TV/laptop. Four fixed regions —
-// act rail, stage, pot, clock — that never move; only their contents change.
-// The TV has no identity of its own (it isn't "someone's" device), so it shows the
-// neutral session tally only — the persistent you-vs-them leaderboard lives on the
-// phones, which each know who they belong to.
+// Shared-screen renderer: the public board on a TV/laptop, under the same header as the
+// phones, drawn bigger.
 export function Screen() {
   const s = useSession()
   const debug = new URLSearchParams(location.search).get('debug') === '1'
   const bot = resolveBot(location.search)
   return (
-    <div className="h-full w-full flex flex-col p-6 sm:p-10 select-none">
-      <div className="text-sm sm:text-lg uppercase tracking-[0.25em] text-fg/70 border-b-2 border-fg/80 pb-3">
-        {railText(s)}
-      </div>
-      <div className="flex-1 flex items-center justify-center py-6">
-        <BoardStage s={s} />
-      </div>
-      <div className="flex justify-between items-end gap-6 border-t-2 border-fg/80 pt-3">
-        <SessionTally s={s} />
-        <div className="text-right shrink-0">
-          <div className="text-xs uppercase tracking-widest text-fg/40">Time</div>
-          <div className="text-4xl sm:text-5xl leading-none">
-            <Clock phaseEndsAt={s.phaseEndsAt} />
-          </div>
+    <div className="h-full w-full flex flex-col select-none">
+      <GameHeader s={s} big />
+      <div className="flex-1 min-h-0 overflow-y-auto px-8 sm:px-12 py-6 flex flex-col">
+        <div className="my-auto w-full">
+          <BoardStage s={s} />
         </div>
       </div>
       {debug && <DebugBar s={s} />}
       {bot && <Bot />}
     </div>
-  )
-}
-
-function SessionTally({ s }: { s: SessionState }) {
-  // Derived from the acts, never stored — see engine/standing.ts.
-  const tally = standing(s)
-  return (
-    <div className="min-w-0">
-      <div className="text-xs uppercase tracking-widest text-fg/40">This session</div>
-      <div className="mt-1 text-lg sm:text-2xl font-bold uppercase tracking-tight tabular-nums">
-        <Side name={playerName(s, 'A')} n={tally.A} ahead={tally.A > tally.B} />
-        <span className="text-fg/20 px-2">·</span>
-        <Side name={playerName(s, 'B')} n={tally.B} ahead={tally.B > tally.A} />
-      </div>
-    </div>
-  )
-}
-
-function Side({ name, n, ahead }: { name: string; n: number; ahead: boolean }) {
-  return (
-    <span className={ahead ? 'text-accent' : ''}>
-      {name} {n}
-    </span>
   )
 }

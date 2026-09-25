@@ -42,7 +42,7 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), game, content, dayIndex(localDate()))
+  return { ...initialState(ensureSessionSeed(), game, content, dayIndex(localDate())), intros: true }
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the

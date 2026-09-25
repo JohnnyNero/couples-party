@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { Board as BoardData, BoardKinds } from './api'
 import { Card } from './CardKit'
+import { card } from '../ui/styles'
+import { Avatar, inkOf } from '../ui/Avatar'
 import { localDate } from './dates'
 import { dialOfTheDay, spectrumPrompt } from './dial'
 import { numbersOfTheDay } from './numbers'
@@ -38,8 +40,7 @@ const NAMES: Record<Kind, string> = {
 type Screen = { kind: Kind; mode: 'play' | 'set' }
 type Pools = { content: Content; words: string[]; numbers: string[] }
 
-export function Board() {
-  const board = useBoard()
+export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const [screen, setScreen] = useState<Screen | null>(null)
   // After closing a solve, open tomorrow's set straight away — but only once the fresh
   // board confirms the solve actually finished (backing out of a half-done Wordle
@@ -135,52 +136,50 @@ export function Board() {
 
 // ---------------------------------------------------------------- scoreboard
 
+// You against them, all-time, with today's haul under each — and the day's five as a
+// strip of pips.
 function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   const played = KINDS.map((k) => {
     const s = d.kinds[k].solve
     return !!s && s.status !== 'open'
   })
   const done = played.filter(Boolean).length
-  const rows = [
-    { name: 'You', today: d.today.me, total: d.total.me },
-    { name: d.partner, today: d.today.them, total: d.total.them },
-  ]
-  const lead = Math.max(d.total.me, d.total.them)
+  const lead = d.total.me === d.total.them ? null : d.total.me > d.total.them ? 'A' : 'B'
   return (
-    <section className="rounded-3xl border-2 border-fg bg-fg/[0.02] px-5 py-4 shadow-[4px_4px_0_rgba(0,0,0,0.12)]">
+    <section className={card + ' px-4 py-4 flex flex-col gap-3'}>
       <div className="flex items-center justify-between gap-3">
-        <div className="font-display text-lg font-bold uppercase tracking-wide text-accent">Today's run</div>
-        {d.streak > 0 && (
-          <div className="shrink-0 rounded-full bg-accent/15 text-accent px-3 py-1 text-xs font-bold uppercase tracking-widest">
-            {d.streak}-day streak
+        <div className="font-display text-[1.05rem] font-bold">Today's puzzles</div>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {played.map((p, i) => (
+              <span key={i} className={'h-2 w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
+            ))}
           </div>
-        )}
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="flex-1 flex gap-1.5">
-          {played.map((p, i) => (
-            <span key={i} className={'h-2.5 flex-1 rounded-full ' + (p ? 'bg-accent' : 'bg-fg/15')} />
-          ))}
+          <span className="text-xs font-bold text-fg/55 tabular-nums">{done} of 5</span>
         </div>
-        <span className="shrink-0 text-sm text-fg/60 tabular-nums">{done} of 5 solved</span>
       </div>
-      <div className="mt-3 pt-3 border-t-2 border-dashed border-fg/15 flex flex-col gap-1.5">
-        {rows.map((r) => {
-          const leading = r.total === lead && lead > 0
-          return (
-            <div key={r.name} className="flex items-baseline gap-3">
-              <span className={'flex-1 min-w-0 truncate font-bold ' + (leading ? 'text-fg' : 'text-fg/70')}>
-                {leading ? '👑 ' : ''}{r.name}
-              </span>
-              <span className="text-sm text-fg/50 tabular-nums">+{r.today} today</span>
-              <span className={'w-12 text-right font-display text-2xl font-bold tabular-nums ' + (leading ? 'text-accent' : 'text-fg/70')}>
-                {r.total}
-              </span>
-            </div>
-          )
-        })}
+      <div className="flex items-center gap-2">
+        <Side p="A" name={d.me} label="You" today={d.today.me} total={d.total.me} lead={lead === 'A'} />
+        <span className="font-display font-bold text-sm text-fg/30">vs</span>
+        <Side p="B" name={d.partner} label={d.partner} today={d.today.them} total={d.total.them} lead={lead === 'B'} flip />
       </div>
     </section>
+  )
+}
+
+function Side({ p, name, label, today, total, lead, flip = false }: {
+  p: 'A' | 'B'; name: string; label: string; today: number; total: number; lead: boolean; flip?: boolean
+}) {
+  return (
+    <div className={'flex-1 min-w-0 flex items-center gap-2.5 ' + (flip ? 'flex-row-reverse text-right' : '')}>
+      <Avatar p={p} name={name} />
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-fg/60 truncate">
+          {lead && <span aria-label="leading">👑 </span>}{label} · +{today} today
+        </div>
+        <div className={'font-display text-[1.75rem] font-extrabold leading-none tabular-nums ' + inkOf(p)}>{total}</div>
+      </div>
+    </div>
   )
 }
 
@@ -206,18 +205,25 @@ function Tile({
   const solved = !!solve && solve.status !== 'open'
   const complete = (solved || !solve) && !!next
 
-  let line: ReactNode
+  // What the tile asks of you, as a chip: something to play (filled), something to set
+  // for them (outlined), or nothing left (quiet).
+  let chip: ReactNode
   let mode: 'play' | 'set'
   if (solve && !solved) {
-    line = started ? 'Carry on →' : 'Play →'
+    chip = <span className="px-2.5 py-1 rounded-full bg-pa text-white text-xs font-extrabold">{started ? 'Carry on' : 'Play'}</span>
     mode = 'play'
   } else if (!next) {
     // Nothing set for today yet (day one, or a missed day) → set one for today, so
     // there's something to play right away, instead of only ever setting for tomorrow.
-    line = !mine ? `Set ${partner}'s for today →` : solved ? 'Now set →' : `Set ${partner}'s →`
+    const what = !mine ? `Set ${partner}'s for today` : solved ? `Now set ${partner}'s` : `Set ${partner}'s`
+    chip = <span className="px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">{what}</span>
     mode = 'set'
   } else {
-    line = solved ? 'Done ✓' : 'Sent ✓'
+    chip = (
+      <span className="text-xs font-extrabold text-fg/50">
+        {solved ? <>Done · <span className="text-accent-ink">+{solve!.points ?? 0}</span></> : 'Sent ✓'}
+      </span>
+    )
     mode = solved ? 'play' : 'set'
   }
 
@@ -225,23 +231,16 @@ function Tile({
     <button
       onClick={() => onOpen(mode)}
       className={
-        'text-left rounded-2xl border-2 px-4 py-3 active:translate-y-px transition-colors ' +
-        (wide ? 'col-span-2 ' : '') +
-        (complete
-          ? 'border-fg/15 bg-fg/[0.04]'
-          : 'border-fg bg-bg shadow-[3px_3px_0_rgba(0,0,0,0.15)]')
+        'text-left rounded-[1.25rem] border-2 px-3.5 py-3 active:translate-y-px transition-colors flex ' +
+        (wide ? 'col-span-2 items-center gap-3 ' : 'flex-col gap-2.5 ') +
+        (complete ? 'border-fg/15 bg-fg/[0.03]' : 'border-fg bg-card shadow-[3px_3px_0_rgba(0,0,0,0.12)]')
       }
     >
-      <div className="flex items-center gap-2">
-        <KindIcon kind={kind} />
-        <span className="flex-1 min-w-0 font-display text-base font-bold leading-tight">{NAMES[kind]}</span>
+      <div className={'flex items-center gap-2 min-w-0 ' + (wide ? 'flex-1' : '')}>
+        <span className="shrink-0 w-8 h-8 rounded-[10px] bg-fg/[0.05] inline-flex items-center justify-center"><KindIcon kind={kind} /></span>
+        <span className="flex-1 min-w-0 font-display text-base font-bold leading-tight truncate">{NAMES[kind]}</span>
       </div>
-      <div className="mt-1.5 flex items-baseline justify-between gap-2">
-        <span className={'min-w-0 truncate text-sm ' + (complete ? 'text-fg/45' : 'text-fg/60')}>{line}</span>
-        {solved && (
-          <span className="shrink-0 font-display text-lg font-bold text-accent tabular-nums leading-none">+{solve!.points ?? 0}</span>
-        )}
-      </div>
+      <div className={wide ? 'shrink-0' : 'self-start max-w-full'}>{chip}</div>
     </button>
   )
 }

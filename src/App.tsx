@@ -45,6 +45,7 @@ export default function App() {
     if (!mode) {
       return (
         <ModePicker
+          game={game}
           onBack={() => setGame(null)}
           onPick={(m, bot) => {
             // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's
@@ -74,8 +75,12 @@ function SeenRecorder({ keep }: { keep: boolean }) {
 
 function Connecting() {
   return (
-    <div className="h-full w-full flex items-center justify-center">
-      <div className="text-lg uppercase tracking-[0.3em] text-fg/40 animate-pulse">Connecting…</div>
+    <div className="h-full w-full flex flex-col items-center justify-center gap-4">
+      <div className="flex gap-2">
+        <span className="w-3 h-3 rounded-full bg-pa animate-pulse" />
+        <span className="w-3 h-3 rounded-full bg-pb animate-pulse [animation-delay:200ms]" />
+      </div>
+      <div className="font-display text-xl font-bold text-fg/50">Getting the room ready…</div>
     </div>
   )
 }

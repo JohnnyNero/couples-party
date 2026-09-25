@@ -7,6 +7,8 @@ import { parseSpectrumPrompt } from '../daily/dial'
 import { DrawingCanvas } from '../views/DrawingCanvas'
 import type { PlayerId } from '../engine/state'
 import type { SessionMemory } from './summary'
+import { Avatar, inkOf } from '../ui/Avatar'
+import { card, eyebrow } from '../ui/styles'
 
 // Everything you've played together, newest first: each night's session, and the daily
 // puzzles under the day they were for. Nothing here is new data — the sessions are what
@@ -75,7 +77,10 @@ export function MemoriesTab() {
       )}
       {days.map(({ date, sessions, puzzles }) => (
         <section key={date} className="flex flex-col gap-3">
-          <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40">{longDate(date)}</div>
+          <div className="flex items-center gap-3">
+            <span className={eyebrow}>{longDate(date)}</span>
+            <span className="flex-1 h-px bg-fg/10" />
+          </div>
           {sessions.map((s) => <SessionCard key={s.key} m={s.payload as SessionMemory} />)}
           {puzzles.length > 0 && <PuzzlesCard puzzles={puzzles} me={d.me} partner={d.partner} />}
         </section>
@@ -83,7 +88,7 @@ export function MemoriesTab() {
       <button
         onClick={more}
         disabled={loadingMore}
-        className="self-center text-sm uppercase tracking-widest text-accent font-bold disabled:opacity-40"
+        className="self-center min-h-[44px] text-sm font-extrabold text-accent-ink disabled:opacity-40"
       >
         {loadingMore ? '…' : `Show before ${longDate(last.since, true)}`}
       </button>
@@ -124,15 +129,20 @@ function SessionCard({ m }: { m: SessionMemory }) {
   const n = (p: PlayerId) => m.players[p]
   const lead = m.score.A === m.score.B ? null : m.score.A > m.score.B ? 'A' : 'B'
   return (
-    <section className="rounded-3xl border-2 border-fg bg-fg/[0.02] shadow-[4px_4px_0_rgba(0,0,0,0.12)]">
+    <section className={card}>
       <button onClick={() => setOpen((o) => !o)} className="w-full text-left px-5 py-4 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="font-display text-xl font-bold leading-tight">{SESSION_NAMES[m.game] ?? m.games[0]?.label ?? 'A session'}</div>
           <div className="text-sm text-fg/60 truncate">{m.games.map((g) => g.label).join(' · ')}</div>
         </div>
-        <div className="shrink-0 text-right tabular-nums">
-          <div className="font-bold">{n('A')} <span className={lead === 'A' ? 'text-accent' : ''}>{m.score.A}</span></div>
-          <div className="font-bold">{n('B')} <span className={lead === 'B' ? 'text-accent' : ''}>{m.score.B}</span></div>
+        <div className="shrink-0 flex items-center gap-1.5 tabular-nums" aria-label={`${n('A')} ${m.score.A}, ${n('B')} ${m.score.B}`}>
+          <Avatar p="A" name={n('A')} size="sm" />
+          <span className="font-display text-lg font-extrabold">
+            <span className={lead === 'A' ? inkOf('A') : ''}>{m.score.A}</span>
+            <span className="text-fg/30"> – </span>
+            <span className={lead === 'B' ? inkOf('B') : ''}>{m.score.B}</span>
+          </span>
+          <Avatar p="B" name={n('B')} size="sm" />
         </div>
         <span className="shrink-0 text-fg/40 text-lg">{open ? '▴' : '▾'}</span>
       </button>
@@ -145,7 +155,7 @@ function SessionCard({ m }: { m: SessionMemory }) {
                   <div className="text-sm text-fg/60">{r.question}</div>
                   {(['A', 'B'] as const).map((p) => (
                     <div key={p} className="text-sm">
-                      <b>{n(p)}:</b> {r.answer[p] ?? '—'}
+                      <b className={inkOf(p)}>{n(p)}:</b> {r.answer[p] ?? '—'}
                       <span className="text-fg/45"> · {n(p === 'A' ? 'B' : 'A')} guessed "{r.predict[p === 'A' ? 'B' : 'A'] ?? '—'}" {r.verdict[p === 'A' ? 'B' : 'A'] ? '✓' : '✗'}</span>
                     </div>
                   ))}
@@ -236,7 +246,7 @@ const PUZZLE_NAMES: Record<Puzzle['kind'], string> = {
 
 function PuzzlesCard({ puzzles, me, partner }: { puzzles: Puzzle[]; me: string; partner: string }) {
   return (
-    <section className="rounded-3xl border-2 border-fg/15 px-5 py-4 flex flex-col divide-y divide-fg/10">
+    <section className="rounded-3xl border-2 border-fg/15 bg-card/50 px-5 py-4 flex flex-col divide-y divide-fg/10">
       {puzzles.map((p) => {
         // Set by one of you, for the other to solve.
         const setter = p.mine ? me : partner

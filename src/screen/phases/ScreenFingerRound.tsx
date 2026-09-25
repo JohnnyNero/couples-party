@@ -1,21 +1,13 @@
 import type { SessionState } from '../../engine/state'
-import { Dot } from '../../views/Dot'
+import { PromptCard, WhoIsIn } from '../../ui/kit'
 
 export function ScreenFingerRound({ s }: { s: SessionState }) {
   const f = s.finger!
   const round = f.rounds[f.current]
   return (
-    <div className="w-full max-w-3xl mx-auto text-center">
-      <div className="text-[0.65rem] sm:text-sm uppercase tracking-[0.3em] text-fg/40 mb-3 sm:mb-5">
-        Put a finger down · {round.index} of {f.rounds.length}
-      </div>
-      <div className="text-2xl sm:text-5xl font-bold uppercase tracking-tight break-words">
-        If {round.statementId}
-      </div>
-      <div className="mt-8 sm:mt-14 flex items-center justify-center gap-4">
-        <Dot on={round.applies.A !== null} />
-        <Dot on={round.applies.B !== null} />
-      </div>
+    <div className="w-full max-w-3xl mx-auto flex flex-col gap-8">
+      <PromptCard over="Put a finger down if…">{round.statementId}</PromptCard>
+      <WhoIsIn s={s} done={{ A: round.applies.A !== null, B: round.applies.B !== null }} big />
     </div>
   )
 }

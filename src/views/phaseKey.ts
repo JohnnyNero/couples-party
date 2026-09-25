@@ -9,6 +9,7 @@ export function phaseKey(s: SessionState): string {
   const act = currentAct(s)
   return [
     s.phase,
+    s.intro?.key ?? '',
     s.listActs.length,
     act?.placeIndex ?? 0,
     act?.revealIndex ?? 0,

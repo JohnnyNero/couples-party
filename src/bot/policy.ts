@@ -28,6 +28,9 @@ export function nextBotAction(
     case 'JOIN':
       return s.players[me].connected ? null : { type: 'JOIN', player: me, name: 'BOT' }
 
+    case 'INTRO':
+      return s.intro && !s.intro.ready[me] ? { type: 'READY', player: me } : null
+
     case 'LIST_PLACE': {
       const act = currentAct(s)
       if (!act) return null
@@ -168,6 +171,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
   const spread = (min: number, max: number) => min + rng() * (max - min)
   switch (s.phase) {
     case 'JOIN': return 400
+    case 'INTRO': return spread(1500, 3500)
     case 'LIST_PLACE': return spread(1200, 4000) // per item
     case 'LIKELY_ROUND': return spread(1500, 5000)
     case 'FINGER_ROUND': return spread(2000, 6000)

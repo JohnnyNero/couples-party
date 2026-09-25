@@ -1,32 +1,26 @@
-import type { SessionState } from '../../engine/state'
+import type { PlayerId, SessionState } from '../../engine/state'
 import { Scoreboard } from '../../views/Scoreboard'
-import { Hand } from '../../views/Hand'
+import { Hand } from '../../ui/kit'
+import { Avatar } from '../../ui/Avatar'
 import { playerName } from '../../views/list'
 
-// The one game whose ending is worth a picture as well as a number — how much of each
-// hand is still up IS the result, so it sits above the board rather than being replaced
-// by it.
+// How much of each hand is still up IS the result, so it sits above the board.
 export function ScreenFingerResult({ s }: { s: SessionState }) {
   const f = s.finger!
   return (
     <Scoreboard
       s={s}
-      title="Put a finger down · final hands"
+      title="Put a Finger Down · done"
       flourish={
-        <div className="flex justify-center gap-10 sm:gap-16 mt-3 sm:mt-4">
-          <Side name={playerName(s, 'A')} fingers={f.fingersLeft.A} />
-          <Side name={playerName(s, 'B')} fingers={f.fingersLeft.B} />
+        <div className="flex justify-center gap-10 mt-3">
+          {(['A', 'B'] as PlayerId[]).map((p) => (
+            <div key={p} className="flex items-end gap-2">
+              <Avatar p={p} name={playerName(s, p)} size="sm" />
+              <Hand fingers={f.fingersLeft[p]} p={p} />
+            </div>
+          ))}
         </div>
       }
     />
-  )
-}
-
-function Side({ name, fingers }: { name: string; fingers: number }) {
-  return (
-    <div>
-      <div className="text-[0.55rem] sm:text-xs uppercase tracking-[0.25em] text-fg/40 mb-1.5">{name}</div>
-      <Hand fingers={fingers} />
-    </div>
   )
 }

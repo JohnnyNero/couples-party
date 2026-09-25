@@ -25,6 +25,32 @@ const PLAYERS: PlayerId[] = ['A', 'B']
 function beginGame(state: SessionState, now: number, key: GameKey | null): SessionState {
   // The scored games are done: a level night gets its tiebreaker before Lights Out.
   if ((key === 'lights' || key === null) && needsDecider(state)) return beginDecider(state, now)
+  const began = startGame(state, now, key)
+  // A title card in front of the game's first round — only if the game actually began
+  // (one with nothing to play has already handed on to the next, which got its own).
+  if (!state.intros || key === null || key === 'lights' || gameOfPhase(began.phase) !== key) return began
+  const s = clone(began)
+  s.intro = {
+    key,
+    ready: { A: false, B: false },
+    resume: began.phase,
+    resumeMs: began.phaseEndsAt === null ? null : began.phaseEndsAt - now,
+  }
+  s.phase = 'INTRO'
+  s.phaseEndsAt = now + DURATIONS.INTRO!
+  return s
+}
+
+function endIntro(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const intro = s.intro!
+  s.phase = intro.resume
+  s.phaseEndsAt = intro.resumeMs === null ? null : now + intro.resumeMs
+  s.intro = null
+  return s
+}
+
+function startGame(state: SessionState, now: number, key: GameKey | null): SessionState {
   switch (key) {
     case 'list': return beginList(state, now, 'A')
     case 'likely': return beginLikely(state, now)
@@ -874,6 +900,12 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       mine.stopped[action.player] = Math.round(Math.min(2 * round.targetMs, Math.max(0, action.elapsedMs)))
       return mine.stopped.A !== null && mine.stopped.B !== null ? toClockReveal(s, now, field) : s
     }
+    case 'READY': {
+      if (state.phase !== 'INTRO' || !state.intro || state.intro.ready[action.player]) return state
+      const s = clone(state)
+      s.intro!.ready[action.player] = true
+      return s.intro!.ready.A && s.intro!.ready.B ? endIntro(s, now) : s
+    }
     case 'CONTINUE': {
       if (!TAP_THROUGH.has(state.phase)) return state
       return afterScoreboard(state, now)
@@ -918,6 +950,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
+        case 'INTRO': return state.intro ? endIntro(state, now) : state
         case 'CHAIN_TURN': {
           const s = clone(state)
           const round = s.chain!.rounds[s.chain!.current]

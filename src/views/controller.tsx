@@ -14,6 +14,7 @@ import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
 import { PlayDrawSketch } from '../play/phases/PlayDrawSketch'
 import { PlayDrawGuess } from '../play/phases/PlayDrawGuess'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
+import { PlayIntro } from '../play/phases/PlayIntro'
 import { PlayCircleDraw } from '../play/phases/PlayCircleDraw'
 import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
@@ -35,6 +36,8 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
   switch (s.phase) {
     case 'JOIN':
       return <PlayJoin s={s} me={me} />
+    case 'INTRO':
+      return <PlayIntro s={s} me={me} />
     case 'LIST_INTRO':
       return <PlayWaiting label="See the board" />
     case 'LIST_PLACE':

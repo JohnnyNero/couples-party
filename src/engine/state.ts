@@ -12,6 +12,7 @@ export type Game = 'full' | 'tonight' | Exclude<GameKey, 'lights'>
 
 export type Phase =
   | 'BOOT' | 'JOIN'
+  | 'INTRO' // a game's title card, before its first round
   | 'GAP_STATEMENT' | 'GAP_INPUT' | 'GAP_CALL' | 'GAP_REVEAL' | 'GAP_RESULT'
   | 'LIST_INTRO' | 'LIST_PLACE' | 'LIST_REVEAL' | 'LIST_RESULT'
   | 'LIKELY_ROUND' | 'LIKELY_REVEAL' | 'LIKELY_RESULT'
@@ -189,6 +190,16 @@ export type ClockRound = {
 }
 export type ClockGame = { rounds: ClockRound[]; current: number; bestOf: number }
 
+// A game's title card: what it is and how it plays, before its first round. The game has
+// already been set up underneath it; `resume` is where it picks up — the phase, and how
+// long that phase's clock had — once you're both ready, or the card's own clock runs out.
+export type IntroCard = {
+  key: GameKey
+  ready: Record<PlayerId, boolean>
+  resume: Phase
+  resumeMs: number | null
+}
+
 // Lights Out: one gentle question to end the night on. No score, no typing — it's there
 // to be talked about with the phone face down.
 export type LightsCard = { question: string }
@@ -225,6 +236,8 @@ export type SessionState = {
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
+  intro: IntroCard | null
+  intros: boolean // title cards on — set by the host for real sessions; tests leave them off
   game: Game
   night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
 } & Content
@@ -258,6 +271,8 @@ export type Action =
   // Every game ends on a scoreboard that waits to be tapped — the point of it is to sit
   // and look at the numbers, so nothing moves it on by itself.
   | { type: 'CONTINUE'; player: PlayerId }
+  // Done reading a game's title card.
+  | { type: 'READY'; player: PlayerId }
   // Category Clash: all six of your answers at once ('' for a blank), then — at the
   // reveal — a challenge to your partner's answer in one category.
   | { type: 'SUBMIT_CLASH'; player: PlayerId; answers: string[] }
@@ -308,6 +323,8 @@ export function initialState(
     circle: null,
     clock: null,
     decider: null,
+    intro: null,
+    intros: false,
     game,
     night,
     ...EMPTY_CONTENT,

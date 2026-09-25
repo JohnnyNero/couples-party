@@ -22,6 +22,24 @@ export default {
         correct: 'rgb(var(--correct) / <alpha-value>)',
         present: 'rgb(var(--present) / <alpha-value>)',
         absent: 'rgb(var(--absent) / <alpha-value>)',
+        // The accent as TEXT: the fill colour is too light to read as small type on the
+        // cream, so words in the accent use this deeper shade.
+        'accent-ink': 'rgb(var(--accent-ink) / <alpha-value>)',
+        // A raised surface: white by day, a warm dark card by night.
+        card: 'rgb(var(--card) / <alpha-value>)',
+        // The two of you. Seat A is coral, seat B is blue, on both phones and the TV:
+        // avatars, scores, and whose answer is whose. `-ink` for text, `-soft` for tints.
+        pa: 'rgb(var(--pa) / <alpha-value>)',
+        'pa-ink': 'rgb(var(--pa-ink) / <alpha-value>)',
+        'pa-soft': 'rgb(var(--pa-soft) / <alpha-value>)',
+        pb: 'rgb(var(--pb) / <alpha-value>)',
+        'pb-ink': 'rgb(var(--pb-ink) / <alpha-value>)',
+        'pb-soft': 'rgb(var(--pb-soft) / <alpha-value>)',
+        // Two more tints for game tiles, so every game isn't coral or blue.
+        'tan-soft': 'rgb(var(--tan-soft) / <alpha-value>)',
+        'tan-ink': 'rgb(var(--tan-ink) / <alpha-value>)',
+        'sage-soft': 'rgb(var(--sage-soft) / <alpha-value>)',
+        'sage-ink': 'rgb(var(--sage-ink) / <alpha-value>)',
       },
       fontFamily: {
         // Nunito everywhere by default (preflight sets `sans` on html); `display`
