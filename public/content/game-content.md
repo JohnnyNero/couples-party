@@ -738,6 +738,73 @@ question to talk about with the phone face down. Keep them gentle and short.
 - What's a dream you haven't told anyone?
 - What's something you want to learn this year?
 
+# Category Clash
+
+One letter, six categories, a minute. Six are drawn per round. Each one needs lots
+of answers for most letters, so keep them broad ("a drink", not "a cocktail"), and
+start them the way an answer would finish them: "A …" or "Something …".
+
+- Something in a fridge
+- A breakfast food
+- Something in a handbag
+- A reason to be late
+- A pizza topping
+- Something at the beach
+- An animal
+- A fruit or vegetable
+- A TV show
+- A film
+- A band or singer
+- A famous person
+- A country
+- A city
+- A first name
+- Something in a kitchen
+- A sport
+- A drink
+- A dessert
+- A colour
+- Something with wheels
+- A job
+- A hobby
+- Something you'd take camping
+- Something cold
+- Something that smells nice
+- A takeaway dish
+- A cartoon character
+- Something in a bathroom
+- A body part
+- Something soft
+- Something you plug in
+- A holiday destination
+- A brand
+- A musical instrument
+- Something in the sky
+- An item of clothing
+- A song
+- Something in a supermarket
+- Something you'd find in a garden
+- A game
+- Something sticky
+- Something loud
+- A reason to cancel plans
+- An excuse for not texting back
+- A pet name for a partner
+- A bad first-date spot
+- A date night idea
+- Something couples argue about
+- An anniversary present
+- A romantic film
+- Something to do on a lazy Sunday
+- A honeymoon destination
+- Something under the bed
+- A word to describe your partner
+- A reason to say sorry
+- Something you'd wear to bed
+- Something you do in the shower
+- Something you'd never tell your mum
+- A turn-on
+
 
 # Their Word
 

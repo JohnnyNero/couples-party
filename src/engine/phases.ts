@@ -19,6 +19,7 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   DRAW_SKETCH: 50000, // decide your answer, then draw it with one finger
   DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
   DRAW_REVEAL: 8000,  // long enough for the drawer to wave through a near miss
+  CLASH_WRITE: 60000, // six answers, one letter (the reveal waits for taps)
   CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
   CIRCLE_REVEAL: 6000,
   CLOCK_READY: 3000,  // the target, then 3-2-1 (CLOCK_RUN's length depends on the target)
@@ -71,4 +72,11 @@ export const CLOCK = {
   deadHeatMs: 10,   // closer than this is a dead heat, and the round is played again
   graceMs: 1500,    // on top of 2 × target before the host calls time
   deciderMaxRounds: 3,
+}
+
+export const CLASH = {
+  categories: 6,
+  // No Q, X, Z, J, V or Y: too few answers start with them to be fun against a clock.
+  letters: 'ABCDEFGHIKLMNOPRSTUW',
+  maxLen: 30,
 }

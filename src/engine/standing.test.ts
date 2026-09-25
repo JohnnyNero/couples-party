@@ -1,3 +1,4 @@
+import { CLASH_POINTS } from './clash'
 import { describe, it, expect } from 'vitest'
 import { initialState, type FingerGame, type ListAct, type ListItem, type PlayerId, type WaveRound } from './state'
 import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING } from './standing'
@@ -133,6 +134,7 @@ describe('the four games are worth about the same', () => {
     Wavelength: 7 * SCORING.waveBullseye,
     'Put a Finger Down': 5 * SCORING.fingerKept,
     'Quick Draw': 6 * SCORING.drawCorrect,
+    'Category Clash': 3 * 6 * CLASH_POINTS.unique, // three rounds of six
   }
 
   it('tops out within a quarter of each other', () => {
@@ -179,8 +181,8 @@ describe('gameScores', () => {
     const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
     const rows = gameScores(s)
     // The full roster, in playing order. Lights Out isn't here — it doesn't score.
-    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'mrmrs', 'clock', 'draw'])
-    expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false])
+    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'clash', 'clock', 'mrmrs', 'draw'])
+    expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false, false])
     expect(rows[0].points).toEqual({ A: SCORING.listExact, B: 0 })
     expect(rows[1].points).toEqual({ A: 0, B: SCORING.fingerKept })
   })

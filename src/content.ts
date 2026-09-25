@@ -8,7 +8,7 @@ import type { Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
 export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'clash' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -23,6 +23,7 @@ function sectionFor(heading: string): Section {
     case 'lights out': return 'lights'
     case 'their word': return 'word'
     case 'their numbers': return 'numbers'
+    case 'category clash': return 'clash'
     default: return null
   }
 }
@@ -37,6 +38,7 @@ export function parseContent(text: string): ParsedContent {
   const lightsQuestions: string[] = []
   const wordPrompts: string[] = []
   const numberQuestions: string[] = []
+  const clashCategories: string[] = []
 
   let section: Section = null
   let currentTheme: Theme | null = null
@@ -95,11 +97,14 @@ export function parseContent(text: string): ParsedContent {
       case 'numbers':
         numberQuestions.push(item)
         break
+      case 'clash':
+        clashCategories.push(item)
+        break
     }
   }
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, clashCategories,
   }
 }

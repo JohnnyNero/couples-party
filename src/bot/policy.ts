@@ -110,6 +110,16 @@ export function nextBotAction(
       return { type: 'SUBMIT_DRAW_GUESS', player: me, text: pickFrom(rng, brain.nouns) }
     }
 
+    case 'CLASH_WRITE': {
+      const g = s.clash
+      if (!g) return null
+      const round = g.rounds[g.current]
+      if (round.answers[me] !== null) return null
+      // Whatever it knows that starts with the letter — which isn't much.
+      const fits = brain.nouns.filter((n) => n[0]?.toUpperCase() === round.letter)
+      return { type: 'SUBMIT_CLASH', player: me, answers: round.categories.map((_, i) => fits[i] ?? '') }
+    }
+
     case 'CIRCLE_DRAW': {
       const c = s.circle
       if (!c || c.rounds[c.current].drawn[me] !== null) return null
@@ -155,6 +165,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'WAVE_GUESS': return spread(2000, 7000)
     case 'DRAW_SKETCH': return spread(5000, 15000)
     case 'DRAW_GUESS': return spread(2000, 7000)
+    case 'CLASH_WRITE': return spread(15000, 40000)
     case 'CIRCLE_DRAW': return spread(2000, 6000)
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {

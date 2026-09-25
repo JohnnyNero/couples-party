@@ -197,6 +197,7 @@ describe('the shipped content keeps its shape', () => {
     expect(parsed.spectrums.length).toBeGreaterThanOrEqual(need('wave'))
     expect(parsed.drawPrompts.length).toBeGreaterThanOrEqual(need('draw'))
     expect(parsed.lightsQuestions.length).toBeGreaterThanOrEqual(1)
+    expect(parsed.clashCategories.length).toBeGreaterThanOrEqual(need('clash') * 6)
   })
 
   it('keeps Draw Your Answer prompts as bare phrases the app can put "Your" in front of', () => {
@@ -268,5 +269,6 @@ describe('the shipped content keeps its shape', () => {
     expect(dupes(parsed.mrmrsQuestions)).toEqual([])
     expect(dupes(parsed.lightsQuestions)).toEqual([])
     expect(dupes(parsed.wordPrompts)).toEqual([])
+    expect(dupes(parsed.clashCategories)).toEqual([])
   })
 })

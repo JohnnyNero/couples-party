@@ -156,13 +156,14 @@ describe('the fillers and the tiebreaker', () => {
   })
   it('says a level night goes to a tiebreaker, then plays it as sudden death', () => {
     // The last scored game's scoreboard, still level at 0–0.
-    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], drawPrompts: [{ id: 'd1', text: 'dream pet' }] }, 0)
+    const cats = ['a drink', 'a colour', 'an animal', 'a film', 'a job', 'a sport']
+    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], clashCategories: cats }, 0)
     last = reduce(last, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     last = reduce(last, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
-    for (let i = 0; i < 60 && last.phase !== 'DRAW_RESULT'; i++) {
+    for (let i = 0; i < 120 && last.phase !== 'CLASH_RESULT'; i++) {
       last = last.phase.endsWith('_RESULT') ? reduce(last, { type: 'CONTINUE', player: 'A' }, i * 1000) : reduce(last, { type: 'TIMEOUT' }, i * 1000)
     }
-    expect(last.phase).toBe('DRAW_RESULT')
+    expect(last.phase).toBe('CLASH_RESULT') // the night's last game
     expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('tiebreaker next')
     const decider = walk((x) => x.phase === 'DECIDER_READY')
     expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('closest takes the night')
@@ -179,5 +180,38 @@ describe('the fillers and the tiebreaker', () => {
     s = reduce(s, { type: 'TIMEOUT' }, 20000)
     expect(s.phase).toBe('CIRCLE_REVEAL')
     expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('Dead level')
+  })
+})
+
+describe('Category Clash', () => {
+  const cats = ['a drink', 'a colour', 'an animal', 'a film', 'a job', 'a sport', 'a city', 'a game']
+  const begin = () => {
+    let s = initialState(1, 'clash', { clashCategories: cats })
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
+    return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
+  }
+  it('shows the letter and categories while writing, never anyone\'s answers', () => {
+    let s = begin()
+    const round = s.clash!.rounds[0]
+    s = reduce(s, { type: 'SUBMIT_CLASH', player: 'A', answers: round.categories.map(() => `${round.letter}secret`) }, 1000)
+    const board = renderToStaticMarkup(<BoardStage s={s} />)
+    expect(board).toContain(round.categories[0])
+    expect(board).not.toContain('secret')
+    expect(renderToStaticMarkup(<Controller s={s} me="B" />)).toContain(round.categories[5])
+    expect(railText(s)).toBe('Category Clash · Round 1 of 3')
+  })
+  it('reveals row by row, with the verdict under each answer', () => {
+    let s = begin()
+    const round = s.clash!.rounds[0]
+    s = reduce(s, { type: 'SUBMIT_CLASH', player: 'A', answers: round.categories.map((_, i) => `${round.letter}sam${i}`) }, 1000)
+    s = reduce(s, { type: 'SUBMIT_CLASH', player: 'B', answers: ['zebra', `${round.letter}sam1`] }, 1000)
+    let html = renderToStaticMarkup(<BoardStage s={s} />)
+    expect(html).toContain(`${round.letter}sam0`)
+    expect(html).toContain('wrong letter')
+    expect(html).not.toContain(`${round.letter}sam1`) // not reached yet
+    s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 2000)
+    html = renderToStaticMarkup(<BoardStage s={s} />)
+    expect(html).toContain('same')
+    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain('Next')
   })
 })

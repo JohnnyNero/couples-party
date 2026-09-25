@@ -1,11 +1,12 @@
 import type {
-  Action, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { clashVerdict } from './clash'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
 import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
@@ -30,6 +31,7 @@ function beginGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'mrmrs': return beginMrMrs(state, now)
     case 'wave': return beginWave(state, now)
     case 'draw': return beginDraw(state, now)
+    case 'clash': return beginClash(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
@@ -53,7 +55,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -435,6 +437,61 @@ function advanceDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Category Clash
+
+// Letters and categories are dealt for every round up front, so no letter and no
+// category comes up twice in one game.
+function beginClash(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const rounds = roundsFor(s, 'clash')
+  if (s.clashCategories.length < CLASH.categories) return skipTo(s, now, 'clash')
+  const letters = shuffled(makeRng(s.seed ^ 0xc1a5), CLASH.letters.split(''))
+  const cats = shuffled(makeRng(s.seed ^ 0xca75), s.clashCategories)
+  s.clash = {
+    rounds: Array.from({ length: rounds }, (_, r): ClashRound => {
+      const categories = Array.from({ length: CLASH.categories }, (_, i) => cats[(r * CLASH.categories + i) % cats.length])
+      return {
+        index: r + 1,
+        letter: letters[r % letters.length],
+        categories,
+        answers: { A: null, B: null },
+        challenged: { A: categories.map(() => false), B: categories.map(() => false) },
+        revealIndex: 0,
+      }
+    }),
+    current: 0,
+  }
+  s.phase = 'CLASH_WRITE'
+  s.phaseEndsAt = now + DURATIONS.CLASH_WRITE!
+  return s
+}
+
+// Whatever never came in is six blanks. The reveal has no clock: an argument about
+// whether beans are "a reason to be late" can run as long as it likes.
+function toClashReveal(state: SessionState): SessionState {
+  const s = clone(state)
+  const round = s.clash!.rounds[s.clash!.current]
+  for (const p of PLAYERS) round.answers[p] ??= round.categories.map(() => '')
+  s.phase = 'CLASH_REVEAL'
+  s.phaseEndsAt = null
+  return s
+}
+
+function advanceClash(state: SessionState, now: number): SessionState {
+  const g = state.clash!
+  const round = g.rounds[g.current]
+  const s = clone(state)
+  if (round.revealIndex < round.categories.length - 1) {
+    s.clash!.rounds[g.current].revealIndex += 1
+    return s
+  }
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'CLASH_RESULT')
+  s.clash!.current += 1
+  s.phase = 'CLASH_WRITE'
+  s.phaseEndsAt = now + DURATIONS.CLASH_WRITE!
+  return s
+}
+
 // ---------------------------------------------------------------- Perfect Circle
 
 function newCircleRound(index: number) {
@@ -689,6 +746,28 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       currentDrawRound(s.draw!).correct = true
       return s
     }
+    case 'SUBMIT_CLASH': {
+      if (state.phase !== 'CLASH_WRITE' || !state.clash) return state
+      const round = state.clash.rounds[state.clash.current]
+      if (round.answers[action.player] !== null) return state // sent is sent
+      const s = clone(state)
+      const mine = s.clash!.rounds[s.clash!.current]
+      mine.answers[action.player] = mine.categories.map((_, i) =>
+        String(action.answers[i] ?? '').trim().slice(0, CLASH.maxLen))
+      return mine.answers.A !== null && mine.answers.B !== null ? toClashReveal(s) : s
+    }
+    case 'CHALLENGE': {
+      if (state.phase !== 'CLASH_REVEAL' || !state.clash) return state
+      const round = state.clash.rounds[state.clash.current]
+      // Any category the reveal has reached, and only an answer that's still scoring —
+      // a blank, a wrong letter or a match is already worth nothing.
+      if (action.index < 0 || action.index > round.revealIndex) return state
+      const owner = other(action.player)
+      if (clashVerdict(round, owner, action.index) !== 'scores') return state
+      const s = clone(state)
+      s.clash!.rounds[s.clash!.current].challenged[owner][action.index] = true
+      return s
+    }
     case 'SUBMIT_CIRCLE': {
       if (state.phase !== 'CIRCLE_DRAW' || !state.circle) return state
       const round = state.circle.rounds[state.circle.current]
@@ -714,6 +793,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       return afterScoreboard(state, now)
     }
     case 'ADVANCE_REVEAL': {
+      if (state.phase === 'CLASH_REVEAL') return advanceClash(state, now)
       if (state.phase !== 'LIST_REVEAL') return state
       return advanceReveal(state, now)
     }
@@ -752,6 +832,8 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
+        case 'CLASH_WRITE': return toClashReveal(state)
+        case 'CLASH_REVEAL': return advanceClash(state, now)
         case 'CIRCLE_DRAW': return toCircleReveal(state, now)
         case 'CIRCLE_REVEAL': return advanceCircle(state, now)
         case 'CLOCK_READY': return toClockRun(state, now, 'clock')

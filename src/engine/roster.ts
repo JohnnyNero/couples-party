@@ -16,8 +16,9 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     { key: 'finger', rounds: 5 },
     { key: 'circle', rounds: 1 }, // a filler after every second game
     { key: 'wave', rounds: 7 },
-    { key: 'mrmrs', rounds: 5 },
+    { key: 'clash', rounds: 3 },
     { key: 'clock', rounds: 3 }, // best of 3
+    { key: 'mrmrs', rounds: 5 },
     { key: 'draw', rounds: 6 },
     { key: 'lights', rounds: 1 },
   ],
@@ -30,6 +31,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   mrmrs: [{ key: 'mrmrs', rounds: 5 }],
   wave: [{ key: 'wave', rounds: 7 }],
   draw: [{ key: 'draw', rounds: 6 }],
+  clash: [{ key: 'clash', rounds: 3 }],
   // A filler on its own is a best of 5.
   circle: [{ key: 'circle', rounds: 5 }],
   clock: [{ key: 'clock', rounds: 5 }],
@@ -45,6 +47,7 @@ const TONIGHT_POOL: RosterEntry[] = [
   { key: 'wave', rounds: 2 }, // one each as the psychic
   { key: 'mrmrs', rounds: 2 },
   { key: 'draw', rounds: 2 }, // one drawing each
+  { key: 'clash', rounds: 2 },
 ]
 
 // One quick filler after the second game, Stop the Clock and Perfect Circle in turn.
@@ -92,6 +95,7 @@ export function gameOfPhase(phase: Phase): GameKey | null {
   if (phase.startsWith('MM_')) return 'mrmrs'
   if (phase.startsWith('WAVE_')) return 'wave'
   if (phase.startsWith('DRAW_')) return 'draw'
+  if (phase.startsWith('CLASH_')) return 'clash'
   if (phase.startsWith('CIRCLE_')) return 'circle'
   if (phase.startsWith('CLOCK_')) return 'clock'
   if (phase === 'LIGHTS_OUT') return 'lights'
@@ -105,6 +109,7 @@ export const GAME_LABELS: Record<GameKey, string> = {
   mrmrs: 'Mr & Mrs',
   wave: 'Wavelength',
   draw: 'Draw Your Answer',
+  clash: 'Category Clash',
   circle: 'Perfect Circle',
   clock: 'Stop the Clock',
   lights: 'Lights Out',

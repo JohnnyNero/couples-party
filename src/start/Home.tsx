@@ -60,7 +60,7 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
         <div className="flex-1 min-w-0">
           <div className="font-display text-2xl font-bold tracking-tight leading-none">Tonight</div>
           <div className="mt-1.5 text-xs text-paper/60 leading-snug">
-            About eight minutes · {tonight.join(' · ')}
+            About ten minutes · {tonight.join(' · ')}
           </div>
         </div>
         <button
@@ -80,6 +80,7 @@ const GAME_BLURBS: Partial<Record<Exclude<Game, 'full' | 'tonight'>, string>> = 
   mrmrs: 'Your answer, and your guess at theirs',
   wave: 'Name a thing on a scale · they find the spot',
   draw: 'Answer about yourself, then draw it',
+  clash: 'One letter, six categories · unique answers score',
   circle: 'One circle each · the rounder one wins',
   clock: 'Stop a hidden clock on the second',
 }
@@ -90,7 +91,7 @@ function Games({ onPick }: { onPick: (g: Game) => void }) {
       <PickButton
         onClick={() => onPick('full')}
         title="The full session"
-        sub="Every game, then lights out · about 30 minutes"
+        sub="Every game, then lights out · about 35 minutes"
       />
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mt-3 mb-1">Or just one</div>
       {(Object.entries(GAME_BLURBS) as Array<[keyof typeof GAME_BLURBS, string]>).map(([g, blurb]) => (

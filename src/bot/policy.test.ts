@@ -180,6 +180,7 @@ describe('the bot can play the whole night', () => {
       spectrums: list.map((x, i) => ({ id: `w${i}`, low: x, high: x.toUpperCase() })),
       drawPrompts: list.map((x, i) => ({ id: `d${i}`, text: x })),
       lightsQuestions: ['What made you laugh today?'],
+      clashCategories: list,
     })
     const order: string[] = []
     let steps = 0
@@ -195,6 +196,6 @@ describe('the bot can play the whole night', () => {
     }
     expect(s.phase).toBe('DONE')
     // The tiebreaker only turns up on a level night, which depends on the bot's luck.
-    expect(order.filter((g) => g !== 'DECIDER')).toEqual(['JOIN', 'LIST', 'FINGER', 'CIRCLE', 'WAVE', 'MM', 'CLOCK', 'DRAW', 'LIGHTS'])
+    expect(order.filter((g) => g !== 'DECIDER')).toEqual(['JOIN', 'LIST', 'FINGER', 'CIRCLE', 'WAVE', 'CLASH', 'CLOCK', 'MM', 'DRAW', 'LIGHTS'])
   })
 })

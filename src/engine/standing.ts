@@ -6,6 +6,7 @@ import { other } from './state'
 import { GAME_LABELS, roster } from './roster'
 import { FILLER } from './phases'
 import { clockRoundWinner, fillerOver, fillerWinner, type Filler } from './fillers'
+import { clashPoints } from './clash'
 
 // The in-session tally is NEVER stored: it is derived from the act records here. If a
 // number on the board is not one of these, something has gone wrong.
@@ -194,6 +195,7 @@ function pointsFor(s: SessionState, key: Exclude<GameKey, 'lights'>): Standing {
     case 'mrmrs': return mrmrsPoints(s.mrmrs)
     case 'wave': return sumAwards((s.wave?.rounds ?? []).map(waveAward))
     case 'draw': return sumAwards((s.draw?.rounds ?? []).map(drawAward))
+    case 'clash': return clashPoints(s.clash, s.phase !== 'CLASH_WRITE')
     case 'circle': return fillerPoints(s.circle && { kind: 'circle', game: s.circle })
     case 'clock': return fillerPoints(s.clock && { kind: 'clock', game: s.clock })
   }

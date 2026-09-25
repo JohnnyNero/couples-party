@@ -17,6 +17,8 @@ export function phaseKey(s: SessionState): string {
     s.mrmrs?.current ?? 0,
     s.wave?.current ?? 0,
     s.draw?.current ?? 0,
+    s.clash?.current ?? 0,
+    s.clash ? s.clash.rounds[s.clash.current].revealIndex : 0,
     s.circle?.current ?? 0,
     s.clock?.current ?? 0,
     s.decider?.current ?? 0,

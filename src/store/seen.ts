@@ -1,5 +1,6 @@
 import type { Content, SessionState } from '../engine/state'
 import { roundsFor } from '../engine/roster'
+import { CLASH } from '../engine/phases'
 
 // What this phone has already been shown, so the next session draws something new.
 // Each phone keeps its own log — both play every session, so the two logs match — and
@@ -9,7 +10,7 @@ import { roundsFor } from '../engine/roster'
 // Items are logged by their text, not their id: ids come from their position in the
 // content file, and they shift whenever a line is added or removed.
 
-type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list'
+type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list' | 'clash'
 export type SeenLog = Partial<Record<PoolKey, string[]>> // oldest first
 
 const STORAGE_KEY = 'couples-party:seen'
@@ -25,6 +26,7 @@ const NEED: Record<PoolKey, number> = {
   wave: roundsFor({ game: 'wave' }, 'wave'),
   draw: roundsFor({ game: 'draw' }, 'draw'),
   list: roundsFor({ game: 'list' }, 'list'), // one theme per act
+  clash: roundsFor({ game: 'clash' }, 'clash') * CLASH.categories,
 }
 
 const waveKey = (s: { low: string; high: string }) => `${s.low} | ${s.high}`
@@ -56,6 +58,7 @@ export function freshen(content: Content, log: SeenLog = loadSeen()): Content {
     spectrums: unseen(content.spectrums, waveKey, log.wave, NEED.wave),
     drawPrompts: unseen(content.drawPrompts, (p) => p.text, log.draw, NEED.draw),
     themes: unseen(content.themes, (t) => t.text, log.list, NEED.list),
+    clashCategories: unseen(content.clashCategories, id, log.clash, NEED.clash),
   }
 }
 
@@ -75,6 +78,7 @@ export function shownIn(s: SessionState): Record<PoolKey, string[]> {
     wave: upTo(s.wave).map((r) => spectrum.get(r.spectrumId)).filter(known),
     draw: upTo(s.draw).map((r) => prompt.get(r.promptId)).filter(known),
     list: s.listActs.map((a) => theme.get(a.themeId)).filter(known),
+    clash: s.clash ? s.clash.rounds.slice(0, s.clash.current + 1).flatMap((r) => r.categories) : [],
   }
 }
 

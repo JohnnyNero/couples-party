@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -19,6 +19,7 @@ export type Phase =
   | 'MM_ANSWER' | 'MM_JUDGE' | 'MM_RESULT'
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
+  | 'CLASH_WRITE' | 'CLASH_REVEAL' | 'CLASH_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
@@ -130,6 +131,20 @@ export type MrMrsRound = {
 }
 export type MrMrsGame = { rounds: MrMrsRound[]; current: number }
 
+// Category Clash: one letter, six categories, a minute to answer them all. An answer
+// scores if it starts with the letter and isn't the same as your partner's; the app
+// can check the letter but not whether it fits, so either of you can challenge the
+// other's at the reveal, which halves it.
+export type ClashRound = {
+  index: number // 1-based
+  letter: string // upper case
+  categories: string[]
+  answers: Record<PlayerId, string[] | null> // one per category, '' for blank; null = not in yet
+  challenged: Record<PlayerId, boolean[]>    // keyed by the answer's OWNER
+  revealIndex: number // the category the reveal is on
+}
+export type ClashGame = { rounds: ClashRound[]; current: number }
+
 // Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
 // the round. Only the longest stroke is kept — that's the circle; the rest is noise.
 export type CircleRound = {
@@ -167,6 +182,7 @@ export type Content = {
   likelyStatements: string[]
   mrmrsQuestions: string[]
   lightsQuestions: string[]
+  clashCategories: string[]
 }
 
 export type SessionState = {
@@ -182,6 +198,7 @@ export type SessionState = {
   wave: WaveGame | null
   draw: DrawGame | null
   lights: LightsCard | null
+  clash: ClashGame | null
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
@@ -218,6 +235,10 @@ export type Action =
   // Every game ends on a scoreboard that waits to be tapped — the point of it is to sit
   // and look at the numbers, so nothing moves it on by itself.
   | { type: 'CONTINUE'; player: PlayerId }
+  // Category Clash: all six of your answers at once ('' for a blank), then — at the
+  // reveal — a challenge to your partner's answer in one category.
+  | { type: 'SUBMIT_CLASH'; player: PlayerId; answers: string[] }
+  | { type: 'CHALLENGE'; player: PlayerId; index: number }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -234,6 +255,7 @@ export const EMPTY_CONTENT: Content = {
   likelyStatements: [],
   mrmrsQuestions: [],
   lightsQuestions: [],
+  clashCategories: [],
 }
 
 export function initialState(
@@ -255,6 +277,7 @@ export function initialState(
     wave: null,
     draw: null,
     lights: null,
+    clash: null,
     circle: null,
     clock: null,
     decider: null,

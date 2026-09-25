@@ -119,11 +119,18 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('plays the four head-to-head games with a filler after the second, then Lights Out', () => {
-    for (const night of [0, 1, 2, 3, -3]) {
-      const filler = ((night % 2) + 2) % 2 === 0 ? 'clock' : 'circle'
-      expect(roster('tonight', night).map((e) => e.key)).toEqual(['finger', 'wave', filler, 'mrmrs', 'draw', 'lights'])
+  it('plays four of the five head-to-head games, a different one out each night, with a filler after the second', () => {
+    const pool = ['finger', 'wave', 'mrmrs', 'draw', 'clash']
+    const out: string[] = []
+    for (const night of [0, 1, 2, 3, 4]) {
+      const keys = roster('tonight', night).map((e) => e.key)
+      expect(keys).toHaveLength(6)
+      expect(keys[2]).toBe(night % 2 === 0 ? 'clock' : 'circle')
+      expect(keys[5]).toBe('lights')
+      out.push(pool.find((k) => !keys.includes(k as never))!)
     }
+    expect(new Set(out).size).toBe(5) // each sits out once in five nights
+    expect(roster('tonight', -3)).toEqual(roster('tonight', 7)) // negative day numbers too
   })
   const playThrough = (state: SessionState) => {
     let s = state
@@ -143,9 +150,11 @@ describe('tonight', () => {
     expect(s.phase).toBe('DONE')
     // No finger statements or spectrums in this content, so those two are skipped.
     // Nobody taps and nobody scores, so the night is level and goes to a tiebreaker.
+    // Night 0 sits Finger Down out: Wavelength (skipped, no spectrums), Mr & Mrs, the
+    // clock, Draw, then Category Clash (skipped, no categories).
     expect(seen).toEqual([
-      'CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT',
       'MM_ANSWER', 'MM_JUDGE', 'MM_RESULT',
+      'CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT',
       'DRAW_SKETCH', 'DRAW_GUESS', 'DRAW_REVEAL', 'DRAW_RESULT',
       'DECIDER_READY', 'DECIDER_RUN', 'DECIDER_REVEAL',
       'LIGHTS_OUT',
@@ -158,8 +167,7 @@ describe('tonight', () => {
   })
   it('skips a game the content file gave nothing to, rather than opening it empty', () => {
     const s = start('tonight')
-    expect(s.phase).toBe('CLOCK_READY') // finger and wave had nothing, the filler needs nothing
-    expect(s.finger).toBe(null)
+    expect(s.phase).toBe('MM_ANSWER') // Wavelength had nothing to play
     expect(s.wave).toBe(null)
   })
   it('still plays the filler with no content at all, then ends without Lights Out', () => {

@@ -2,6 +2,16 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
+## Done: Category Clash (new-games spec, step 2)
+
+Scattergories for two: one letter (never Q, X, Z, J, V or Y, and none repeated in a game),
+six categories from the content file's new "# Category Clash" section, 60 seconds. At
+the reveal, one category per tap, an answer scores 2 if it starts with the letter and
+isn't the same as your partner's (case, articles, spacing and a plural "s" ignored),
+0 if it is. Either of you can challenge the other's scoring answer ("That doesn't
+count"), which halves it to 1. Three rounds in the full session (max 36), two in
+Tonight. It joins Tonight's pool, so Tonight rotates again: four of five games a night.
+
 ## Done: fillers and the tiebreaker (new-games spec, step 1)
 
 Two 30-second head-to-head fillers slot in between games: **Perfect Circle** (draw one
