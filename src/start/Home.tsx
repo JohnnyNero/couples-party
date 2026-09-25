@@ -52,17 +52,34 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
 
 // Each tab's own title, with the theme toggle (and anything else) on the right.
 function TabHeader({ over, title, sub, right }: { over?: string; title: string; sub?: string; right?: ReactNode }) {
+  const controls = (
+    <div className="shrink-0 flex items-center gap-2">
+      {right}
+      <ThemeToggle />
+    </div>
+  )
+  // With a line over the title (Today's date), that line shares the row with the
+  // controls and the title gets the full width underneath, on one line — shrinking a
+  // little for long names, and trimmed with an ellipsis only past that.
+  if (over) {
+    return (
+      <header className="mb-4">
+        <div className="flex items-center justify-between gap-3 pr-10 min-h-[2.75rem]">
+          <div className={eyebrow + ' min-w-0 truncate'}>{over}</div>
+          {controls}
+        </div>
+        <h1 className="mt-1 font-display text-[clamp(1.45rem,7.6vw,1.9rem)] font-extrabold leading-[1.1] tracking-tight whitespace-nowrap truncate">{title}</h1>
+        {sub && <div className="mt-0.5 text-sm text-fg/60">{sub}</div>}
+      </header>
+    )
+  }
   return (
     <header className="flex items-start justify-between gap-3 mb-4 pr-10">
       <div className="min-w-0">
-        {over && <div className={eyebrow}>{over}</div>}
         <h1 className="font-display text-[1.9rem] font-extrabold leading-[1.05] tracking-tight">{title}</h1>
         {sub && <div className="mt-0.5 text-sm text-fg/60">{sub}</div>}
       </div>
-      <div className="shrink-0 flex items-center gap-2">
-        {right}
-        <ThemeToggle />
-      </div>
+      {controls}
     </header>
   )
 }

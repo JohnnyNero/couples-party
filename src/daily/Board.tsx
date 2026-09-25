@@ -148,14 +148,14 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   return (
     <section className={card + ' px-4 py-4 flex flex-col gap-3'}>
       <div className="flex items-center justify-between gap-3">
-        <div className="font-display text-[1.05rem] font-bold">Today's puzzles</div>
+        <div className="font-display text-[1.05rem] font-bold whitespace-nowrap">Today's puzzles</div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
             {played.map((p, i) => (
-              <span key={i} className={'h-2 w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
+              <span key={i} className={'h-2 w-3.5 min-[400px]:w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
             ))}
           </div>
-          <span className="text-xs font-bold text-fg/55 tabular-nums">{done} of 5</span>
+          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of 5</span>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -215,8 +215,9 @@ function Tile({
   } else if (!next) {
     // Nothing set for today yet (day one, or a missed day) → set one for today, so
     // there's something to play right away, instead of only ever setting for tomorrow.
-    const what = !mine ? `Set ${partner}'s for today` : solved ? `Now set ${partner}'s` : `Set ${partner}'s`
-    chip = <span className="px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">{what}</span>
+    // "for today" only where there's room for it; a half-width tile just says whose.
+    const what = !mine && wide ? `Set ${partner}'s for today` : solved ? `Now set ${partner}'s` : `Set ${partner}'s`
+    chip = <span className="inline-block align-top px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">{what}</span>
     mode = 'set'
   } else {
     chip = (
