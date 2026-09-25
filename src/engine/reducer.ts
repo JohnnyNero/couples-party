@@ -37,7 +37,9 @@ function beginGame(state: SessionState, now: number, key: GameKey | null): Sessi
     resumeMs: began.phaseEndsAt === null ? null : began.phaseEndsAt - now,
   }
   s.phase = 'INTRO'
-  s.phaseEndsAt = now + DURATIONS.INTRO!
+  // No clock: it waits until you've both tapped ready. (A TIMEOUT still ends it — that's
+  // the debug skip; the host's timer never sends one without a deadline.)
+  s.phaseEndsAt = null
   return s
 }
 

@@ -5,7 +5,6 @@ import type { Phase } from './state'
 // until both rulings are in — all of those wait for a tap, because hurrying them would
 // cut off the conversation they exist to start.
 export const DURATIONS: Partial<Record<Phase, number>> = {
-  INTRO: 12000,       // a game's title card — gone sooner if you both tap Ready
   LIST_INTRO: 4000,   // the theme card, read once before the items start
   LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
   LIKELY_ROUND: 12000, // read it, tap a name

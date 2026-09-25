@@ -19,7 +19,7 @@ describe('title cards', () => {
     expect(s.phase).toBe('INTRO')
     expect(s.intro).toMatchObject({ key: 'mrmrs', ready: { A: false, B: false }, resume: 'MM_ANSWER' })
     expect(s.mrmrs?.rounds).toHaveLength(2) // as many as the content has
-    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.INTRO!)
+    expect(s.phaseEndsAt).toBe(null) // no clock — it waits for you both
   })
   it('moves on once you are both ready, with the first round’s clock full', () => {
     let s = start('mrmrs')
@@ -31,10 +31,12 @@ describe('title cards', () => {
     expect(s.intro).toBe(null)
     expect(s.phaseEndsAt).toBe(5000 + DURATIONS.MM_ANSWER!)
   })
-  it('moves on by itself when its clock runs out', () => {
-    const s = reduce(start('mrmrs'), { type: 'TIMEOUT' }, 20000)
+  it('waits however long it takes for the second of you', () => {
+    let s = reduce(start('mrmrs'), { type: 'READY', player: 'A' }, 3000)
+    expect(s.phaseEndsAt).toBe(null)
+    s = reduce(s, { type: 'READY', player: 'B' }, 10 * 60 * 1000) // ten minutes later
     expect(s.phase).toBe('MM_ANSWER')
-    expect(s.phaseEndsAt).toBe(20000 + DURATIONS.MM_ANSWER!)
+    expect(s.phaseEndsAt).toBe(10 * 60 * 1000 + DURATIONS.MM_ANSWER!)
   })
   it('never shows for a game with nothing to play, nor for Lights Out', () => {
     let s = start('tonight') // night 0: Mr & Mrs is the first game with content here

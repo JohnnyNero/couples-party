@@ -9,7 +9,6 @@ import {
   useMultiplayerState,
   getState,
   setState,
-  getRoomCode,
   RPC,
   type PlayerState,
 } from 'playroomkit'
@@ -19,11 +18,16 @@ import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
-import { assignPlayerId, getPlayerId } from './ids'
+import { claimSeat, type Seats } from './ids'
 import { dayIndex, localDate } from '../daily/dates'
 import type { PlayMode } from '../start/mode'
 
 const SESSION_KEY = 'session'
+// Which device sits in which seat — decided by the host, read by everyone (see ids.ts).
+const SEATS_KEY = 'seats'
+// Who's in the room right now, by Playroom id. Every phone keeps this, not just the host,
+// so whichever phone becomes host already knows.
+const present = new Set<string>()
 
 let content: Content = EMPTY_CONTENT
 let game: Game = 'full'
@@ -75,22 +79,28 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
     ...(roomCode ? { roomCode, skipLobby: true } : {}),
   })
 
+  // Before anyone's seated, so the first JOIN lands in the session that stays.
+  if (isHost()) {
+    // A paired couple's room is the same room every night, so it can still hold an old
+    // session. A finished one, one from another day, or a different game starts over;
+    // one still going from today — a host reloading mid-game — carries on.
+    const existing = getState(SESSION_KEY) as SessionState | undefined
+    const stale = !existing || existing.phase === 'DONE' || existing.game !== game || existing.night !== dayIndex(localDate())
+    setState(SESSION_KEY, stale ? hostFreshState() : existing, true)
+  }
+
   // Ruling P1: Playroom collects each player's name at join, so JOIN is dispatched
-  // automatically here (host-guarded) instead of via a name-entry UI.
+  // automatically here (host-guarded) instead of via a name-entry UI. The host also
+  // gives the newcomer a seat and tells everyone which it is.
   onPlayerJoin((player: PlayerState) => {
-    const id = assignPlayerId(player.id, getRoomCode())
-    if (isHost()) {
-      const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
-      const name = player.getProfile().name || id
-      setState(SESSION_KEY, reduce(current, { type: 'JOIN', player: id, name }, Date.now()), true)
-    }
+    present.add(player.id)
+    if (isHost()) seat(player)
     player.onQuit(() => {
-      // Reconnection hardening is out of scope for M0 (tracked for M5).
+      present.delete(player.id)
     })
   })
 
   if (isHost()) {
-    setState(SESSION_KEY, (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState(), true)
 
     RPC.register('dispatch', async (action: Action) => {
       const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
@@ -135,7 +145,19 @@ export function getIsHost(): boolean {
   return isHost()
 }
 
+// Your seat, as the host decided it — the same answer on every phone.
 export function useMyPlayerId(): PlayerId | null {
+  const [seats] = useMultiplayerState<Seats>(SEATS_KEY, {})
   const me = myPlayer()
-  return me ? getPlayerId(me.id, getRoomCode()) : null
+  return me ? seats?.[me.id] ?? null : null
+}
+
+// Host only: seat a player who's just arrived, and JOIN them into the session.
+function seat(player: PlayerState): void {
+  const { seats, seat: mine } = claimSeat((getState(SEATS_KEY) as Seats | undefined) ?? {}, player.id, present)
+  setState(SEATS_KEY, seats, true)
+  if (!mine) return // a third device: it can watch, not play
+  const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
+  const name = player.getProfile().name || mine
+  setState(SESSION_KEY, reduce(current, { type: 'JOIN', player: mine, name }, Date.now()), true)
 }
