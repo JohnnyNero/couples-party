@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { initNet, getIsStreamScreen, useSession } from './net'
 import { recordSeen } from './store/seen'
+import { useKeepMemory } from './memories/useKeepMemory'
 import { api } from './daily/api'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
@@ -34,7 +35,7 @@ export default function App() {
   return (
     <>
       <FullscreenToggle />
-      {ready && <SeenRecorder />}
+      {ready && <SeenRecorder keep={mode !== 'solo' && !getIsStreamScreen()} />}
       {renderApp()}
     </>
   )
@@ -61,10 +62,13 @@ export default function App() {
   }
 }
 
-// Logs every prompt the session puts in front of you, so the next one draws new ones.
-function SeenRecorder() {
+// Logs every prompt the session puts in front of you, so the next one draws new ones —
+// and, on a paired phone, keeps the session for Memories. A TV isn't anyone's phone and
+// solo play is a testing seat, so neither keeps anything.
+function SeenRecorder({ keep }: { keep: boolean }) {
   const session = useSession()
   useEffect(() => recordSeen(session), [session])
+  useKeepMemory(session, keep)
   return null
 }
 

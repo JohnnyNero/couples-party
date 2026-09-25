@@ -5,19 +5,22 @@ import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
 import { Board } from '../daily/Board'
 import { dayIndex, localDate } from '../daily/dates'
+import { MemoriesTab } from '../memories/MemoriesTab'
 
-// The front door. Two tabs: Today, which is the nightly habit — one short session, the
-// same shape every night — and Games, for when you've got longer or want one thing.
+// The front door. Three tabs: Today, which is the nightly habit — one short session —
+// Games, for when you've got longer or want one thing, and Memories, everything you've
+// played together so far.
 // Today also carries the daily puzzles — five a day, each set by your partner the day
 // before — with the scoreboard between you.
 
-type Tab = 'today' | 'games'
+type Tab = 'today' | 'games' | 'memories'
 
 const TAB_KEY = 'couples-party:tab'
 
 function loadTab(): Tab {
   try {
-    return localStorage.getItem(TAB_KEY) === 'games' ? 'games' : 'today'
+    const t = localStorage.getItem(TAB_KEY)
+    return t === 'games' || t === 'memories' ? t : 'today'
   } catch {
     return 'today'
   }
@@ -38,12 +41,13 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
       </header>
       <main className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
         <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
-          {tab === 'today' ? <Today onPick={onPick} /> : <Games onPick={onPick} />}
+          {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <MemoriesTab />}
         </div>
       </main>
-      <nav className="shrink-0 border-t border-fg/15 bg-bg grid grid-cols-2 pb-[env(safe-area-inset-bottom)]">
+      <nav className="shrink-0 border-t border-fg/15 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === 'today'} onClick={() => choose('today')} label="Today" icon={<MoonIcon />} />
         <TabButton active={tab === 'games'} onClick={() => choose('games')} label="Games" icon={<GridIcon />} />
+        <TabButton active={tab === 'memories'} onClick={() => choose('memories')} label="Memories" icon={<BookIcon />} />
       </nav>
     </div>
   )
@@ -125,6 +129,16 @@ const iconProps = {
 
 function MoonIcon() {
   return <svg {...iconProps}><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z" /></svg>
+}
+
+function BookIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+      <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z" />
+      <path d="M12 7.2c-.9-1-2.6-.6-2.6.8 0 1.3 2.6 2.8 2.6 2.8s2.6-1.5 2.6-2.8c0-1.4-1.7-1.8-2.6-.8z" />
+    </svg>
+  )
 }
 
 function GridIcon() {

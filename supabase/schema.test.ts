@@ -11,6 +11,7 @@ import m0008 from './migrations/0008_their_numbers.sql?raw'
 import m0009 from './migrations/0009_streak_any_puzzle.sql?raw'
 import m0010 from './migrations/0010_solve_then_set.sql?raw'
 import m0011 from './migrations/0011_couple_room_code.sql?raw'
+import m0012 from './migrations/0012_memories.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -68,6 +69,7 @@ beforeAll(async () => {
   await db.exec(m0009)
   await db.exec(m0010)
   await db.exec(m0011)
+  await db.exec(m0012)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -564,5 +566,62 @@ describe('my_couple_code', () => {
     expect(await call(ALEX, 'my_couple_code')).toBe(room) // …and both of you share the same one
     await call(SAM, 'leave_couple'); await call(ALEX, 'leave_couple')
     expect(await call(SAM, 'my_couple_code')).toBe(null)
+  })
+})
+
+describe('memories', () => {
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
+  const SESSION = { v: 1, game: 'tonight', score: { A: 12, B: 9 }, lights: 'What made you laugh today?' }
+
+  it('keeps a session for the couple, once however many times either phone saves it', async () => {
+    expect(await call(SAM, 'memories', [today()])).toEqual({ state: 'single' })
+    // Not paired yet: nothing to save to.
+    await expect(call(SAM, 'save_moment', ['s1', today(), SESSION])).rejects.toThrow(/not paired/)
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await expect(call(SAM, 'save_moment', ['s1', today(), SESSION])).rejects.toThrow(/not paired/) // still waiting
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+
+    await call(SAM, 'save_moment', ['s1', today(), SESSION])
+    await call(ALEX, 'save_moment', ['s1', today(), { ...SESSION, score: { A: 20, B: 9 } }])
+    const mem = await call(ALEX, 'memories', [today()])
+    expect(mem).toMatchObject({ state: 'paired', me: 'Alex', partner: 'Sam' })
+    expect(mem.sessions).toHaveLength(1)
+    expect(mem.sessions[0]).toMatchObject({ key: 's1', playedOn: today(), payload: { score: { A: 20, B: 9 } } })
+    // The same for both of you.
+    expect((await call(SAM, 'memories', [today()])).sessions).toEqual(mem.sessions)
+  })
+
+  it('refuses a far-off date, something that is not a memory, or one that is far too big', async () => {
+    await expect(call(SAM, 'save_moment', ['s2', daysAgo(10), SESSION])).rejects.toThrow(/bad date/)
+    await expect(call(SAM, 'save_moment', ['s2', today(), [1, 2]])).rejects.toThrow(/bad memory/)
+    await expect(call(SAM, 'save_moment', ['s2', today(), { big: 'x'.repeat(310000) }])).rejects.toThrow(/too big/)
+  })
+
+  it('never shows one couple another couple’s memories, and is closed to the public', async () => {
+    expect(await call(EVE, 'memories', [today()])).toEqual({ state: 'single' })
+    await db.exec("set role anon;")
+    await expect(db.query('select public.memories($1)', [today()])).rejects.toThrow()
+    await db.exec('reset role;')
+    expect(await as(SAM, 'select * from public.moments')).toEqual([]) // row level security, no policies
+  })
+
+  it('includes past daily puzzles with their answers once the day is over, but never today’s', async () => {
+    await call(SAM, 'set_word', [daysAgo(2), 'Your day in one word', 'sunny']) // never solved
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])     // still in play
+    const mem = await call(ALEX, 'memories', [today()])
+    const words = mem.puzzles.filter((p: { kind: string }) => p.kind === 'word')
+    expect(words).toHaveLength(1)
+    expect(words[0]).toMatchObject({ forDate: daysAgo(2), answer: 'sunny', mine: false })
+    expect((await call(SAM, 'memories', [today()])).puzzles[0]).toMatchObject({ mine: true })
+    // A phone can't pull today's answer out early by claiming it's tomorrow.
+    const early = await call(ALEX, 'memories', [tomorrow()])
+    expect(early.puzzles.some((p: { answer?: string }) => p.answer === 'pasta')).toBe(false)
+  })
+
+  it('pages back a window of days at a time', async () => {
+    const older = await call(SAM, 'memories', [today(), daysAgo(1), 30])
+    expect(older.sessions).toEqual([]) // today's session is after the window
+    expect(older.puzzles.map((p: { forDate: string }) => p.forDate)).toEqual([daysAgo(2)])
+    await call(SAM, 'leave_couple'); await call(ALEX, 'leave_couple')
   })
 })

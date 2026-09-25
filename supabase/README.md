@@ -49,6 +49,10 @@ SQL Editor → New query → paste the whole file → **Run**.
    asking you to share a room code or link. Adds `couples.room_code` (backfilled for
    existing rows), has `create_couple` set it alongside the pairing code, and adds
    `my_couple_code()`.
+12. `migrations/0012_memories.sql` — Memories: each live session a paired couple plays is
+   saved (answers, drawings, clues, the Lights Out question) for the Memories tab. Adds a
+   `moments` table (locked down like the others), `save_moment()`, and `memories()`,
+   which also returns past daily puzzles with their answers once the day is over.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

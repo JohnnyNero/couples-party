@@ -167,6 +167,20 @@ export type Board =
       streak: number
     }
 
+// Memories: the live sessions you've played together, and your past daily puzzles.
+// A puzzle carries `mine` (you set it) alongside its usual view.
+export type Memories =
+  | { state: 'single' }
+  | { state: 'waiting' }
+  | {
+      state: 'paired'
+      me: string
+      partner: string
+      since: string // the oldest day this window covers
+      sessions: { key: string; playedOn: string; payload: unknown }[]
+      puzzles: Array<(PuzzleView | DialView | Top5View | SketchView | NumbersView) & { mine: boolean; points?: number | null }>
+    }
+
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
 // (the migration hasn't been run, or anonymous sign-ins are off) — that's a problem for
 // whoever runs the project, not the person holding the phone.
@@ -265,6 +279,10 @@ export const api = {
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
   board: (today: string) => rpc<Board>('board', { p_today: today }),
   coupleCode: () => rpc<string | null>('my_couple_code'),
+  saveMoment: (key: string, playedOn: string, payload: unknown) =>
+    rpc<void>('save_moment', { p_session_key: key, p_played_on: playedOn, p_payload: payload }),
+  memories: (today: string, before?: string) =>
+    rpc<Memories>('memories', { p_today: today, ...(before ? { p_before: before } : {}), p_days: 30 }),
   streak: (today: string) => rpc<number>('streak', { p_today: today }),
   dailyNumbers: (today: string) => rpc<DailyNumbers>('daily_numbers', { p_today: today }),
   setNumbers: (forDate: string, questions: string[], answers: number[]) =>

@@ -2,6 +2,16 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
+## Done: Memories (migration 0012)
+
+A third home tab. Both paired phones save the live session as it goes, at every
+scoreboard, Lights Out and the end, so a night stopped halfway is still kept. The TV and
+solo play never save. What's kept: the score, Mr & Mrs answers and guesses, drawings with
+their answers, Wavelength clues, Shortlist rankings, Category Clash answers, Word Chain
+chains, and the Lights Out question. The tab shows those sessions and the past daily
+puzzles, answers included once the day is safely over, 30 days at a time. Still open:
+fallback puzzles for a missed day could now be drawn from these past answers.
+
 ## Done: Word Chain (new-games spec, step 3)
 
 Take turns naming things in a category, each starting with the last letter of the one
