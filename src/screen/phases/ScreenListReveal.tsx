@@ -34,10 +34,11 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
       <section className={card + ' px-4 py-2'}>
         <div className="flex items-center py-1.5 text-xs sm:text-base font-extrabold">
           <span className="flex-1 min-w-0" />
-          <span className={'w-[4.5rem] sm:w-28 shrink-0 flex items-center justify-center gap-1 ' + inkOf(ranker)}>
+          {/* Too narrow for names on a phone: the avatar says whose, the label says it in full. */}
+          <span title={`${playerName(s, ranker)} ranked`} aria-label={`${playerName(s, ranker)} ranked`} className={'w-[4.5rem] sm:w-28 shrink-0 flex items-center justify-center gap-1 ' + inkOf(ranker)}>
             <Avatar p={ranker} name={playerName(s, ranker)} size="sm" /> ranked
           </span>
-          <span className={'w-[5.5rem] sm:w-32 shrink-0 flex items-center justify-center gap-1 ' + inkOf(act.author)}>
+          <span title={`${playerName(s, act.author)} guessed`} aria-label={`${playerName(s, act.author)} guessed`} className={'w-[5.5rem] sm:w-32 shrink-0 flex items-center justify-center gap-1 ' + inkOf(act.author)}>
             <Avatar p={act.author} name={playerName(s, act.author)} size="sm" /> guessed
           </span>
         </div>
