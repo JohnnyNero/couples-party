@@ -97,7 +97,7 @@ describe('the scoreboard between games', () => {
     expect(html).toContain('Put a Finger Down')
     expect(html).toContain('Wavelength')
     expect(html).toContain('Draw Your Answer')
-    expect(html).toContain('More Likely')
+    expect(html).not.toContain('More Likely') // parked — see roster.ts
     expect(html).toContain('Mr &amp; Mrs')
     expect(html).toContain('Next up')
   })

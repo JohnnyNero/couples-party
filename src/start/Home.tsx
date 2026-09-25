@@ -74,9 +74,8 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
   )
 }
 
-const GAME_BLURBS: Record<Exclude<Game, 'full' | 'tonight'>, string> = {
+const GAME_BLURBS: Partial<Record<Exclude<Game, 'full' | 'tonight'>, string>> = {
   list: 'Rank seven things for them · they guess your order',
-  likely: 'Tap a name in secret · score when you agree',
   finger: 'Five confessions · keep your hand up',
   mrmrs: 'Your answer, and your guess at theirs',
   wave: 'Name a thing on a scale · they find the spot',
@@ -92,8 +91,8 @@ function Games({ onPick }: { onPick: (g: Game) => void }) {
         sub="Every game, then lights out · about 25 minutes"
       />
       <div className="text-[0.65rem] uppercase tracking-[0.3em] text-fg/40 mt-3 mb-1">Or just one</div>
-      {(Object.keys(GAME_BLURBS) as Array<keyof typeof GAME_BLURBS>).map((g) => (
-        <PickButton key={g} onClick={() => onPick(g)} title={GAME_LABELS[g]} sub={GAME_BLURBS[g]} />
+      {(Object.entries(GAME_BLURBS) as Array<[keyof typeof GAME_BLURBS, string]>).map(([g, blurb]) => (
+        <PickButton key={g} onClick={() => onPick(g)} title={GAME_LABELS[g]} sub={blurb} />
       ))}
     </div>
   )

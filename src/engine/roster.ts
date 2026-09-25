@@ -11,7 +11,8 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   // scoring was balanced against — see SCORING in standing.ts before changing one.
   full: [
     { key: 'list', rounds: 2 }, // two acts, roles swapped
-    { key: 'likely', rounds: 6 },
+    // Who's More Likely is parked for now: it pays you both for agreeing, and every other
+    // game is you against each other. It still runs on its own (?game=likely).
     { key: 'finger', rounds: 5 },
     { key: 'wave', rounds: 7 },
     { key: 'mrmrs', rounds: 5 },
@@ -29,12 +30,12 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   draw: [{ key: 'draw', rounds: 6 }],
 }
 
-// Tonight: four quick games before bed, then a question to turn the light off on. The
-// five candidates keep this order; each night leaves a different one out, so the same
-// mix comes round only every fifth night. Shortlist never plays here — it needs both
-// acts to be fair, and that's most of the night on its own.
+// Tonight: quick games before bed, then a question to turn the light off on. The
+// candidates keep this order; when there are more than TONIGHT_GAMES of them, each
+// night leaves a different one out, so the mix changes from night to night. Shortlist
+// never plays here — it needs both acts to be fair, and that's most of the night.
+const TONIGHT_GAMES = 4
 const TONIGHT_POOL: RosterEntry[] = [
-  { key: 'likely', rounds: 4 },
   { key: 'finger', rounds: 3 },
   { key: 'wave', rounds: 2 }, // one each as the psychic
   { key: 'mrmrs', rounds: 2 },
@@ -42,8 +43,11 @@ const TONIGHT_POOL: RosterEntry[] = [
 ]
 
 function tonight(night: number): RosterEntry[] {
-  const out = ((night % TONIGHT_POOL.length) + TONIGHT_POOL.length) % TONIGHT_POOL.length
-  return [...TONIGHT_POOL.filter((_, i) => i !== out), { key: 'lights', rounds: 1 }]
+  const n = TONIGHT_POOL.length
+  const skip = Math.max(0, n - TONIGHT_GAMES)
+  const first = ((night % n) + n) % n
+  const out = new Set(Array.from({ length: skip }, (_, i) => (first + i) % n))
+  return [...TONIGHT_POOL.filter((_, i) => !out.has(i)), { key: 'lights', rounds: 1 }]
 }
 
 // `night` only matters to Tonight: the day number the host started the session on

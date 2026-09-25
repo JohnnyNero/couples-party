@@ -119,27 +119,13 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('plays four of the five quick games, a different one left out each night, then Lights Out', () => {
-    const nights = [0, 1, 2, 3, 4].map((n) => roster('tonight', n).map((e) => e.key))
-    for (const keys of nights) {
-      expect(keys).toHaveLength(5)
-      expect(keys[4]).toBe('lights')
-      expect(keys).not.toContain('list')
+  it('plays the four quick head-to-head games, then Lights Out', () => {
+    for (const night of [0, 1, 2, 3, 4, -3]) {
+      expect(roster('tonight', night).map((e) => e.key)).toEqual(['finger', 'wave', 'mrmrs', 'draw', 'lights'])
     }
-    // Each of the five is the one left out exactly once in five nights…
-    const out = nights.map((keys) => ['likely', 'finger', 'wave', 'mrmrs', 'draw'].find((k) => !keys.includes(k as never)))
-    expect(new Set(out).size).toBe(5)
-    // …and the cycle repeats, negative day numbers included.
-    expect(roster('tonight', 7)).toEqual(roster('tonight', 2))
-    expect(roster('tonight', -3)).toEqual(roster('tonight', 2))
-    expect(roster('tonight', 1).map((e) => e.key)).toEqual(['likely', 'wave', 'mrmrs', 'draw', 'lights'])
-  })
-  it('takes its line-up from the night the session carries, so both phones agree', () => {
-    expect(start('tonight', CONTENT, 1).phase).toBe('LIKELY_ROUND')
-    expect(start('tonight', CONTENT, 0).phase).toBe('MM_ANSWER') // likely out; finger and wave have no content here
   })
   it('runs its line-up in order and ends on Lights Out', () => {
-    let s = start('tonight', CONTENT, 1)
+    let s = start('tonight')
     const seen: string[] = []
     for (let i = 0; i < 200 && s.phase !== 'DONE'; i++) {
       if (!seen.includes(s.phase)) seen.push(s.phase)
@@ -150,26 +136,26 @@ describe('tonight', () => {
       } else s = reduce(s, { type: 'TIMEOUT' }, 1000 * i)
     }
     expect(s.phase).toBe('DONE')
+    // No finger statements or spectrums in this content, so those two are skipped.
     expect(seen).toEqual([
-      'LIKELY_ROUND', 'LIKELY_REVEAL', 'LIKELY_RESULT',
       'MM_ANSWER', 'MM_JUDGE', 'MM_RESULT',
       'DRAW_SKETCH', 'DRAW_GUESS', 'DRAW_REVEAL', 'DRAW_RESULT',
       'LIGHTS_OUT',
     ])
-    expect(s.likely?.rounds).toHaveLength(4)
     expect(s.mrmrs?.rounds).toHaveLength(2)
     expect(s.draw?.rounds.map((r) => r.drawer)).toEqual(['A', 'B']) // one drawing each
     expect(s.lights?.question).toBe('What made you laugh today?')
   })
   it('skips a game the content file gave nothing to, rather than opening it empty', () => {
-    const s = start('tonight', { ...CONTENT, likelyStatements: [] }, 1)
+    const s = start('tonight')
     expect(s.phase).toBe('MM_ANSWER')
-    expect(s.likely).toBe(null)
+    expect(s.finger).toBe(null)
+    expect(s.wave).toBe(null)
   })
   it('goes straight to the end if there is nothing to end on', () => {
     let s = start('tonight', { lightsQuestions: [] })
     expect(s.phase).toBe('DONE') // nothing in any of Tonight's pools
-    s = start('tonight', { ...CONTENT, lightsQuestions: [] }, 1)
-    expect(s.phase).toBe('LIKELY_ROUND')
+    s = start('tonight', { ...CONTENT, lightsQuestions: [] })
+    expect(s.phase).toBe('MM_ANSWER')
   })
 })

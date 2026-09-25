@@ -15,15 +15,16 @@ export type SeenLog = Partial<Record<PoolKey, string[]>> // oldest first
 const STORAGE_KEY = 'couples-party:seen'
 const CAP = 400 // per pool; far more than any pool holds
 
-// The most any one session draws from each pool: the full night, the longest roster.
+// The most any one session draws from each pool: a game played on its own runs its
+// longest, so that's the size to keep.
 const NEED: Record<PoolKey, number> = {
-  likely: roundsFor({ game: 'full' }, 'likely'),
-  finger: roundsFor({ game: 'full' }, 'finger'),
-  mrmrs: roundsFor({ game: 'full' }, 'mrmrs'),
+  likely: roundsFor({ game: 'likely' }, 'likely'),
+  finger: roundsFor({ game: 'finger' }, 'finger'),
+  mrmrs: roundsFor({ game: 'mrmrs' }, 'mrmrs'),
   lights: 1,
-  wave: roundsFor({ game: 'full' }, 'wave'),
-  draw: roundsFor({ game: 'full' }, 'draw'),
-  list: roundsFor({ game: 'full' }, 'list'), // one theme per act
+  wave: roundsFor({ game: 'wave' }, 'wave'),
+  draw: roundsFor({ game: 'draw' }, 'draw'),
+  list: roundsFor({ game: 'list' }, 'list'), // one theme per act
 }
 
 const waveKey = (s: { low: string; high: string }) => `${s.low} | ${s.high}`

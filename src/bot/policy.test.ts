@@ -134,7 +134,7 @@ describe('the bot plays a whole session through the real reducer', () => {
 
 describe('the bot can play Tonight', () => {
   it('gets through every night of the rotation to DONE with only its own moves and the clock', () => {
-    for (const night of [0, 1, 2, 3, 4]) {
+    for (const night of [0, 1, 2, 3, 4]) { // the line-up can vary by night
       const r = makeRng(5 + night)
       let s = initialState(77, 'tonight', {
         likelyStatements: ['snore', 'burn dinner', 'go viral', 'cry at an advert'],
@@ -155,7 +155,6 @@ describe('the bot can play Tonight', () => {
       }
       expect(s.phase).toBe('DONE')
       const played = roster('tonight', night).map((e) => e.key)
-      expect(played).toHaveLength(5)
       if (played.includes('likely')) expect(s.likely!.rounds.every((r) => r.picks.A !== null && r.picks.B !== null)).toBe(true)
       if (played.includes('finger')) expect(s.finger!.rounds.every((r) => r.applies.A !== null && r.applies.B !== null)).toBe(true)
       if (played.includes('wave')) expect(s.wave!.rounds.every((r) => r.guess !== null)).toBe(true)
@@ -195,6 +194,6 @@ describe('the bot can play the whole night', () => {
       if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
     }
     expect(s.phase).toBe('DONE')
-    expect(order).toEqual(['JOIN', 'LIST', 'LIKELY', 'FINGER', 'WAVE', 'MM', 'DRAW', 'LIGHTS'])
+    expect(order).toEqual(['JOIN', 'LIST', 'FINGER', 'WAVE', 'MM', 'DRAW', 'LIGHTS'])
   })
 })

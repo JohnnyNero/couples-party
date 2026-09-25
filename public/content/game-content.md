@@ -409,7 +409,8 @@ Pick things that have a drawable answer.
 
 # Who's More Likely
 
-Six are drawn in a full session, four in Tonight. Just the end of the sentence —
+Parked for now: not in Tonight or the full session, only playable on its own by
+link (?game=likely). Six are drawn when it plays. Just the end of the sentence —
 the app starts it with "Who's more likely to". You both tap a name in secret and
 score when you agree.
 

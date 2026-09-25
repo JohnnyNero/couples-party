@@ -179,10 +179,10 @@ describe('gameScores', () => {
     const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
     const rows = gameScores(s)
     // The full roster, in playing order. Lights Out isn't here — it doesn't score.
-    expect(rows.map((g) => g.key)).toEqual(['list', 'likely', 'finger', 'wave', 'mrmrs', 'draw'])
-    expect(rows.map((g) => g.played)).toEqual([true, false, true, false, false, false])
+    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'wave', 'mrmrs', 'draw'])
+    expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false])
     expect(rows[0].points).toEqual({ A: SCORING.listExact, B: 0 })
-    expect(rows[2].points).toEqual({ A: 0, B: SCORING.fingerKept })
+    expect(rows[1].points).toEqual({ A: 0, B: SCORING.fingerKept })
   })
   it('always sums to the session total', () => {
     const s = {
