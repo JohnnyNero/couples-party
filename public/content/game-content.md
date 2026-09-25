@@ -360,6 +360,12 @@ between has to be nameable.
 - Useless | Useful
 - Scary | Comforting
 - Cheap date | Fancy date
+- Sweet | Savoury
+- Mild | Spicy
+- Relaxing | Stressful
+- Smells bad | Smells good
+- Tiny | Huge
+- Bad idea | Good idea
 
 
 # Draw Your Answer
@@ -590,3 +596,12 @@ money and anything with a right answer to be embarrassed about.
 - Minutes you'd wait for a table before giving up
 - Your ideal room temperature, in degrees
 - Minutes you'd happily spend in a hot bath
+- Out of 10, how romantic you are
+- Out of 10, how stubborn you are
+- Out of 10, how good you are at saying sorry
+- Out of 10, how adventurous you are with food
+- Out of 10, how scared you are of flying
+- Out of 10, how good your sense of direction is
+- Out of 10, how much you like dancing
+- The age you'd most like to be again
+- Alarms you set on a work morning
