@@ -295,6 +295,182 @@ the same theme plays differently every time.
 - a scruffy cat
 - a huge fluffy cat
 
+## seven ways {name} likes to unwind
+- a hot bath
+- a long walk
+- a glass of wine
+- a massage
+- a good book
+- a box set
+- a workout
+- an afternoon nap
+- a takeaway
+- a run
+- a cold beer
+- a drive
+- a podcast
+- a hot chocolate
+- a video game
+- a bike ride
+- a face mask
+- a night out
+- a cocktail
+- a crossword
+
+## seven foods {name} could eat every day
+- pasta
+- pizza
+- sushi
+- curry
+- toast
+- burgers
+- chips
+- eggs
+- noodles
+- tacos
+- chocolate
+- rice
+- soup
+- salad
+- fried chicken
+- bacon
+- cereal
+- avocado
+- dumplings
+- steak
+
+## seven jobs {name} would be terrible at
+- nurse
+- teacher
+- chef
+- spy
+- pilot
+- lifeguard
+- surgeon
+- therapist
+- comedian
+- bin collector
+- influencer
+- flight attendant
+- librarian
+- politician
+- personal trainer
+- receptionist
+- hairdresser
+- judge
+- bouncer
+- wedding planner
+
+## seven things {name} would do with a free day
+- staying in bed
+- going to the beach
+- watching films
+- going to a museum
+- going shopping
+- cooking
+- seeing friends
+- day drinking
+- going for a hike
+- visiting family
+- going to the cinema
+- cleaning the house
+- taking a road trip
+- doing nothing
+- going to the gym
+- going to a spa
+- trying a new restaurant
+- seeing a gig
+- people watching
+- going to the pub
+
+## seven smells {name} loves
+- cut grass
+- rain
+- petrol
+- frying bacon
+- baking bread
+- clean laundry
+- new books
+- a bonfire
+- sun cream
+- sea air
+- vanilla
+- lavender
+- fresh paint
+- garlic
+- a new car
+- chlorine
+- popcorn
+- coconut
+- cinnamon
+- aftershave
+
+## seven things {name} spends too much on
+- takeaways
+- clothes
+- shoes
+- coffee shops
+- gadgets
+- skincare
+- subscriptions
+- taxis
+- nights out
+- candles
+- plants
+- books
+- video games
+- flights
+- gifts
+- makeup
+- gym gear
+- gig tickets
+- lottery tickets
+- homeware
+
+## seven foods {name} would never eat
+- olives
+- mushrooms
+- anchovies
+- liver
+- snails
+- oysters
+- blue cheese
+- sprouts
+- tofu
+- coriander
+- marmite
+- black pudding
+- raw fish
+- tripe
+- beetroot
+- pickles
+- haggis
+- celery
+- tinned tuna
+- frogs' legs
+
+## seven things {name} does in bed (besides sleep)
+- doom scrolling
+- reading
+- watching TV
+- snoring
+- stealing the covers
+- sleep talking
+- texting
+- cuddling
+- having sex
+- overthinking
+- playing games
+- listening to podcasts
+- working
+- stretching
+- farting
+- spooning
+- starfishing
+- making plans
+- having breakfast
+- setting alarms
+
 
 # Put a Finger Down
 
@@ -332,6 +508,20 @@ anecdotes. Keep them under ten words.
 - you've kissed someone you shouldn't have
 - you've sent a message you regretted
 - you've been the difficult one lately
+- you've laughed at a joke you didn't get
+- you've pretended to know a song
+- you've re-gifted a present
+- you've googled yourself
+- you've fallen asleep during a film you picked
+- you've practised an argument in the shower
+- you've lied about how much something cost
+- you've sent a text to the wrong person
+- you've worn their clothes without asking
+- you've said you went to the gym when you didn't
+- you've ignored a call then texted "what's up?"
+- you've pulled a sickie
+- you've kept something you should have returned
+- you've eaten food off the floor
 
 
 # Wavelength
@@ -366,6 +556,8 @@ between has to be nameable.
 - Smells bad | Smells good
 - Tiny | Huge
 - Bad idea | Good idea
+- Terrible superpower | Great superpower
+- Rude | Polite
 
 
 # Draw Your Answer
@@ -405,6 +597,13 @@ Pick things that have a drawable answer.
 - ideal Sunday
 - best holiday ever
 - guilty pleasure
+- sleeping position
+- ideal pizza
+- favourite takeaway
+- most treasured possession
+- desert island item
+- favourite flower
+- favourite hobby
 
 
 # Who's More Likely
@@ -484,6 +683,16 @@ person the answer belongs to decides if the guess counts. Short answers only.
 - Your favourite place to be kissed?
 - Your biggest turn-on?
 - The best date we've been on?
+- Your go-to takeaway order?
+- The film that makes you cry?
+- The food you'd eat every day?
+- Your perfect breakfast?
+- The superpower you'd pick?
+- Your most-played song?
+- The celebrity you'd swap lives with?
+- Your favourite crisp flavour?
+- Your childhood nickname?
+- Your biggest pet peeve?
 
 
 # Lights Out
@@ -515,6 +724,19 @@ question to talk about with the phone face down. Keep them gentle and short.
 - What's a small win from this week?
 - What are you proud of yourself for?
 - What would a perfect weekend with me look like?
+- When did you feel closest to me recently?
+- What could I do to make your week easier?
+- What were you like at school?
+- When were you last proud of me?
+- What do you want more of next year?
+- What's your favourite way to spend time with me?
+- What would your younger self think of your life now?
+- What's a tradition we should start?
+- What's a place from your childhood you'd take me?
+- What made you feel loved this week?
+- What's one thing you love about yourself?
+- What's a dream you haven't told anyone?
+- What's something you want to learn this year?
 
 
 # Their Word
@@ -562,6 +784,15 @@ because they're not in the word list. Keep them short. No "right now", no
 - The colour that suits {name}
 - Something we should do more
 - What we bicker about
+- {name}'s spirit animal
+- {name}'s signature dish
+- The word {name} overuses
+- What {name} is secretly good at
+- Something {name} is scared of
+- {name}'s favourite treat
+- A smell you hate
+- Your favourite fruit
+- Your perfect breakfast
 
 
 # Their Numbers
@@ -606,3 +837,14 @@ money and anything with a right answer to be embarrassed about.
 - Out of 10, how much you like dancing
 - The age you'd most like to be again
 - Alarms you set on a work morning
+- Minutes you spend in the shower
+- The age you think you'll live to
+- Hours you'd happily spend shopping
+- Out of 10, how much you like spicy food
+- Out of 10, how good you are at video games
+- Out of 10, how much you like horror films
+- Out of 10, how patient you are
+- Out of 10, how much you like your birthday
+- Out of 10, how ticklish you are
+- Out of 10, how much you like kissing in public
+- Out of 10, how good a kisser you are
