@@ -1,6 +1,6 @@
 import type {
   Action, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
-  PlayerId, SessionState, WaveGame,
+  Phase, PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
@@ -720,7 +720,34 @@ function beginLights(state: SessionState, now: number): SessionState {
 
 // ---------------------------------------------------------------- reduce
 
+// Where a pause makes sense: mid-game. Not before it starts or after it ends, and not
+// during Stop the Clock's run — each phone times that on its own clock, which can't be
+// stopped from here, so a pause there would cost someone the round.
+const UNPAUSABLE = new Set<Phase>(['BOOT', 'JOIN', 'DONE', 'LIGHTS_OUT', 'CLOCK_READY', 'CLOCK_RUN', 'DECIDER_READY', 'DECIDER_RUN'])
+export const canPause = (s: SessionState): boolean => !s.paused && !UNPAUSABLE.has(s.phase)
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
+  if (action.type === 'PAUSE') {
+    if (!canPause(state)) return state
+    const s = clone(state)
+    s.paused = { by: action.player, leftMs: state.phaseEndsAt === null ? null : Math.max(0, state.phaseEndsAt - now) }
+    s.phaseEndsAt = null
+    return s
+  }
+  if (action.type === 'RESUME') {
+    if (!state.paused) return state
+    const s = clone(state)
+    // At least a couple of seconds back on the clock, so nobody resumes into a timeout.
+    s.phaseEndsAt = state.paused.leftMs === null ? null : now + Math.max(state.paused.leftMs, 2000)
+    s.paused = null
+    return s
+  }
+  // Paused: nothing moves. A JOIN still lands (a phone reconnecting, or a rename).
+  if (state.paused && action.type !== 'JOIN') return state
+  return step(state, action, now)
+}
+
+function step(state: SessionState, action: Action, now: number): SessionState {
   switch (action.type) {
     case 'JOIN': {
       const s = clone(state)

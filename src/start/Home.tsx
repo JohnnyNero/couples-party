@@ -85,7 +85,7 @@ function TabHeader({ over, title, sub, right }: { over?: string; title: string; 
   if (over) {
     return (
       <header className="mb-4">
-        <div className="flex items-center justify-between gap-3 pr-10 min-h-[2.75rem]">
+        <div className="flex items-center justify-between gap-3 min-h-[2.75rem]">
           <div className={eyebrow + ' min-w-0 truncate'}>{over}</div>
           {controls}
         </div>
@@ -95,7 +95,7 @@ function TabHeader({ over, title, sub, right }: { over?: string; title: string; 
     )
   }
   return (
-    <header className="flex items-start justify-between gap-3 mb-4 pr-10">
+    <header className="flex items-start justify-between gap-3 mb-4">
       <div className="min-w-0">
         <h1 className="font-display text-[1.9rem] font-extrabold leading-[1.05] tracking-tight">{title}</h1>
         {sub && <div className="mt-0.5 text-sm text-fg/60">{sub}</div>}

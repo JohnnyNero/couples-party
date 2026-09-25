@@ -29,7 +29,7 @@ export function OurQuestions({ onClose, partner }: { onClose: () => void; partne
 
   return (
     <div className="fixed inset-0 z-50 bg-bg flex flex-col animate-fade-up">
-      <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
+      <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
         <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-extrabold leading-tight">Our questions</h1>

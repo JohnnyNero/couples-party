@@ -13,7 +13,6 @@ import { readInvite } from './start/invite'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
-import { FullscreenToggle } from './views/FullscreenToggle'
 
 export default function App() {
   // Game and mode both come from the URL (a shared link carries both) or the launch
@@ -41,7 +40,6 @@ export default function App() {
 
   return (
     <>
-      <FullscreenToggle />
       {ready && <SeenRecorder keep={mode !== 'solo' && !getIsStreamScreen()} />}
       {renderApp()}
     </>

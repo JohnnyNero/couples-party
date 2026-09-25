@@ -241,6 +241,9 @@ export type SessionState = {
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
   intro: IntroCard | null
   intros: boolean // title cards on — set by the host for real sessions; tests leave them off
+  // Paused by either of you, from the menu: the clock stops (what was left of it is kept
+  // here) and nothing moves until one of you resumes.
+  paused: { by: PlayerId; leftMs: number | null } | null
   game: Game
   night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
 } & Content
@@ -288,6 +291,8 @@ export type Action =
   // tapped, in ms.
   | { type: 'STOP_CLOCK'; player: PlayerId; elapsedMs: number }
   | { type: 'TIMEOUT' }
+  | { type: 'PAUSE'; player: PlayerId }
+  | { type: 'RESUME'; player: PlayerId }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
 export const EMPTY_CONTENT: Content = {
@@ -328,6 +333,7 @@ export function initialState(
     decider: null,
     intro: null,
     intros: false,
+    paused: null,
     game,
     night,
     ...EMPTY_CONTENT,

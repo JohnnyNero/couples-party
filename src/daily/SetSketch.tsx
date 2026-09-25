@@ -42,7 +42,7 @@ export function SetSketch({
   }, [strokes, prompt, answer, forDate])
 
   const header = (
-    <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
+    <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
       <button onClick={drawingNow && !sent ? () => setDrawingNow(false) : onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
       <div className="min-w-0">
         <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">{`Sketch · ${forDate ? 'tomorrow' : 'today'}'s question`}</div>

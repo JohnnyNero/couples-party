@@ -20,7 +20,7 @@ export function ModePicker({
   const name = GAME_NAMES[game] ?? (game in GAME_LABELS ? GAME_LABELS[game as keyof typeof GAME_LABELS] : '')
   return (
     <div className="h-full w-full flex flex-col select-none px-5 pt-5 pb-7 max-w-xl mx-auto">
-      <header className="flex items-center gap-3 pr-10">
+      <header className="flex items-center gap-3">
         {onBack && (
           <button
             onClick={onBack}

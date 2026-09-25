@@ -24,6 +24,7 @@ export function nextBotAction(
   brain: BotBrain,
   rng: () => number,
 ): Action | null {
+  if (s.paused) return null // waits, like a person would
   switch (s.phase) {
     case 'JOIN':
       return s.players[me].connected ? null : { type: 'JOIN', player: me, name: 'BOT' }

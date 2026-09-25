@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, DailyError } from '../daily/api'
 import { Avatar } from '../ui/Avatar'
 import { ThemeChoice } from '../views/ThemeToggle'
+import { FullscreenRow } from '../views/FullscreenToggle'
 import { btnPrimary, card, eyebrow, field } from '../ui/styles'
 import { clearProfile, patchMe, refreshProfile, useProfile } from './store'
 import { shrinkPhoto } from './photo'
@@ -25,7 +26,7 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
 
   return (
     <div className="fixed inset-0 z-40 bg-bg flex flex-col animate-fade-up">
-      <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2 pr-14">
+      <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
         <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
         <h1 className="font-display text-2xl font-extrabold">Profile</h1>
       </header>
@@ -65,8 +66,9 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
           )}
 
           <section className="flex flex-col gap-2">
-            <div className={eyebrow}>Appearance</div>
+            <div className={eyebrow}>Settings</div>
             <ThemeChoice />
+            <FullscreenRow />
           </section>
 
           {onServer && <Unpair partner={paired?.partner.name ?? null} onDone={onUnpaired} />}
