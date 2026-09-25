@@ -249,6 +249,8 @@ function friendly(message: string): string {
   if (/1 to 30 characters/.test(message)) return 'A word or two — up to 30 characters.'
   if (/draw something/.test(message)) return 'Draw something first.'
   if (/five whole numbers/.test(message)) return 'Whole numbers, 0 to 9999, all five.'
+  if (/another device/.test(message)) return "That's this device's own code — type it on the other one."
+  if (/already linked/.test(message)) return 'This device is already linked to someone.'
   if (/2 to 120 characters/.test(message)) return 'A few words — up to 120 characters.'
   if (/already on the list/.test(message)) return "That one's already on your list."
   if (/two ends/.test(message)) return 'A scale needs two ends — like Cringe and Cool.'
@@ -261,10 +263,12 @@ function friendly(message: string): string {
 
 // You and your partner, for the profile page and every avatar — from migration 0013.
 export type Person = { name: string; photo: string | null }
+// `linked`: this device was linked to you from another one (migration 0015);
+// `devices`: how many other devices you have linked.
 export type Profile =
-  | { state: 'single' }
-  | { state: 'waiting'; code: string | null; me: Person }
-  | { state: 'paired'; me: Person; partner: Person; since: string }
+  | { state: 'single'; linked?: boolean }
+  | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number }
+  | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number }
 
 // Our questions: the couple's own cards for the games — from migration 0014.
 export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word'
@@ -277,6 +281,9 @@ export const api = {
   profile: () => rpc<Profile>('profile'),
   setName: (name: string) => rpc<void>('set_name', { p_name: name }),
   setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
+  linkCode: () => rpc<string>('link_code'),
+  linkDevice: (code: string) => rpc<void>('link_device', { p_code: code }),
+  unlinkDevice: () => rpc<void>('unlink_device'),
   daily: (today: string) => rpc<Daily>('daily', { p_today: today }),
   createCouple: (name: string) => rpc<string>('create_couple', { p_name: name }),
   joinCouple: (code: string, name: string) => rpc<void>('join_couple', { p_code: code, p_name: name }),
@@ -312,4 +319,19 @@ export const api = {
     rpc<void>('set_numbers', { p_for_date: forDate, p_questions: questions, p_answers: answers }),
   submitNumbers: (puzzleId: string, guesses: number[]) =>
     rpc<NumbersView>('submit_numbers', { p_puzzle: puzzleId, p_guesses: guesses }),
+}
+
+// One box for any code: a device code (from your own Profile, on another device) makes
+// this device you; anything else is taken as your partner's pairing code. A server
+// without migration 0015 has no device codes, so it goes straight to pairing.
+export async function enterCode(code: string, name: string): Promise<'device' | 'couple'> {
+  try {
+    await api.linkDevice(code)
+    return 'device'
+  } catch (e) {
+    const notADeviceCode = e instanceof DailyError && (e.kind === 'setup' || /didn't work/.test(e.message))
+    if (!notADeviceCode) throw e
+  }
+  await api.joinCouple(code, name)
+  return 'couple'
 }

@@ -23,6 +23,23 @@ export function readInvite(search: string): InviteLink | null {
 export function forgetInvite(): void {
   const url = new URL(window.location.href)
   url.searchParams.delete('pair')
+  url.searchParams.delete('device')
   url.searchParams.delete('from')
   window.history.replaceState(null, '', url.toString())
+}
+
+// A device link: "…/?device=ABC234&from=Johnny" makes the device that opens it Johnny
+// too (see DeviceLink.tsx and migration 0015).
+export function deviceUrl(code: string, from: string): string {
+  const url = new URL(window.location.origin + window.location.pathname)
+  url.searchParams.set('device', code)
+  if (from.trim()) url.searchParams.set('from', from.trim())
+  return url.toString()
+}
+
+export function readDeviceLink(search: string): InviteLink | null {
+  const p = new URLSearchParams(search)
+  const code = (p.get('device') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (code.length !== 6) return null
+  return { code, from: (p.get('from') ?? '').trim().slice(0, 24) }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { api, DailyError } from './api'
+import { api, DailyError, enterCode } from './api'
 import { field } from '../ui/styles'
 import { inviteUrl } from '../start/invite'
 
@@ -60,7 +60,7 @@ export function PairStart({ onDone }: { onDone: () => void }) {
       ) : (
         <>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Their code</span>
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">The code</span>
             <input
               className={input + ' uppercase tracking-[0.4em] font-bold text-center'}
               value={code}
@@ -70,6 +70,7 @@ export function PairStart({ onDone }: { onDone: () => void }) {
               autoComplete="off"
               placeholder="ABC234"
             />
+            <span className="text-xs text-fg/50">Your partner’s code — or, to use this device as you, a code from Profile on your other one.</span>
           </label>
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button onClick={() => setMode('choose')} className="min-h-[52px] px-4 rounded-2xl border-2 border-fg/15 font-bold text-fg/60 active:translate-y-px">
@@ -77,7 +78,7 @@ export function PairStart({ onDone }: { onDone: () => void }) {
             </button>
             <button
               disabled={busy || code.length !== 6}
-              onClick={() => run(() => api.joinCouple(code, name.trim()))}
+              onClick={() => run(() => enterCode(code, name.trim()))}
               className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
             >
               Pair

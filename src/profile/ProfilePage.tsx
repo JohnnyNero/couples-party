@@ -8,6 +8,7 @@ import { clearProfile, patchMe, refreshProfile, useProfile } from './store'
 import { shrinkPhoto } from './photo'
 import { OurQuestions } from '../ideas/OurQuestions'
 import { clearIdeas } from '../ideas/store'
+import { deviceUrl } from '../start/invite'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -63,6 +64,15 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
               </span>
               <span className="text-xl text-fg/40" aria-hidden="true">›</span>
             </button>
+          )}
+
+          {onServer && (
+            <Devices
+              linked={!!onServer.linked}
+              others={onServer.devices ?? 0}
+              name={onServer.me.name}
+              onUnlinked={onUnpaired}
+            />
           )}
 
           <section className="flex flex-col gap-2">
@@ -226,4 +236,90 @@ function Unpair({ partner, onDone }: { partner: string | null; onDone: () => voi
 function longDate(iso: string): string {
   const d = new Date(iso + 'T12:00:00')
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// Your other devices. On your first one: make a code (and a link) for another device to
+// become you. On a linked one: say so, and let it step away.
+function Devices({ linked, others, name, onUnlinked }: { linked: boolean; others: number; name: string; onUnlinked: () => void }) {
+  const [code, setCode] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [asking, setAsking] = useState(false)
+
+  const make = async () => {
+    setBusy(true)
+    setNote(null)
+    try {
+      setCode(await api.linkCode())
+    } catch (e) {
+      setNote(e instanceof DailyError && e.kind === 'setup' ? 'Linking devices needs a quick server update first.' : "Couldn't reach the server — try again.")
+    } finally {
+      setBusy(false)
+    }
+  }
+  const share = () => {
+    if (!code) return
+    const url = deviceUrl(code, name)
+    if (navigator.share) void navigator.share({ title: 'Coupled', text: `Open this on your other device to use Coupled as ${name}`, url }).catch(() => {})
+    else void navigator.clipboard?.writeText(url).then(() => setCopied(true))
+  }
+  const unlink = async () => {
+    setBusy(true)
+    try {
+      await api.unlinkDevice()
+      clearProfile()
+      clearIdeas()
+      onUnlinked()
+    } catch {
+      setNote("Couldn't reach the server — try again.")
+      setBusy(false)
+    }
+  }
+
+  if (linked) {
+    return (
+      <section className="flex flex-col gap-2">
+        <div className={eyebrow}>This device</div>
+        <div className="rounded-2xl border-2 border-fg/15 bg-card px-4 py-3 text-sm text-fg/70 leading-snug">
+          Linked to your account from another device. Everything here is shared with it.
+        </div>
+        {asking ? (
+          <div className="flex gap-2">
+            <button onClick={() => setAsking(false)} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold">Keep</button>
+            <button onClick={() => void unlink()} disabled={busy} className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold disabled:opacity-50">Remove</button>
+          </div>
+        ) : (
+          <button onClick={() => setAsking(true)} className="self-start min-h-[44px] font-bold text-pa-ink">Remove this device</button>
+        )}
+        {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
+      </section>
+    )
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div className={eyebrow}>Your devices</div>
+      {code ? (
+        <div className={card + ' px-4 py-4 flex flex-col items-center gap-3 text-center'}>
+          <div className="text-sm text-fg/65">On your other device, open the link — or tap <b>I have a code</b> and type:</div>
+          <div className="font-display text-4xl font-extrabold tracking-[0.18em] text-pa-ink tabular-nums">{code}</div>
+          <button onClick={share} className={btnPrimary + ' !text-lg'}>{copied ? 'Link copied' : 'Send the link'}</button>
+          <div className="text-xs text-fg/50">Works once, for the next 15 minutes.</div>
+        </div>
+      ) : (
+        <button onClick={() => void make()} disabled={busy} className="w-full min-h-[56px] flex items-center gap-3 rounded-2xl border-2 border-fg/15 bg-card px-4 text-left active:translate-y-px disabled:opacity-50">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-fg/60" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" />
+          </svg>
+          <span className="flex-1">
+            <span className="block font-bold">Add another device</span>
+            <span className="block text-xs text-fg/50">{others === 0 ? 'Use Coupled as you on a tablet or a second phone' : `${others} other device${others === 1 ? '' : 's'} linked`}</span>
+          </span>
+          <span className="text-xl text-fg/40" aria-hidden="true">›</span>
+        </button>
+      )}
+      {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
+    </section>
+  )
 }

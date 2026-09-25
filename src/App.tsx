@@ -10,7 +10,8 @@ import { ModePicker } from './start/ModePicker'
 import { Home } from './start/Home'
 import { Invite } from './start/Invite'
 import { Logo } from './ui/Logo'
-import { readInvite } from './start/invite'
+import { readDeviceLink, readInvite } from './start/invite'
+import { DeviceLink } from './start/DeviceLink'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
@@ -23,6 +24,8 @@ export default function App() {
   const [ready, setReady] = useState(false)
   // An invite link (?pair=CODE&from=Name) opens on its own welcome page first.
   const [invite, setInvite] = useState(() => readInvite(window.location.search))
+  // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
+  const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
 
   useEffect(() => {
@@ -47,6 +50,7 @@ export default function App() {
   )
 
   function renderApp() {
+    if (deviceLink && !game) return <DeviceLink link={deviceLink} onDone={() => setDeviceLink(null)} />
     if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
     if (!game) return <Home onPick={setGame} />
     if (!mode) {

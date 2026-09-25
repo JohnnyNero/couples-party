@@ -14,6 +14,7 @@ import m0011 from './migrations/0011_couple_room_code.sql?raw'
 import m0012 from './migrations/0012_memories.sql?raw'
 import m0013 from './migrations/0013_profile.sql?raw'
 import m0014 from './migrations/0014_our_questions.sql?raw'
+import m0015 from './migrations/0015_more_than_one_device.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -37,6 +38,7 @@ const STUB = `
 const SAM = '00000000-0000-0000-0000-00000000000a'
 const ALEX = '00000000-0000-0000-0000-00000000000b'
 const EVE = '00000000-0000-0000-0000-00000000000e' // not in this couple
+const SAM2 = '00000000-0000-0000-0000-0000000000a2' // Sam's second device, once it's linked
 
 let db: PGlite
 
@@ -74,7 +76,8 @@ beforeAll(async () => {
   await db.exec(m0012)
   await db.exec(m0013)
   await db.exec(m0014)
-  await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
+  await db.exec(m0015)
+  await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
 describe('the wordle colouring', () => {
@@ -634,7 +637,7 @@ describe('memories', () => {
 describe('profile', () => {
   const DOT = 'data:image/jpeg;base64,' + 'A'.repeat(200)
   it('says who you are and who you are with, photos included', async () => {
-    expect(await call(SAM, 'profile')).toEqual({ state: 'single' })
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'single' })
     const code = await call(SAM, 'create_couple', ['Sam'])
     expect(await call(SAM, 'profile')).toMatchObject({ state: 'waiting', code, me: { name: 'Sam', photo: null } })
     await call(ALEX, 'join_couple', [code, 'Alex'])
@@ -657,7 +660,7 @@ describe('profile', () => {
     await call(SAM, 'set_photo', [null])
     expect((await call(ALEX, 'profile')).partner.photo).toBe(null)
     await call(SAM, 'leave_couple')
-    expect(await call(ALEX, 'profile')).toEqual({ state: 'single' })
+    expect(await call(ALEX, 'profile')).toMatchObject({ state: 'single' })
   })
 })
 
@@ -697,5 +700,40 @@ describe('our questions', () => {
     const left = await db.query<{ n: number }>('select count(*)::int as n from public.ideas')
     expect(left.rows[0].n).toBe(0)
     await call(EVE, 'leave_couple')
+  })
+})
+
+describe('more than one device', () => {
+  it('makes a linked device the same person: same couple, same puzzles, same name', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
+    const link = await call(SAM, 'link_code')
+    expect(link).toMatch(/^[A-Z2-9]{6}$/)
+    await call(SAM2, 'link_device', [link.toLowerCase()])
+    expect(await call(SAM2, 'profile')).toMatchObject({ state: 'paired', linked: true, me: { name: 'Sam' }, partner: { name: 'Alex' } })
+    expect((await call(SAM, 'profile')).devices).toBe(1)
+    expect((await call(SAM2, 'daily', [today()])).mine).toMatchObject({ answer: 'pasta' }) // Sam's own puzzle, from the other device
+    await call(SAM2, 'set_name', ['Samantha'])
+    expect((await call(ALEX, 'profile')).partner.name).toBe('Samantha')
+    expect(await call(SAM2, 'my_couple_code')).toBe(await call(SAM, 'my_couple_code'))
+  })
+
+  it('uses a code once, only before it runs out, and never for a device that is already someone', async () => {
+    await expect(call(EVE, 'link_device', ['ZZZZZZ'])).rejects.toThrow(/no such code/)
+    const link = await call(SAM, 'link_code')
+    await expect(call(ALEX, 'link_device', [link])).rejects.toThrow(/already paired/) // Alex is someone already
+    await expect(call(SAM, 'link_device', [link])).rejects.toThrow(/another device/)
+    await expect(call(SAM2, 'link_device', [link])).rejects.toThrow(/already linked/)
+    await db.exec(`update public.device_codes set expires_at = now() - interval '1 minute'`)
+    await expect(call(EVE, 'link_device', [link])).rejects.toThrow(/no such code/)
+    expect(await as(SAM, 'select * from public.devices')).toEqual([]) // no policies
+  })
+
+  it('lets a device step away, leaving you and your couple as you were', async () => {
+    await call(SAM2, 'unlink_device')
+    expect(await call(SAM2, 'profile')).toEqual({ state: 'single', linked: false })
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'paired', devices: 0 })
+    await call(SAM, 'leave_couple')
   })
 })
