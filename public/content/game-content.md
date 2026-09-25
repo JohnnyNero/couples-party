@@ -5,9 +5,25 @@
   Parser rules (everything else on a line is ignored, so notes like this are fine):
     - "# " starts a game section. Don't rename the sections below — the game
       finds its content by the heading.
-    - "## " starts a Shortlist theme. Keep "{name}" in it. 7+ items each.
+    - "## " starts a Shortlist theme. Say who it's about with [you|@] (see
+      WHO IS "YOU" below). 7+ items each.
     - "- " is one entry.
     - A Wavelength entry is two poles: "- Low | High".
+
+  ---------------------------------------------------------------------------
+  WHO IS "YOU"
+
+  Anything that's about one of you (a Shortlist theme, a Top 5, Their Word,
+  Their Numbers) reads "you" to that person and their name to the other. Mark
+  the words that change as [for them|for everyone else], with @ for their name:
+
+      seven things [you do|@ does] in bed      -> "you do" / "Rocko does"
+      [Your|@'s] comfort food                  -> "Your" / "Rocko's"
+      Hours [you|@] could go without [your|their] phone
+
+  {partner} is the other one of you: "The animal {partner} reminds [you|@] of".
+  Lines both of you answer for yourselves at once (Mr & Mrs, Put a Finger
+  Down, Lights Out) just say "you" — everyone reading them is "you".
 
   ---------------------------------------------------------------------------
   HOW TO WRITE ENTRIES  (read this before adding any — it is easy to get wrong)
@@ -53,7 +69,7 @@
 Seven items are drawn from one theme and ranked. Keep 7+ per theme; 20 means
 the same theme plays differently every time.
 
-## seven things {name} would struggle to give up
+## seven things [you'd|@ would] struggle to give up
 - coffee
 - their phone
 - sleeping in
@@ -75,7 +91,7 @@ the same theme plays differently every time.
 - scrolling
 - cheese
 
-## seven things {name} will argue about
+## seven things [you'll|@ will] argue about
 - pineapple on pizza
 - tipping
 - horoscopes
@@ -97,7 +113,7 @@ the same theme plays differently every time.
 - the aisle seat
 - parking
 
-## seven things {name} is genuinely bad at
+## seven things [you're|@ is] genuinely bad at
 - directions
 - reversing
 - waking up
@@ -119,7 +135,7 @@ the same theme plays differently every time.
 - phone calls
 - drawing
 
-## seven of {name}'s small fears
+## seven of [your|@'s] small fears
 - unknown numbers
 - moths
 - the dentist
@@ -141,7 +157,7 @@ the same theme plays differently every time.
 - doorbells
 - flying
 
-## seven of {name}'s guilty pleasures
+## seven of [your|@'s] guilty pleasures
 - reality TV
 - gossip
 - energy drinks
@@ -163,7 +179,7 @@ the same theme plays differently every time.
 - pretending to be busy
 - long baths
 
-## seven ways to annoy {name} instantly
+## seven ways to annoy [you|@] instantly
 - loud chewing
 - being late
 - wet towels
@@ -185,7 +201,7 @@ the same theme plays differently every time.
 - being woken up
 - loud typing
 
-## seven things {name} is secretly proud of
+## seven things [you're|@ is] secretly proud of
 - their parking
 - their playlist
 - their handwriting
@@ -207,7 +223,7 @@ the same theme plays differently every time.
 - their driving
 - their gift wrapping
 
-## seven things that make {name} happy
+## seven things that make [you|@] happy
 - sunshine
 - dogs
 - fresh sheets
@@ -229,7 +245,7 @@ the same theme plays differently every time.
 - a parcel arriving
 - being hugged
 
-## seven things {name} finds attractive
+## seven things [you find|@ finds] attractive
 - confidence
 - a good voice
 - being funny
@@ -251,7 +267,7 @@ the same theme plays differently every time.
 - ambition
 - being tall
 
-## seven of {name}'s turn-offs
+## seven of [your|@'s] turn-offs
 - bad breath
 - arrogance
 - rudeness to staff
@@ -273,7 +289,7 @@ the same theme plays differently every time.
 - bad tipping
 - name dropping
 
-## the best cats, according to {name}
+## the best cats, according to [you|@]
 - a tabby
 - a ginger
 - a black cat
@@ -295,7 +311,7 @@ the same theme plays differently every time.
 - a scruffy cat
 - a huge fluffy cat
 
-## seven ways {name} likes to unwind
+## seven ways [you like|@ likes] to unwind
 - a hot bath
 - a long walk
 - a glass of wine
@@ -317,7 +333,7 @@ the same theme plays differently every time.
 - a cocktail
 - a crossword
 
-## seven foods {name} could eat every day
+## seven foods [you|@] could eat every day
 - pasta
 - pizza
 - sushi
@@ -339,7 +355,7 @@ the same theme plays differently every time.
 - dumplings
 - steak
 
-## seven jobs {name} would be terrible at
+## seven jobs [you'd|@ would] be terrible at
 - nurse
 - teacher
 - chef
@@ -361,7 +377,7 @@ the same theme plays differently every time.
 - bouncer
 - wedding planner
 
-## seven things {name} would do with a free day
+## seven things [you'd|@ would] do with a free day
 - staying in bed
 - going to the beach
 - watching films
@@ -383,7 +399,7 @@ the same theme plays differently every time.
 - people watching
 - going to the pub
 
-## seven smells {name} loves
+## seven smells [you love|@ loves]
 - cut grass
 - rain
 - petrol
@@ -405,7 +421,7 @@ the same theme plays differently every time.
 - cinnamon
 - aftershave
 
-## seven things {name} spends too much on
+## seven things [you spend|@ spends] too much on
 - takeaways
 - clothes
 - shoes
@@ -427,7 +443,7 @@ the same theme plays differently every time.
 - lottery tickets
 - homeware
 
-## seven foods {name} would never eat
+## seven foods [you'd|@ would] never eat
 - olives
 - mushrooms
 - anchovies
@@ -449,7 +465,7 @@ the same theme plays differently every time.
 - tinned tuna
 - frogs' legs
 
-## seven things {name} does in bed (besides sleep)
+## seven things [you do|@ does] in bed (besides sleep)
 - doom scrolling
 - reading
 - watching TV
@@ -2375,7 +2391,7 @@ The daily puzzle. One of these comes up each day — the same one for both of yo
 You each answer it in five or six letters, then solve the other's as a Wordle,
 with the question as the only clue.
 
-"{name}" is your partner — the person who'll solve it — so "The animal {name}
+"{partner}" is your partner — the person who'll solve it — so "The animal {partner}
 reminds you of" is about them, and they find out how you see them.
 
 The best ones are open: there's no obvious answer, so a stranger would never get
@@ -2386,43 +2402,43 @@ people would really give are five or six letters. Places and names never are,
 because they're not in the word list. Keep them short. No "right now", no
 "if you could", nothing sentimental.
 
-- What you're craving
-- Your comfort food
-- A food you'd never eat
-- Your desert island food
-- Your go-to snack
-- Your day in one word
-- Tomorrow in one word
-- Your mood as weather
-- What's on your mind
-- The best part of your day
-- A smell you love
-- Your dream job
-- Your dream holiday
-- Your biggest fear
-- What you were in a past life
-- The thing you can't live without
-- Your perfect date
-- The animal {name} reminds you of
-- {name} in one word
-- {name}'s best quality
-- {name}'s most annoying habit
-- {name}'s guilty pleasure
-- What {name} does when stressed
-- What {name} spends too much on
-- What always makes {name} laugh
-- The colour that suits {name}
+- What [you're|@'s] craving
+- [Your|@'s] comfort food
+- A food [you'd|@ would] never eat
+- [Your|@'s] desert island food
+- [Your|@'s] go-to snack
+- [Your|@'s] day in one word
+- [Your|@'s] tomorrow in one word
+- [Your|@'s] mood as weather
+- What's on [your|@'s] mind
+- The best part of [your|@'s] day
+- A smell [you love|@ loves]
+- [Your|@'s] dream job
+- [Your|@'s] dream holiday
+- [Your|@'s] biggest fear
+- What [you were|@ was] in a past life
+- The thing [you|@] can't live without
+- [Your|@'s] perfect date
+- The animal {partner} reminds [you|@] of
+- {partner} in one word
+- {partner}'s best quality
+- {partner}'s most annoying habit
+- {partner}'s guilty pleasure
+- What {partner} does when stressed
+- What {partner} spends too much on
+- What always makes {partner} laugh
+- The colour that suits {partner}
 - Something we should do more
 - What we bicker about
-- {name}'s spirit animal
-- {name}'s signature dish
-- The word {name} overuses
-- What {name} is secretly good at
-- Something {name} is scared of
-- {name}'s favourite treat
-- A smell you hate
-- Your favourite fruit
-- Your perfect breakfast
+- {partner}'s spirit animal
+- {partner}'s signature dish
+- The word {partner} overuses
+- What {partner} is secretly good at
+- Something {partner} is scared of
+- {partner}'s favourite treat
+- A smell [you hate|@ hates]
+- [Your|@'s] favourite fruit
+- [Your|@'s] perfect breakfast
 
 
 # Their Numbers
@@ -2436,45 +2452,45 @@ up, and it should be about you, not the two of you. Say what the number counts
 ("hours", "out of 10") so nobody's guessing the units. Keep away from weight,
 money and anything with a right answer to be embarrassed about.
 
-- Hours of sleep you'd have tonight, if you could
-- Minutes it takes you to get ready to go out
-- Cups of tea or coffee you have on a normal day
-- The age you'd happily retire at
-- Out of 10, how much you like mornings
-- Out of 10, how good a driver you are
-- Out of 10, how brave you are with spiders
-- Out of 10, how tidy you are
-- Out of 10, how good a cook you are
-- Out of 10, how competitive you are
-- Out of 10, how much you like surprises
-- Out of 10, how good you are at keeping secrets
-- Out of 10, how much you like camping
-- Out of 10, how much you like your own singing voice
-- Unread messages on your phone right now
-- Pairs of shoes you own
-- Times you hit snooze on a bad morning
-- Hours you could go without your phone
-- The age you feel inside
-- Minutes you'd wait for a table before giving up
-- Your ideal room temperature, in degrees
-- Minutes you'd happily spend in a hot bath
-- Out of 10, how romantic you are
-- Out of 10, how stubborn you are
-- Out of 10, how good you are at saying sorry
-- Out of 10, how adventurous you are with food
-- Out of 10, how scared you are of flying
-- Out of 10, how good your sense of direction is
-- Out of 10, how much you like dancing
-- The age you'd most like to be again
-- Alarms you set on a work morning
-- Minutes you spend in the shower
-- The age you think you'll live to
-- Hours you'd happily spend shopping
-- Out of 10, how much you like spicy food
-- Out of 10, how good you are at video games
-- Out of 10, how much you like horror films
-- Out of 10, how patient you are
-- Out of 10, how much you like your birthday
-- Out of 10, how ticklish you are
-- Out of 10, how much you like kissing in public
-- Out of 10, how good a kisser you are
+- Hours of sleep [you'd|@ would] have tonight, if [you|they] could
+- Minutes it takes [you|@] to get ready to go out
+- Cups of tea or coffee [you have|@ has] on a normal day
+- The age [you'd|@ would] happily retire at
+- Out of 10, how much [you like|@ likes] mornings
+- Out of 10, how good a driver [you are|@ is]
+- Out of 10, how brave [you are|@ is] with spiders
+- Out of 10, how tidy [you are|@ is]
+- Out of 10, how good a cook [you are|@ is]
+- Out of 10, how competitive [you are|@ is]
+- Out of 10, how much [you like|@ likes] surprises
+- Out of 10, how good [you are|@ is] at keeping secrets
+- Out of 10, how much [you like|@ likes] camping
+- Out of 10, how much [you like|@ likes] [your|their] own singing voice
+- Unread messages on [your|@'s] phone right now
+- Pairs of shoes [you own|@ owns]
+- Times [you hit|@ hits] snooze on a bad morning
+- Hours [you|@] could go without [your|their] phone
+- The age [you feel|@ feels] inside
+- Minutes [you'd|@ would] wait for a table before giving up
+- [Your|@'s] ideal room temperature, in degrees
+- Minutes [you'd|@ would] happily spend in a hot bath
+- Out of 10, how romantic [you are|@ is]
+- Out of 10, how stubborn [you are|@ is]
+- Out of 10, how good [you are|@ is] at saying sorry
+- Out of 10, how adventurous [you are|@ is] with food
+- Out of 10, how scared [you are|@ is] of flying
+- Out of 10, how good [your|@'s] sense of direction is
+- Out of 10, how much [you like|@ likes] dancing
+- The age [you'd|@ would] most like to be again
+- Alarms [you set|@ sets] on a work morning
+- Minutes [you spend|@ spends] in the shower
+- The age [you think you'll|@ thinks they'll] live to
+- Hours [you'd|@ would] happily spend shopping
+- Out of 10, how much [you like|@ likes] spicy food
+- Out of 10, how good [you are|@ is] at video games
+- Out of 10, how much [you like|@ likes] horror films
+- Out of 10, how patient [you are|@ is]
+- Out of 10, how much [you like|@ likes] [your|their] birthday
+- Out of 10, how ticklish [you are|@ is]
+- Out of 10, how much [you like|@ likes] kissing in public
+- Out of 10, how good a kisser [you are|@ is]

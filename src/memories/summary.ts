@@ -1,3 +1,5 @@
+import { aboutReader } from '../views/voice'
+import { themeText } from '../views/list'
 import type { DrawStroke, Game, PlayerId, SessionState } from '../engine/state'
 import { gameScores, standing } from '../engine/standing'
 import { chainRoundWinner } from '../engine/chain'
@@ -43,14 +45,14 @@ export function sessionMemory(s: SessionState): SessionMemory {
   const acts = s.listActs.filter((a) => a.displacement !== null)
   if (acts.length) {
     m.shortlist = acts.map((a) => ({
-      theme: (s.themes.find((t) => t.id === a.themeId)?.text ?? '').replace('{name}', name(a.author)),
+      theme: themeText(s, a),
       author: a.author,
       ranked: [...a.items].filter((i) => i.actualSlot !== null).sort((x, y) => x.actualSlot! - y.actualSlot!).map((i) => i.text),
     }))
   }
 
   const mm = upTo(s.mrmrs, (r) => r.answer.A !== null || r.answer.B !== null)
-  if (mm.length) m.mrmrs = mm.map((r) => ({ question: r.question, answer: r.answer, predict: r.predict, verdict: r.verdict }))
+  if (mm.length) m.mrmrs = mm.map((r) => ({ question: aboutReader(s, r.question, null), answer: r.answer, predict: r.predict, verdict: r.verdict }))
 
   const draws = upTo(s.draw, (r) => r.answer !== null)
   if (draws.length) {

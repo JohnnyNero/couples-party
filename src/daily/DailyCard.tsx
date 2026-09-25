@@ -4,7 +4,7 @@ import { api } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
 import { PairStart, PairWaiting } from './Pairing'
-import { questionOfTheDay, renderQuestion } from './question'
+import { questionFromThem, questionOfTheDay, renderQuestion } from './question'
 import { QuestionSpin } from './Spin'
 import { TileRow } from './Tiles'
 import type { useDaily } from './useDaily'
@@ -109,7 +109,7 @@ export function DailyCard({
               {partner} has answered — <b>answer yours to unlock it</b>
             </span>
           ) : (
-            <TheirRow puzzle={theirsOpen} onPlay={() => open({ kind: 'play', puzzle: theirsOpen, partner, question: renderQuestion(template, d.me), mine: mine?.answer ?? null })} />
+            <TheirRow puzzle={theirsOpen} onPlay={() => open({ kind: 'play', puzzle: theirsOpen, partner, question: questionFromThem(template, partner, d.me), mine: mine?.answer ?? null })} />
           )}
         </Step>
       </div>

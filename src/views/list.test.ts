@@ -22,7 +22,14 @@ describe('themeText', () => {
   })
   it('never leaves a raw placeholder on screen when the theme is missing', () => {
     const s = base()
-    expect(themeText(s, { ...act, themeId: 'nope' })).not.toContain('{name}')
+    expect(themeText(s, { ...act, themeId: 'nope' })).not.toMatch(/[{}@]/)
+  })
+  it('reads "you" on the author\'s own phone, and their name everywhere else', () => {
+    const s = initialState(1, 'full', { themes: [{ id: 't001', text: 'seven things [you do|@ does] in bed', pool: [] }] })
+    s.players.A.name = 'Sam'
+    expect(themeText(s, act, 'A')).toBe('seven things you do in bed')
+    expect(themeText(s, act, 'B')).toBe('seven things Sam does in bed')
+    expect(themeText(s, act, null)).toBe('seven things Sam does in bed') // a TV
   })
 })
 

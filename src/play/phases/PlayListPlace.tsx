@@ -25,7 +25,7 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
             {byAuthor ? 'Your guess' : 'For real'}
           </span>
         </div>
-        <div className="mt-0.5 font-display text-lg font-bold leading-tight truncate">{themeText(s, act)}</div>
+        <div className="mt-0.5 font-display text-lg font-bold leading-tight truncate">{themeText(s, act, me)}</div>
       </div>
 
       {/* The item in hand. Once it's placed it's down in the ladder, so the card goes

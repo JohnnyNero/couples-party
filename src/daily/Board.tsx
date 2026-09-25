@@ -12,7 +12,8 @@ import { PlayDial } from './PlayDial'
 import { PlayNumbers } from './PlayNumbers'
 import { PlaySketch } from './PlaySketch'
 import { PlayTop5 } from './PlayTop5'
-import { questionOfTheDay, renderQuestion } from './question'
+import { questionFromThem, questionOfTheDay, renderQuestion } from './question'
+import { say } from '../say'
 import { useIdeas } from '../ideas/store'
 import { refreshProfile } from '../profile/store'
 import { SetDialClue } from './SetDialClue'
@@ -326,12 +327,12 @@ function PuzzleScreen({
     switch (screen.kind) {
       case 'word': {
         const p = kinds.word.solve!
-        return <WordPlay puzzle={p} partner={partner} question={renderQuestion(p.prompt, me)} mine={kinds.word.mine?.answer ?? null} onClose={onClose} />
+        return <WordPlay puzzle={p} partner={partner} question={questionFromThem(p.prompt, partner, me)} mine={kinds.word.mine?.answer ?? null} onClose={onClose} />
       }
       case 'dial': return <PlayDial puzzle={kinds.dial.solve!} partner={partner} spectrum={kinds.dial.solve!.prompt} onClose={onClose} />
-      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={kinds.top5.solve!.prompt} onClose={onClose} />
+      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={say(kinds.top5.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} />
       case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} />
-      case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} onClose={onClose} />
+      case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} me={me} onClose={onClose} />
     }
   }
 
@@ -351,9 +352,10 @@ function PuzzleScreen({
       const date = setDate('top5')
       const next = kinds.top5.next
       const theme = themeOfTheDay(date ?? localDate(), pools.content.themes)
-      const title = next?.prompt ?? (theme ? fiveify(renderQuestion(theme.text, partner)) : '')
+      const template = next?.prompt ?? (theme ? fiveify(theme.text) : '')
       const items = next?.items ?? (theme ? itemsOfTheDay(date ?? localDate(), theme) : [])
-      return <SetTop5 partner={partner} theme={title} items={items} onClose={onClose} forDate={date} />
+      const title = say(template, { self: true, subject: me, partner })
+      return <SetTop5 partner={partner} theme={title} template={template} items={items} onClose={onClose} forDate={date} />
     }
     case 'sketch': {
       const date = setDate('sketch')

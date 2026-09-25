@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { questionFromThem } from './question'
 import { api, DailyError, type NumbersView } from './api'
 import { NumberForm } from './NumberForm'
 import { summary } from './NumbersCard'
@@ -8,10 +9,12 @@ import { summary } from './NumbersCard'
 export function PlayNumbers({
   puzzle,
   partner,
+  me = 'you',
   onClose,
 }: {
   puzzle: NumbersView
   partner: string
+  me?: string
   onClose: () => void
 }) {
   const [result, setResult] = useState<NumbersView | null>(puzzle.status === 'open' ? null : puzzle)
@@ -52,7 +55,7 @@ export function PlayNumbers({
                     (mark === 'exact' ? 'border-sage-ink bg-sage-soft' : mark === 'close' ? 'border-tan-ink/50 bg-tan-soft' : 'border-fg/15')
                   }
                 >
-                  <div className="text-sm leading-snug">{q}</div>
+                  <div className="text-sm leading-snug">{questionFromThem(q, partner, me)}</div>
                   <div className="mt-1 flex items-baseline justify-between gap-3">
                     <span className="font-display text-3xl font-bold tabular-nums text-accent-ink">{result.answers![i]}</span>
                     <span className="text-xs uppercase tracking-widest text-fg/50 tabular-nums">
@@ -72,7 +75,7 @@ export function PlayNumbers({
             <div className="text-sm text-fg/70 leading-snug mb-4">
               Your guess at each of {partner}'s — one go, then they're revealed. Close counts for something.
             </div>
-            <NumberForm questions={puzzle.questions} onSubmit={(v) => void submit(v)} label="Lock them in" busy={busy} />
+            <NumberForm questions={puzzle.questions} show={(q) => questionFromThem(q, partner, me)} onSubmit={(v) => void submit(v)} label="Lock them in" busy={busy} />
             <div className="h-6 mt-3 text-sm font-bold text-accent-ink text-center">{note}</div>
           </>
         )}

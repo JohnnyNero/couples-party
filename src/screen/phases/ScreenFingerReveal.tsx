@@ -1,3 +1,5 @@
+import { aboutPartner } from '../../views/voice'
+import { useMyPlayerId } from '../../net'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { fingerRoundPoints } from '../../engine/standing'
 import { Avatar, inkOf } from '../../ui/Avatar'
@@ -6,13 +8,14 @@ import { eyebrow } from '../../ui/styles'
 import { playerName } from '../../views/list'
 
 export function ScreenFingerReveal({ s }: { s: SessionState }) {
+  const me = useMyPlayerId()
   const f = s.finger!
   const round = f.rounds[f.current]
   return (
     <div className="w-full max-w-2xl mx-auto text-center flex flex-col gap-7">
       <div>
         <div className={eyebrow}>Put a finger down if…</div>
-        <div className="mt-2 font-display text-2xl sm:text-4xl font-extrabold leading-tight break-words">{round.statementId}</div>
+        <div className="mt-2 font-display text-2xl sm:text-4xl font-extrabold leading-tight break-words">{aboutPartner(s, round.statementId, me)}</div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         {(['A', 'B'] as PlayerId[]).map((p) => {

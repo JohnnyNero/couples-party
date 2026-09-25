@@ -7,12 +7,14 @@ import { RankFive } from './RankFive'
 export function SetTop5({
   partner,
   theme,
+  template,
   items,
   onClose,
   forDate,
 }: {
   partner: string
-  theme: string
+  theme: string // as you read it: "five things you do in bed"
+  template?: string // as it's stored, for your partner to read their way (see say)
   items: string[] // the five, in the fixed day's order
   onClose: () => void
   forDate?: string // who it's for and when: tomorrow, on the Today board
@@ -25,14 +27,14 @@ export function SetTop5({
     setBusy(true)
     setNote(null)
     try {
-      await api.setTop5(forDate ?? localDate(), theme, items, order)
+      await api.setTop5(forDate ?? localDate(), template ?? theme, items, order)
       setSent(true)
     } catch (e) {
       setNote(e instanceof DailyError ? e.message : "Couldn't send that — try again")
     } finally {
       setBusy(false)
     }
-  }, [theme, items, forDate])
+  }, [theme, template, items, forDate])
 
   return (
     <div className="h-full flex flex-col select-none">

@@ -252,6 +252,15 @@ function currentFingerRound(f: FingerGame) {
 
 const text = (t: string) => t
 
+// A card both of you read the same way that names one of you ({player}, from Our
+// questions): the session picks who by its seed, and it's filled in as it's dealt, so
+// both phones, the TV and Memories all say the same name.
+function namedFor(s: SessionState, t: string): string {
+  if (!t.includes('{player}')) return t
+  const p: PlayerId = s.seed % 2 === 0 ? 'A' : 'B'
+  return t.split('{player}').join(s.players[p].name || p)
+}
+
 function beginFinger(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const pool = oursFirst(makeRng(s.seed ^ 0x9001), s.fingerStatements, s.ours, text)
@@ -479,7 +488,7 @@ function beginClash(state: SessionState, now: number): SessionState {
   const cats = oursFirst(makeRng(s.seed ^ 0xca75), s.clashCategories, s.ours, text)
   s.clash = {
     rounds: Array.from({ length: rounds }, (_, r): ClashRound => {
-      const categories = Array.from({ length: CLASH.categories }, (_, i) => cats[(r * CLASH.categories + i) % cats.length])
+      const categories = Array.from({ length: CLASH.categories }, (_, i) => namedFor(s, cats[(r * CLASH.categories + i) % cats.length]))
       return {
         index: r + 1,
         letter: letters[r % letters.length],
@@ -712,7 +721,7 @@ function advanceClock(state: SessionState, now: number, field: ClockField): Sess
 function beginLights(state: SessionState, now: number): SessionState {
   const s = clone(state)
   if (s.lightsQuestions.length === 0) return skipTo(s, now, 'lights')
-  s.lights = { question: oursFirst(makeRng(s.seed ^ 0x0ff), s.lightsQuestions, s.ours, text)[0] }
+  s.lights = { question: namedFor(s, oursFirst(makeRng(s.seed ^ 0x0ff), s.lightsQuestions, s.ours, text)[0]) }
   s.phase = 'LIGHTS_OUT'
   s.phaseEndsAt = null
   return s

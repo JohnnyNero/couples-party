@@ -1,4 +1,5 @@
 import type { SessionState } from '../../engine/state'
+import { useMyPlayerId } from '../../net'
 import { currentAct } from '../../engine/list'
 import { ThemeIcon } from '../../views/ThemeIcon'
 import { themeText, playerName, rankerOf } from '../../views/list'
@@ -7,8 +8,9 @@ import { Avatar, inkOf } from '../../ui/Avatar'
 // The card that opens each Shortlist act: the theme, once, big, with nothing to do.
 // Both devices show it, so the first item never lands on someone still reading.
 export function ScreenListIntro({ s }: { s: SessionState }) {
+  const me = useMyPlayerId()
   const act = currentAct(s)!
-  const theme = themeText(s, act)
+  const theme = themeText(s, act, me)
   const ranker = rankerOf(act)
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center text-center gap-5 sm:gap-7">

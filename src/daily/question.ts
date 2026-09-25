@@ -1,5 +1,6 @@
 import { makeRng, shuffled } from '../engine/rng'
 import { dayIndex } from './dates'
+import { say } from '../say'
 
 // The day's question: the same for both of you (and for every couple, like a daily
 // Wordle), picked from the content file's pool by date. The pool is walked in one fixed
@@ -22,9 +23,14 @@ export function questionOfTheDay(date: string, pool: string[], ours: string[] = 
   return order[((day % order.length) + order.length) % order.length]
 }
 
-// "{name}" in a question is the person it's about — your partner, who'll be solving it.
-// So it always renders as the SOLVER's name: Sam sees "The animal Alex reminds you of",
-// and Alex, solving it, sees Sam's answer to that same line.
+// A question as the person answering it reads it: "you", with {partner} (or the old
+// {name}) as the one who'll solve it — Sam sees "The animal Alex reminds you of".
 export function renderQuestion(template: string, solverName: string): string {
-  return template.split('{name}').join(solverName)
+  return say(template, { self: true, subject: 'you', partner: solverName, legacyName: 'partner' })
+}
+
+// …and as the one solving it reads it: the setter by name — Alex sees "Sam's comfort
+// food", and "The animal Alex reminds Sam of".
+export function questionFromThem(template: string, setterName: string, solverName: string): string {
+  return say(template, { self: false, subject: setterName, partner: solverName, legacyName: 'partner' })
 }

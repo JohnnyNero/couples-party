@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { renderQuestion } from './question'
 import { api, DailyError } from './api'
 import { localDate } from './dates'
 import { NumberForm } from './NumberForm'
@@ -56,7 +57,7 @@ export function SetNumbers({
           <div className="text-sm text-fg/70 leading-snug mb-4">
             The honest number for each — {partner} will be guessing them.
           </div>
-          <NumberForm questions={questions} onSubmit={(v) => void send(v)} label="Send them" busy={busy} />
+          <NumberForm questions={questions} show={(q) => renderQuestion(q, partner)} onSubmit={(v) => void send(v)} label="Send them" busy={busy} />
           <div className="h-6 mt-3 text-sm font-bold text-accent-ink text-center">{note}</div>
         </div>
       )}

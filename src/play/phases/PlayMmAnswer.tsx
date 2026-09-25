@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { aboutReader } from '../../views/voice'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { MRMRS } from '../../engine/phases'
@@ -43,7 +44,7 @@ export function PlayMmAnswer({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col px-5 pb-6">
       <div className="flex-1 flex flex-col justify-center gap-5">
-        <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{round.question}</div>
+        <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{aboutReader(s, round.question, me)}</div>
         <label className="flex flex-col gap-1.5">
           <span className="flex items-center gap-2 text-sm font-extrabold">
             <Avatar p={me} name={playerName(s, me)} size="sm" /> Your answer

@@ -28,7 +28,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-3">
       <div className="font-display text-xl sm:text-3xl font-extrabold text-center leading-tight text-balance">
-        {themeText(s, act)}
+        {themeText(s, act, me)}
       </div>
 
       <section className={card + ' px-4 py-2'}>

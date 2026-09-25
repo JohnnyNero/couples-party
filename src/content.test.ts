@@ -1,3 +1,4 @@
+import { say } from './say'
 import { describe, it, expect } from 'vitest'
 // The real shipped file, not a fixture — these tests are worthless unless they
 // read what actually goes live. `?raw` keeps it a plain string import, so no
@@ -221,14 +222,14 @@ describe('the shipped content keeps its shape', () => {
 
   it('gives the daily word puzzle enough prompts to choose from, each short', () => {
     expect(parsed.wordPrompts.length).toBeGreaterThanOrEqual(12)
-    expect(parsed.wordPrompts.filter((t) => words(t) > 7 || /\?$/.test(t))).toEqual([])
-    // Only {name} — any other brace token would show up on screen as-is.
-    expect(parsed.wordPrompts.filter((t) => /\{(?!name\})/.test(t))).toEqual([])
+    expect(parsed.wordPrompts.filter((t) => words(say(t, { self: true, subject: 'x', partner: 'y' })) > 7 || /\?$/.test(t))).toEqual([])
+    // Only {partner} — any other brace token would show up on screen as-is.
+    expect(parsed.wordPrompts.filter((t) => /\{(?!partner\})/.test(t))).toEqual([])
   })
 
   it('gives Their Numbers enough questions, each saying what it counts', () => {
     expect(parsed.numberQuestions.length).toBeGreaterThanOrEqual(15)
-    expect(parsed.numberQuestions.filter((t) => words(t) > 12 || /\?$/.test(t))).toEqual([])
+    expect(parsed.numberQuestions.filter((t) => words(say(t, { self: true, subject: 'x', partner: 'y' })) > 12 || /\?$/.test(t))).toEqual([])
     expect(new Set(parsed.numberQuestions).size).toBe(parsed.numberQuestions.length)
   })
 
@@ -256,8 +257,21 @@ describe('the shipped content keeps its shape', () => {
   })
 
   it('names every Shortlist theme after one of the players', () => {
-    const nameless = parsed.themes.filter((t) => !t.text.includes('{name}')).map((t) => t.text)
+    const nameless = parsed.themes.filter((t) => !t.text.includes('@')).map((t) => t.text)
     expect(nameless).toEqual([])
+  })
+
+  it('reads cleanly both ways — as "you", and with a name — wherever it says who', () => {
+    const marked = [...parsed.themes.map((t) => t.text), ...parsed.wordPrompts, ...parsed.numberQuestions]
+    const broken = marked.flatMap((t) =>
+      [true, false].map((self) => say(t, { self, subject: 'Rocko', partner: 'Johnny' })).filter((out) => /[[\]|@{}]/.test(out)),
+    )
+    expect(broken).toEqual([])
+    // The "you" reading never names the person it's about; the other always does.
+    for (const t of [...parsed.themes.map((x) => x.text), ...parsed.numberQuestions]) {
+      expect(say(t, { self: true, subject: 'Rocko', partner: 'Johnny' })).not.toContain('Rocko')
+      expect(say(t, { self: false, subject: 'Rocko', partner: 'Johnny' })).toContain('Rocko')
+    }
   })
 
   it('never reuses one Shortlist item across two themes — ranking the same thing twice reads as a bug', () => {

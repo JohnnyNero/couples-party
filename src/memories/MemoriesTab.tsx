@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { api, DailyError, type Memories } from '../daily/api'
 import type { DialView, NumbersView, PuzzleView, SketchView, Top5View } from '../daily/api'
 import { localDate } from '../daily/dates'
-import { renderQuestion } from '../daily/question'
+import { questionFromThem } from '../daily/question'
 import { parseSpectrumPrompt } from '../daily/dial'
 import { DrawingCanvas } from '../views/DrawingCanvas'
 import type { PlayerId } from '../engine/state'
@@ -274,7 +274,7 @@ function PuzzleLine({ p, setter, solver }: { p: Puzzle; setter: string; solver: 
       const w = p as PuzzleView
       return (
         <>
-          {renderQuestion(w.prompt, solver)}: <b className="uppercase">{w.answer ?? '—'}</b>
+          {questionFromThem(w.prompt, setter, solver)}: <b className="uppercase">{w.answer ?? '—'}</b>
           <span className="text-fg/45"> · {outcome ?? (w.status === 'solved' ? `${solver} got it in ${w.guesses.length}` : `${solver} didn't get it`)}</span>
         </>
       )
@@ -294,7 +294,7 @@ function PuzzleLine({ p, setter, solver }: { p: Puzzle; setter: string; solver: 
       const order = t.rank?.map((i) => t.items[i]) ?? t.items
       return (
         <>
-          {t.prompt}: <b>{order.map((x, k) => `${k + 1}. ${x}`).join('  ')}</b>
+          {questionFromThem(t.prompt, setter, solver)}: <b>{order.map((x, k) => `${k + 1}. ${x}`).join('  ')}</b>
           <span className="text-fg/45"> · {outcome ?? `${solver} got ${t.exact ?? 0} exactly right`}</span>
         </>
       )
@@ -317,7 +317,7 @@ function PuzzleLine({ p, setter, solver }: { p: Puzzle; setter: string; solver: 
         <div className="flex flex-col">
           {nv.questions.map((q, i) => (
             <span key={i}>
-              {q}: <b>{nv.answers?.[i] ?? '—'}</b>
+              {questionFromThem(q, setter, solver)}: <b>{nv.answers?.[i] ?? '—'}</b>
               {nv.guesses && <span className="text-fg/45"> · guessed {nv.guesses[i]}</span>}
             </span>
           ))}

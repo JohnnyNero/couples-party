@@ -1,3 +1,4 @@
+import { aboutPartner } from '../../views/voice'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { dispatch } from '../../net'
@@ -21,7 +22,7 @@ export function PlayFingerRound({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col px-5 pb-6">
       <div className="flex-1 flex flex-col justify-center gap-6">
-        <PromptCard over="Put a finger down if…">{round.statementId}</PromptCard>
+        <PromptCard over="Put a finger down if…">{aboutPartner(s, round.statementId, me)}</PromptCard>
         <div className="flex items-center justify-center gap-3 text-sm font-bold text-fg/60">
           Your hand <Hand fingers={f.fingersLeft[me]} p={me} /> {f.fingersLeft[me]} up
         </div>

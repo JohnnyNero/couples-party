@@ -14,7 +14,7 @@ export function WordPlay({
 }: {
   puzzle: PuzzleView
   partner: string
-  question: string // rendered for you — it's about you, so it has your name in it
+  question: string // as the solver reads it: the setter by name ("Rocko’s comfort food")
   mine: string | null // what you answered, for the side-by-side at the end
   onClose: () => void
 }) {
@@ -86,7 +86,7 @@ export function WordPlay({
         <div className="min-w-0">
           <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Their Word · from {partner}</div>
           {/* The clue is the whole puzzle — it always shows in full, never truncated. */}
-          <div className="font-display text-xl font-extrabold leading-tight">{partner}'s answer to “{question}”</div>
+          <div className="font-display text-xl font-extrabold leading-tight">{question}</div>
         </div>
       </header>
       <div className="flex-1 min-h-0 flex flex-col justify-center gap-1.5 px-4">

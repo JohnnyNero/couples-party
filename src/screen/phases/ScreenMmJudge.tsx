@@ -1,3 +1,4 @@
+import { aboutReader } from '../../views/voice'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { mrmrsRoundPoints } from '../../engine/standing'
@@ -19,7 +20,7 @@ export function ScreenMmJudge({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-lg mx-auto flex flex-col gap-3 sm:gap-5">
       <div className="text-center font-display text-xl sm:text-3xl font-extrabold leading-tight break-words">
-        {round.question}
+        {aboutReader(s, round.question, me)}
       </div>
       {ORDER.map((subject, i) => {
         const predictor = other(subject)

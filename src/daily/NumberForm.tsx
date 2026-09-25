@@ -4,11 +4,13 @@ import { useState } from 'react'
 // theirs. Whole numbers only; the send button waits until all five are filled.
 export function NumberForm({
   questions,
+  show = (q) => q,
   onSubmit,
   label,
   busy = false,
 }: {
   questions: string[]
+  show?: (q: string) => string // how each reads to you — see say
   onSubmit: (values: number[]) => void
   label: string
   busy?: boolean
@@ -20,11 +22,11 @@ export function NumberForm({
     <div className="flex flex-col gap-3">
       {questions.map((q, i) => (
         <label key={i} className="flex items-center gap-3 rounded-2xl bg-fg/[0.04] px-4 py-3">
-          <span className="flex-1 min-w-0 text-sm leading-snug">{q}</span>
+          <span className="flex-1 min-w-0 text-sm leading-snug">{show(q)}</span>
           <input
             inputMode="numeric"
             pattern="[0-9]*"
-            aria-label={q}
+            aria-label={show(q)}
             className="w-20 shrink-0 min-h-[44px] rounded-xl border-2 border-fg bg-card text-center text-xl font-bold tabular-nums outline-none focus:border-pa"
             value={values[i]}
             onChange={(e) => {
