@@ -5,10 +5,10 @@ import { useId } from 'react'
 // one at the top crossing and under it at the bottom — a real interlock, not an overlap.
 // `on` is the colour it sits on, so the little gaps at the crossings match it.
 
-const CX = [35, 65] as const
-const RX = 19
-const RY = 15
-const SW = 9.5
+const CX = [37, 63] as const
+const RX = 20
+const RY = 14
+const SW = 8
 
 function Link({ cx, colour, width = SW }: { cx: number; colour: string; width?: number }) {
   return <ellipse cx={cx} cy={50} rx={RX} ry={RY} fill="none" style={{ stroke: colour }} strokeWidth={width} />
@@ -18,7 +18,7 @@ export function Logo({ className = 'w-12', on = 'bg' }: { className?: string; on
   const clip = useId()
   const gap = `rgb(var(--${on}))`
   return (
-    <svg viewBox="6 30 88 40" className={className} role="img" aria-label="Coupled">
+    <svg viewBox="8 31 84 38" className={className} role="img" aria-label="Coupled">
       <defs>
         <clipPath id={clip}><rect x="0" y="50" width="100" height="50" /></clipPath>
       </defs>

@@ -166,23 +166,23 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Side p="A" name={d.me} label="You" today={d.today.me} total={d.total.me} lead={lead === 'A'} />
+        <Side p="A" name={d.me} label="You" total={d.total.me} lead={lead === 'A'} />
         <span className="font-display font-bold text-sm text-fg/30">vs</span>
-        <Side p="B" name={d.partner} label={d.partner} today={d.today.them} total={d.total.them} lead={lead === 'B'} flip />
+        <Side p="B" name={d.partner} label={d.partner} total={d.total.them} lead={lead === 'B'} flip />
       </div>
     </section>
   )
 }
 
-function Side({ p, name, label, today, total, lead, flip = false }: {
-  p: 'A' | 'B'; name: string; label: string; today: number; total: number; lead: boolean; flip?: boolean
+function Side({ p, name, label, total, lead, flip = false }: {
+  p: 'A' | 'B'; name: string; label: string; total: number; lead: boolean; flip?: boolean
 }) {
   return (
     <div className={'flex-1 min-w-0 flex items-center gap-2.5 ' + (flip ? 'flex-row-reverse text-right' : '')}>
       <Avatar p={p} name={name} />
       <div className="min-w-0">
         <div className="text-xs font-bold text-fg/60 truncate">
-          {lead && <span aria-label="leading">👑 </span>}{label} · +{today} today
+          {lead && <span aria-label="leading">👑 </span>}{label}
         </div>
         <div className={'font-display text-[1.75rem] font-extrabold leading-none tabular-nums ' + inkOf(p)}>{total}</div>
       </div>

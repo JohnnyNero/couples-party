@@ -133,7 +133,7 @@ function ProfileButton() {
 function Today({ onPick }: { onPick: (g: Game) => void }) {
   const board = useBoard()
   const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
-  const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+  const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
   return (
     <div className="flex flex-col gap-4">
       <TabHeader
