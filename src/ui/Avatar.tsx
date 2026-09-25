@@ -1,6 +1,9 @@
 import type { PlayerId } from '../engine/state'
+import { usePhoto } from '../profile/store'
 
-// A player's initial in their own colour: coral for seat A, blue for seat B.
+// A player's photo if they've added one on their profile, otherwise their initial in
+// their own colour: coral for seat A, blue for seat B. A photo still gets a ring in that
+// colour, so whose is whose never depends on the picture.
 const SIZES = {
   sm: 'w-6 h-6 text-[0.8rem]',
   md: 'w-9 h-9 text-lg',
@@ -8,7 +11,24 @@ const SIZES = {
   xl: 'w-24 h-24 text-5xl',
 } as const
 
-export function Avatar({ p, name, size = 'md', className = '' }: { p: PlayerId; name: string; size?: keyof typeof SIZES; className?: string }) {
+const RINGS = { sm: 'ring-[1.5px]', md: 'ring-2', lg: 'ring-[3px]', xl: 'ring-4' } as const
+
+export function Avatar({ p, name, size = 'md', className = '', photo }: { p: PlayerId; name: string; size?: keyof typeof SIZES; className?: string; photo?: string | null }) {
+  const found = usePhoto(name)
+  const src = photo === undefined ? found : photo
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className={
+          'shrink-0 rounded-full object-cover bg-fg/10 ' + RINGS[size] + (p === 'A' ? ' ring-pa ' : ' ring-pb ') + SIZES[size] + ' ' + className
+        }
+      />
+    )
+  }
   return (
     <span
       aria-hidden="true"

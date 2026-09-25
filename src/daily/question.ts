@@ -8,9 +8,16 @@ import { dayIndex } from './dates'
 // Once either of you answers, the server pins that question for the couple for the day
 // — so if the content file changes mid-day, the second of you still gets the first's
 // question. This is only for before anyone has answered.
-export function questionOfTheDay(date: string, pool: string[]): string | null {
-  if (pool.length === 0) return null
+//
+// With questions of your own (Our questions), every other day is one of yours instead,
+// taking them in the order you added them.
+export function questionOfTheDay(date: string, pool: string[], ours: string[] = []): string | null {
   const day = dayIndex(date)
+  if (ours.length > 0 && (day % 2 === 0 || pool.length === 0)) {
+    const i = Math.floor(day / 2)
+    return ours[((i % ours.length) + ours.length) % ours.length]
+  }
+  if (pool.length === 0) return null
   const order = shuffled(makeRng(0xc0ffee), pool)
   return order[((day % order.length) + order.length) % order.length]
 }

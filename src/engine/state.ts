@@ -216,6 +216,9 @@ export type Content = {
   lightsQuestions: string[]
   clashCategories: string[]
   chainCategories: ChainCategory[]
+  // The couple's own cards (Our questions), by their text — a Wavelength scale as
+  // "Low | High". Already in the pools above; this only says which to deal first.
+  ours?: string[]
 }
 
 export type SessionState = {

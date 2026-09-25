@@ -23,7 +23,7 @@ export function ScreenLightsOut({ s }: { s: SessionState }) {
   const lead: PlayerId | null = t.A === t.B ? null : t.A > t.B ? 'A' : 'B'
   const played = t.A + t.B > 0
   return (
-    <div className="relative h-full w-full overflow-hidden flex flex-col bg-[#1B1311] text-[#F0DED2]">
+    <div className="relative h-full w-full overflow-hidden flex flex-col bg-[#000000] text-[#F0DED2]">
       <svg className="absolute inset-x-0 top-0 w-full h-1/2 pointer-events-none" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         {STARS.map(([x, y, r, o], i) => (
           <circle key={i} cx={x} cy={y} r={r * 0.28} fill="#F0DED2" opacity={o} className="animate-pulse" style={{ animationDelay: `${i * 370}ms`, animationDuration: '3s' }} />
@@ -50,8 +50,8 @@ export function ScreenLightsOut({ s }: { s: SessionState }) {
         {played && (
           <section className="rounded-[22px] bg-[#F0DED2]/[0.06] border border-[#F0DED2]/[0.12] px-4 py-3.5 flex items-center gap-3">
             <div className="flex">
-              <Avatar p="A" name={playerName(s, 'A')} size="md" className="ring-2 ring-[#1B1311]" />
-              <Avatar p="B" name={playerName(s, 'B')} size="md" className="-ml-2 ring-2 ring-[#1B1311]" />
+              <Avatar p="A" name={playerName(s, 'A')} size="md" className="ring-2 ring-[#000000]" />
+              <Avatar p="B" name={playerName(s, 'B')} size="md" className="-ml-2 ring-2 ring-[#000000]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-extrabold">

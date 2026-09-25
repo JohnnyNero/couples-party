@@ -249,11 +249,34 @@ function friendly(message: string): string {
   if (/1 to 30 characters/.test(message)) return 'A word or two — up to 30 characters.'
   if (/draw something/.test(message)) return 'Draw something first.'
   if (/five whole numbers/.test(message)) return 'Whole numbers, 0 to 9999, all five.'
+  if (/2 to 120 characters/.test(message)) return 'A few words — up to 120 characters.'
+  if (/already on the list/.test(message)) return "That one's already on your list."
+  if (/two ends/.test(message)) return 'A scale needs two ends — like Cringe and Cool.'
+  if (/plenty of ideas/.test(message)) return "That's plenty — take some off first."
+  if (/1 to 24 characters/.test(message)) return 'A name, up to 24 characters.'
+  if (/photo is too big/.test(message)) return "That photo's too big — try another."
   if (/drawing is too big/.test(message)) return "That drawing's too busy to send — undo a few lines."
   return message
 }
 
+// You and your partner, for the profile page and every avatar — from migration 0013.
+export type Person = { name: string; photo: string | null }
+export type Profile =
+  | { state: 'single' }
+  | { state: 'waiting'; code: string | null; me: Person }
+  | { state: 'paired'; me: Person; partner: Person; since: string }
+
+// Our questions: the couple's own cards for the games — from migration 0014.
+export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word'
+export type Idea = { id: string; kind: IdeaKind; text: string; mine: boolean; createdAt: string }
+
 export const api = {
+  ideas: () => rpc<Idea[]>('ideas'),
+  addIdea: (kind: IdeaKind, text: string) => rpc<Idea>('add_idea', { p_kind: kind, p_text: text }),
+  deleteIdea: (id: string) => rpc<void>('delete_idea', { p_id: id }),
+  profile: () => rpc<Profile>('profile'),
+  setName: (name: string) => rpc<void>('set_name', { p_name: name }),
+  setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
   daily: (today: string) => rpc<Daily>('daily', { p_today: today }),
   createCouple: (name: string) => rpc<string>('create_couple', { p_name: name }),
   joinCouple: (code: string, name: string) => rpc<void>('join_couple', { p_code: code, p_name: name }),

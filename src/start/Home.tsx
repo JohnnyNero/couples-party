@@ -1,8 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Game } from './mode'
 import type { GameKey } from '../engine/state'
 import { GAME_LABELS, roster } from '../engine/roster'
-import { ThemeToggle } from '../views/ThemeToggle'
+import { ProfilePage } from '../profile/ProfilePage'
+import { refreshProfile, useProfile } from '../profile/store'
+import { refreshIdeas } from '../ideas/store'
+import { Avatar } from '../ui/Avatar'
 import { Board } from '../daily/Board'
 import { useBoard } from '../daily/useDaily'
 import { dayIndex, localDate } from '../daily/dates'
@@ -27,8 +30,18 @@ function loadTab(): Tab {
   }
 }
 
+// Opens the profile page, from the avatar in any tab's header.
+const OpenProfile = createContext<() => void>(() => {})
+
 export function Home({ onPick }: { onPick: (g: Game) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
+  const [profileOpen, setProfileOpen] = useState(false)
+  // Bumped after unpairing, so Today fetches its board again from scratch.
+  const [epoch, setEpoch] = useState(0)
+  useEffect(() => { void refreshProfile(); void refreshIdeas() }, [])
+  // A new name redraws Today, so its greeting and board catch up.
+  const profile = useProfile()
+  const myName = profile && profile.state !== 'single' ? profile.me.name : ''
   const choose = (t: Tab) => {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
@@ -37,15 +50,23 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
   return (
     <div className="h-full w-full flex flex-col select-none">
       <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
-        <div key={tab} className="w-full max-w-xl mx-auto animate-fade-up">
-          {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <Memories />}
-        </div>
+        <OpenProfile.Provider value={() => setProfileOpen(true)}>
+          <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto animate-fade-up">
+            {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <Memories />}
+          </div>
+        </OpenProfile.Provider>
       </main>
       <nav className="shrink-0 border-t border-fg/10 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === 'today'} onClick={() => choose('today')} label="Today" icon={<MoonIcon />} />
         <TabButton active={tab === 'games'} onClick={() => choose('games')} label="Games" icon={<GridIcon />} />
         <TabButton active={tab === 'memories'} onClick={() => choose('memories')} label="Memories" icon={<BookIcon />} />
       </nav>
+      {profileOpen && (
+        <ProfilePage
+          onClose={() => setProfileOpen(false)}
+          onUnpaired={() => { setProfileOpen(false); setEpoch((n) => n + 1); choose('today') }}
+        />
+      )}
     </div>
   )
 }
@@ -55,7 +76,7 @@ function TabHeader({ over, title, sub, right }: { over?: string; title: string; 
   const controls = (
     <div className="shrink-0 flex items-center gap-2">
       {right}
-      <ThemeToggle />
+      <ProfileButton />
     </div>
   )
   // With a line over the title (Today's date), that line shares the row with the
@@ -81,6 +102,28 @@ function TabHeader({ over, title, sub, right }: { over?: string; title: string; 
       </div>
       {controls}
     </header>
+  )
+}
+
+// You, top right of every tab: your photo or initial, or a plain figure before you've
+// paired. Tapping it opens the profile page.
+function ProfileButton() {
+  const open = useContext(OpenProfile)
+  const profile = useProfile()
+  const me = profile && profile.state !== 'single' ? profile.me : null
+  return (
+    <button onClick={open} aria-label="Profile" className="shrink-0 rounded-full active:translate-y-px">
+      {me ? (
+        <Avatar p="A" name={me.name} size="md" className="!w-10 !h-10" />
+      ) : (
+        <span className="w-10 h-10 rounded-full border-2 border-fg/15 text-fg/60 inline-flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8.5" r="3.5" />
+            <path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" />
+          </svg>
+        </span>
+      )}
+    </button>
   )
 }
 

@@ -12,6 +12,8 @@ import m0009 from './migrations/0009_streak_any_puzzle.sql?raw'
 import m0010 from './migrations/0010_solve_then_set.sql?raw'
 import m0011 from './migrations/0011_couple_room_code.sql?raw'
 import m0012 from './migrations/0012_memories.sql?raw'
+import m0013 from './migrations/0013_profile.sql?raw'
+import m0014 from './migrations/0014_our_questions.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -70,6 +72,8 @@ beforeAll(async () => {
   await db.exec(m0010)
   await db.exec(m0011)
   await db.exec(m0012)
+  await db.exec(m0013)
+  await db.exec(m0014)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
 }, 30000)
 
@@ -545,10 +549,11 @@ describe('the board: solve theirs, then set tomorrow', () => {
 })
 
 describe('unpairing', () => {
-  it('takes the couple and its puzzles with the last one out', async () => {
+  it('ends the couple for both of you, and takes its puzzles with it', async () => {
     await call(SAM, 'leave_couple')
-    expect(await call(ALEX, 'daily', [today()])).toMatchObject({ state: 'waiting' })
-    await call(ALEX, 'leave_couple')
+    // Not stranded in a couple of one: Alex is back at "pair up" too.
+    expect(await call(ALEX, 'daily', [today()])).toEqual({ state: 'single' })
+    await call(ALEX, 'leave_couple') // and a second unpair is harmless
     const left = await db.query<{ n: number }>('select count(*)::int as n from public.puzzles')
     expect(left.rows[0].n).toBe(0)
   })
@@ -623,5 +628,74 @@ describe('memories', () => {
     expect(older.sessions).toEqual([]) // today's session is after the window
     expect(older.puzzles.map((p: { forDate: string }) => p.forDate)).toEqual([daysAgo(2)])
     await call(SAM, 'leave_couple'); await call(ALEX, 'leave_couple')
+  })
+})
+
+describe('profile', () => {
+  const DOT = 'data:image/jpeg;base64,' + 'A'.repeat(200)
+  it('says who you are and who you are with, photos included', async () => {
+    expect(await call(SAM, 'profile')).toEqual({ state: 'single' })
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'waiting', code, me: { name: 'Sam', photo: null } })
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    await call(SAM, 'set_photo', [DOT])
+    expect(await call(ALEX, 'profile')).toMatchObject({
+      state: 'paired', me: { name: 'Alex', photo: null }, partner: { name: 'Sam', photo: DOT },
+    })
+  })
+  it('renames you everywhere, within the same limits as pairing', async () => {
+    await call(SAM, 'set_name', ['  Samantha '])
+    expect((await call(ALEX, 'profile')).partner.name).toBe('Samantha')
+    expect((await call(ALEX, 'daily', [today()])).partner).toBe('Samantha')
+    await expect(call(SAM, 'set_name', ['   '])).rejects.toThrow(/1 to 24/)
+    await expect(call(SAM, 'set_name', ['x'.repeat(25)])).rejects.toThrow(/1 to 24/)
+    await expect(call(EVE, 'set_name', ['Eve'])).rejects.toThrow(/not paired/)
+  })
+  it('only takes a small picture, and null takes it off', async () => {
+    await expect(call(SAM, 'set_photo', ['https://example.com/me.jpg'])).rejects.toThrow(/too big/)
+    await expect(call(SAM, 'set_photo', ['data:image/jpeg;base64,' + 'A'.repeat(70000)])).rejects.toThrow(/too big/)
+    await call(SAM, 'set_photo', [null])
+    expect((await call(ALEX, 'profile')).partner.photo).toBe(null)
+    await call(SAM, 'leave_couple')
+    expect(await call(ALEX, 'profile')).toEqual({ state: 'single' })
+  })
+})
+
+describe('our questions', () => {
+  it('is one shared list for the couple, closed to everyone else', async () => {
+    expect(await call(SAM, 'ideas')).toEqual([])
+    await expect(call(SAM, 'add_idea', ['mrmrs', 'Your best holiday?'])).rejects.toThrow(/not paired/)
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    const a = await call(SAM, 'add_idea', ['mrmrs', '  Your   best holiday? '])
+    expect(a).toMatchObject({ kind: 'mrmrs', text: 'Your best holiday?', mine: true })
+    await call(ALEX, 'add_idea', ['finger', "you've cried at an advert"])
+    const alexSees = await call(ALEX, 'ideas')
+    expect(alexSees.map((i: { text: string; mine: boolean }) => [i.text, i.mine])).toEqual([
+      ['Your best holiday?', false], ["you've cried at an advert", true],
+    ])
+    expect(await call(EVE, 'ideas')).toEqual([])
+    expect(await as(SAM, 'select * from public.ideas')).toEqual([]) // no policies
+  })
+  it('checks what goes in: known games, sensible length, no repeats, scales with two ends', async () => {
+    await expect(call(SAM, 'add_idea', ['poker', 'hmm'])).rejects.toThrow(/unknown game/)
+    await expect(call(SAM, 'add_idea', ['lights', 'x'])).rejects.toThrow(/2 to 120/)
+    await expect(call(ALEX, 'add_idea', ['mrmrs', 'your best HOLIDAY?'])).rejects.toThrow(/already on the list/)
+    await expect(call(SAM, 'add_idea', ['wave', 'Cringe'])).rejects.toThrow(/two ends/)
+    await expect(call(SAM, 'add_idea', ['wave', 'a | b | c'])).rejects.toThrow(/two ends/)
+    expect((await call(SAM, 'add_idea', ['wave', 'Cringe|Cool'])).text).toBe('Cringe | Cool')
+  })
+  it('lets either of you take one off, and goes when you unpair', async () => {
+    const [first] = await call(ALEX, 'ideas')
+    await expect(call(EVE, 'delete_idea', [first.id])).rejects.toThrow(/not paired/)
+    await call(EVE, 'create_couple', ['Eve'])
+    await call(EVE, 'delete_idea', [first.id]) // another couple's: quietly nothing
+    expect((await call(SAM, 'ideas')).some((i: { id: string }) => i.id === first.id)).toBe(true)
+    await call(ALEX, 'delete_idea', [first.id]) // Sam wrote it; Alex can still remove it
+    expect((await call(SAM, 'ideas')).some((i: { id: string }) => i.id === first.id)).toBe(false)
+    await call(SAM, 'leave_couple')
+    const left = await db.query<{ n: number }>('select count(*)::int as n from public.ideas')
+    expect(left.rows[0].n).toBe(0)
+    await call(EVE, 'leave_couple')
   })
 })

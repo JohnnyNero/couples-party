@@ -18,6 +18,7 @@ import { EMPTY_CONTENT, initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
+import { ideasForGame, withIdeas } from '../ideas/store'
 import { assignPlayerId, getPlayerId } from './ids'
 import { dayIndex, localDate } from '../daily/dates'
 import type { PlayMode } from '../start/mode'
@@ -58,7 +59,7 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
 
   // Only the host's copy matters — it builds the session — but every phone trims its
   // pools to what it hasn't seen yet; see store/seen.
-  content = freshen(await loadPacks())
+  content = freshen(withIdeas(await loadPacks(), await ideasForGame()))
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,

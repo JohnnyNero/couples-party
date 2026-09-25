@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
-// Day / night. With nothing chosen the app follows the phone's own dark-mode setting;
-// tapping this pins one or the other on this device. index.html applies the stored
-// choice before first paint so there's no flash of the wrong one.
+// Day / night. With nothing chosen ("Auto") the app follows the phone's own dark-mode
+// setting; picking one pins it on this device. index.html applies the stored choice
+// before first paint so there's no flash of the wrong one. The choice lives on the
+// profile page (ThemeChoice); this module also keeps the phone's status bar in step.
 
-type Theme = 'day' | 'night'
+export type Theme = 'day' | 'night'
 const KEY = 'couples-party:theme'
 const media = () => window.matchMedia?.('(prefers-color-scheme: dark)')
 
@@ -17,10 +18,6 @@ function stored(): Theme | null {
   }
 }
 
-function effective(): Theme {
-  return stored() ?? (media()?.matches ? 'night' : 'day')
-}
-
 function apply(t: Theme | null) {
   if (t) document.documentElement.dataset.theme = t
   else delete document.documentElement.dataset.theme
@@ -29,41 +26,46 @@ function apply(t: Theme | null) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', `rgb(${bg})`)
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(effective)
-
+// Keeps the status bar right from the first render, and follows the phone switching over
+// at sunset — unless someone has pinned a choice. Mounted once, at the app's root.
+export function useThemeSync() {
   useEffect(() => {
     apply(stored())
-    // Follow the phone switching over at sunset — unless someone has pinned a choice.
     const m = media()
-    const onChange = () => { if (!stored()) { apply(null); setTheme(effective()) } }
+    const onChange = () => { if (!stored()) apply(null) }
     m?.addEventListener?.('change', onChange)
     return () => m?.removeEventListener?.('change', onChange)
   }, [])
+}
 
-  const flip = () => {
-    const next: Theme = theme === 'night' ? 'day' : 'night'
-    try { localStorage.setItem(KEY, next) } catch { /* private mode — lasts this visit */ }
-    apply(next)
-    setTheme(next)
+// Day, Night or Auto, as three segments.
+export function ThemeChoice() {
+  const [choice, setChoice] = useState<Theme | null>(stored)
+  const pick = (t: Theme | null) => {
+    try {
+      if (t) localStorage.setItem(KEY, t)
+      else localStorage.removeItem(KEY)
+    } catch { /* private mode — lasts this visit */ }
+    apply(t)
+    setChoice(t)
   }
-
+  const opts: [Theme | null, string][] = [['day', 'Day'], ['night', 'Night'], [null, 'Auto']]
   return (
-    <button
-      onClick={flip}
-      aria-label={theme === 'night' ? 'Switch to day mode' : 'Switch to night mode'}
-      className="h-9 w-9 flex items-center justify-center rounded-full border-2 border-fg/15 text-fg/60 active:translate-y-px"
-    >
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {theme === 'night' ? (
-          <>
-            <circle cx="12" cy="12" r="4.5" />
-            <path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4M18.7 18.7l-1.4-1.4M6.7 6.7 5.3 5.3" />
-          </>
-        ) : (
-          <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z" />
-        )}
-      </svg>
-    </button>
+    <div role="radiogroup" aria-label="Appearance" className="grid grid-cols-3 gap-1 rounded-2xl bg-fg/[0.06] p-1">
+      {opts.map(([t, label]) => (
+        <button
+          key={label}
+          role="radio"
+          aria-checked={choice === t}
+          onClick={() => pick(t)}
+          className={
+            'min-h-[44px] rounded-xl font-display text-base font-extrabold transition-colors ' +
+            (choice === t ? 'bg-card text-fg shadow-[0_1px_0_rgba(0,0,0,0.12)] border-2 border-fg' : 'text-fg/55')
+          }
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }

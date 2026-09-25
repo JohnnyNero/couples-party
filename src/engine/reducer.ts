@@ -4,7 +4,7 @@ import type {
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
-import { makeRng, pick, shuffled } from './rng'
+import { makeRng, oursFirst, pick, shuffled } from './rng'
 import { CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
 import { checkWord, nextLetter, turnMs } from './chain'
@@ -250,9 +250,11 @@ function currentFingerRound(f: FingerGame) {
   return f.rounds[f.current]
 }
 
+const text = (t: string) => t
+
 function beginFinger(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  const pool = shuffled(makeRng(s.seed ^ 0x9001), s.fingerStatements)
+  const pool = oursFirst(makeRng(s.seed ^ 0x9001), s.fingerStatements, s.ours, text)
   const rounds = pool.slice(0, roundsFor(s, 'finger')).map((statementId, i) => ({
     index: i + 1,
     statementId,
@@ -294,7 +296,7 @@ function advanceFinger(state: SessionState, now: number): SessionState {
 
 function beginMrMrs(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  const questions = shuffled(makeRng(s.seed ^ 0x3303), s.mrmrsQuestions)
+  const questions = oursFirst(makeRng(s.seed ^ 0x3303), s.mrmrsQuestions, s.ours, text)
     .slice(0, roundsFor(s, 'mrmrs'))
   if (questions.length === 0) return skipTo(s, now, 'mrmrs')
   s.mrmrs = {
@@ -357,7 +359,7 @@ function beginWave(state: SessionState, now: number): SessionState {
   const s = clone(state)
   if (s.spectrums.length === 0) return skipTo(s, now, 'wave')
   const rng = makeRng(s.seed ^ 0xa001)
-  const spectrums = shuffled(rng, s.spectrums)
+  const spectrums = oursFirst(rng, s.spectrums, s.ours, (w) => `${w.low} | ${w.high}`)
   const rounds = Array.from({ length: roundsFor(s, 'wave') }, (_, i) => {
     const spectrum = spectrums[i % spectrums.length]
     const span = WAVE.targetMax - WAVE.targetMin
@@ -474,7 +476,7 @@ function beginClash(state: SessionState, now: number): SessionState {
   const rounds = roundsFor(s, 'clash')
   if (s.clashCategories.length < CLASH.categories) return skipTo(s, now, 'clash')
   const letters = shuffled(makeRng(s.seed ^ 0xc1a5), CLASH.letters.split(''))
-  const cats = shuffled(makeRng(s.seed ^ 0xca75), s.clashCategories)
+  const cats = oursFirst(makeRng(s.seed ^ 0xca75), s.clashCategories, s.ours, text)
   s.clash = {
     rounds: Array.from({ length: rounds }, (_, r): ClashRound => {
       const categories = Array.from({ length: CLASH.categories }, (_, i) => cats[(r * CLASH.categories + i) % cats.length])
@@ -710,7 +712,7 @@ function advanceClock(state: SessionState, now: number, field: ClockField): Sess
 function beginLights(state: SessionState, now: number): SessionState {
   const s = clone(state)
   if (s.lightsQuestions.length === 0) return skipTo(s, now, 'lights')
-  s.lights = { question: pick(makeRng(s.seed ^ 0x0ff), s.lightsQuestions) }
+  s.lights = { question: oursFirst(makeRng(s.seed ^ 0x0ff), s.lightsQuestions, s.ours, text)[0] }
   s.phase = 'LIGHTS_OUT'
   s.phaseEndsAt = null
   return s

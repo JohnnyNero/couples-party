@@ -2,6 +2,7 @@ import type { Action, Game, PlayerId, SessionState } from '../engine/state'
 import type { PlayMode } from '../start/mode'
 import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
+import { ideasForGame, withIdeas } from '../ideas/store'
 import * as playroom from './playroom'
 import { SOLO_PLAYER, initLocal, localDispatch, useLocalSession } from './local'
 
@@ -14,7 +15,7 @@ let solo = false
 export async function initNet(mode: PlayMode, game: Game, roomCode?: string): Promise<void> {
   solo = mode === 'solo'
   if (!solo) return playroom.initNet(mode, game, roomCode)
-  initLocal(freshen(await loadPacks()), game)
+  initLocal(freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
 }
 
 export function useSession(): SessionState {

@@ -37,16 +37,16 @@ html, body, #root { height: 100%; }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="day"]) {
-    --bg: 27 19 17;
+    --bg: 0 0 0;
     --fg: 240 222 210;
     --accent: 255 128 112;
-    --ink: 46 34 30;
+    --ink: 32 29 28;
     --paper: 240 222 210;
     --correct: 83 141 78;
     --present: 181 159 59;
     --absent: 58 58 60;
     --accent-ink: 255 154 140;
-    --card: 42 31 28;
+    --card: 24 22 22;
     --pa: 232 102 85;
     --pa-ink: 255 154 140;
     --pa-soft: 66 38 33;
@@ -61,16 +61,16 @@ html, body, #root { height: 100%; }
   }
 }
 :root[data-theme="night"] {
-  --bg: 27 19 17;
+  --bg: 0 0 0;
   --fg: 240 222 210;
   --accent: 255 128 112;
-  --ink: 46 34 30;
+  --ink: 32 29 28;
   --paper: 240 222 210;
   --correct: 83 141 78;
   --present: 181 159 59;
   --absent: 58 58 60;
   --accent-ink: 255 154 140;
-  --card: 42 31 28;
+  --card: 24 22 22;
   --pa: 232 102 85;
   --pa-ink: 255 154 140;
   --pa-soft: 66 38 33;

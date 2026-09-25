@@ -13,6 +13,7 @@ import { PlayNumbers } from './PlayNumbers'
 import { PlaySketch } from './PlaySketch'
 import { PlayTop5 } from './PlayTop5'
 import { questionOfTheDay, renderQuestion } from './question'
+import { useIdeas } from '../ideas/store'
 import { SetDialClue } from './SetDialClue'
 import { SetNumbers } from './SetNumbers'
 import { SetSketch } from './SetSketch'
@@ -308,6 +309,7 @@ function PuzzleScreen({
 }) {
   const { partner, me, kinds } = data
   const tomorrow = localDate(1)
+  const ourWords = useIdeas().filter((i) => i.kind === 'word').map((i) => i.text)
 
   // Setting for tomorrow is the normal flow — but if nothing's been set for today at
   // all yet (day one, or a day you both missed), set that one for today instead, so
@@ -331,7 +333,7 @@ function PuzzleScreen({
   switch (screen.kind) {
     case 'word': {
       const date = setDate('word')
-      const template = kinds.word.next?.prompt ?? questionOfTheDay(date ?? localDate(), pools.words) ?? ''
+      const template = kinds.word.next?.prompt ?? questionOfTheDay(date ?? localDate(), pools.words, ourWords) ?? ''
       return <WordAnswer partner={partner} template={template} question={renderQuestion(template, partner)} onClose={onClose} forDate={date} />
     }
     case 'dial': {

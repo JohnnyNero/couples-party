@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { initNet, getIsStreamScreen, useSession } from './net'
+import { initNet, getIsStreamScreen, useSession, useMyPlayerId, dispatch } from './net'
+import { useThemeSync } from './views/ThemeToggle'
+import { refreshProfile, useProfile } from './profile/store'
 import { recordSeen } from './store/seen'
 import { useKeepMemory } from './memories/useKeepMemory'
 import { api } from './daily/api'
@@ -17,6 +19,7 @@ export default function App() {
   const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
   const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
   const [ready, setReady] = useState(false)
+  useThemeSync()
 
   useEffect(() => {
     if (!mode || !game) return
@@ -70,6 +73,7 @@ function SeenRecorder({ keep }: { keep: boolean }) {
   const session = useSession()
   useEffect(() => recordSeen(session), [session])
   useKeepMemory(session, keep)
+  useProfileName(keep)
   return null
 }
 
@@ -83,4 +87,21 @@ function Connecting() {
       <div className="font-display text-xl font-bold text-fg/50">Getting the room ready…</div>
     </div>
   )
+}
+
+// In a game, a paired phone goes by the name on its profile rather than whatever
+// Playroom picked — so the game says "Roxx", not "Player 2", and every avatar can find
+// its photo (photos are matched by name). A JOIN from a seat already taken only
+// renames it; it doesn't restart anything.
+function useProfileName(enabled: boolean) {
+  const session = useSession()
+  const me = useMyPlayerId()
+  const profile = useProfile()
+  useEffect(() => { if (enabled) void refreshProfile() }, [enabled])
+  const name = profile?.state === 'paired' ? profile.me.name : null
+  const current = me ? session.players[me] : null
+  useEffect(() => {
+    if (!enabled || !me || !name || !current?.connected || current.name === name) return
+    dispatch({ type: 'JOIN', player: me, name })
+  }, [enabled, me, name, current?.connected, current?.name])
 }

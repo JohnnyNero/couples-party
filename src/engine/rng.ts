@@ -23,3 +23,12 @@ export function shuffled<T>(rng: () => number, arr: readonly T[]): T[] {
   }
   return out
 }
+
+// Shuffled, but with the couple's own cards (Our questions) dealt ahead of the rest —
+// each part shuffled on its own, so which of theirs comes up first still varies.
+export function oursFirst<T>(rng: () => number, arr: readonly T[], ours: readonly string[] | undefined, key: (t: T) => string): T[] {
+  if (!ours || ours.length === 0) return shuffled(rng, arr)
+  const mine = new Set(ours.map((o) => o.toLowerCase()))
+  const isOurs = (t: T) => mine.has(key(t).toLowerCase())
+  return [...shuffled(rng, arr.filter(isOurs)), ...shuffled(rng, arr.filter((t) => !isOurs(t)))]
+}
