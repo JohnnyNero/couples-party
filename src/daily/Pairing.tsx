@@ -95,8 +95,8 @@ export function PairWaiting({ code, me, onCancel }: { code: string; me: string; 
   const link = inviteUrl(code, me || savedName())
   // A link they just tap: it opens the app, pairs them and asks for their name and photo.
   const share = () => {
-    const text = `${me ? `${me} has` : "I've"} invited you to Couples Party — tap to pair up with me`
-    if (navigator.share) void navigator.share({ title: 'Couples Party', text, url: link }).catch(() => {})
+    const text = `${me ? `${me} has` : "I've"} invited you to Coupled — tap to pair up with me`
+    if (navigator.share) void navigator.share({ title: 'Coupled', text, url: link }).catch(() => {})
     else void navigator.clipboard?.writeText(link).then(() => setCopied(true))
   }
   return (

@@ -13,7 +13,7 @@ const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The f
 // What the header says: which game, and where in it you are.
 export function headerInfo(s: SessionState): { icon: GameKey | null; title: string; sub: string } {
   if (s.phase === 'JOIN' || s.phase === 'BOOT') {
-    return { icon: null, title: SESSION_NAMES[s.game] ?? GAME_LABELS[s.game as GameKey] ?? 'Couples Party', sub: 'Getting ready' }
+    return { icon: null, title: SESSION_NAMES[s.game] ?? GAME_LABELS[s.game as GameKey] ?? 'Coupled', sub: 'Getting ready' }
   }
   if (s.phase === 'DONE') return { icon: 'lights', title: "That's the night", sub: '' }
   if (s.phase === 'LIGHTS_OUT') return { icon: 'lights', title: 'Lights out', sub: '' }

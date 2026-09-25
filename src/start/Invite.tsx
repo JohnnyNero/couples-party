@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, DailyError } from '../daily/api'
 import { Avatar } from '../ui/Avatar'
+import { Wordmark } from '../ui/Logo'
 import { btnAccent, eyebrow, field } from '../ui/styles'
 import { refreshProfile, useProfile } from '../profile/store'
 import { shrinkPhoto } from '../profile/photo'
@@ -88,7 +89,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
         ) : (
           <div className="flex-1 flex flex-col gap-7 animate-fade-up">
             <div className="text-center">
-              <div className={eyebrow}>Couples Party</div>
+              <Wordmark className="font-display text-xl font-extrabold" />
               <h1 className="mt-2 font-display text-[2.1rem] font-extrabold leading-[1.1]">{from} has invited you</h1>
               <p className="mt-2 text-fg/65 leading-snug">
                 Daily puzzles you set for each other, and a game night for the two of you. First, who are you?

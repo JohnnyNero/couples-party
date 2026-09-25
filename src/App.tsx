@@ -9,6 +9,7 @@ import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from '.
 import { ModePicker } from './start/ModePicker'
 import { Home } from './start/Home'
 import { Invite } from './start/Invite'
+import { Logo } from './ui/Logo'
 import { readInvite } from './start/invite'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
@@ -83,10 +84,7 @@ function SeenRecorder({ keep }: { keep: boolean }) {
 function Connecting() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center gap-4">
-      <div className="flex gap-2">
-        <span className="w-3 h-3 rounded-full bg-pa animate-pulse" />
-        <span className="w-3 h-3 rounded-full bg-pb animate-pulse [animation-delay:200ms]" />
-      </div>
+      <Logo className="w-20 animate-pulse" />
       <div className="font-display text-xl font-bold text-fg/50">Getting the room ready…</div>
     </div>
   )

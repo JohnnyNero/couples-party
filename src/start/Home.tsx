@@ -6,6 +6,7 @@ import { ProfilePage } from '../profile/ProfilePage'
 import { refreshProfile, useProfile } from '../profile/store'
 import { refreshIdeas } from '../ideas/store'
 import { Avatar } from '../ui/Avatar'
+import { Wordmark } from '../ui/Logo'
 import { Board } from '../daily/Board'
 import { useBoard } from '../daily/useDaily'
 import { dayIndex, localDate } from '../daily/dates'
@@ -72,7 +73,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
 }
 
 // Each tab's own title, with the theme toggle (and anything else) on the right.
-function TabHeader({ over, title, sub, right }: { over?: string; title: string; sub?: string; right?: ReactNode }) {
+function TabHeader({ over, title, sub, right, logo = false }: { over?: string; title: string; sub?: string; right?: ReactNode; logo?: boolean }) {
   const controls = (
     <div className="shrink-0 flex items-center gap-2">
       {right}
@@ -89,7 +90,9 @@ function TabHeader({ over, title, sub, right }: { over?: string; title: string; 
           <div className={eyebrow + ' min-w-0 truncate'}>{over}</div>
           {controls}
         </div>
-        <h1 className="mt-1 font-display text-[clamp(1.45rem,7.6vw,1.9rem)] font-extrabold leading-[1.1] tracking-tight whitespace-nowrap truncate">{title}</h1>
+        <h1 className="mt-1 font-display text-[clamp(1.45rem,7.6vw,1.9rem)] font-extrabold leading-[1.1] tracking-tight whitespace-nowrap truncate">
+          {logo ? <Wordmark /> : title}
+        </h1>
         {sub && <div className="mt-0.5 text-sm text-fg/60">{sub}</div>}
       </header>
     )
@@ -135,7 +138,8 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
     <div className="flex flex-col gap-4">
       <TabHeader
         over={date}
-        title={paired ? `Hey ${paired.me} & ${paired.partner}` : 'Couples Party'}
+        title={paired ? `Hey ${paired.me} & ${paired.partner}` : 'Coupled'}
+        logo={!paired}
         right={paired && paired.streak > 0 ? <Streak n={paired.streak} /> : null}
       />
       <Board board={board} />
