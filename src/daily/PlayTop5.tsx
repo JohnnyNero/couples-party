@@ -2,17 +2,20 @@ import { useCallback, useState } from 'react'
 import { api, DailyError, type Top5View } from './api'
 import { outcome } from './Top5Card'
 import { RankFive } from './RankFive'
+import { Avatar } from '../ui/Avatar'
 
 // Guessing your partner's real order — one ranking, then it's locked in and their
 // order is revealed either way, item by item.
 export function PlayTop5({
   puzzle,
   partner,
+  me = 'You',
   theme,
   onClose,
 }: {
   puzzle: Top5View
   partner: string
+  me?: string
   theme: string
   onClose: () => void
 }) {
@@ -43,9 +46,8 @@ export function PlayTop5({
       </header>
 
       {result ? (
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-8 flex flex-col items-center gap-4 animate-fade-up">
-          <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50 mt-2">{partner}'s real order was</div>
-          <RevealLadder puzzle={result} />
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-8 flex flex-col items-center gap-4 pt-3 animate-fade-up">
+          <RevealLadder puzzle={result} partner={partner} me={me} />
           <div className="font-display text-2xl font-bold text-accent-ink text-center">
             {outcome(result.exact!, result.near!)}
           </div>
@@ -66,32 +68,54 @@ export function PlayTop5({
   )
 }
 
-// The true order, top to bottom, each marked by how close the guess landed it —
-// exact, a rank out, or nowhere near.
-function RevealLadder({ puzzle }: { puzzle: Top5View }) {
+// Both rankings side by side: their real order on the left, your guess on the right, a
+// row per rank. Your guess is marked by how close it landed — exact, one rank out, or
+// nowhere near.
+function RevealLadder({ puzzle, partner, me }: { puzzle: Top5View; partner: string; me: string }) {
   const rank = puzzle.rank!
   const guess = puzzle.guess!
+  const cell = 'min-h-[3.25rem] rounded-xl border-2 px-2.5 py-1.5 flex items-center text-sm font-bold leading-tight break-words'
   return (
-    <div className="w-full flex flex-col gap-1.5">
+    <div className="w-full grid grid-cols-[1.25rem_1fr_1fr] gap-x-2 gap-y-1.5 items-stretch">
+      <span />
+      <span className="flex items-center gap-1.5 min-w-0 text-xs font-extrabold text-pb-ink">
+        <Avatar p="B" name={partner} size="sm" /><span className="truncate">{partner}’s order</span>
+      </span>
+      <span className="flex items-center gap-1.5 min-w-0 text-xs font-extrabold text-pa-ink">
+        <Avatar p="A" name={me} size="sm" /><span className="truncate">Your guess</span>
+      </span>
       {rank.map((itemIndex, i) => {
-        const gap = Math.abs(i - guess.indexOf(itemIndex))
+        const guessed = guess[i]
+        const gap = Math.abs(rank.indexOf(guessed) - i)
         const tier = gap === 0 ? 'exact' : gap === 1 ? 'near' : 'miss'
         return (
-          <div
-            key={itemIndex}
-            className={
-              'flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 ' +
-              (tier === 'exact' ? 'border-sage-ink bg-sage-soft' : tier === 'near' ? 'border-tan-ink/50 bg-tan-soft' : 'border-fg/15')
-            }
-          >
-            <span className="w-6 shrink-0 text-xl font-bold tabular-nums text-accent-ink">{i + 1}</span>
-            <span className="flex-1 min-w-0 truncate text-sm font-bold text-left">{puzzle.items[itemIndex]}</span>
-            <span className="shrink-0 text-[0.6rem] uppercase tracking-widest text-fg/50">
-              {tier === 'exact' ? 'Exact' : tier === 'near' ? 'Close' : ''}
-            </span>
-          </div>
+          <Row key={i} n={i + 1}>
+            <div className={cell + ' border-fg/15 bg-card'}>{puzzle.items[itemIndex]}</div>
+            <div
+              className={
+                cell + ' justify-between gap-1 ' +
+                (tier === 'exact' ? 'border-sage-ink bg-sage-soft' : tier === 'near' ? 'border-tan-ink/50 bg-tan-soft' : 'border-fg/15 bg-card text-fg/60')
+              }
+            >
+              <span className="min-w-0">{puzzle.items[guessed]}</span>
+              {tier !== 'miss' && (
+                <span className={'shrink-0 text-xs font-extrabold ' + (tier === 'exact' ? 'text-sage-ink' : 'text-tan-ink')} aria-label={tier === 'exact' ? 'Exact' : 'One out'}>
+                  {tier === 'exact' ? '✓' : '±1'}
+                </span>
+              )}
+            </div>
+          </Row>
         )
       })}
     </div>
+  )
+}
+
+function Row({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <>
+      <span className="self-center font-display text-xl font-extrabold tabular-nums text-accent-ink">{n}</span>
+      {children}
+    </>
   )
 }

@@ -329,7 +329,7 @@ function PuzzleScreen({
         return <WordPlay puzzle={p} partner={partner} question={renderQuestion(p.prompt, me)} mine={kinds.word.mine?.answer ?? null} onClose={onClose} />
       }
       case 'dial': return <PlayDial puzzle={kinds.dial.solve!} partner={partner} spectrum={kinds.dial.solve!.prompt} onClose={onClose} />
-      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} theme={kinds.top5.solve!.prompt} onClose={onClose} />
+      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={kinds.top5.solve!.prompt} onClose={onClose} />
       case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} />
       case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} onClose={onClose} />
     }
