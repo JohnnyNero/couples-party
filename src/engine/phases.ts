@@ -20,6 +20,7 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
   DRAW_REVEAL: 8000,  // long enough for the drawer to wave through a near miss
   CLASH_WRITE: 60000, // six answers, one letter (the reveal waits for taps)
+  CHAIN_END: 7000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
   CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
   CIRCLE_REVEAL: 6000,
   CLOCK_READY: 3000,  // the target, then 3-2-1 (CLOCK_RUN's length depends on the target)
@@ -79,4 +80,13 @@ export const CLASH = {
   // No Q, X, Z, J, V or Y: too few answers start with them to be fun against a clock.
   letters: 'ABCDEFGHIKLMNOPRSTUW',
   maxLen: 30,
+}
+
+export const CHAIN = {
+  // The turn clock tightens as the chain grows: 10 s, then 7 s after ten words, then 5 s.
+  turnMs: [10000, 7000, 5000],
+  tightenEvery: 10,
+  maxLen: 30,
+  winPoints: 10,
+  fuzzyMinLen: 5, // a word this long can be one letter off a listed one and still count
 }

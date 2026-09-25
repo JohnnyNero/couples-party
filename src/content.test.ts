@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 // node types are needed just to open a file.
 import shippedContent from '../public/content/game-content.md?raw'
 import { parseContent } from './content'
+import { chainKey } from './engine/chain'
 import { roundsFor } from './engine/roster'
 
 describe('parseContent', () => {
@@ -198,6 +199,17 @@ describe('the shipped content keeps its shape', () => {
     expect(parsed.drawPrompts.length).toBeGreaterThanOrEqual(need('draw'))
     expect(parsed.lightsQuestions.length).toBeGreaterThanOrEqual(1)
     expect(parsed.clashCategories.length).toBeGreaterThanOrEqual(need('clash') * 6)
+    expect(parsed.chainCategories.length).toBeGreaterThanOrEqual(need('chain'))
+  })
+
+  it('gives every Word Chain category a long, clean answer list', () => {
+    for (const c of parsed.chainCategories) {
+      expect({ name: c.name, n: c.words.length >= 60 }).toEqual({ name: c.name, n: true })
+      expect(c.words.filter((w) => w !== w.toLowerCase() || !/^[a-z][a-z' -]*$/.test(w))).toEqual([])
+      // Two entries that the game would read as the same word is one entry twice.
+      const keys = c.words.map(chainKey)
+      expect(keys.filter((k, i) => keys.indexOf(k) !== i)).toEqual([])
+    }
   })
 
   it('keeps Draw Your Answer prompts as bare phrases the app can put "Your" in front of', () => {

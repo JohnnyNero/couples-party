@@ -1,4 +1,4 @@
-import type { Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
+import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
 
 // Parses the one plain-text file all the game content lives in (content/game-content.md
 // at the repo root, served as a static asset) — so editing what the games say never
@@ -8,7 +8,7 @@ import type { Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
 export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'clash' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'clash' | 'chain' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -24,6 +24,7 @@ function sectionFor(heading: string): Section {
     case 'their word': return 'word'
     case 'their numbers': return 'numbers'
     case 'category clash': return 'clash'
+    case 'word chain': return 'chain'
     default: return null
   }
 }
@@ -39,6 +40,8 @@ export function parseContent(text: string): ParsedContent {
   const wordPrompts: string[] = []
   const numberQuestions: string[] = []
   const clashCategories: string[] = []
+  const chainCategories: ChainCategory[] = []
+  let currentChain: ChainCategory | null = null
 
   let section: Section = null
   let currentTheme: Theme | null = null
@@ -54,12 +57,18 @@ export function parseContent(text: string): ParsedContent {
         currentTheme = { id: `t${String(themes.length + 1).padStart(3, '0')}`, text: themeText, pool: [] }
         themes.push(currentTheme)
       }
+      // Inside Word Chain, "## Name" starts a category and its answer list.
+      if (section === 'chain' && themeText.length > 0) {
+        currentChain = { name: themeText, words: [] }
+        chainCategories.push(currentChain)
+      }
       continue
     }
     // "# Section Name" switches which game the following lines belong to.
     if (line.startsWith('# ')) {
       section = sectionFor(line.slice(2))
       currentTheme = null
+      currentChain = null
       continue
     }
     // Everything else — blank lines, plain prose instructions — is commentary.
@@ -100,11 +109,14 @@ export function parseContent(text: string): ParsedContent {
       case 'clash':
         clashCategories.push(item)
         break
+      case 'chain':
+        currentChain?.words.push(item)
+        break
     }
   }
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, clashCategories,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, clashCategories, chainCategories,
   }
 }

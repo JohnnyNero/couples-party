@@ -1,6 +1,7 @@
 import type { Action, PlayerId, SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
+import { freeFor } from '../engine/chain'
 
 // A stand-in second player, so the loop can be played solo. It lives entirely outside
 // the engine — it only ever produces the same actions a phone would, and the reducer
@@ -120,6 +121,17 @@ export function nextBotAction(
       return { type: 'SUBMIT_CLASH', player: me, answers: round.categories.map((_, i) => fits[i] ?? '') }
     }
 
+    case 'CHAIN_TURN': {
+      const g = s.chain
+      if (!g) return null
+      const round = g.rounds[g.current]
+      if (round.turn !== me || round.over) return null
+      // Usually finds one; sometimes freezes, so it can lose a round too.
+      const options = freeFor(round, round.need)
+      if (options.length === 0 || rng() < 0.15) return null
+      return { type: 'CHAIN_WORD', player: me, word: pickFrom(rng, options) }
+    }
+
     case 'CIRCLE_DRAW': {
       const c = s.circle
       if (!c || c.rounds[c.current].drawn[me] !== null) return null
@@ -166,6 +178,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'DRAW_SKETCH': return spread(5000, 15000)
     case 'DRAW_GUESS': return spread(2000, 7000)
     case 'CLASH_WRITE': return spread(15000, 40000)
+    case 'CHAIN_TURN': return spread(1500, 5000)
     case 'CIRCLE_DRAW': return spread(2000, 6000)
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {

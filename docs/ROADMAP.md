@@ -2,6 +2,22 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
+## Done: Word Chain (new-games spec, step 3)
+
+Take turns naming things in a category, each starting with the last letter of the one
+before, against a turn clock (10 s, 7 s after ten words, 5 s after twenty). Ten
+categories in the content file's "# Word Chain" section, each with its full list of
+accepted answers (76 to 260), so every word is checked instantly: case, spacing and a
+plural don't matter, and a 5+ letter word one slip off a listed one counts. Two changes
+from the spec, both to keep it fair: a word that doesn't pass (wrong letter, already
+used, not on the list) is turned back with the reason and you try again while your
+clock runs, rather than losing on the spot; and when nothing left starts with the last
+letter, the letter before it is used instead of replaying the round. Run out of time
+and your partner takes the round's 10. Four rounds in the full session, two in
+Tonight, where the pool is now six games and two sit out each night. Only the
+categories a session can use travel with it, since the whole session is sent to both
+phones on every move.
+
 ## Done: Category Clash (new-games spec, step 2)
 
 Scattergories for two: one letter (never Q, X, Z, J, V or Y, and none repeated in a game),

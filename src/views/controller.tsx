@@ -17,6 +17,7 @@ import { PlayWaiting } from '../play/phases/PlayWaiting'
 import { PlayCircleDraw } from '../play/phases/PlayCircleDraw'
 import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
+import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
 
 // This player's private controller for the current phase, shared by the phone
@@ -59,7 +60,10 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'CIRCLE_RESULT':
     case 'CLOCK_RESULT':
     case 'CLASH_RESULT':
+    case 'CHAIN_RESULT':
       return <PlayContinue s={s} me={me} />
+    case 'CHAIN_TURN':
+      return <PlayChainTurn s={s} me={me} />
     case 'CLASH_WRITE':
       return <PlayClashWrite s={s} me={me} />
     case 'CLASH_REVEAL':

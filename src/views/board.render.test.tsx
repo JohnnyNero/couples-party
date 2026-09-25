@@ -157,7 +157,8 @@ describe('the fillers and the tiebreaker', () => {
   it('says a level night goes to a tiebreaker, then plays it as sudden death', () => {
     // The last scored game's scoreboard, still level at 0–0.
     const cats = ['a drink', 'a colour', 'an animal', 'a film', 'a job', 'a sport']
-    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], clashCategories: cats }, 0)
+    // Night 5 ends on Category Clash (Word Chain and Finger Down sit out).
+    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], clashCategories: cats }, 5)
     last = reduce(last, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     last = reduce(last, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
     for (let i = 0; i < 120 && last.phase !== 'CLASH_RESULT'; i++) {
@@ -213,5 +214,30 @@ describe('Category Clash', () => {
     html = renderToStaticMarkup(<BoardStage s={s} />)
     expect(html).toContain('same')
     expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain('Next')
+  })
+})
+
+describe('Word Chain', () => {
+  const cat = { name: 'Animals', words: ['tiger', 'rabbit', 'rat', 'toad', 'dog', 'goat', 'turkey', 'yak', 'kangaroo', 'owl', 'lion', 'newt'] }
+  const begin = () => {
+    let s = initialState(1, 'chain', { chainCategories: [cat] })
+    s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
+    return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
+  }
+  it('shows whose go it is and the letter they need, on the board and both phones', () => {
+    let s = begin()
+    const r = s.chain!.rounds[0]
+    const who = r.turn === 'A' ? 'Sam' : 'Alex'
+    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain(`${who} needs`)
+    expect(renderToStaticMarkup(<Controller s={s} me={r.turn} />)).toContain('Your go')
+    expect(renderToStaticMarkup(<Controller s={s} me={r.turn === 'A' ? 'B' : 'A'} />)).toContain(`${who} needs`)
+    s = reduce(s, { type: 'CHAIN_WORD', player: r.turn, word: 'unicorn' }, 100)
+    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('unicorn')
+    expect(railText(s)).toBe('Word Chain · Round 1 of 4')
+  })
+  it('ends a round on whoever ran out of time', () => {
+    const s = reduce(begin(), { type: 'TIMEOUT' }, 20000)
+    expect(s.phase).toBe('CHAIN_END')
+    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('ran out of time')
   })
 })

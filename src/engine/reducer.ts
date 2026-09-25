@@ -1,12 +1,13 @@
 import type {
-  Action, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, pick, shuffled } from './rng'
-import { CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
+import { checkWord, nextLetter, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
 import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
@@ -32,6 +33,7 @@ function beginGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'wave': return beginWave(state, now)
     case 'draw': return beginDraw(state, now)
     case 'clash': return beginClash(state, now)
+    case 'chain': return beginChain(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
@@ -55,7 +57,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -492,6 +494,68 @@ function advanceClash(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Word Chain
+
+// Every round is dealt up front — its category, its answer list and the app's opening
+// word — but who goes first is only settled when it starts: the loser of the round before.
+function newChainRound(cat: ChainCategory, index: number, rng: () => number): ChainRound {
+  const opener = pick(rng, cat.words)
+  const round: ChainRound = {
+    index,
+    category: cat.name,
+    words: cat.words,
+    chain: [{ word: opener, by: null }],
+    turn: 'A',
+    need: '',
+    loser: null,
+    over: false,
+    reject: null,
+  }
+  const need = nextLetter(round, opener)
+  if (need === null) round.over = true
+  else round.need = need
+  return round
+}
+
+function beginChain(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  if (s.chainCategories.length === 0) return skipTo(s, now, 'chain')
+  const rng = makeRng(s.seed ^ 0xc4a1)
+  const cats = shuffled(rng, s.chainCategories)
+  const rounds = Array.from({ length: roundsFor(s, 'chain') }, (_, i) => newChainRound(cats[i % cats.length], i + 1, rng))
+  rounds[0].turn = rng() < 0.5 ? 'A' : 'B'
+  s.chain = { rounds, current: 0 }
+  // The rounds now carry the lists they need; the rest needn't ride along on every move.
+  s.chainCategories = []
+  return rounds[0].over ? toChainEnd(s, now) : toChainTurn(s, now)
+}
+
+function toChainTurn(s: SessionState, now: number): SessionState {
+  const round = s.chain!.rounds[s.chain!.current]
+  s.phase = 'CHAIN_TURN'
+  s.phaseEndsAt = now + turnMs(round)
+  return s
+}
+
+function toChainEnd(s: SessionState, now: number): SessionState {
+  s.chain!.rounds[s.chain!.current].over = true
+  s.phase = 'CHAIN_END'
+  s.phaseEndsAt = now + DURATIONS.CHAIN_END!
+  return s
+}
+
+function advanceChain(state: SessionState, now: number): SessionState {
+  const g = state.chain!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'CHAIN_RESULT')
+  const s = clone(state)
+  const prev = s.chain!.rounds[s.chain!.current]
+  const starter = prev.chain[1]?.by ?? prev.turn
+  s.chain!.current += 1
+  const round = s.chain!.rounds[s.chain!.current]
+  round.turn = prev.loser ?? other(starter)
+  return round.over ? toChainEnd(s, now) : toChainTurn(s, now)
+}
+
 // ---------------------------------------------------------------- Perfect Circle
 
 function newCircleRound(index: number) {
@@ -768,6 +832,28 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       s.clash!.rounds[s.clash!.current].challenged[owner][action.index] = true
       return s
     }
+    case 'CHAIN_WORD': {
+      if (state.phase !== 'CHAIN_TURN' || !state.chain) return state
+      const live = state.chain.rounds[state.chain.current]
+      if (live.over || live.turn !== action.player) return state
+      const typed = action.word.trim().slice(0, CHAIN.maxLen)
+      if (!typed) return state
+      const s = clone(state)
+      const round = s.chain!.rounds[s.chain!.current]
+      const check = checkWord(round, typed)
+      // Turned back, with the reason on screen — but the clock doesn't stop for it.
+      if (!check.ok) {
+        round.reject = { player: action.player, word: typed, reason: check.reason }
+        return s
+      }
+      round.chain.push({ word: check.word, by: action.player })
+      round.reject = null
+      const need = nextLetter(round, check.word)
+      if (need === null) return toChainEnd(s, now) // nothing left that could follow: nobody's fault
+      round.need = need
+      round.turn = other(action.player)
+      return toChainTurn(s, now)
+    }
     case 'SUBMIT_CIRCLE': {
       if (state.phase !== 'CIRCLE_DRAW' || !state.circle) return state
       const round = state.circle.rounds[state.circle.current]
@@ -832,6 +918,13 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)
+        case 'CHAIN_TURN': {
+          const s = clone(state)
+          const round = s.chain!.rounds[s.chain!.current]
+          round.loser = round.turn
+          return toChainEnd(s, now)
+        }
+        case 'CHAIN_END': return advanceChain(state, now)
         case 'CLASH_WRITE': return toClashReveal(state)
         case 'CLASH_REVEAL': return advanceClash(state, now)
         case 'CIRCLE_DRAW': return toCircleReveal(state, now)

@@ -28,6 +28,8 @@ import { ScreenDrawResult } from '../screen/phases/ScreenDrawResult'
 import { ScreenCircleDraw } from '../screen/phases/ScreenCircleDraw'
 import { ScreenClashWrite } from '../screen/phases/ScreenClashWrite'
 import { ScreenClashReveal } from '../screen/phases/ScreenClashReveal'
+import { ScreenChainTurn } from '../screen/phases/ScreenChainTurn'
+import { ScreenChainEnd } from '../screen/phases/ScreenChainEnd'
 import { ScreenCircleReveal } from '../screen/phases/ScreenCircleReveal'
 import { ScreenFillerResult } from '../screen/phases/ScreenFillerResult'
 import { ScreenClockReady } from '../screen/phases/ScreenClockReady'
@@ -58,7 +60,7 @@ export function railText(s: SessionState): string {
     return `${label} · Round ${f.current + 1} · best of ${f.bestOf}`
   }
   const game = key === 'lights' ? null
-    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash }[key]
+    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain }[key]
   if (!game) return label
   return `${label} · Round ${game.current + 1} of ${game.rounds.length}`
 }
@@ -125,6 +127,12 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenClashReveal s={s} />
     case 'CLASH_RESULT':
       return <Scoreboard s={s} title="Category Clash · done" />
+    case 'CHAIN_TURN':
+      return <ScreenChainTurn s={s} />
+    case 'CHAIN_END':
+      return <ScreenChainEnd s={s} />
+    case 'CHAIN_RESULT':
+      return <Scoreboard s={s} title="Word Chain · done" />
     case 'CIRCLE_DRAW':
       return <ScreenCircleDraw s={s} />
     case 'CIRCLE_REVEAL':

@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -20,6 +20,7 @@ export type Phase =
   | 'WAVE_CLUE' | 'WAVE_GUESS' | 'WAVE_REVEAL' | 'WAVE_RESULT'
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
   | 'CLASH_WRITE' | 'CLASH_REVEAL' | 'CLASH_RESULT'
+  | 'CHAIN_TURN' | 'CHAIN_END' | 'CHAIN_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
@@ -145,6 +146,26 @@ export type ClashRound = {
 }
 export type ClashGame = { rounds: ClashRound[]; current: number }
 
+// Word Chain: take turns naming things in a category, each starting with the letter the
+// last one ended on, against a clock. The category's answer list lives in the content
+// file, so every word is checked instantly — a word that doesn't pass is turned back and
+// you try again, but the clock keeps running. Run out of time and you lose the round.
+export type ChainCategory = { name: string; words: string[] }
+export type ChainLink = { word: string; by: PlayerId | null } // null = the app's opener
+export type ChainReject = { player: PlayerId; word: string; reason: 'letter' | 'used' | 'unknown' }
+export type ChainRound = {
+  index: number // 1-based
+  category: string
+  words: string[]    // the accepted answers, as written in the content file
+  chain: ChainLink[]
+  turn: PlayerId
+  need: string       // the letter the next word must start with, lower case
+  loser: PlayerId | null // whoever ran out of time; null while live, or a round nobody could go on
+  over: boolean
+  reject: ChainReject | null
+}
+export type ChainGame = { rounds: ChainRound[]; current: number }
+
 // Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
 // the round. Only the longest stroke is kept — that's the circle; the rest is noise.
 export type CircleRound = {
@@ -183,6 +204,7 @@ export type Content = {
   mrmrsQuestions: string[]
   lightsQuestions: string[]
   clashCategories: string[]
+  chainCategories: ChainCategory[]
 }
 
 export type SessionState = {
@@ -199,6 +221,7 @@ export type SessionState = {
   draw: DrawGame | null
   lights: LightsCard | null
   clash: ClashGame | null
+  chain: ChainGame | null
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
@@ -239,6 +262,8 @@ export type Action =
   // reveal — a challenge to your partner's answer in one category.
   | { type: 'SUBMIT_CLASH'; player: PlayerId; answers: string[] }
   | { type: 'CHALLENGE'; player: PlayerId; index: number }
+  // Word Chain: one try at the next word, on your turn.
+  | { type: 'CHAIN_WORD'; player: PlayerId; word: string }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -256,6 +281,7 @@ export const EMPTY_CONTENT: Content = {
   mrmrsQuestions: [],
   lightsQuestions: [],
   clashCategories: [],
+  chainCategories: [],
 }
 
 export function initialState(
@@ -278,6 +304,7 @@ export function initialState(
     draw: null,
     lights: null,
     clash: null,
+    chain: null,
     circle: null,
     clock: null,
     decider: null,
