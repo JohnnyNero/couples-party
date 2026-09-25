@@ -449,7 +449,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
       s.players[action.player] = { name: action.name, connected: true }
       const both = s.players.A.connected && s.players.B.connected
       // Straight into the first game in this session's roster.
-      if (both && s.phase === 'JOIN') return beginGame(s, now, roster(s.game)[0]?.key ?? null)
+      if (both && s.phase === 'JOIN') return beginGame(s, now, roster(s.game, s.night)[0]?.key ?? null)
       return s
     }
     case 'PLACE_ITEM': {

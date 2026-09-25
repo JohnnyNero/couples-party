@@ -11,8 +11,8 @@ const CONTENT: Partial<Content> = {
   lightsQuestions: ['What made you laugh today?'],
 }
 
-const start = (game: Game, content: Partial<Content> = CONTENT) => {
-  let s = initialState(1, game, content)
+const start = (game: Game, content: Partial<Content> = CONTENT, night = 0) => {
+  let s = initialState(1, game, content, night)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
 }
@@ -119,9 +119,27 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('runs its own short line-up, in order, and ends on Lights Out', () => {
-    expect(roster('tonight').map((e) => e.key)).toEqual(['likely', 'mrmrs', 'draw', 'lights'])
-    let s = start('tonight')
+  it('plays four of the five quick games, a different one left out each night, then Lights Out', () => {
+    const nights = [0, 1, 2, 3, 4].map((n) => roster('tonight', n).map((e) => e.key))
+    for (const keys of nights) {
+      expect(keys).toHaveLength(5)
+      expect(keys[4]).toBe('lights')
+      expect(keys).not.toContain('list')
+    }
+    // Each of the five is the one left out exactly once in five nights…
+    const out = nights.map((keys) => ['likely', 'finger', 'wave', 'mrmrs', 'draw'].find((k) => !keys.includes(k as never)))
+    expect(new Set(out).size).toBe(5)
+    // …and the cycle repeats, negative day numbers included.
+    expect(roster('tonight', 7)).toEqual(roster('tonight', 2))
+    expect(roster('tonight', -3)).toEqual(roster('tonight', 2))
+    expect(roster('tonight', 1).map((e) => e.key)).toEqual(['likely', 'wave', 'mrmrs', 'draw', 'lights'])
+  })
+  it('takes its line-up from the night the session carries, so both phones agree', () => {
+    expect(start('tonight', CONTENT, 1).phase).toBe('LIKELY_ROUND')
+    expect(start('tonight', CONTENT, 0).phase).toBe('MM_ANSWER') // likely out; finger and wave have no content here
+  })
+  it('runs its line-up in order and ends on Lights Out', () => {
+    let s = start('tonight', CONTENT, 1)
     const seen: string[] = []
     for (let i = 0; i < 200 && s.phase !== 'DONE'; i++) {
       if (!seen.includes(s.phase)) seen.push(s.phase)
@@ -144,14 +162,14 @@ describe('tonight', () => {
     expect(s.lights?.question).toBe('What made you laugh today?')
   })
   it('skips a game the content file gave nothing to, rather than opening it empty', () => {
-    const s = start('tonight', { ...CONTENT, likelyStatements: [] })
+    const s = start('tonight', { ...CONTENT, likelyStatements: [] }, 1)
     expect(s.phase).toBe('MM_ANSWER')
     expect(s.likely).toBe(null)
   })
   it('goes straight to the end if there is nothing to end on', () => {
     let s = start('tonight', { lightsQuestions: [] })
     expect(s.phase).toBe('DONE') // nothing in any of Tonight's pools
-    s = start('tonight', { ...CONTENT, lightsQuestions: [] })
+    s = start('tonight', { ...CONTENT, lightsQuestions: [] }, 1)
     expect(s.phase).toBe('LIKELY_ROUND')
   })
 })

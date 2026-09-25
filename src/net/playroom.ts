@@ -17,7 +17,9 @@ import type { Action, Content, Game, PlayerId, SessionState } from '../engine/st
 import { EMPTY_CONTENT, initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { loadPacks } from '../packs'
+import { freshen } from '../store/seen'
 import { assignPlayerId, getPlayerId } from './ids'
+import { dayIndex, localDate } from '../daily/dates'
 import type { PlayMode } from '../start/mode'
 
 const SESSION_KEY = 'session'
@@ -40,7 +42,7 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  return initialState(ensureSessionSeed(), game, content)
+  return initialState(ensureSessionSeed(), game, content, dayIndex(localDate()))
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
@@ -54,7 +56,9 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
   started = true
   game = chosenGame
 
-  content = await loadPacks()
+  // Only the host's copy matters — it builds the session — but every phone trims its
+  // pools to what it hasn't seen yet; see store/seen.
+  content = freshen(await loadPacks())
 
   // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
   // controllers). Duo mode = regular multiplayer (both devices are equal players,

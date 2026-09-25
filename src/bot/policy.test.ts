@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { initialState } from '../engine/state'
+import { roster } from '../engine/roster'
 import { reduce } from '../engine/reducer'
 import { makeRng } from '../engine/rng'
 import { nextBotAction, type BotBrain } from './policy'
@@ -132,27 +133,36 @@ describe('the bot plays a whole session through the real reducer', () => {
 })
 
 describe('the bot can play Tonight', () => {
-  it('gets through every new game to DONE with only its own moves and the clock', () => {
-    const r = makeRng(5)
-    let s = initialState(77, 'tonight', {
-      likelyStatements: ['snore', 'burn dinner', 'go viral', 'cry at an advert'],
-      mrmrsQuestions: ['Your comfort meal?', 'Your first gig?'],
-      drawPrompts: [{ id: 'd01', text: 'comfort food' }],
-      lightsQuestions: ['What made you laugh today?'],
-    })
-    let steps = 0
-    while (s.phase !== 'DONE' && steps++ < 400) {
-      const a = nextBotAction(s, 'A', BRAIN, r)
-      const b = nextBotAction(s, 'B', BRAIN, r)
-      const before = s
-      if (a) s = reduce(s, a, steps)
-      if (b) s = reduce(s, b, steps)
-      if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+  it('gets through every night of the rotation to DONE with only its own moves and the clock', () => {
+    for (const night of [0, 1, 2, 3, 4]) {
+      const r = makeRng(5 + night)
+      let s = initialState(77, 'tonight', {
+        likelyStatements: ['snore', 'burn dinner', 'go viral', 'cry at an advert'],
+        fingerStatements: ['you have stolen the blanket', 'you have cried at an advert', 'you have lied about being five minutes away'],
+        spectrums: [{ id: 'w01', low: 'Cold', high: 'Hot' }, { id: 'w02', low: 'Quiet', high: 'Loud' }],
+        mrmrsQuestions: ['Your comfort meal?', 'Your first gig?'],
+        drawPrompts: [{ id: 'd01', text: 'comfort food' }],
+        lightsQuestions: ['What made you laugh today?'],
+      }, night)
+      let steps = 0
+      while (s.phase !== 'DONE' && steps++ < 400) {
+        const a = nextBotAction(s, 'A', BRAIN, r)
+        const b = nextBotAction(s, 'B', BRAIN, r)
+        const before = s
+        if (a) s = reduce(s, a, steps)
+        if (b) s = reduce(s, b, steps)
+        if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
+      }
+      expect(s.phase).toBe('DONE')
+      const played = roster('tonight', night).map((e) => e.key)
+      expect(played).toHaveLength(5)
+      if (played.includes('likely')) expect(s.likely!.rounds.every((r) => r.picks.A !== null && r.picks.B !== null)).toBe(true)
+      if (played.includes('finger')) expect(s.finger!.rounds.every((r) => r.applies.A !== null && r.applies.B !== null)).toBe(true)
+      if (played.includes('wave')) expect(s.wave!.rounds.every((r) => r.guess !== null)).toBe(true)
+      if (played.includes('mrmrs')) expect(s.mrmrs!.rounds.every((r) => r.verdict.A !== null && r.verdict.B !== null)).toBe(true)
+      if (played.includes('draw')) expect(s.draw!.rounds.every((r) => r.answer !== null)).toBe(true)
+      expect(s.lights).not.toBe(null)
     }
-    expect(s.phase).toBe('DONE')
-    expect(s.likely!.rounds.every((r) => r.picks.A !== null && r.picks.B !== null)).toBe(true)
-    expect(s.mrmrs!.rounds.every((r) => r.verdict.A !== null && r.verdict.B !== null)).toBe(true)
-    expect(s.draw!.rounds.every((r) => r.answer !== null)).toBe(true)
   })
 })
 

@@ -177,7 +177,7 @@ function playedYet(s: SessionState, key: GameScore['key']): boolean {
 // Tonight's games; a single-game session shows one row. `played` is false for a game
 // the night hasn't reached yet.
 export function gameScores(s: SessionState): GameScore[] {
-  return roster(s.game)
+  return roster(s.game, s.night)
     .map((e) => e.key)
     .filter((key): key is GameScore['key'] => key !== 'lights')
     .map((key) => ({ key, label: GAME_LABELS[key], points: pointsFor(s, key), played: playedYet(s, key) }))

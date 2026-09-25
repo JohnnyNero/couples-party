@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { initNet, getIsStreamScreen } from './net'
+import { initNet, getIsStreamScreen, useSession } from './net'
+import { recordSeen } from './store/seen'
 import { api } from './daily/api'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
 import { ModePicker } from './start/ModePicker'
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <>
       <FullscreenToggle />
+      {ready && <SeenRecorder />}
       {renderApp()}
     </>
   )
@@ -57,6 +59,13 @@ export default function App() {
     // Duo and solo share a layout: the board on top, your own controller underneath.
     return <Duo />
   }
+}
+
+// Logs every prompt the session puts in front of you, so the next one draws new ones.
+function SeenRecorder() {
+  const session = useSession()
+  useEffect(() => recordSeen(session), [session])
+  return null
 }
 
 function Connecting() {

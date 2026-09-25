@@ -6,7 +6,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 // a stop on the night like any other, it just has no points and no scoreboard.
 export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'lights'
 
-// Which session this is. 'full' is the long night, 'tonight' the five-minute one; a bare
+// Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
 export type Game = 'full' | 'tonight' | Exclude<GameKey, 'lights'>
 
@@ -157,6 +157,7 @@ export type SessionState = {
   draw: DrawGame | null
   lights: LightsCard | null
   game: Game
+  night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
 } & Content
 
 export type Action =
@@ -205,6 +206,7 @@ export function initialState(
   seed: number,
   game: Game = 'full',
   content: Partial<Content> = {},
+  night = 0,
 ): SessionState {
   return {
     seed,
@@ -220,6 +222,7 @@ export function initialState(
     draw: null,
     lights: null,
     game,
+    night,
     ...EMPTY_CONTENT,
     ...content,
   }

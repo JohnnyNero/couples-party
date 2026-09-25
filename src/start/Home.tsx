@@ -4,6 +4,7 @@ import { GAME_LABELS, roster } from '../engine/roster'
 import { PickButton } from './PickButton'
 import { ThemeToggle } from '../views/ThemeToggle'
 import { Board } from '../daily/Board'
+import { dayIndex, localDate } from '../daily/dates'
 
 // The front door. Two tabs: Today, which is the nightly habit — one short session, the
 // same shape every night — and Games, for when you've got longer or want one thing.
@@ -49,7 +50,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
 }
 
 function Today({ onPick }: { onPick: (g: Game) => void }) {
-  const tonight = roster('tonight').map((e) => GAME_LABELS[e.key])
+  const tonight = roster('tonight', dayIndex(localDate())).map((e) => GAME_LABELS[e.key])
   const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   return (
     <div className="flex flex-col gap-4 pt-1">
@@ -59,7 +60,7 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
         <div className="flex-1 min-w-0">
           <div className="font-display text-2xl font-bold tracking-tight leading-none">Tonight</div>
           <div className="mt-1.5 text-xs text-paper/60 leading-snug">
-            About five minutes · {tonight.join(' · ')}
+            About seven minutes · {tonight.join(' · ')}
           </div>
         </div>
         <button
