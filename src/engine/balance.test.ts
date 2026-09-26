@@ -66,6 +66,14 @@ const SIMS: Partial<Record<GameKey, Sim>> = {
       }
     }) },
   }),
+  finger: (rng, rounds) => ({
+    finger: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i) => {
+      const answer = { A: chance(rng, 0.5), B: chance(rng, 0.5) }
+      // Each call right about two times in three.
+      const call = (truth: boolean) => (chance(rng, 0.65) ? truth : !truth)
+      return { index: i + 1, statementId: 's', answer, predict: { A: call(answer.B), B: call(answer.A) } }
+    }) },
+  }),
   bluff: (rng, rounds) => ({
     bluff: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): BluffRound => ({
       index: i + 1, prompt: 'p', first: 'A', turn: 'B',

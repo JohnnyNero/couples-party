@@ -8,6 +8,7 @@ import { CLASH_POINTS } from '../engine/clash'
 // so a game with fewer rounds pays more for each one (see standing.ts).
 export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [string, string, string] {
   const pts = (k: GameKey, raw: number) => shown(s, k, raw)
+  const team = (k: GameKey, raw: number) => shown(s, k, raw, 'us')
   const STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, string]> = {
   list: [
     'A theme about one of you, and seven things, one at a time.',
@@ -20,9 +21,9 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
     'Name the same person and you both score.',
   ],
   finger: [
-    'A confession comes up, like “you’ve stolen the blanket”.',
-    'Put a finger down if it’s true. Nobody sees your phone.',
-    `Every finger you keep up is worth ${pts('finger', SCORING.fingerKept)}.`,
+    'A statement comes up, like “you’ve stolen the blanket”.',
+    'Say if it’s true for you — and call whether it’s true for them.',
+    `Every right call scores you ${pts('finger', SCORING.calledRight)}, and the team ${team('finger', 1)}.`,
   ],
   wave: [
     'You each get a scale, like Cold ↔ Hot, with a hidden mark on it.',
@@ -32,7 +33,7 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
   mrmrs: [
     'A question about yourselves, like “your comfort meal?”.',
     'Type your own answer, and your guess at theirs.',
-    `They rule on your guess. Right is worth ${pts('mrmrs', SCORING.mrmrsRight)}, for you and for the team.`,
+    `They rule on your guess. Right scores you ${pts('mrmrs', SCORING.mrmrsRight)}, and the team ${team('mrmrs', 1)}.`,
   ],
   draw: [
     'You each get a question about yourself — say, your dream pet.',

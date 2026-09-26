@@ -9,8 +9,8 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
   LIKELY_ROUND: 12000, // read it, tap a name
   LIKELY_REVEAL: 4000,
-  FINGER_ROUND: 15000,  // read it, think about it, decide privately
-  FINGER_REVEAL: 4000,
+  FINGER_ROUND: 20000,  // Called It: two taps — true for you, and your call on them
+  FINGER_REVEAL: 5000,
   MM_ANSWER: 45000,   // two short answers to type — yours, and your guess at theirs
   MM_JUDGE: 5000,     // only starts once both rulings are in: a beat to take it in
   WAVE_CLUE: 25000,   // the clue-giver has to come up with a whole clue
@@ -36,10 +36,6 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
 export const LIST = {
   items: 7,         // seven items, seven slots
   blank: '(blank)', // pads a theme whose pool comes up short of seven
-}
-
-export const FINGER = {
-  startFingers: 5,  // one hand — every round can matter
 }
 
 export const WAVE = {

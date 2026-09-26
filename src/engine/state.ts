@@ -61,17 +61,18 @@ export type ListAct = {
   displacement: number | null    // 0..24, set at LIST_REVEAL
 }
 
-// Put a Finger Down: five statements, drawn once at the start of the game. Missing a
-// round (timeout) counts the same as "doesn't apply" — nobody is forced to confess.
+// Called It (key 'finger' — it grew out of Put a Finger Down, and keeps its statements):
+// a statement like "you've stolen the blanket". Each of you says whether it's true for
+// you, and calls whether it's true for the other. A call nobody made just misses.
 export type FingerRound = {
   index: number // 1-based
   statementId: string
-  applies: Record<PlayerId, boolean | null> // null = hasn't answered yet
+  answer: Record<PlayerId, boolean | null>  // true for you? null = not in yet
+  predict: Record<PlayerId, boolean | null> // keyed by the CALLER: true for the other one?
 }
 export type FingerGame = {
   rounds: FingerRound[]        // as many as the roster asks for, chosen up front
   current: number              // 0-based index into rounds — which one is live
-  fingersLeft: Record<PlayerId, number>
 }
 
 // Wavelength: a spectrum (two opposed poles), a hidden target on it, a one-word clue
@@ -274,8 +275,8 @@ export type Action =
   // One item is live at a time. Each side locks a slot on it the instant they tap one —
   // no changing your mind, and a slot already spent on an earlier item can't be reused.
   | { type: 'PLACE_ITEM'; player: PlayerId; slot: number }
-  // Put a Finger Down: a private yes/no to the round's statement. No changing your mind.
-  | { type: 'SUBMIT_FINGER'; player: PlayerId; applies: boolean }
+  // Called It: true for you, and your call on them — sent together, no changing it.
+  | { type: 'SUBMIT_CALLED'; player: PlayerId; answer: boolean; predict: boolean }
   // Who's More Likely: the name each of you taps, privately. No changing your mind.
   | { type: 'PICK_LIKELY'; player: PlayerId; pick: PlayerId }
   // Mr & Mrs: your own answer and your prediction of theirs, sent together.

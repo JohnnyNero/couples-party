@@ -95,7 +95,7 @@ describe('the scoreboard between games', () => {
     const html = renderToStaticMarkup(<BoardStage s={session('LIST_RESULT', revealed())} />)
     // Six one-place misses: 6 points to Alex, who authored nothing here — Sam authored.
     expect(html).toContain('Shortlist')
-    expect(html).toContain('Put a Finger Down')
+    expect(html).toContain('Called It')
     expect(html).toContain('Wavelength')
     expect(html).toContain('Draw Your Answer')
     expect(html).not.toContain('More Likely') // parked — see roster.ts

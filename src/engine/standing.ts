@@ -36,7 +36,7 @@ export const SCORING = {
   waveClose: 4, // within 5
   waveNear: 2, // within 15
   waveConsolation: 2, // a miss wide enough that the guesser deserves something
-  fingerKept: 8, // per statement you don't put a finger down on
+  calledRight: 1, // Called It: each right call on your partner (scaled like everything)
   drawCorrect: 6,
   likelyAgree: 7, // to each of you, when you named the same person
   mrmrsRight: 8, // to whoever predicted right, as ruled by the person it was about
@@ -139,25 +139,30 @@ export function clashTeamRaw(round: ClashRound, upTo = round.categories.length -
   return n
 }
 
-// ---------------------------------------------------------------- Put a Finger Down
+// ---------------------------------------------------------------- Called It
 
-// Scored per statement rather than once at the end: both players can come out of the
-// same round with points, so this is a tally, not an Award.
+// A call on your partner that was right. Nothing counts until you've both answered —
+// which is also when it's revealed.
+export function calledRight(round: FingerRound, p: PlayerId): boolean {
+  const theirs = round.answer[other(p)]
+  return round.answer.A !== null && round.answer.B !== null && round.predict[p] !== null && round.predict[p] === theirs
+}
+
 export function fingerRoundPoints(round: FingerRound, p: PlayerId): number {
-  // A round pays nothing until both have answered — which is also when it's revealed.
-  if (round.applies.A === null || round.applies.B === null) return 0
-  return round.applies[p] ? 0 : SCORING.fingerKept
+  return calledRight(round, p) ? SCORING.calledRight : 0
 }
 
 export function fingerPoints(f: FingerGame | null): Standing {
   const tally: Standing = { A: 0, B: 0 }
-  if (!f) return tally
-  for (const round of f.rounds) {
+  for (const round of f?.rounds ?? []) {
     tally.A += fingerRoundPoints(round, 'A')
     tally.B += fingerRoundPoints(round, 'B')
   }
   return tally
 }
+
+// Every right call is a team point too.
+export const fingerTeamRaw = (round: FingerRound) => (calledRight(round, 'A') ? 1 : 0) + (calledRight(round, 'B') ? 1 : 0)
 
 // ---------------------------------------------------------------- Wavelength
 
@@ -243,8 +248,8 @@ export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   chain: { you: 9.5, us: 12 },
   // Per round: two picks, 7 to someone every time; each truth spotted is the team's.
   bluff: { you: 14, us: 0.8 },
-  // Being retired for Called It: 8 for each finger kept up, about half of them.
-  finger: { you: 8, us: 0 },
+  // Called It, per statement: two calls, each right about two times in three.
+  finger: { you: 1.3, us: 1.3 },
 }
 
 export type Scale = { you: number; us: number }
@@ -344,6 +349,7 @@ function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'cl
     case 'finger':
       for (const round of s.finger?.rounds ?? []) {
         for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: fingerRoundPoints(round, p) })
+        us.push(fingerTeamRaw(round))
       }
       break
     case 'chain':

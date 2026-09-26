@@ -15,7 +15,7 @@ type KindInfo = { label: string; icon: GameKey | 'word'; help: string; example: 
 
 const KINDS: Record<IdeaKind, KindInfo> = {
   mrmrs: { label: 'Mr & Mrs', icon: 'mrmrs', help: 'A question you each answer about yourself — and guess the other’s answer.', example: 'Your first impression of me?', player: 'whoever’s answering' },
-  finger: { label: 'Put a Finger Down', icon: 'finger', help: 'Something one of you might have done. It reads “Put a finger down if…”', example: 'you’ve pretended to like a present', player: 'the other one of you' },
+  finger: { label: 'Called It', icon: 'finger', help: 'Something either of you might have done — “you’ve…”. You each say if it’s true, and call it for the other.', example: 'you’ve sung in the shower this week', player: 'the other one of you' },
   lights: { label: 'Lights Out', icon: 'lights', help: 'The last question of the night, to talk about with the phones down.', example: 'What are you looking forward to this month?', player: 'one of you, picked each time' },
   wave: { label: 'Wavelength', icon: 'wave', help: 'Two opposite ends of a scale. One of you names something that sits on it.', example: 'Cringe | Cool', player: null },
   clash: { label: 'Category Clash', icon: 'clash', help: 'A category with lots of answers, for the letter round.', example: 'Things in our fridge', player: 'one of you, picked each time' },
@@ -142,7 +142,6 @@ function AddIdea({ kind, info, example }: { kind: IdeaKind; info: KindInfo; exam
         </div>
       ) : (
         <div className="flex items-stretch gap-2">
-          {kind === 'finger' && <span className="shrink-0 self-center text-sm font-bold text-fg/45">…if</span>}
           <input ref={box} className={field + ' !text-lg'} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={enter} maxLength={120} placeholder={info.example} aria-label={`New ${info.label} card`} />
         </div>
       )}

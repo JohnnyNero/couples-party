@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
-import { FINGER, WAVE } from './phases'
+import { WAVE } from './phases'
+import { SCORING, shown, standing, teamScore } from './standing'
 import { roundsFor } from './roster'
 
 const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
@@ -233,13 +234,13 @@ describe('act III · reveal and alternation', () => {
 
 describe('the scoreboard between games', () => {
   const order = [1, 2, 3, 4, 5, 6, 7]
-  // A keeps every finger up, B puts every one down — so A takes the whole game.
+  // A calls B right every time (B's never true), B calls A wrong — so A takes the whole game.
   const playOutFinger = (state: SessionState) => {
     let s = state
     for (let i = 0; i < 20 && s.phase.startsWith('FINGER') && s.phase !== 'FINGER_RESULT'; i++) {
       if (s.phase === 'FINGER_ROUND') {
-        s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 1000)
-        s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: true }, 1000)
+        s = reduce(s, { type: 'SUBMIT_CALLED', player: 'A', answer: true, predict: true }, 1000)
+        s = reduce(s, { type: 'SUBMIT_CALLED', player: 'B', answer: false, predict: false }, 1000)
       } else {
         s = reduce(s, { type: 'TIMEOUT' }, 2000) // out of the reveal
       }
@@ -338,62 +339,40 @@ const atFingerRound = () => {
   return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
 }
 
-describe('put a finger down', () => {
-  it('opens on round 1 of 5, a full hand each, and a 15s clock', () => {
+describe('called it', () => {
+  const send = (s: SessionState, p: 'A' | 'B', answer: boolean, predict: boolean, t = 2000) =>
+    reduce(s, { type: 'SUBMIT_CALLED', player: p, answer, predict }, t)
+  it('opens on the first statement with a 20s clock', () => {
     const s = atFingerRound()
     expect(s.phase).toBe('FINGER_ROUND')
-    expect(s.phaseEndsAt).toBe(1000 + 15000)
-    expect(s.finger?.current).toBe(0)
+    expect(s.phaseEndsAt).toBe(1000 + 20000)
     expect(s.finger?.rounds).toHaveLength(roundsFor({ game: 'finger' }, 'finger'))
-    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers })
   })
-  it('holds the round until both answer, then reveals', () => {
-    let s = atFingerRound()
-    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 2000)
+  it('waits for both, then reveals; sent is sent', () => {
+    let s = send(atFingerRound(), 'A', true, false)
     expect(s.phase).toBe('FINGER_ROUND')
-    expect(s.finger?.rounds[0].applies.A).toBe(true)
-    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: false }, 2500)
+    expect(send(s, 'A', false, true)).toBe(s)
+    s = send(s, 'B', false, true, 2500)
     expect(s.phase).toBe('FINGER_REVEAL')
-    expect(s.phaseEndsAt).toBe(2500 + 4000)
-    // A's finger went down, B's stayed up.
-    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers - 1, B: FINGER.startFingers })
+    expect(s.finger?.rounds[0]).toMatchObject({ answer: { A: true, B: false }, predict: { A: false, B: true } })
   })
-  it('ignores a second answer from the same player', () => {
-    let s = atFingerRound()
-    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 2000)
-    s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 2000)
-    expect(s.finger?.rounds[0].applies.A).toBe(true)
+  it('scores a right call to whoever made it, and to the team', () => {
+    let s = send(atFingerRound(), 'A', true, false) // A: true for me; B won't be
+    s = send(s, 'B', false, false) // B: not me; A won't be — wrong
+    const t = standing(s)
+    expect(t.A).toBe(shown(s, 'finger', SCORING.calledRight))
+    expect(t.B).toBe(0)
+    expect(teamScore(s)).toBe(shown(s, 'finger', 1, 'us'))
   })
-  it('a statement neither answers counts as "stays up" for both, on timeout', () => {
+  it('plays every statement through to its scoreboard', () => {
     let s = atFingerRound()
-    s = reduce(s, { type: 'TIMEOUT' }, 5000) // round -> reveal, nobody answered
-    expect(s.phase).toBe('FINGER_REVEAL')
-    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers })
-  })
-  it('advances through all five rounds to FINGER_RESULT, then DONE (standalone)', () => {
-    let s = atFingerRound()
-    for (let r = 0; r < roundsFor({ game: 'finger' }, 'finger'); r++) {
-      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: true }, 1000) // A always confesses
-      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: false }, 1000)
-      expect(s.phase).toBe('FINGER_REVEAL')
-      s = reduce(s, { type: 'TIMEOUT' }, 1000) // reveal -> next round, or result on the last
+    for (let i = 0; i < 40 && s.phase !== 'FINGER_RESULT'; i++) {
+      if (s.phase === 'FINGER_ROUND') s = send(send(s, 'A', true, true, 1000), 'B', true, true, 1000)
+      else s = reduce(s, { type: 'TIMEOUT' }, 1000 + i * 10000)
     }
     expect(s.phase).toBe('FINGER_RESULT')
-    expect(s.finger?.fingersLeft).toEqual({ A: 0, B: FINGER.startFingers })
-    s = reduce(s, { type: 'TIMEOUT' }, 1000)
-    expect(s.phase).toBe('DONE')
-  })
-  it('feeds the leaderboard: fewer fingers down wins, not first to zero', () => {
-    let s = atFingerRound()
-    // A confesses to none, B confesses to two — B ends with fewer fingers but the game
-    // still runs all five rounds rather than stopping early.
-    for (let r = 0; r < roundsFor({ game: 'finger' }, 'finger'); r++) {
-      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'A', applies: false }, 1000)
-      s = reduce(s, { type: 'SUBMIT_FINGER', player: 'B', applies: r < 2 }, 1000)
-      s = reduce(s, { type: 'TIMEOUT' }, 1000)
-    }
-    expect(s.phase).toBe('FINGER_RESULT')
-    expect(s.finger?.fingersLeft).toEqual({ A: FINGER.startFingers, B: FINGER.startFingers - 2 })
+    const each = roundsFor({ game: 'finger' }, 'finger') * shown(s, 'finger', SCORING.calledRight)
+    expect(standing(s)).toEqual({ A: each, B: each })
   })
 })
 

@@ -13,7 +13,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     { key: 'list', rounds: 2 }, // two acts, roles swapped
     // Who's More Likely is parked for now: it pays you both for agreeing, and every other
     // game is you against each other. It still runs on its own (?game=likely).
-    { key: 'finger', rounds: 5 },
+    { key: 'finger', rounds: 6 }, // Called It
     { key: 'circle', rounds: 1 }, // a filler after every second game
     { key: 'wave', rounds: 6 }, // three pairs: you each give a clue in every pair
     { key: 'clash', rounds: 3 },
@@ -29,7 +29,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   // A single game on its own runs at its full-session length.
   list: [{ key: 'list', rounds: 2 }],
   likely: [{ key: 'likely', rounds: 6 }],
-  finger: [{ key: 'finger', rounds: 5 }],
+  finger: [{ key: 'finger', rounds: 8 }],
   mrmrs: [{ key: 'mrmrs', rounds: 5 }],
   wave: [{ key: 'wave', rounds: 6 }],
   draw: [{ key: 'draw', rounds: 6 }],
@@ -47,7 +47,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
 // never plays here — it needs both acts to be fair, and that's most of the night.
 const TONIGHT_GAMES = 4
 const TONIGHT_POOL: RosterEntry[] = [
-  { key: 'finger', rounds: 3 },
+  { key: 'finger', rounds: 4 },
   { key: 'wave', rounds: 2 }, // one each as the psychic
   { key: 'mrmrs', rounds: 2 },
   { key: 'draw', rounds: 2 }, // one drawing each
@@ -113,7 +113,7 @@ export function gameOfPhase(phase: Phase): GameKey | null {
 export const GAME_LABELS: Record<GameKey, string> = {
   list: 'Shortlist',
   likely: "Who's More Likely",
-  finger: 'Put a Finger Down',
+  finger: 'Called It',
   mrmrs: 'Mr & Mrs',
   wave: 'Wavelength',
   draw: 'Draw Your Answer',

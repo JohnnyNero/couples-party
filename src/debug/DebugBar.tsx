@@ -49,8 +49,7 @@ export function DebugBar({ s }: { s: SessionState }) {
         <button
           className={btn}
           onClick={() => {
-            dispatch({ type: 'SUBMIT_FINGER', player: 'A', applies: Math.random() < 0.5 })
-            dispatch({ type: 'SUBMIT_FINGER', player: 'B', applies: Math.random() < 0.5 })
+            for (const p of ['A', 'B'] as const) dispatch({ type: 'SUBMIT_CALLED', player: p, answer: Math.random() < 0.5, predict: Math.random() < 0.5 })
           }}
         >
           fill-both

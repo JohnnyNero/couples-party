@@ -13,7 +13,7 @@ export function aboutReader(s: SessionState, text: string, reader: PlayerId | nu
   return say(text, { self: false, subject: playerName(s, p), partner: playerName(s, p) })
 }
 
-// Put a Finger Down: "…if {player} has seen you cry" — the other one of you.
+// Called It: "{player} has seen you cry" — the other one of you.
 export function aboutPartner(s: SessionState, text: string, reader: PlayerId | null): string {
   if (!text.includes('{player}')) return text
   const p = reader ? other(reader) : seatFor(s)

@@ -233,7 +233,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
 }
 
 const SHORT: Record<GameKey, string> = {
-  list: 'Shortlist', likely: 'Likely', finger: 'Finger', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
+  list: 'Shortlist', likely: 'Likely', finger: 'Called It', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
   draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
 }
 
@@ -241,7 +241,7 @@ type Pick = { key: Exclude<Game, 'full' | 'tonight'>; blurb: string; meta: strin
 
 const HEAD_TO_HEAD: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },
-  { key: 'finger', blurb: 'Five confessions. Keep your hand up.', meta: '5 rounds · 3 min' },
+  { key: 'finger', blurb: 'True for you? Now call it for them.', meta: '8 rounds · 4 min' },
   { key: 'wave', blurb: 'Name a thing on a scale. They find the spot.', meta: '3 rounds · 5 min' },
   { key: 'mrmrs', blurb: 'Your answer, and your guess at theirs.', meta: '5 rounds · 5 min' },
   { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '3 rounds · 6 min' },

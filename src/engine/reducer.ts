@@ -5,7 +5,7 @@ import type {
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
-import { BLUFF, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { BLUFF, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
 import { checkWord, nextLetter, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
@@ -247,7 +247,7 @@ function advanceLikely(state: SessionState, now: number): SessionState {
   return s
 }
 
-// ---------------------------------------------------------------- Put a Finger Down
+// ---------------------------------------------------------------- Called It (key 'finger')
 
 function currentFingerRound(f: FingerGame) {
   return f.rounds[f.current]
@@ -270,30 +270,23 @@ function beginFinger(state: SessionState, now: number): SessionState {
   const rounds = pool.slice(0, roundsFor(s, 'finger')).map((statementId, i) => ({
     index: i + 1,
     statementId,
-    applies: { A: null, B: null } as Record<PlayerId, boolean | null>,
+    answer: { A: null, B: null } as Record<PlayerId, boolean | null>,
+    predict: { A: null, B: null } as Record<PlayerId, boolean | null>,
   }))
   if (rounds.length === 0) return skipTo(s, now, 'finger')
-  s.finger = { rounds, current: 0, fingersLeft: { A: FINGER.startFingers, B: FINGER.startFingers } }
+  s.finger = { rounds, current: 0 }
   s.phase = 'FINGER_ROUND'
   s.phaseEndsAt = now + DURATIONS.FINGER_ROUND!
   return s
 }
 
-// A statement nobody answered in time counts as "doesn't apply" for both — an unopened
-// hand, not a forced confession.
 function toFingerReveal(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  const f = s.finger!
-  const round = currentFingerRound(f)
-  for (const p of PLAYERS) {
-    if (round.applies[p]) f.fingersLeft[p] = Math.max(0, f.fingersLeft[p] - 1)
-  }
   s.phase = 'FINGER_REVEAL'
   s.phaseEndsAt = now + DURATIONS.FINGER_REVEAL!
   return s
 }
 
-// All the statements, then it's over — least fingers down wins, not first to zero.
 function advanceFinger(state: SessionState, now: number): SessionState {
   const f = state.finger!
   if (f.current >= f.rounds.length - 1) return toScoreboard(state, 'FINGER_RESULT')
@@ -379,7 +372,7 @@ const secondOfPair = (g: { rounds: unknown[]; current: number }) =>
   g.current % 2 === 0 && g.current + 1 < g.rounds.length
 
 // Generated in full up front — spectrum, psychic and hidden target for every round —
-// the same way Put a Finger Down pre-picks its statements, and for the same reason:
+// the same way Called It pre-picks its statements, and for the same reason:
 // exactly the roster's number of rounds happen, no branching on how any of them go.
 function beginWave(state: SessionState, now: number): SessionState {
   const s = clone(state)
@@ -913,17 +906,14 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       round.picks[action.player] = action.pick
       return round.picks.A !== null && round.picks.B !== null ? toLikelyReveal(s, now) : s
     }
-    case 'SUBMIT_FINGER': {
-      if (state.phase !== 'FINGER_ROUND') return state
-      const f = state.finger
-      if (!f) return state
-      const round = currentFingerRound(f)
-      if (round.applies[action.player] !== null) return state // no changing your mind
+    case 'SUBMIT_CALLED': {
+      if (state.phase !== 'FINGER_ROUND' || !state.finger) return state
+      if (currentFingerRound(state.finger).answer[action.player] !== null) return state // sent is sent
       const s = clone(state)
-      const sr = currentFingerRound(s.finger!)
-      sr.applies[action.player] = action.applies
-      if (sr.applies.A !== null && sr.applies.B !== null) return toFingerReveal(s, now)
-      return s
+      const round = currentFingerRound(s.finger!)
+      round.answer[action.player] = !!action.answer
+      round.predict[action.player] = !!action.predict
+      return round.answer.A !== null && round.answer.B !== null ? toFingerReveal(s, now) : s
     }
     case 'SUBMIT_MRMRS': {
       if (state.phase !== 'MM_ANSWER' || !state.mrmrs) return state

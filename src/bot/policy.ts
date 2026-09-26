@@ -73,9 +73,8 @@ export function nextBotAction(
       const f = s.finger
       if (!f) return null
       const round = f.rounds[f.current]
-      if (round.applies[me] !== null) return null
-      // A little more often true than false — a hand that never goes down is no fun.
-      return { type: 'SUBMIT_FINGER', player: me, applies: rng() < 0.55 }
+      if (round.answer[me] !== null) return null
+      return { type: 'SUBMIT_CALLED', player: me, answer: rng() < 0.5, predict: rng() < 0.5 }
     }
 
     case 'WAVE_CLUE': {

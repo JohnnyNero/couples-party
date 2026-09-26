@@ -13,7 +13,7 @@ type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmr
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
     case 'shortlist': return 'shortlist'
-    case 'put a finger down': return 'finger'
+    case 'called it': case 'put a finger down': return 'finger'
     case 'wavelength': return 'wavelength'
     // Renamed twice (Draw Your Love, then Quick Draw); the old headings still parse so
     // an older copy of the content file doesn't silently ship a game with no prompts.

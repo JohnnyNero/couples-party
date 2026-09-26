@@ -66,10 +66,8 @@ describe('the bot plays a whole session through the real reducer', () => {
       if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
     }
     expect(s.phase).toBe('DONE')
-    expect(s.finger?.rounds).toHaveLength(5)
-    expect(s.finger?.fingersLeft.A).toBeGreaterThanOrEqual(0)
-    expect(s.finger?.fingersLeft.B).toBeGreaterThanOrEqual(0)
-    expect(s.finger?.rounds.every((round) => round.applies.A !== null && round.applies.B !== null)).toBe(true)
+    expect(s.finger?.rounds).toHaveLength(roundsFor({ game: 'full' }, 'finger'))
+    expect(s.finger?.rounds.every((round) => round.answer.A !== null && round.answer.B !== null)).toBe(true)
   })
 
   it('also gets a Wavelength session to DONE with every round resolved', () => {
@@ -126,7 +124,7 @@ describe('the bot plays a whole session through the real reducer', () => {
     }
     expect(s.phase).toBe('DONE')
     expect(s.listActs).toHaveLength(2)
-    expect(s.finger?.rounds).toHaveLength(5)
+    expect(s.finger?.rounds).toHaveLength(roundsFor({ game: 'full' }, 'finger'))
     expect(s.wave?.rounds).toHaveLength(roundsFor({ game: 'wave' }, 'wave'))
     expect(s.draw?.rounds).toHaveLength(6)
   })
@@ -156,7 +154,7 @@ describe('the bot can play Tonight', () => {
       expect(s.phase).toBe('DONE')
       const played = roster('tonight', night).map((e) => e.key)
       if (played.includes('likely')) expect(s.likely!.rounds.every((r) => r.picks.A !== null && r.picks.B !== null)).toBe(true)
-      if (played.includes('finger')) expect(s.finger!.rounds.every((r) => r.applies.A !== null && r.applies.B !== null)).toBe(true)
+      if (played.includes('finger')) expect(s.finger!.rounds.every((r) => r.answer.A !== null && r.answer.B !== null)).toBe(true)
       if (played.includes('wave')) expect(s.wave!.rounds.every((r) => r.guess !== null)).toBe(true)
       if (played.includes('mrmrs')) expect(s.mrmrs!.rounds.every((r) => r.verdict.A !== null && r.verdict.B !== null)).toBe(true)
       if (played.includes('draw')) expect(s.draw!.rounds.every((r) => r.answer !== null)).toBe(true)

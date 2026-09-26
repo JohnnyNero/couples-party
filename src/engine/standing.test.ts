@@ -1,5 +1,3 @@
-import { CLASH_POINTS } from './clash'
-import { roundsFor } from './roster'
 import { describe, it, expect } from 'vitest'
 import { initialState, type FingerGame, type ListAct, type ListItem, type PlayerId, type WaveRound } from './state'
 import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING, shown } from './standing'
@@ -21,16 +19,18 @@ const act = (
 
 const withActs = (...acts: ListAct[]) => ({ ...initialState(1), listActs: acts })
 
-// Each pair is one statement: [did it apply to A, did it apply to B]. A null means that
-// player hasn't answered yet, so the round isn't resolved.
-const finger = (...pairs: Array<[boolean | null, boolean | null]>): FingerGame => ({
-  rounds: pairs.map(([A, B], i) => ({ index: i + 1, statementId: `f${i}`, applies: { A, B } })),
+// Each entry is one statement: what each of you said about yourself, and each one's
+// call on the other. A null answer means that player hasn't answered yet.
+type Said = { A: [boolean | null, boolean | null]; B: [boolean | null, boolean | null] } // [answer, call]
+const finger = (...said: Said[]): FingerGame => ({
+  rounds: said.map((x, i) => ({
+    index: i + 1, statementId: `f${i}`,
+    answer: { A: x.A[0], B: x.B[0] }, predict: { A: x.A[1], B: x.B[1] },
+  })),
   current: 0,
-  fingersLeft: {
-    A: 5 - pairs.filter(([A]) => A).length,
-    B: 5 - pairs.filter(([, B]) => B).length,
-  },
 })
+// A calls B right, B calls A wrong.
+const aRight: Said = { A: [true, false], B: [false, false] }
 
 const dRound = (drawer: PlayerId, correct: boolean | null) => ({
   index: 1, drawer, promptId: 'd01', answer: 'x', strokes: [], guess: correct === null ? null : 'x', correct,
@@ -83,27 +83,17 @@ describe('listAward', () => {
   })
 })
 
-describe('fingerPoints', () => {
-  const kept = SCORING.fingerKept
-
-  it('pays every statement you keep your finger up on, and both of you can score', () => {
-    // A admits the first, B admits the second, neither admits the third.
-    expect(fingerPoints(finger([true, false], [false, true], [false, false]))).toEqual({
-      A: kept * 2,
-      B: kept * 2,
-    })
+describe('fingerPoints (Called It)', () => {
+  const right = SCORING.calledRight
+  it('pays each right call to whoever made it, and both of you can score', () => {
+    expect(fingerPoints(finger(aRight))).toEqual({ A: right, B: 0 })
+    expect(fingerPoints(finger({ A: [true, false], B: [false, true] }))).toEqual({ A: right, B: right })
   })
   it('pays nothing for a round one of you has not answered yet', () => {
-    expect(fingerPoints(finger([false, null]))).toEqual({ A: 0, B: 0 })
+    expect(fingerPoints(finger({ A: [true, false], B: [null, null] }))).toEqual({ A: 0, B: 0 })
   })
   it('pays nothing for a game that never happened', () => {
     expect(fingerPoints(null)).toEqual({ A: 0, B: 0 })
-  })
-  it('caps out at five statements, so no game can run away with the night', () => {
-    const all: Array<[boolean, boolean]> = [
-      [false, true], [false, true], [false, true], [false, true], [false, true],
-    ]
-    expect(fingerPoints(finger(...all))).toEqual({ A: kept * 5, B: 0 })
   })
 })
 
@@ -126,31 +116,7 @@ describe('waveAward', () => {
   })
 })
 
-// The point of the retune: no single game can quietly decide the night. Every maximum
-// has to stay in the same band, so a change to one of the SCORING numbers that breaks
-// the balance fails here rather than three sessions later.
-describe('the four games are worth about the same', () => {
-  const maxima = {
-    Shortlist: 14 * SCORING.listExact, // 7 items, two acts
-    Wavelength: roundsFor({ game: 'wave' }, 'wave') * SCORING.waveBullseye,
-    'Put a Finger Down': 5 * SCORING.fingerKept,
-    'Quick Draw': 6 * SCORING.drawCorrect,
-    'Category Clash': 3 * 6 * CLASH_POINTS.unique, // three rounds of six
-  }
-
-  it('tops out within a quarter of each other', () => {
-    const values = Object.values(maxima)
-    const lowest = Math.min(...values)
-    const highest = Math.max(...values)
-    expect({ maxima, spread: highest / lowest }).toEqual({ maxima, spread: expect.any(Number) })
-    expect(highest / lowest).toBeLessThanOrEqual(1.25)
-  })
-  it('keeps a near miss worth less than a hit in every game that has both', () => {
-    expect(SCORING.listNear).toBeLessThan(SCORING.listExact)
-    expect(SCORING.waveNear).toBeLessThan(SCORING.waveClose)
-    expect(SCORING.waveClose).toBeLessThan(SCORING.waveBullseye)
-  })
-})
+// Whether every game is worth the same to the night: see balance.test.ts.
 
 describe('standing', () => {
   it('is zero-zero before anything resolves', () => {
@@ -168,9 +134,9 @@ describe('standing', () => {
     expect(leader(withActs(act('A', 2, [[1, 2]]), act('B', 2, [[3, 4]])))).toBe(null)
   })
   it('folds in Put a Finger Down alongside Shortlist', () => {
-    // A guessed one item exactly; B kept a finger up on the one statement played.
-    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
-    expect(standing(s)).toEqual({ A: shown(s, 'list', SCORING.listExact), B: shown(s, 'finger', SCORING.fingerKept) })
+    // A guessed one item exactly; B made the one right call.
+    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger({ A: [true, true], B: [false, true] }) }
+    expect(standing(s)).toEqual({ A: shown(s, 'list', SCORING.listExact), B: shown(s, 'finger', SCORING.calledRight) })
   })
   it('sums Wavelength across every round played so far', () => {
     const s = { ...initialState(1), wave: { rounds: [wRound('A', 0), wRound('B', 5), wRound('A', null)], current: 2 } }
@@ -181,19 +147,19 @@ describe('standing', () => {
 
 describe('gameScores', () => {
   it('breaks the total down by game, and says which have been played', () => {
-    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
+    const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger({ A: [true, true], B: [false, true] }) }
     const rows = gameScores(s)
     // The full roster, in playing order. Lights Out isn't here — it doesn't score.
     expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'clash', 'clock', 'mrmrs', 'chain', 'draw', 'bluff'])
     expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false, false, false, false])
     expect(rows[0].points).toEqual({ A: shown(s, 'list', SCORING.listExact), B: 0 })
     expect(rows[0].team).toBe(shown(s, 'list', 1, 'us')) // the exact one is a team point too
-    expect(rows[1].points).toEqual({ A: 0, B: shown(s, 'finger', SCORING.fingerKept) })
+    expect(rows[1].points).toEqual({ A: 0, B: shown(s, 'finger', SCORING.calledRight) })
   })
   it('always sums to the session total', () => {
     const s = {
       ...withActs(act('A', 0, [[1, 1], [2, 3]])),
-      finger: finger([true, false], [false, false]),
+      finger: finger(aRight, aRight),
       wave: { rounds: [wRound('A', 0), wRound('B', 90)], current: 1 },
       draw: { rounds: [dRound('A', true), dRound('B', false)], current: 1 },
     }

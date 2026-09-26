@@ -489,10 +489,12 @@ the same theme plays differently every time.
 - setting alarms
 
 
-# Put a Finger Down
+# Called It
 
-Five are drawn per session. These are accusations — "you've done this" — not
-anecdotes. Keep them under ten words.
+A statement a round: each of you says whether it's true for you, and calls
+whether it's true for the other. They're accusations, "you've done this", not
+anecdotes, so they read the same to either of you. Keep them under ten words,
+and keep a mix: some most people have done, some hardly anyone has.
 
 - you've stolen the blanket
 - you've eaten the last one and said nothing
