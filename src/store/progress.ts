@@ -8,8 +8,13 @@ import type { PlayMode } from '../start/mode'
 //
 // One at a time: starting another game replaces it, and finishing clears it.
 
+// Bumped whenever the shape of a game in progress changes (a game reworked, a field
+// renamed): a save from before can't be read by this version, so it's dropped rather
+// than crashing whatever opens it. 2: Called It replaced Put a Finger Down.
+export const SAVE_VERSION = 2
+
 export type Saved = {
-  v: 1
+  v: typeof SAVE_VERSION
   game: Game
   mode: PlayMode
   seat: PlayerId // which of the two you were, so the scores stay with the right person
@@ -25,7 +30,10 @@ export function loadSaved(): Saved | null {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const saved = JSON.parse(raw) as Saved
-    if (saved.v !== 1 || Date.now() - saved.savedAt > KEEP_MS || saved.state.phase === 'DONE') return null
+    if (saved.v !== SAVE_VERSION || !saved.state || Date.now() - saved.savedAt > KEEP_MS || saved.state.phase === 'DONE') {
+      clearSaved()
+      return null
+    }
     return saved
   } catch {
     return null
@@ -48,7 +56,7 @@ export const inProgress = (s: SessionState) => s.phase !== 'JOIN' && s.phase !==
 export function useKeepProgress(s: SessionState, seat: PlayerId | null, mode: PlayMode, enabled: boolean): void {
   const latest = useRef<Saved | null>(null)
   latest.current = enabled && seat && inProgress(s)
-    ? { v: 1, game: s.game, mode, seat, savedAt: Date.now(), state: s }
+    ? { v: SAVE_VERSION, game: s.game, mode, seat, savedAt: Date.now(), state: s }
     : null
 
   useEffect(() => {

@@ -148,6 +148,7 @@ export function clashTeamRaw(round: ClashRound, upTo = round.categories.length -
 // A call on your partner that was right. Nothing counts until you've both answered —
 // which is also when it's revealed.
 export function calledRight(round: FingerRound, p: PlayerId): boolean {
+  if (!round.answer || !round.predict) return false
   const theirs = round.answer[other(p)]
   return round.answer.A !== null && round.answer.B !== null && round.predict[p] !== null && round.predict[p] === theirs
 }

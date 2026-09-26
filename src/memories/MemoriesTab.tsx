@@ -9,6 +9,7 @@ import { DrawingCanvas } from '../views/DrawingCanvas'
 import type { PlayerId } from '../engine/state'
 import type { SessionMemory } from './summary'
 import { RecordsCard } from './Records'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { card, eyebrow } from '../ui/styles'
 
@@ -71,7 +72,7 @@ export function MemoriesTab() {
 
   return (
     <div className="flex flex-col gap-6 pt-1">
-      <RecordsCard />
+      <ErrorBoundary quiet><RecordsCard /></ErrorBoundary>
       {days.length === 0 && (
         <Empty>
           Nothing yet. Play Tonight together and it's kept here as you go; the daily puzzles

@@ -5,6 +5,7 @@ import { GAME_LABELS, roster } from '../engine/roster'
 import { ProfilePage } from '../profile/ProfilePage'
 import { useBackLayer } from '../ui/back'
 import { ContinueCard } from './ContinueCard'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
 import { NudgeBanner } from './NudgeBanner'
 import type { PlayMode } from './mode'
 import type { Saved } from '../store/progress'
@@ -61,7 +62,7 @@ export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; 
       <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
         <OpenProfile.Provider value={() => setProfileOpen(true)}>
           <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto animate-fade-up">
-            {tab !== 'memories' && <div className="mb-4 empty:hidden"><NudgeBanner onJoin={onJoin} /></div>}
+            {tab !== 'memories' && <div className="mb-4 empty:hidden"><ErrorBoundary quiet><NudgeBanner onJoin={onJoin} /></ErrorBoundary></div>}
             {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : <Memories />}
           </div>
         </OpenProfile.Provider>
@@ -152,7 +153,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
         logo={!paired}
         right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
-      <ContinueCard onResume={onResume} />
+      <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
@@ -260,7 +261,7 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
   return (
     <div className="flex flex-col gap-4">
       <TabHeader title="Games" sub="Every one of them is you against each other." />
-      <ContinueCard onResume={onResume} />
+      <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
         <div className="flex-1 min-w-0">
           <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>
