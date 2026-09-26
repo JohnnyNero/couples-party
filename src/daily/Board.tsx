@@ -29,6 +29,7 @@ import { SetSketch } from './SetSketch'
 import { SetTop5 } from './SetTop5'
 import { sketchOfTheDay } from './sketch'
 import { TodayPuzzle } from './TodayPuzzle'
+import { StatsPage } from './StatsPage'
 import { fiveify, itemsOfTheDay, themeOfTheDay } from './top5'
 import { useBoard } from './useDaily'
 import { WordAnswer } from './WordAnswer'
@@ -156,7 +157,9 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
 // against your best day as a couple. The crown is this week's — it goes to whoever's
 // ahead since Monday and resets every Monday. All-time and last week are one tap deeper.
 function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
+  // "More" opens the Stats page; back closes it.
   const [open, setOpen] = useState(false)
+  useBackLayer(open, () => setOpen(false))
   const kinds = kindsOf(d)
   const played = kinds.map((k) => {
     const s = d.kinds[k]!.solve
@@ -184,7 +187,7 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
         </div>
       </div>
 
-      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-2 text-left">
+      <button onClick={() => setOpen(true)} className="flex items-center gap-2 text-left">
         <Side p="A" name={d.me} label="You" points={d.today.me} crown={crown === 'A'} />
         <span className="font-display font-bold text-sm text-fg/30">vs</span>
         <Side p="B" name={d.partner} label={d.partner} points={d.today.them} crown={crown === 'B'} flip />
@@ -204,36 +207,18 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
       )}
 
       {stats && (
-        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="text-left text-xs font-bold text-fg/55 flex items-center justify-between gap-2">
+        <button onClick={() => setOpen(true)} className="text-left text-xs font-bold text-fg/55 flex items-center justify-between gap-2">
           <span className="truncate">
             {crown
               ? <>👑 {crown === 'A' ? 'You’re' : `${d.partner}’s`} ahead this week, {Math.max(week!.me, week!.them)}–{Math.min(week!.me, week!.them)}</>
               : week && week.me + week.them > 0 ? <>Level this week, {week.me}–{week.them}</> : 'A new week — the crown’s up for grabs'}
           </span>
-          <span className="shrink-0">{open ? 'Less' : 'More'} ›</span>
+          <span className="shrink-0">More ›</span>
         </button>
       )}
 
-      {open && (
-        <div className="rounded-2xl bg-fg/[0.04] px-3.5 py-3 text-sm flex flex-col gap-1.5 animate-fade-up">
-          <Line label="This week" me={week?.me ?? 0} them={week?.them ?? 0} partner={d.partner} note="resets Monday" />
-          {stats && <Line label="Last week" me={stats.lastWeek.me} them={stats.lastWeek.them} partner={d.partner} />}
-          <Line label="All time" me={d.total.me} them={d.total.them} partner={d.partner} />
-        </div>
-      )}
+      {open && createPortal(<StatsPage d={d} onClose={() => setOpen(false)} />, document.body)}
     </section>
-  )
-}
-
-function Line({ label, me, them, partner, note }: { label: string; me: number; them: number; partner: string; note?: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="flex-1 flex flex-col">
-        <span className="font-bold text-fg/60">{label}</span>
-        {note && <span className="text-xs text-fg/40">{note}</span>}
-      </span>
-      <span className="tabular-nums"><b className="text-pa-ink">You {me}</b> · <b className="text-pb-ink">{partner} {them}</b></span>
-    </div>
   )
 }
 
