@@ -194,6 +194,9 @@ export type BoardStats = {
   daysLast7: number
 }
 
+// Your partner waiting for you in a game's lobby (see nudge).
+export type Nudge = { game: string; mode: 'duo' | 'screen'; at: string; from: string }
+
 // Memories: the live sessions you've played together, and your past daily puzzles.
 // A puzzle carries `mine` (you set it) alongside its usual view.
 export type Memories =
@@ -352,6 +355,10 @@ export const api = {
   // The questions your partner already set for a day, kind by kind (migration 0018).
   dayPrompts: (date: string) =>
     rpc<Partial<Record<'word' | 'dial' | 'top5' | 'sketch' | 'numbers' | 'either', { prompt?: string; items?: string[]; questions?: string[] }>>>('day_prompts', { p_date: date }),
+  // Nudging your partner into a game from its lobby (migration 0019).
+  nudge: (game: string, mode: string) => rpc<void>('nudge', { p_game: game, p_mode: mode }),
+  clearNudge: () => rpc<void>('clear_nudge'),
+  nudged: () => rpc<Nudge | null>('nudged'),
   setEither: (forDate: string, questions: string[], picks: number[]) =>
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>

@@ -5,6 +5,8 @@ import { GAME_LABELS, roster } from '../engine/roster'
 import { ProfilePage } from '../profile/ProfilePage'
 import { useBackLayer } from '../ui/back'
 import { ContinueCard } from './ContinueCard'
+import { NudgeBanner } from './NudgeBanner'
+import type { PlayMode } from './mode'
 import type { Saved } from '../store/progress'
 import { refreshProfile, useProfile } from '../profile/store'
 import { refreshIdeas } from '../ideas/store'
@@ -37,7 +39,7 @@ function loadTab(): Tab {
 // Opens the profile page, from the avatar in any tab's header.
 const OpenProfile = createContext<() => void>(() => {})
 
-export function Home({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
+export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void; onJoin: (g: Game, mode: PlayMode) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
   const [profileOpen, setProfileOpen] = useState(false)
   // Bumped after unpairing, so Today fetches its board again from scratch.
@@ -59,6 +61,7 @@ export function Home({ onPick, onResume }: { onPick: (g: Game) => void; onResume
       <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
         <OpenProfile.Provider value={() => setProfileOpen(true)}>
           <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto animate-fade-up">
+            {tab !== 'memories' && <div className="mb-4 empty:hidden"><NudgeBanner onJoin={onJoin} /></div>}
             {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : <Memories />}
           </div>
         </OpenProfile.Provider>

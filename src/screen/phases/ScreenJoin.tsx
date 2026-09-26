@@ -3,6 +3,7 @@ import { GAME_LABELS, roster } from '../../engine/roster'
 import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
+import { LobbyInvite } from '../../views/LobbyInvite'
 
 const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
@@ -46,6 +47,7 @@ export function ScreenJoin({ s }: { s: SessionState }) {
       )}
 
       <p className="text-center text-sm text-fg/60">Starts the moment you're both here.</p>
+      <LobbyInvite s={s} />
     </div>
   )
 }

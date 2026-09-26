@@ -71,6 +71,12 @@ export default function App() {
       return (
         <Home
           onPick={(g) => { setResume(null); setGame(g) }}
+          onJoin={(g, m) => {
+            stampMode(m, g, false)
+            setResume(null)
+            setMode(m)
+            setGame(g)
+          }}
           onResume={(saved) => {
             stampMode(saved.mode, saved.game, false)
             setResume(saved)

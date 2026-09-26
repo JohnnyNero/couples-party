@@ -4,6 +4,7 @@
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { Avatar } from '../../ui/Avatar'
+import { LobbyInvite } from '../../views/LobbyInvite'
 
 export function PlayJoin({ s, me }: { s: SessionState; me: PlayerId }) {
   const player = s.players[me]
@@ -17,6 +18,7 @@ export function PlayJoin({ s, me }: { s: SessionState; me: PlayerId }) {
       <div className="text-sm text-fg/60 animate-pulse">
         {them.connected ? 'Starting…' : 'Waiting for your partner to join'}
       </div>
+      <div className="w-full max-w-sm mt-2"><LobbyInvite s={s} /></div>
     </div>
   )
 }

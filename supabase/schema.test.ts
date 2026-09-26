@@ -18,6 +18,7 @@ import m0015 from './migrations/0015_more_than_one_device.sql?raw'
 import m0016 from './migrations/0016_week_and_team.sql?raw'
 import m0017 from './migrations/0017_this_or_that.sql?raw'
 import m0018 from './migrations/0018_day_prompts.sql?raw'
+import m0019 from './migrations/0019_nudge.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -83,6 +84,7 @@ beforeAll(async () => {
   await db.exec(m0016)
   await db.exec(m0017)
   await db.exec(m0018)
+  await db.exec(m0019)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -818,6 +820,26 @@ describe('day_prompts', () => {
     // Your own don't come back to you — it's the other one's question you need.
     expect(await call(SAM, 'day_prompts', [today()])).toEqual({})
     expect(await call(EVE, 'day_prompts', [today()])).toEqual({})
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('nudge', () => {
+  it("shows your partner that you're waiting in a game, and not you", async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    expect(await call(ALEX, 'nudged', [])).toBeNull()
+    await expect(call(SAM, 'nudge', ['tonight; drop', 'duo'])).rejects.toThrow(/no such game/)
+    await call(SAM, 'nudge', ['tonight', 'duo'])
+    expect(await call(ALEX, 'nudged', [])).toMatchObject({ game: 'tonight', mode: 'duo', from: 'Sam' })
+    expect(await call(SAM, 'nudged', [])).toBeNull()
+    await expect(call(EVE, 'nudge', ['tonight', 'duo'])).rejects.toThrow(/not paired/)
+    // Stale after a quarter of an hour.
+    await db.query(`update public.couples set waiting = jsonb_set(waiting, '{at}', to_jsonb(now() - interval '20 minutes'))`)
+    expect(await call(ALEX, 'nudged', [])).toBeNull()
+    await call(SAM, 'nudge', ['wave', 'duo'])
+    await call(ALEX, 'clear_nudge', [])
+    expect(await call(ALEX, 'nudged', [])).toBeNull()
     await call(SAM, 'leave_couple')
   })
 })
