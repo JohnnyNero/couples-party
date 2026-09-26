@@ -47,6 +47,9 @@ type Pools = { content: Content; words: string[]; numbers: string[] }
 
 export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const [screen, setScreen] = useState<Screen | null>(null)
+  // Just closed a puzzle: until the board has caught up, the tiles still show how things
+  // were before (a "Play" on something you've just finished). They don't open till then.
+  const [syncing, setSyncing] = useState(false)
   const [pools, setPools] = useState<Pools | null>(null)
   useEffect(() => {
     void Promise.all([loadPacks(), loadWordPrompts(), loadNumberQuestions()])
@@ -95,7 +98,8 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   // closing just closes.
   const close = () => {
     setScreen(null)
-    void refresh()
+    setSyncing(true)
+    void refresh().finally(() => setSyncing(false))
   }
 
   return (
@@ -124,7 +128,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
               partner={d.partner}
               slot={d.kinds[k]}
               wide={i === KINDS.length - 1}
-              onOpen={(mode) => setScreen({ kind: k, mode })}
+              onOpen={(mode) => { if (!syncing) setScreen({ kind: k, mode }) }}
             />
           ))}
         </div>
@@ -207,7 +211,9 @@ function Tile({
   // What the tile asks of you, as a chip: something to play (filled), something to set
   // for them (outlined), or nothing left (quiet).
   let chip: ReactNode
-  let mode: 'play' | 'set'
+  // null: nothing to do here — you've set theirs and there's nothing of yours to see yet.
+  // A set puzzle is never reopened to change; a finished one only ever shows its result.
+  let mode: 'play' | 'set' | null
   if (solve && !solved) {
     chip = <span className="px-2.5 py-1 rounded-full bg-pa text-white text-xs font-extrabold">{started ? 'Carry on' : 'Play'}</span>
     mode = 'play'
@@ -225,12 +231,13 @@ function Tile({
         {solved ? <>Done · <span className="text-accent-ink">+{solve!.points ?? 0}</span></> : 'Sent ✓'}
       </span>
     )
-    mode = solved ? 'play' : 'set'
+    mode = solved ? 'play' : null
   }
 
   return (
     <button
-      onClick={() => onOpen(mode)}
+      onClick={() => { if (mode) onOpen(mode) }}
+      disabled={mode === null}
       className={
         'text-left rounded-[1.25rem] border-2 px-3.5 py-3 active:translate-y-px transition-colors flex ' +
         (wide ? 'col-span-2 items-center gap-3 ' : 'flex-col gap-2.5 ') +
