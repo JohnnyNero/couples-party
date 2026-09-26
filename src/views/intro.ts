@@ -1,12 +1,18 @@
 import type { GameKey, SessionState } from '../engine/state'
 import { roster, roundsFor } from '../engine/roster'
+import { SCORING, shown } from '../engine/standing'
+import { CLASH_POINTS } from '../engine/clash'
 
 // Each game's title card: three steps, in plain words, and a line on how long it runs.
-export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, string]> = {
+// Points on these cards are this session's: every game is worth the same to the night,
+// so a game with fewer rounds pays more for each one (see standing.ts).
+export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [string, string, string] {
+  const pts = (k: GameKey, raw: number) => shown(s, k, raw)
+  const STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, string]> = {
   list: [
     'A theme about one of you, and seven things, one at a time.',
     'The other ranks each one 1 to 7 as it comes. No moving it after.',
-    'The one it’s about guesses the order. Spot on scores 3, one out scores 1.',
+    `The one it’s about guesses the order. Spot on scores ${pts('list', SCORING.listExact)}, one out scores ${pts('list', SCORING.listNear)}.`,
   ],
   likely: [
     'A “who’s more likely to…” comes up.',
@@ -16,7 +22,7 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
   finger: [
     'A confession comes up, like “you’ve stolen the blanket”.',
     'Put a finger down if it’s true. Nobody sees your phone.',
-    'Every finger you keep up is worth 8.',
+    `Every finger you keep up is worth ${pts('finger', SCORING.fingerKept)}.`,
   ],
   wave: [
     'You each get a scale, like Cold ↔ Hot, with a hidden mark on it.',
@@ -26,17 +32,17 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
   mrmrs: [
     'A question about yourselves, like “your comfort meal?”.',
     'Type your own answer, and your guess at theirs.',
-    'They rule on your guess. Right is worth 8.',
+    `They rule on your guess. Right is worth ${pts('mrmrs', SCORING.mrmrsRight)}, for you and for the team.`,
   ],
   draw: [
     'You each get a question about yourself — say, your dream pet.',
     'At the same time, answer it in secret and draw your answer. No words.',
-    'Then one at a time, the other gets one guess. Getting it scores 6.',
+    `Then one at a time, the other gets one guess. Getting it scores ${pts('draw', SCORING.drawCorrect)}.`,
   ],
   clash: [
     'A letter and six categories.',
     'A minute to write one for each, starting with that letter.',
-    'Unique answers score 2. Say the same as your partner and neither of you does.',
+    `Unique answers score ${pts('clash', CLASH_POINTS.unique)} each. Say the same thing and it’s a team point instead.`,
   ],
   chain: [
     'A category, and a word to start from.',
@@ -46,7 +52,7 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
   bluff: [
     'A prompt about yourselves, like “your worst ever present”.',
     'You each write the truth and two believable lies, at the same time.',
-    'Then one at a time: spot their truth for 7, or they score 7 for fooling you.',
+    `Then one at a time: spot their truth for ${pts('bluff', SCORING.bluffSpotted)}, or they score ${pts('bluff', SCORING.bluffFooled)} for fooling you.`,
   ],
   circle: [
     'One go each at drawing a perfect circle.',
@@ -58,6 +64,8 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
     'It disappears. Tap Stop when you think it’s there.',
     'Closest wins the round.',
   ],
+  }
+  return STEPS[key]
 }
 
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']

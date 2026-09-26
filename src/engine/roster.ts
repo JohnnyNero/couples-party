@@ -80,7 +80,7 @@ export function roster(game: Game, night = 0): RosterEntry[] {
   return game === 'tonight' ? tonight(night) : ROSTERS[game]
 }
 
-type RosterOf = { game: Game; night?: number }
+export type RosterOf = { game: Game; night?: number }
 
 export function roundsFor(s: RosterOf, key: GameKey): number {
   return roster(s.game, s.night).find((e) => e.key === key)?.rounds ?? 0

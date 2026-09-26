@@ -1,6 +1,6 @@
 import type { ListItem, SessionState } from '../../engine/state'
 import { currentAct } from '../../engine/list'
-import { listItemPoints } from '../../engine/standing'
+import { listItemPoints, SCORING, shown as scaled } from '../../engine/standing'
 import { dispatch, useMyPlayerId } from '../../net'
 import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { themeText, playerName, rankerOf } from '../../views/list'
@@ -18,7 +18,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
   const act = currentAct(s)!
   const me = useMyPlayerId()
   const shown = act.items.slice(0, act.revealIndex + 1)
-  const total = shown.reduce((n, i) => n + listItemPoints(i), 0)
+  const total = shown.reduce((n, i) => n + scaled(s, 'list', listItemPoints(i)), 0)
   const last = act.revealIndex >= act.items.length - 1
   const ranker = rankerOf(act)
   // A TV has nobody to tap it (`me` is null on a stream screen), and the act is over by
@@ -43,7 +43,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
           </span>
         </div>
         {shown.map((item, i) => (
-          <Row key={item.id} item={item} live={i === act.revealIndex} />
+          <Row s={s} key={item.id} item={item} live={i === act.revealIndex} />
         ))}
         {/* The items still to come, as empty ruled lines — you can see how much is left. */}
         {act.items.slice(act.revealIndex + 1).map((item) => (
@@ -57,7 +57,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
           <span className={'tabular-nums ' + inkOf(act.author)}>
             <AnimatedNumber
               value={total}
-              from={total - listItemPoints(act.items[act.revealIndex])}
+              from={total - scaled(s, 'list', listItemPoints(act.items[act.revealIndex]))}
               delayMs={600}
             />
           </span>
@@ -75,9 +75,10 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
   )
 }
 
-function Row({ item, live }: { item: ListItem; live: boolean }) {
-  const points = listItemPoints(item)
-  const exact = points === 3
+function Row({ s, item, live }: { s: SessionState; item: ListItem; live: boolean }) {
+  const raw = listItemPoints(item)
+  const exact = raw === SCORING.listExact
+  const points = scaled(s, 'list', raw)
   return (
     <div
       className={

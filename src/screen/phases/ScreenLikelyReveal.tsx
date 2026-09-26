@@ -1,5 +1,5 @@
 import type { PlayerId, SessionState } from '../../engine/state'
-import { likelyRoundPoints } from '../../engine/standing'
+import { likelyRoundPoints, shown as scaled } from '../../engine/standing'
 import { playerName } from '../../views/list'
 
 const ORDER: PlayerId[] = ['A', 'B']
@@ -9,7 +9,7 @@ const ORDER: PlayerId[] = ['A', 'B']
 export function ScreenLikelyReveal({ s }: { s: SessionState }) {
   const g = s.likely!
   const round = g.rounds[g.current]
-  const points = likelyRoundPoints(round)
+  const points = scaled(s, 'likely', likelyRoundPoints(round))
   return (
     <div className="w-full max-w-2xl mx-auto text-center">
       <div className="text-[0.7rem] sm:text-sm uppercase tracking-[0.22em] font-extrabold text-fg/50 mb-2 sm:mb-4">

@@ -5,7 +5,7 @@ import { dispatch, useMyPlayerId } from '../../net'
 import { GameGlyph } from '../../ui/GameIcon'
 import { card, btnPrimary } from '../../ui/styles'
 import { fillOf, inkOf } from '../../ui/Avatar'
-import { INTRO_STEPS, gameNumber, introSub } from '../../views/intro'
+import { introSteps, gameNumber, introSub } from '../../views/intro'
 import { playerName } from '../../views/list'
 
 // A game's title card: the big icon, its name, and how it plays in three steps. Moves on
@@ -30,7 +30,7 @@ export function ScreenIntro({ s }: { s: SessionState }) {
       </div>
 
       <ol className={card + ' px-4 py-4 flex flex-col gap-3'}>
-        {INTRO_STEPS[key].map((step, i) => (
+        {introSteps(s, key).map((step, i) => (
           <li key={i} className="flex gap-3 items-start">
             <span className="shrink-0 w-7 h-7 rounded-full bg-pa-soft text-pa-ink font-display font-extrabold text-sm inline-flex items-center justify-center">{i + 1}</span>
             <span className="text-sm sm:text-lg leading-snug pt-0.5">{step}</span>

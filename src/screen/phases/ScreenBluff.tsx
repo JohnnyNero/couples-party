@@ -1,6 +1,6 @@
 import type { SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
-import { bluffAward, SCORING } from '../../engine/standing'
+import { bluffAward, SCORING, shown as scaled } from '../../engine/standing'
 import { dispatch, useLive, useMyPlayerId } from '../../net'
 import { asYou } from '../../say'
 import { playerName } from '../../views/list'
@@ -60,10 +60,10 @@ export function ScreenBluffReveal({ s }: { s: SessionState }) {
   const pick = round.pick[owner]
   const award = bluffAward(round, owner)
   const verdict = pick === 0
-    ? `${playerName(s, guesser)} spotted it · +${SCORING.bluffSpotted}`
+    ? `${playerName(s, guesser)} spotted it · +${scaled(s, 'bluff', SCORING.bluffSpotted)}`
     : pick === -1
-      ? `Out of time · ${playerName(s, owner)} +${SCORING.bluffFooled}`
-      : `Fooled! · ${playerName(s, owner)} +${SCORING.bluffFooled}`
+      ? `Out of time · ${playerName(s, owner)} +${scaled(s, 'bluff', SCORING.bluffFooled)}`
+      : `Fooled! · ${playerName(s, owner)} +${scaled(s, 'bluff', SCORING.bluffFooled)}`
   const more = round.pick[guesser] === null && round.entry[guesser] !== null
   const next = more ? `Next: ${playerName(s, guesser)}’s three` : g.current < g.rounds.length - 1 ? 'Next round' : 'See the scores'
   return (

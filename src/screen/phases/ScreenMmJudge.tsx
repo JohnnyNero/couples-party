@@ -1,7 +1,7 @@
 import { aboutReader } from '../../views/voice'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
-import { mrmrsRoundPoints } from '../../engine/standing'
+import { mrmrsRoundPoints, shown as scaled } from '../../engine/standing'
 import { dispatch, useMyPlayerId } from '../../net'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
@@ -25,7 +25,7 @@ export function ScreenMmJudge({ s }: { s: SessionState }) {
       {ORDER.map((subject, i) => {
         const predictor = other(subject)
         const verdict = round.verdict[predictor]
-        const points = mrmrsRoundPoints(round, predictor)
+        const points = scaled(s, 'mrmrs', mrmrsRoundPoints(round, predictor))
         return (
           <section
             key={subject}

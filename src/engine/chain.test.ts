@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { initialState, type ChainCategory, type ChainRound, type Game, type SessionState } from './state'
 import { reduce } from './reducer'
 import { chainKey, checkWord, findListed, nextLetter, turnMs } from './chain'
-import { standing } from './standing'
+import { standing, shown } from './standing'
 import { CHAIN } from './phases'
 
 const ANIMALS: ChainCategory = {
@@ -99,7 +99,7 @@ describe('Word Chain', () => {
     s = reduce(s, { type: 'TIMEOUT' }, 20000)
     expect(s.phase).toBe('CHAIN_END')
     expect(live(s).loser).toBe(loser)
-    expect(standing(s)[winner]).toBe(CHAIN.winPoints)
+    expect(standing(s)[winner]).toBe(shown(s, 'chain', CHAIN.winPoints))
     s = reduce(s, { type: 'TIMEOUT' }, 30000)
     expect(s.phase).toBe('CHAIN_TURN')
     expect(s.chain!.current).toBe(1)
@@ -110,7 +110,7 @@ describe('Word Chain', () => {
     for (let i = 0; i < 20 && s.phase !== 'CHAIN_RESULT'; i++) s = reduce(s, { type: 'TIMEOUT' }, 1000 * i)
     expect(s.phase).toBe('CHAIN_RESULT')
     const t = standing(s)
-    expect(t.A + t.B).toBe(4 * CHAIN.winPoints)
+    expect(t.A + t.B).toBe(4 * shown(s, 'chain', CHAIN.winPoints))
   })
   it('skips itself when the content file has no categories', () => {
     expect(start('chain', []).phase).toBe('DONE')

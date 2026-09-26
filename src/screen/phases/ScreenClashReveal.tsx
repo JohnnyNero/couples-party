@@ -1,6 +1,7 @@
 import type { ClashRound, PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
-import { clashCellPoints, clashRoundPoints, clashVerdict, type ClashVerdict } from '../../engine/clash'
+import { clashCellPoints, clashVerdict, type ClashVerdict } from '../../engine/clash'
+import { shown as scaled } from '../../engine/standing'
 import { dispatch, useMyPlayerId } from '../../net'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
@@ -29,13 +30,13 @@ export function ScreenClashReveal({ s }: { s: SessionState }) {
           {(['A', 'B'] as const).map((p) => (
             <span key={p} className="w-[6.5rem] sm:w-44 shrink-0 flex items-center justify-center gap-1.5">
               <Avatar p={p} name={playerName(s, p)} size="sm" />
-              <span className={'font-display text-lg sm:text-2xl font-extrabold tabular-nums ' + inkOf(p)}>{clashRoundPoints(round, p)}</span>
+              <span className={'font-display text-lg sm:text-2xl font-extrabold tabular-nums ' + inkOf(p)}>{scaledRound(s, round, p)}</span>
             </span>
           ))}
         </div>
         {round.categories.map((cat, i) =>
           i <= round.revealIndex ? (
-            <Row key={i} round={round} i={i} cat={cat} live={i === round.revealIndex} />
+            <Row key={i} s={s} round={round} i={i} cat={cat} live={i === round.revealIndex} />
           ) : (
             <div key={i} className="border-t border-fg/10 h-[2.9rem] sm:h-[3.6rem]" />
           ),
@@ -46,6 +47,13 @@ export function ScreenClashReveal({ s }: { s: SessionState }) {
   )
 }
 
+// A round's points so far, as the board scores them: each cell scaled on its own.
+function scaledRound(s: SessionState, round: ClashRound, p: PlayerId): number {
+  let n = 0
+  for (let i = 0; i <= round.revealIndex; i++) n += scaled(s, 'clash', clashCellPoints(round, p, i))
+  return n
+}
+
 const LABEL: Record<ClashVerdict, string> = {
   scores: '',
   same: 'same',
@@ -54,7 +62,7 @@ const LABEL: Record<ClashVerdict, string> = {
   challenged: 'challenged',
 }
 
-function Row({ round, i, cat, live }: { round: ClashRound; i: number; cat: string; live: boolean }) {
+function Row({ s, round, i, cat, live }: { s: SessionState; round: ClashRound; i: number; cat: string; live: boolean }) {
   return (
     <div className={'flex items-center border-t border-fg/10 h-[2.9rem] sm:h-[3.6rem] ' + (live ? 'animate-fade-up' : '')}>
       <span className={'flex-1 min-w-0 pr-2 text-xs sm:text-base font-extrabold leading-tight line-clamp-2 ' + (live ? 'text-fg' : 'text-fg/50')}>
@@ -62,7 +70,7 @@ function Row({ round, i, cat, live }: { round: ClashRound; i: number; cat: strin
       </span>
       {(['A', 'B'] as const).map((p) => {
         const v = clashVerdict(round, p, i)
-        const pts = clashCellPoints(round, p, i)
+        const pts = scaled(s, 'clash', clashCellPoints(round, p, i))
         return (
           <span key={p} className="w-[6.5rem] sm:w-44 shrink-0 text-center leading-tight">
             <span className={'block font-display text-base sm:text-2xl font-extrabold leading-tight truncate ' + (v === 'scores' || v === 'challenged' ? inkOf(p) : 'text-fg/40 line-through decoration-2')}>

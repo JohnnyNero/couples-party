@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { GameKey, SessionState } from '../engine/state'
 import { GAME_LABELS, gameOfPhase } from '../engine/roster'
-import { standing } from '../engine/standing'
+import { standing, teamScore } from '../engine/standing'
 import { GameIcon } from '../ui/GameIcon'
 import { Avatar } from '../ui/Avatar'
 import { playerName } from './list'
@@ -65,6 +65,7 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
 
 export function ScorePill({ s, big = false }: { s: SessionState; big?: boolean }) {
   const t = standing(s)
+  const together = teamScore(s)
   return (
     <div
       className={'shrink-0 flex items-center gap-1.5 rounded-full border-2 border-fg/10 bg-card pl-1 pr-1 py-1 ' + (big ? 'text-2xl' : 'text-[0.95rem]')}
@@ -75,6 +76,10 @@ export function ScorePill({ s, big = false }: { s: SessionState; big?: boolean }
       <span className="text-fg/25">·</span>
       <span className="font-display font-extrabold tabular-nums">{t.B}</span>
       <Avatar p="B" name={playerName(s, 'B')} size={big ? 'md' : 'sm'} />
+      {/* Yours together. */}
+      <span className={'ml-0.5 rounded-full bg-tan-soft text-tan-ink font-display font-extrabold tabular-nums ' + (big ? 'px-3 py-0.5' : 'px-2 py-0.5 text-[0.85rem]')} aria-label={`Together ${together}`}>
+        {together}
+      </span>
     </div>
   )
 }

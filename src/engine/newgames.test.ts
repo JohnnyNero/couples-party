@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { initialState, type Content, type Game, type SessionState } from './state'
 import { reduce } from './reducer'
 import { roster, roundsFor } from './roster'
-import { SCORING, likelyPoints, mrmrsPoints, standing } from './standing'
+import { SCORING, likelyPoints, mrmrsPoints, shown, standing } from './standing'
 
 const CONTENT: Partial<Content> = {
   likelyStatements: ['cry at an advert', 'fall asleep first', 'burn dinner', 'snore', 'get lost', 'go viral'],
@@ -112,7 +112,8 @@ describe('mr & mrs', () => {
       else s = reduce(s, { type: 'TIMEOUT' }, 1000 * i)
     }
     expect(s.phase).toBe('MM_RESULT')
-    expect(standing(s)).toEqual({ A: SCORING.mrmrsRight * 5, B: SCORING.mrmrsRight * 5 })
+    const right = shown(s, 'mrmrs', SCORING.mrmrsRight)
+    expect(standing(s)).toEqual({ A: right * 5, B: right * 5 })
   })
 })
 

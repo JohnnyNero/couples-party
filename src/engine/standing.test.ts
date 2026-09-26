@@ -2,7 +2,7 @@ import { CLASH_POINTS } from './clash'
 import { roundsFor } from './roster'
 import { describe, it, expect } from 'vitest'
 import { initialState, type FingerGame, type ListAct, type ListItem, type PlayerId, type WaveRound } from './state'
-import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING } from './standing'
+import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING, shown } from './standing'
 
 // Each pair is one item: [where the ranker put it, where the author guessed].
 const items = (pairs: Array<[number | null, number | null]>): ListItem[] =>
@@ -159,7 +159,9 @@ describe('standing', () => {
   })
   it('sums both runs of the act, each paying its own author', () => {
     const s = withActs(act('A', 0, [[1, 1], [2, 2]]), act('B', 4, [[1, 2], [2, 4]]))
-    expect(standing(s)).toEqual({ A: 6, B: 1 }) // A: two exacts; B: one out, then miles off
+    // A: two exacts; B: one out, then miles off — each award scaled on its own.
+    const x = shown(s, 'list', SCORING.listExact), n = shown(s, 'list', SCORING.listNear)
+    expect(standing(s)).toEqual({ A: 2 * x, B: n })
     expect(leader(s)).toBe('A')
   })
   it('reports level as null', () => {
@@ -168,12 +170,12 @@ describe('standing', () => {
   it('folds in Put a Finger Down alongside Shortlist', () => {
     // A guessed one item exactly; B kept a finger up on the one statement played.
     const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger([true, false]) }
-    expect(standing(s)).toEqual({ A: SCORING.listExact, B: SCORING.fingerKept })
+    expect(standing(s)).toEqual({ A: shown(s, 'list', SCORING.listExact), B: shown(s, 'finger', SCORING.fingerKept) })
   })
   it('sums Wavelength across every round played so far', () => {
     const s = { ...initialState(1), wave: { rounds: [wRound('A', 0), wRound('B', 5), wRound('A', null)], current: 2 } }
     // A's bullseye, B's close guess; round 3 is unresolved and pays nothing.
-    expect(standing(s)).toEqual({ A: SCORING.waveBullseye, B: SCORING.waveClose })
+    expect(standing(s)).toEqual({ A: shown(s, 'wave', SCORING.waveBullseye), B: shown(s, 'wave', SCORING.waveClose) })
   })
 })
 
@@ -184,8 +186,9 @@ describe('gameScores', () => {
     // The full roster, in playing order. Lights Out isn't here — it doesn't score.
     expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'clash', 'clock', 'mrmrs', 'chain', 'draw', 'bluff'])
     expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false, false, false, false])
-    expect(rows[0].points).toEqual({ A: SCORING.listExact, B: 0 })
-    expect(rows[1].points).toEqual({ A: 0, B: SCORING.fingerKept })
+    expect(rows[0].points).toEqual({ A: shown(s, 'list', SCORING.listExact), B: 0 })
+    expect(rows[0].team).toBe(shown(s, 'list', 1, 'us')) // the exact one is a team point too
+    expect(rows[1].points).toEqual({ A: 0, B: shown(s, 'finger', SCORING.fingerKept) })
   })
   it('always sums to the session total', () => {
     const s = {

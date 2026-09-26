@@ -1,12 +1,12 @@
 import type {
-  BluffGame, BluffRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
+  BluffGame, BluffRound, ClashRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
   MrMrsRound, PlayerId, SessionState, WaveRound,
 } from './state'
 import { other } from './state'
-import { GAME_LABELS, roster } from './roster'
+import { GAME_LABELS, roster, roundsFor, type RosterOf } from './roster'
 import { FILLER } from './phases'
 import { clockRoundWinner, fillerOver, fillerWinner, type Filler } from './fillers'
-import { clashPoints } from './clash'
+import { clashCellPoints, clashVerdict } from './clash'
 import { chainRoundWinner } from './chain'
 import { CHAIN } from './phases'
 
@@ -120,6 +120,25 @@ export function bluffPoints(g: BluffGame | null): Standing {
   return sumAwards((g?.rounds ?? []).flatMap((r) => [bluffAward(r, 'A'), bluffAward(r, 'B')]))
 }
 
+// ---------------------------------------------------------------- team raw points
+
+// Every correct read of each other is a team point.
+export const mrmrsTeamRaw = (round: MrMrsRound) => (round.verdict.A ? 1 : 0) + (round.verdict.B ? 1 : 0)
+// Every truth spotted.
+export const bluffTeamRaw = (round: BluffRound) => (round.pick.A === 0 ? 1 : 0) + (round.pick.B === 0 ? 1 : 0)
+// A clue and a read that land close: 2 within 5, 1 within 15.
+export function waveTeamRaw(round: WaveRound): number {
+  const d = round.distance
+  if (d === null) return 0
+  return d <= 5 ? 2 : d <= 15 ? 1 : 0
+}
+// The same answer from you both — a mind meld, even though it scores neither of you.
+export function clashTeamRaw(round: ClashRound, upTo = round.categories.length - 1): number {
+  let n = 0
+  for (let i = 0; i <= upTo; i++) if (clashVerdict(round, 'A', i) === 'same') n += 1
+  return n
+}
+
 // ---------------------------------------------------------------- Put a Finger Down
 
 // Scored per statement rather than once at the end: both players can come out of the
@@ -190,12 +209,67 @@ export function deciderPoints(s: SessionState): Standing {
   return t
 }
 
+// ---------------------------------------------------------------- Scaling
+
+// Every game counts the same towards the night, however many rounds it runs: on
+// average, a game hands out PER_GAME.you points between the two of you (so about half
+// each) and PER_GAME.us team points — the points you score together, for knowing each
+// other. Each game keeps its own natural scoring in "raw" points (above); what the board
+// shows is that, scaled to the budget for the number of rounds this session plays.
+//
+// The scale comes from AVERAGE: what an average couple — right about half the time,
+// close some of the rest — scores per round, in raw points, per game. Change a game's
+// raw points and its average has to move with it, or that game quietly starts to count
+// for more (or less) than the others.
+export const PER_GAME = { you: 40, us: 20 } as const
+
+type Scaled = Exclude<GameKey, 'lights' | 'circle' | 'clock'>
+export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
+  // Per act: 7 items, 3 for an exact slot (about a quarter), 1 for one out (about a third).
+  list: { you: 7.7, us: 1.75 },
+  // Per statement: you both score 7 when you agree (a bit over half the time).
+  likely: { you: 7.7, us: 0.55 },
+  // Two predictions a round, 8 each, right a bit under half the time; each right one is
+  // a team point too.
+  mrmrs: { you: 7.2, us: 0.9 },
+  // Per clue: 6/4/2 to the clue-giver by how close, 2 to the guesser for a wide miss.
+  wave: { you: 2, us: 0.7 },
+  // Per drawing: 6 to the guesser, half the time.
+  draw: { you: 3, us: 0.5 },
+  // Per round: six categories each, 2 for a unique answer (about 60% of them); matching
+  // answers are the team's.
+  clash: { you: 14.4, us: 0.8 },
+  // Per round: 10 to the winner; the team scores every word you chained together.
+  chain: { you: 9.5, us: 12 },
+  // Per round: two picks, 7 to someone every time; each truth spotted is the team's.
+  bluff: { you: 14, us: 0.8 },
+  // Being retired for Called It: 8 for each finger kept up, about half of them.
+  finger: { you: 8, us: 0 },
+}
+
+export type Scale = { you: number; us: number }
+
+export function scaleFor(s: RosterOf, key: GameKey): Scale {
+  if (!(key in AVERAGE)) return { you: 1, us: 0 } // fillers: their flat prize, no team points
+  const avg = AVERAGE[key as Scaled]
+  const rounds = Math.max(1, roundsFor(s, key))
+  return {
+    you: avg.you > 0 ? PER_GAME.you / (avg.you * rounds) : 0,
+    us: avg.us > 0 ? PER_GAME.us / (avg.us * rounds) : 0,
+  }
+}
+
+// A raw award as the board shows it: scaled for this session, in whole points.
+export const shown = (s: RosterOf, key: GameKey, raw: number, kind: keyof Scale = 'you') =>
+  Math.round(raw * scaleFor(s, key)[kind])
+
 // ---------------------------------------------------------------- The board
 
 export type GameScore = {
   key: Exclude<GameKey, 'lights'> | 'decider'
   label: string
-  points: Standing
+  points: Standing // yours, each — who wins the night
+  team: number // yours together
   played: boolean
 }
 
@@ -207,27 +281,90 @@ const sumAwards = (awards: Award[]): Standing => {
   return t
 }
 
-function pointsFor(s: SessionState, key: Exclude<GameKey, 'lights'>): Standing {
+// Every award a game has made so far, in raw points — to one of you, and to the team.
+// Each one is scaled (and rounded) on its own, so the totals are always the sum of the
+// "+n"s the reveal screens showed.
+type Raw = { you: Award[]; us: number[] }
+
+function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'clock'>): Raw {
+  const you: Award[] = []
+  const us: number[] = []
   switch (key) {
-    case 'list': return sumAwards(s.listActs.map(listAward))
-    case 'likely': return likelyPoints(s.likely)
-    case 'finger': return fingerPoints(s.finger)
-    case 'mrmrs': return mrmrsPoints(s.mrmrs)
-    case 'bluff': return bluffPoints(s.bluff)
-    case 'wave': return sumAwards((s.wave?.rounds ?? []).map(waveAward))
-    case 'draw': return sumAwards((s.draw?.rounds ?? []).map(drawAward))
-    case 'clash': return clashPoints(s.clash, s.phase !== 'CLASH_WRITE')
-    case 'chain': {
-      const t = zero()
+    case 'list':
+      for (const act of s.listActs) {
+        if (act.displacement === null) continue
+        const shownItems = act.items.slice(0, act.revealIndex + 1)
+        for (const item of shownItems) you.push({ player: act.author, points: listItemPoints(item) })
+        us.push(shownItems.filter((i) => listItemPoints(i) === SCORING.listExact).length)
+      }
+      break
+    case 'likely':
+      for (const round of s.likely?.rounds ?? []) {
+        const pts = likelyRoundPoints(round)
+        if (!pts) continue
+        you.push({ player: 'A', points: pts }, { player: 'B', points: pts })
+        us.push(1)
+      }
+      break
+    case 'mrmrs':
+      for (const round of s.mrmrs?.rounds ?? []) {
+        for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: mrmrsRoundPoints(round, p) })
+        us.push(mrmrsTeamRaw(round))
+      }
+      break
+    case 'bluff':
+      for (const round of s.bluff?.rounds ?? []) {
+        for (const owner of ['A', 'B'] as PlayerId[]) you.push(bluffAward(round, owner))
+        us.push(bluffTeamRaw(round))
+      }
+      break
+    case 'wave':
+      for (const round of s.wave?.rounds ?? []) {
+        you.push(waveAward(round))
+        us.push(waveTeamRaw(round))
+      }
+      break
+    case 'draw':
+      for (const round of s.draw?.rounds ?? []) {
+        you.push(drawAward(round))
+        us.push(round.correct ? 1 : 0)
+      }
+      break
+    case 'clash':
+      s.clash?.rounds.forEach((round, r) => {
+        const live = r === s.clash!.current
+        if (r > s.clash!.current || (live && s.phase === 'CLASH_WRITE')) return
+        const upTo = live ? round.revealIndex : round.categories.length - 1
+        for (let i = 0; i <= upTo; i++) {
+          for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: clashCellPoints(round, p, i) })
+        }
+        us.push(clashTeamRaw(round, upTo))
+      })
+      break
+    case 'finger':
+      for (const round of s.finger?.rounds ?? []) {
+        for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: fingerRoundPoints(round, p) })
+      }
+      break
+    case 'chain':
       for (const round of s.chain?.rounds ?? []) {
         const w = chainRoundWinner(round)
-        if (w) t[w] += CHAIN.winPoints
+        if (w) you.push({ player: w, points: CHAIN.winPoints })
+        us.push(round.chain.filter((l) => l.by !== null).length)
       }
-      return t
-    }
-    case 'circle': return fillerPoints(s.circle && { kind: 'circle', game: s.circle })
-    case 'clock': return fillerPoints(s.clock && { kind: 'clock', game: s.clock })
+      break
   }
+  return { you, us }
+}
+
+function scoreFor(s: SessionState, key: Exclude<GameKey, 'lights'>): { points: Standing; team: number } {
+  if (key === 'circle') return { points: fillerPoints(s.circle && { kind: 'circle', game: s.circle }), team: 0 }
+  if (key === 'clock') return { points: fillerPoints(s.clock && { kind: 'clock', game: s.clock }), team: 0 }
+  const raw = rawFor(s, key)
+  const points = zero()
+  for (const a of raw.you) if (a) points[a.player] += shown(s, key, a.points)
+  const team = raw.us.reduce((n, u) => n + shown(s, key, u, 'us'), 0)
+  return { points, team }
 }
 
 function playedYet(s: SessionState, key: Exclude<GameKey, 'lights'>): boolean {
@@ -242,9 +379,9 @@ export function gameScores(s: SessionState): GameScore[] {
   const rows: GameScore[] = roster(s.game, s.night)
     .map((e) => e.key)
     .filter((key): key is Exclude<GameKey, 'lights'> => key !== 'lights')
-    .map((key) => ({ key, label: GAME_LABELS[key], points: pointsFor(s, key), played: playedYet(s, key) }))
+    .map((key) => ({ key, label: GAME_LABELS[key], ...scoreFor(s, key), played: playedYet(s, key) }))
   // Only there once a level night has needed it.
-  if (s.decider) rows.push({ key: 'decider', label: 'Tiebreaker', points: deciderPoints(s), played: true })
+  if (s.decider) rows.push({ key: 'decider', label: 'Tiebreaker', points: deciderPoints(s), team: 0, played: true })
   return rows
 }
 
@@ -264,6 +401,11 @@ export function standing(s: SessionState): Standing {
     tally.B += game.points.B
   }
   return tally
+}
+
+// Your points together, across the whole session.
+export function teamScore(s: SessionState): number {
+  return gameScores(s).reduce((n, g) => n + g.team, 0)
 }
 
 // Who is ahead this session, or null if level.

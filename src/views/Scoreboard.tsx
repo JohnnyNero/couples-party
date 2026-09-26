@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import type { GameKey, PlayerId, SessionState } from '../engine/state'
-import { gameScores, needsDecider, standing } from '../engine/standing'
+import { gameScores, needsDecider, standing, teamScore } from '../engine/standing'
 import { GAME_LABELS, gameOfPhase, nextGame } from '../engine/roster'
 import { dispatch, useMyPlayerId } from '../net'
 import { AnimatedNumber } from './AnimatedNumber'
@@ -29,6 +29,7 @@ export function Scoreboard({
   const me = useMyPlayerId()
   const games = gameScores(s)
   const total = standing(s)
+  const together = teamScore(s)
   // What a tap leads to, straight off the roster. DONE leads nowhere, whatever is left
   // unplayed — a session that ended early shouldn't promise a game that isn't coming.
   const current = gameOfPhase(s.phase)
@@ -67,7 +68,23 @@ export function Scoreboard({
         )).reduce<ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, <Vs key="vs" />, el]), [])}
       </section>
 
+      {/* Yours together: every time a game showed you know each other. */}
+      <section className="flex items-center gap-3 rounded-2xl bg-tan-soft text-tan-ink px-4 py-3">
+        <span className="text-xl" aria-hidden="true">🤝</span>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-lg font-extrabold leading-tight">Together</div>
+          <div className="text-xs font-bold opacity-75">Points for knowing each other</div>
+        </div>
+        <span className="font-display text-4xl font-extrabold tabular-nums"><AnimatedNumber value={together} durationMs={900} delayMs={280} /></span>
+      </section>
+
       <section className="flex flex-col">
+        <div className="flex items-center gap-2.5 px-1 pb-1 text-[0.65rem] uppercase tracking-[0.16em] font-extrabold text-fg/40">
+          <span className="w-5 shrink-0" />
+          <span className="flex-1" />
+          {ORDER.map((p) => <span key={p} className="w-9 text-right truncate">{playerName(s, p).slice(0, 4)}</span>)}
+          <span className="w-9 text-right" aria-label="Together">🤝</span>
+        </div>
         {games.map((g, i) => {
           const isNext = g.key === next
           return (
@@ -79,11 +96,14 @@ export function Scoreboard({
               <GameGlyph game={g.key === 'decider' ? 'clock' : (g.key as GameKey)} className={'w-5 h-5 shrink-0 ' + (g.played ? 'text-accent-ink' : '')} />
               <span className="flex-1 min-w-0 truncate text-sm font-bold">{g.label}</span>
               {g.played ? (
-                ORDER.map((p) => (
-                  <span key={p} className={'w-9 text-right font-display text-base font-extrabold tabular-nums ' + inkOf(p)}>
-                    {g.points[p]}
-                  </span>
-                ))
+                <>
+                  {ORDER.map((p) => (
+                    <span key={p} className={'w-9 text-right font-display text-base font-extrabold tabular-nums ' + inkOf(p)}>
+                      {g.points[p]}
+                    </span>
+                  ))}
+                  <span className="w-9 text-right font-display text-base font-extrabold tabular-nums text-tan-ink">{g.key === 'decider' || g.key === 'circle' || g.key === 'clock' ? '' : g.team}</span>
+                </>
               ) : (
                 <span className="text-xs font-extrabold">{isNext ? 'next' : ''}</span>
               )}

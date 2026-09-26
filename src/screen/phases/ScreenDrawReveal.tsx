@@ -1,3 +1,4 @@
+import { shown as scaled } from '../../engine/standing'
 import type { SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { drawAward } from '../../engine/standing'
@@ -32,7 +33,7 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
       <div className="animate-fade-up" style={{ animationDelay: '400ms' }}>
         {award ? (
           <span className="inline-block rounded-full bg-sage-soft text-sage-ink px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold">
-            Got it! · {playerName(s, award.player)} +{award.points}
+            Got it! · {playerName(s, award.player)} +{scaled(s, 'draw', award.points)}
           </span>
         ) : (
           <span className="inline-block rounded-full bg-fg/10 text-fg/60 px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold">

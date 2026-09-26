@@ -1,6 +1,6 @@
 import type { PlayerId, SessionState } from '../../engine/state'
 import { currentAct } from '../../engine/list'
-import { listItemPoints } from '../../engine/standing'
+import { listItemPoints, shown as scaled } from '../../engine/standing'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
 import { inkOf } from '../../ui/Avatar'
@@ -13,7 +13,7 @@ export function PlayListReveal({ s, me }: { s: SessionState; me: PlayerId }) {
   const act = currentAct(s)!
   const done = act.revealIndex + 1
   const last = act.revealIndex >= act.items.length - 1
-  const total = act.items.slice(0, done).reduce((n, i) => n + listItemPoints(i), 0)
+  const total = act.items.slice(0, done).reduce((n, i) => n + scaled(s, 'list', listItemPoints(i)), 0)
 
   return (
     <div className="h-full flex flex-col px-5 pb-6">

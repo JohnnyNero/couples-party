@@ -1,3 +1,4 @@
+import { shown as scaled } from '../../engine/standing'
 import type { SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { waveAward } from '../../engine/standing'
@@ -36,7 +37,7 @@ export function ScreenWaveReveal({ s }: { s: SessionState }) {
         <div className="mt-1.5 text-base sm:text-xl text-fg/70">
           <span className="tabular-nums"><AnimatedNumber value={d} /></span> away
           {award ? (
-            <> · <b className={inkOf(award.player)}>{playerName(s, award.player)} +{award.points}</b>{award.player === round.psychic ? ' for the clue' : ''}</>
+            <> · <b className={inkOf(award.player)}>{playerName(s, award.player)} +{scaled(s, 'wave', award.points)}</b>{award.player === round.psychic ? ' for the clue' : ''}</>
           ) : ' · no points'}
         </div>
       </div>

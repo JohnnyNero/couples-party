@@ -1,3 +1,4 @@
+import { shown as scaled } from '../../engine/standing'
 import type { SessionState } from '../../engine/state'
 import { chainRoundWinner } from '../../engine/chain'
 import { CHAIN } from '../../engine/phases'
@@ -23,7 +24,7 @@ export function ScreenChainEnd({ s }: { s: SessionState }) {
         <div className="mt-1 text-base sm:text-2xl text-fg/65">
           {round.loser ? `${playerName(s, round.loser)} ran out of time` : 'Nothing left that could follow'}
           {' · '}
-          {winner ? <b className="text-sage-ink">{playerName(s, winner)} +{CHAIN.winPoints}</b> : 'no points'}
+          {winner ? <b className="text-sage-ink">{playerName(s, winner)} +{scaled(s, 'chain', CHAIN.winPoints)}</b> : 'no points'}
         </div>
       </div>
     </div>
