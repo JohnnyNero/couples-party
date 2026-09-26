@@ -1,3 +1,4 @@
+import { ScreenBluffPick, ScreenBluffReveal, ScreenBluffWrite } from '../screen/phases/ScreenBluff'
 import type { SessionState } from '../engine/state'
 import { GAME_LABELS, gameOfPhase, roundsFor } from '../engine/roster'
 import { phaseKey } from './phaseKey'
@@ -61,7 +62,7 @@ export function railText(s: SessionState): string {
     return `${label} · Round ${f.current + 1} · best of ${f.bestOf}`
   }
   const game = key === 'lights' ? null
-    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain }[key]
+    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff }[key]
   if (!game) return label
   return `${label} · Round ${game.current + 1} of ${game.rounds.length}`
 }
@@ -136,6 +137,14 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenChainEnd s={s} />
     case 'CHAIN_RESULT':
       return <Scoreboard s={s} title="Word Chain · done" />
+    case 'BLUFF_WRITE':
+      return <ScreenBluffWrite s={s} />
+    case 'BLUFF_PICK':
+      return <ScreenBluffPick s={s} />
+    case 'BLUFF_REVEAL':
+      return <ScreenBluffReveal s={s} />
+    case 'BLUFF_RESULT':
+      return <Scoreboard s={s} title="Two Lies & a Truth · done" />
     case 'CIRCLE_DRAW':
       return <ScreenCircleDraw s={s} />
     case 'CIRCLE_REVEAL':

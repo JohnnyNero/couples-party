@@ -219,6 +219,21 @@ function SessionCard({ m }: { m: SessionMemory }) {
               ))}
             </Part>
           )}
+          {m.bluff && (
+            <Part title="Two Lies & a Truth">
+              {m.bluff.map((r, i) => (
+                <div key={i} className="py-1.5 border-b border-fg/10 last:border-0">
+                  <div className="text-sm text-fg/60">{r.prompt}</div>
+                  {(['A', 'B'] as const).filter((p) => r.truth[p] !== null).map((p) => (
+                    <div key={p} className="text-sm">
+                      <b className={inkOf(p)}>{n(p)}:</b> {r.truth[p]}
+                      {r.spotted[p] !== null && <span className="text-fg/45"> · {r.spotted[p] ? 'spotted ✓' : 'fooled them'}</span>}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </Part>
+          )}
           {m.lights && (
             <Part title="Lights out">
               <div className="text-base italic">{m.lights}</div>

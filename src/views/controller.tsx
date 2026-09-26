@@ -20,6 +20,9 @@ import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
+import { PlayBluffWrite } from '../play/phases/PlayBluffWrite'
+import { PlayBluffPick } from '../play/phases/PlayBluffPick'
+import { ScreenBluffReveal } from '../screen/phases/ScreenBluff'
 
 // This player's private controller for the current phase, shared by the phone
 // renderer (Play, screen mode) and the phones-only renderer (Duo). Shows only this
@@ -64,7 +67,15 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'CLOCK_RESULT':
     case 'CLASH_RESULT':
     case 'CHAIN_RESULT':
+    case 'BLUFF_RESULT':
       return <PlayContinue s={s} me={me} />
+    case 'BLUFF_WRITE':
+      return <PlayBluffWrite s={s} me={me} />
+    case 'BLUFF_PICK':
+      return <PlayBluffPick s={s} me={me} />
+    // The truth, on the phone too: it's where the tap to move on is.
+    case 'BLUFF_REVEAL':
+      return <div className="h-full overflow-y-auto p-5 flex flex-col"><div className="my-auto w-full"><ScreenBluffReveal s={s} /></div></div>
     case 'CHAIN_TURN':
       return <PlayChainTurn s={s} me={me} />
     case 'CLASH_WRITE':

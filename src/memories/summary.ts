@@ -3,6 +3,7 @@ import { themeText } from '../views/list'
 import type { DrawStroke, Game, PlayerId, SessionState } from '../engine/state'
 import { gameScores, standing } from '../engine/standing'
 import { chainRoundWinner } from '../engine/chain'
+import { asYou } from '../say'
 
 // What a live session leaves behind once it's over: the answers worth looking back on,
 // not the moves. Names are written in, because "A" and "B" mean different people on
@@ -22,6 +23,9 @@ export type SessionMemory = {
   wave?: { low: string; high: string; psychic: PlayerId; clue: string | null; target: number; guess: number | null }[]
   clash?: { letter: string; rows: { category: string; answers: Pair<string> }[] }[]
   chain?: { category: string; words: string[]; winner: PlayerId | null }[]
+  // Two Lies & a Truth: the prompt as it reads to anyone, and each of your truths — with
+  // whether the other spotted it (null: it was never guessed).
+  bluff?: { prompt: string; truth: Pair<string | null>; spotted: Pair<boolean | null> }[]
   lights?: string
 }
 
@@ -81,11 +85,20 @@ export function sessionMemory(s: SessionState): SessionMemory {
   const chains = upTo(s.chain, (r) => r.over)
   if (chains.length) m.chain = chains.map((r) => ({ category: r.category, words: r.chain.map((l) => l.word), winner: chainRoundWinner(r) }))
 
+  const bluffs = upTo(s.bluff, (r) => r.entry.A !== null || r.entry.B !== null)
+  if (bluffs.length) {
+    m.bluff = bluffs.map((r) => ({
+      prompt: asYou(r.prompt),
+      truth: { A: r.entry.A?.truth ?? null, B: r.entry.B?.truth ?? null },
+      spotted: { A: r.pick.A === null ? null : r.pick.A === 0, B: r.pick.B === null ? null : r.pick.B === 0 },
+    }))
+  }
+
   if (s.lights) m.lights = s.lights.question
   return m
 }
 
 // Worth keeping once there's something in it: an answer, a drawing, a clue, a point.
 export function worthKeeping(m: SessionMemory): boolean {
-  return !!(m.shortlist || m.mrmrs || m.draw || m.wave || m.clash || m.chain) || m.score.A + m.score.B > 0
+  return !!(m.shortlist || m.mrmrs || m.draw || m.wave || m.clash || m.chain || m.bluff) || m.score.A + m.score.B > 0
 }

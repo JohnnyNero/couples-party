@@ -1,5 +1,5 @@
 import type {
-  DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
+  BluffGame, BluffRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
   MrMrsRound, PlayerId, SessionState, WaveRound,
 } from './state'
 import { other } from './state'
@@ -40,6 +40,8 @@ export const SCORING = {
   drawCorrect: 6,
   likelyAgree: 7, // to each of you, when you named the same person
   mrmrsRight: 8, // to whoever predicted right, as ruled by the person it was about
+  bluffSpotted: 7, // to the guesser, for picking the truth
+  bluffFooled: 7, // to the bluffer, when a lie (or the clock) got them
 } as const
 
 export type Standing = Record<PlayerId, number>
@@ -100,6 +102,22 @@ export function mrmrsPoints(g: MrMrsGame | null): Standing {
     t.B += mrmrsRoundPoints(round, 'B')
   }
   return t
+}
+
+// ---------------------------------------------------------------- Two Lies & a Truth
+
+// Every pick pays someone: the guesser for finding the truth, the bluffer when they
+// didn't. Three rounds is six picks, three each way — so 42 at most, like the rest.
+export function bluffAward(round: BluffRound, owner: PlayerId): Award {
+  const pick = round.pick[owner]
+  if (pick === null) return null
+  return pick === 0
+    ? { player: other(owner), points: SCORING.bluffSpotted }
+    : { player: owner, points: SCORING.bluffFooled }
+}
+
+export function bluffPoints(g: BluffGame | null): Standing {
+  return sumAwards((g?.rounds ?? []).flatMap((r) => [bluffAward(r, 'A'), bluffAward(r, 'B')]))
 }
 
 // ---------------------------------------------------------------- Put a Finger Down
@@ -195,6 +213,7 @@ function pointsFor(s: SessionState, key: Exclude<GameKey, 'lights'>): Standing {
     case 'likely': return likelyPoints(s.likely)
     case 'finger': return fingerPoints(s.finger)
     case 'mrmrs': return mrmrsPoints(s.mrmrs)
+    case 'bluff': return bluffPoints(s.bluff)
     case 'wave': return sumAwards((s.wave?.rounds ?? []).map(waveAward))
     case 'draw': return sumAwards((s.draw?.rounds ?? []).map(drawAward))
     case 'clash': return clashPoints(s.clash, s.phase !== 'CLASH_WRITE')

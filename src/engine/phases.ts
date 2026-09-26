@@ -20,6 +20,8 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
   DRAW_REVEAL: 8000,  // long enough for the drawer to wave through a near miss
   CLASH_WRITE: 60000, // six answers, one letter (the reveal waits for taps)
+  BLUFF_WRITE: 120000, // three things to make up (or own up to) — the reveal waits for taps
+  BLUFF_PICK: 30000,  // three to choose from
   CHAIN_END: 7000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
   CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
   CIRCLE_REVEAL: 6000,
@@ -48,6 +50,10 @@ export const WAVE = {
 
 export const MRMRS = {
   maxLen: 40,       // an answer, not an essay — the thing the other apps get wrong
+}
+
+export const BLUFF = {
+  maxLen: 60, // one line each: a lie needs a little detail to be believable
 }
 
 export const DRAW = {

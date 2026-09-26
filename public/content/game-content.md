@@ -2567,3 +2567,55 @@ predict. No names and no "you": it's always about whoever's picking.
 - Online shopping | High street
 - Warm bedroom | Cool bedroom
 - Cuddle to sleep | Own side
+
+# Two Lies & a Truth
+
+A live game. One of these comes up each round, the same for both of you. You
+each write one true answer about yourself and two believable lies. Then your
+partner has to pick out the truth.
+
+Each prompt should have a short, specific answer (a thing, a place, a moment),
+so a lie can sound just as real as the truth. Say who it's about with [you|@]
+or [Your|@'s], like the daily puzzles. Keep it to things a partner might not
+already know.
+
+- [Your|@'s] worst ever present
+- A food [you|@] secretly can't stand
+- [Your|@'s] first ever job
+- Something [you|@] got told off for at school
+- [Your|@'s] most embarrassing moment
+- A famous person [you've|@ has] met or seen up close
+- The strangest thing [you've|@ has] ever eaten
+- [Your|@'s] childhood dream job
+- A place [you've|@ has] been that nobody expects
+- [Your|@'s] first celebrity crush
+- The worst haircut [you've|@ has] had
+- Something [you've|@ has] broken and never owned up to
+- [Your|@'s] weirdest injury
+- A talent [you've|@ has] never shown off
+- The last thing [you|@] cried at
+- A rule [you|@] broke as a teenager
+- [Your|@'s] first concert or gig
+- Something [you|@] collected as a kid
+- The worst date [you've|@ has] been on
+- A lie [you|@] told [your|their] parents
+- [Your|@'s] most-played song ever
+- Something [you're|@ is] secretly scared of
+- A film [you've|@ has] watched more than five times
+- The first thing [you|@] bought with [your|their] own money
+- A nickname [you've|@ has] had
+- A time [you|@] got really lost
+- [Your|@'s] worst holiday
+- Something [you|@] did that [you'd|they'd] never do again
+- An award or prize [you've|@ has] won
+- The most money [you've|@ has] spent on something silly
+- A hobby [you|@] gave up on
+- The worst thing [you've|@ has] cooked
+- A bad habit [you've|@ has] never kicked
+- [Your|@'s] favourite toy as a kid
+- A time [you|@] got caught doing something
+- Something [you|@] pretended to like
+- The furthest [you've|@ has] travelled from home
+- A job [you'd|@ would] be secretly brilliant at
+- The best compliment [you've|@ has] ever had
+- The last time [you|@] laughed so hard it hurt

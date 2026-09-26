@@ -10,7 +10,7 @@ import { CLASH } from '../engine/phases'
 // Items are logged by their text, not their id: ids come from their position in the
 // content file, and they shift whenever a line is added or removed.
 
-type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list' | 'clash' | 'chain'
+type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list' | 'clash' | 'chain' | 'bluff'
 export type SeenLog = Partial<Record<PoolKey, string[]>> // oldest first
 
 const STORAGE_KEY = 'couples-party:seen'
@@ -28,6 +28,7 @@ const NEED: Record<PoolKey, number> = {
   list: roundsFor({ game: 'list' }, 'list'), // one theme per act
   clash: roundsFor({ game: 'clash' }, 'clash') * CLASH.categories,
   chain: roundsFor({ game: 'chain' }, 'chain'),
+  bluff: roundsFor({ game: 'bluff' }, 'bluff'),
 }
 
 const waveKey = (s: { low: string; high: string }) => `${s.low} | ${s.high}`
@@ -60,6 +61,7 @@ export function freshen(content: Content, log: SeenLog = loadSeen()): Content {
     drawPrompts: unseen(content.drawPrompts, (p) => p.text, log.draw, NEED.draw),
     themes: unseen(content.themes, (t) => t.text, log.list, NEED.list),
     clashCategories: unseen(content.clashCategories, id, log.clash, NEED.clash),
+    bluffPrompts: unseen(content.bluffPrompts ?? [], id, log.bluff, NEED.bluff),
     // Capped, not just trimmed: each Word Chain category carries a long answer list, and
     // the whole session is sent to both phones on every move, so only what a session can
     // use goes along.
@@ -85,6 +87,7 @@ export function shownIn(s: SessionState): Record<PoolKey, string[]> {
     list: s.listActs.map((a) => theme.get(a.themeId)).filter(known),
     clash: s.clash ? s.clash.rounds.slice(0, s.clash.current + 1).flatMap((r) => r.categories) : [],
     chain: s.chain ? s.chain.rounds.slice(0, s.chain.current + 1).map((r) => r.category) : [],
+    bluff: upTo(s.bluff).map((r) => r.prompt),
   }
 }
 

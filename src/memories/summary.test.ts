@@ -9,9 +9,9 @@ const CONTENT = {
   lightsQuestions: ['What made you laugh today?'],
 }
 
-// Tonight on night 0 (Mr & Mrs, Draw, the clock), played for real where it matters.
+// Tonight on night 4 (the clock, Mr & Mrs, Draw), played for real where it matters.
 function playNight(): SessionState {
-  let s = initialState(7, 'tonight', CONTENT, 0)
+  let s = initialState(7, 'tonight', CONTENT, 4)
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
   s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
   for (let i = 1; i < 300 && s.phase !== 'DONE'; i++) {
@@ -38,7 +38,7 @@ function playNight(): SessionState {
 
 describe('sessionMemory', () => {
   it('keeps nothing before a game has been played', () => {
-    let s = initialState(7, 'tonight', CONTENT, 0)
+    let s = initialState(7, 'tonight', CONTENT, 4)
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
     expect(worthKeeping(sessionMemory(s))).toBe(false)

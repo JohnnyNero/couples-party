@@ -1,11 +1,11 @@
 import type {
-  Action, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, BluffGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   Phase, PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
-import { CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
+import { BLUFF, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FINGER, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
 import { checkWord, nextLetter, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
@@ -62,6 +62,7 @@ function startGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'draw': return beginDraw(state, now)
     case 'clash': return beginClash(state, now)
     case 'chain': return beginChain(state, now)
+    case 'bluff': return beginBluff(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
@@ -85,7 +86,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CHAIN_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -533,6 +534,70 @@ function advanceClash(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Two Lies & a Truth
+
+// Prompts and the order each person's three will be shown in are dealt up front. Who
+// goes first swaps every round.
+function beginBluff(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const prompts = shuffled(makeRng(s.seed ^ 0xb1f5), s.bluffPrompts).slice(0, roundsFor(s, 'bluff'))
+  if (prompts.length === 0) return skipTo(s, now, 'bluff')
+  const rng = makeRng(s.seed ^ 0x3b1f)
+  s.bluff = {
+    rounds: prompts.map((prompt, i) => {
+      const first: PlayerId = (s.seed + i) % 2 === 0 ? 'A' : 'B'
+      return {
+        index: i + 1,
+        prompt,
+        first,
+        turn: first,
+        entry: { A: null, B: null },
+        order: { A: shuffled(rng, [0, 1, 2]), B: shuffled(rng, [0, 1, 2]) },
+        pick: { A: null, B: null },
+      }
+    }),
+    current: 0,
+  }
+  s.phase = 'BLUFF_WRITE'
+  s.phaseEndsAt = now + DURATIONS.BLUFF_WRITE!
+  return s
+}
+
+const currentBluff = (g: BluffGame) => g.rounds[g.current]
+
+// On to whoever's three haven't been guessed yet — first this round's opener, then the
+// other. Anyone whose three never came in is skipped; once nobody's left, the next round
+// (or the scoreboard).
+function nextBluffStep(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const g = s.bluff!
+  const round = currentBluff(g)
+  for (const owner of [round.first, other(round.first)]) {
+    if (round.entry[owner] && round.pick[owner] === null) {
+      round.turn = owner
+      s.phase = 'BLUFF_PICK'
+      s.phaseEndsAt = now + DURATIONS.BLUFF_PICK!
+      return s
+    }
+  }
+  if (g.current >= g.rounds.length - 1) return toScoreboard(s, 'BLUFF_RESULT')
+  g.current += 1
+  s.phase = 'BLUFF_WRITE'
+  s.phaseEndsAt = now + DURATIONS.BLUFF_WRITE!
+  return s
+}
+
+// The pick is in (or the clock ran out): show the truth. No clock — "wait, really?"
+// is the whole point.
+function toBluffReveal(state: SessionState, choice: number): SessionState {
+  const s = clone(state)
+  const round = currentBluff(s.bluff!)
+  round.pick[round.turn] = choice
+  s.phase = 'BLUFF_REVEAL'
+  s.phaseEndsAt = null
+  return s
+}
+
 // ---------------------------------------------------------------- Word Chain
 
 // Every round is dealt up front — its category, its answer list and the app's opening
@@ -898,6 +963,26 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       s.clash!.rounds[s.clash!.current].challenged[owner][action.index] = true
       return s
     }
+    case 'SUBMIT_BLUFF': {
+      if (state.phase !== 'BLUFF_WRITE' || !state.bluff) return state
+      if (currentBluff(state.bluff).entry[action.player] !== null) return state // sent is sent
+      const clean = (t: unknown) => String(t ?? '').trim().slice(0, BLUFF.maxLen)
+      const truth = clean(action.truth)
+      const lies: [string, string] = [clean(action.lies?.[0]), clean(action.lies?.[1])]
+      if (!truth || !lies[0] || !lies[1]) return state
+      const s = clone(state)
+      const round = currentBluff(s.bluff!)
+      round.entry[action.player] = { truth, lies }
+      return round.entry.A && round.entry.B ? nextBluffStep(s, now) : s
+    }
+    case 'PICK_BLUFF': {
+      if (state.phase !== 'BLUFF_PICK' || !state.bluff) return state
+      const round = currentBluff(state.bluff)
+      // Only the guesser picks, once, and only one of the three.
+      if (action.player === round.turn || round.pick[round.turn] !== null) return state
+      if (![0, 1, 2].includes(action.choice)) return state
+      return toBluffReveal(state, action.choice)
+    }
     case 'CHAIN_WORD': {
       if (state.phase !== 'CHAIN_TURN' || !state.chain) return state
       const live = state.chain.rounds[state.chain.current]
@@ -952,6 +1037,7 @@ function step(state: SessionState, action: Action, now: number): SessionState {
     }
     case 'ADVANCE_REVEAL': {
       if (state.phase === 'CLASH_REVEAL') return advanceClash(state, now)
+      if (state.phase === 'BLUFF_REVEAL') return nextBluffStep(state, now)
       if (state.phase !== 'LIST_REVEAL') return state
       return advanceReveal(state, now)
     }
@@ -998,6 +1084,11 @@ function step(state: SessionState, action: Action, now: number): SessionState {
           return toChainEnd(s, now)
         }
         case 'CHAIN_END': return advanceChain(state, now)
+        // Only what came in gets guessed at; anyone whose three never came is skipped.
+        case 'BLUFF_WRITE': return nextBluffStep(state, now)
+        // No pick in time counts as fooled.
+        case 'BLUFF_PICK': return toBluffReveal(state, -1)
+        case 'BLUFF_REVEAL': return nextBluffStep(state, now)
         case 'CLASH_WRITE': return toClashReveal(state)
         case 'CLASH_REVEAL': return advanceClash(state, now)
         case 'CIRCLE_DRAW': return toCircleReveal(state, now)

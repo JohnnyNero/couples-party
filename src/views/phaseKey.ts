@@ -22,6 +22,8 @@ export function phaseKey(s: SessionState): string {
     s.clash ? s.clash.rounds[s.clash.current].revealIndex : 0,
     s.chain?.current ?? 0,
     s.chain ? s.chain.rounds[s.chain.current].chain.length : 0,
+    s.bluff?.current ?? 0,
+    s.bluff ? s.bluff.rounds[s.bluff.current].turn : '',
     s.circle?.current ?? 0,
     s.clock?.current ?? 0,
     s.decider?.current ?? 0,

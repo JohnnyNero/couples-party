@@ -240,6 +240,14 @@ describe('the shipped content keeps its shape', () => {
     expect(new Set(parsed.eitherPairs.map((p) => p.toLowerCase())).size).toBe(parsed.eitherPairs.length)
   })
 
+  it('gives Two Lies & a Truth enough prompts, each about one of you', () => {
+    expect(parsed.bluffPrompts.length).toBeGreaterThanOrEqual(20)
+    // Every prompt names who it's about, so the guesser reads "Rocko's", not "your".
+    expect(parsed.bluffPrompts.filter((t) => !/\[/.test(t))).toEqual([])
+    expect(parsed.bluffPrompts.filter((t) => words(say(t, { self: true, subject: 'x', partner: 'y' })) > 12 || /\?$/.test(t))).toEqual([])
+    expect(new Set(parsed.bluffPrompts).size).toBe(parsed.bluffPrompts.length)
+  })
+
   it('keeps the newer games short enough to read at a glance', () => {
     // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
     expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])

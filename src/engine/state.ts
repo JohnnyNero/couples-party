@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -22,6 +22,7 @@ export type Phase =
   | 'DRAW_SKETCH' | 'DRAW_GUESS' | 'DRAW_REVEAL' | 'DRAW_RESULT'
   | 'CLASH_WRITE' | 'CLASH_REVEAL' | 'CLASH_RESULT'
   | 'CHAIN_TURN' | 'CHAIN_END' | 'CHAIN_RESULT'
+  | 'BLUFF_WRITE' | 'BLUFF_PICK' | 'BLUFF_REVEAL' | 'BLUFF_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
@@ -167,6 +168,22 @@ export type ChainRound = {
 }
 export type ChainGame = { rounds: ChainRound[]; current: number }
 
+// Two Lies & a Truth: one prompt about yourselves ("the worst gift you've been given").
+// You both write a truth and two lies at once; then it takes one of you at a time, and
+// the other picks which of the three is true. Options are numbered 0 (the truth), 1 and
+// 2 (the lies); `order` is the shuffle they're shown in, dealt up front.
+export type BluffEntry = { truth: string; lies: [string, string] }
+export type BluffRound = {
+  index: number // 1-based
+  prompt: string
+  first: PlayerId // whose three are guessed first this round
+  turn: PlayerId  // whose three are being guessed now
+  entry: Record<PlayerId, BluffEntry | null> // null = not in yet (or never came)
+  order: Record<PlayerId, number[]>          // keyed by the entry's owner
+  pick: Record<PlayerId, number | null>      // keyed by the entry's OWNER: what the other picked; -1 = ran out of time
+}
+export type BluffGame = { rounds: BluffRound[]; current: number }
+
 // Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
 // the round. Only the longest stroke is kept — that's the circle; the rest is noise.
 export type CircleRound = {
@@ -216,6 +233,7 @@ export type Content = {
   lightsQuestions: string[]
   clashCategories: string[]
   chainCategories: ChainCategory[]
+  bluffPrompts: string[]
   // The couple's own cards (Our questions), by their text — a Wavelength scale as
   // "Low | High". Already in the pools above; this only says which to deal first.
   ours?: string[]
@@ -236,6 +254,7 @@ export type SessionState = {
   lights: LightsCard | null
   clash: ClashGame | null
   chain: ChainGame | null
+  bluff: BluffGame | null
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
@@ -285,6 +304,10 @@ export type Action =
   | { type: 'CHALLENGE'; player: PlayerId; index: number }
   // Word Chain: one try at the next word, on your turn.
   | { type: 'CHAIN_WORD'; player: PlayerId; word: string }
+  // Two Lies & a Truth: your truth and two lies, all at once (sending is readying up);
+  // then, on your partner's turn, which of theirs you think is true (0, 1 or 2).
+  | { type: 'SUBMIT_BLUFF'; player: PlayerId; truth: string; lies: [string, string] }
+  | { type: 'PICK_BLUFF'; player: PlayerId; choice: number }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -305,6 +328,7 @@ export const EMPTY_CONTENT: Content = {
   lightsQuestions: [],
   clashCategories: [],
   chainCategories: [],
+  bluffPrompts: [],
 }
 
 export function initialState(
@@ -328,6 +352,7 @@ export function initialState(
     lights: null,
     clash: null,
     chain: null,
+    bluff: null,
     circle: null,
     clock: null,
     decider: null,

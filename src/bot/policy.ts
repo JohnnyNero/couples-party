@@ -150,6 +150,20 @@ export function nextBotAction(
       return { type: 'SUBMIT_CIRCLE', player: me, strokes: [stroke] }
     }
 
+    case 'BLUFF_WRITE': {
+      const g = s.bluff
+      if (!g || g.rounds[g.current].entry[me] !== null) return null
+      return { type: 'SUBMIT_BLUFF', player: me, truth: pickFrom(rng, brain.nouns), lies: [pickFrom(rng, brain.nouns), pickFrom(rng, brain.nouns)] }
+    }
+
+    case 'BLUFF_PICK': {
+      const g = s.bluff
+      if (!g) return null
+      const round = g.rounds[g.current]
+      if (round.turn === me || round.pick[round.turn] !== null) return null
+      return { type: 'PICK_BLUFF', player: me, choice: Math.floor(rng() * 3) }
+    }
+
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {
       const g = s.phase === 'CLOCK_RUN' ? s.clock : s.decider
@@ -184,6 +198,8 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'DRAW_GUESS': return spread(2000, 7000)
     case 'CLASH_WRITE': return spread(15000, 40000)
     case 'CHAIN_TURN': return spread(1500, 5000)
+    case 'BLUFF_WRITE': return spread(15000, 40000)
+    case 'BLUFF_PICK': return spread(3000, 9000)
     case 'CIRCLE_DRAW': return spread(2000, 6000)
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {

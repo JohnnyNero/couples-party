@@ -7,8 +7,8 @@ const CONTENT: Partial<Content> = {
   mrmrsQuestions: ['Your comfort meal?', 'Your go-to drink?'],
   lightsQuestions: ['What made you laugh today?'],
 }
-const start = (game: Game, intros = true) => {
-  let s = { ...initialState(1, game, CONTENT, 0), intros }
+const start = (game: Game, intros = true, night = 0) => {
+  let s = { ...initialState(1, game, CONTENT, night), intros }
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
   return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
 }
@@ -39,7 +39,7 @@ describe('title cards', () => {
     expect(s.phaseEndsAt).toBe(10 * 60 * 1000 + DURATIONS.MM_ANSWER!)
   })
   it('never shows for a game with nothing to play, nor for Lights Out', () => {
-    let s = start('tonight') // night 0: Mr & Mrs is the first game with content here
+    let s = start('tonight', true, 5) // night 5: Mr & Mrs is the first game with content here
     expect(s.intro?.key).toBe('mrmrs')
     s = reduce(s, { type: 'TIMEOUT' }, 2000)
     for (let i = 0; i < 100 && s.phase !== 'LIGHTS_OUT' && s.phase !== 'DONE'; i++) {

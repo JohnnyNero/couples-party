@@ -43,6 +43,11 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
     'Take turns naming one that starts with the last word’s last letter.',
     'Run out of time and your partner takes the round.',
   ],
+  bluff: [
+    'A prompt about yourselves, like “your worst ever present”.',
+    'You each write the truth and two believable lies, at the same time.',
+    'Then one at a time: spot their truth for 7, or they score 7 for fooling you.',
+  ],
   circle: [
     'One go each at drawing a perfect circle.',
     'Lifting your finger sends it.',

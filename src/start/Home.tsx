@@ -224,7 +224,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
 
 const SHORT: Record<GameKey, string> = {
   list: 'Shortlist', likely: 'Likely', finger: 'Finger', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
-  draw: 'Draw', clash: 'Clash', chain: 'Chain', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
+  draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
 }
 
 type Pick = { key: Exclude<Game, 'full' | 'tonight'>; blurb: string; meta: string }
@@ -237,6 +237,7 @@ const HEAD_TO_HEAD: Pick[] = [
   { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '6 rounds · 7 min' },
   { key: 'clash', blurb: 'One letter, six categories. Unique answers score.', meta: '3 rounds · 5 min' },
   { key: 'chain', blurb: 'Name things in turn. The last letter starts the next.', meta: '4 rounds · 4 min' },
+  { key: 'bluff', blurb: 'Two lies and a truth about you. Can they spot it?', meta: '3 rounds · 8 min' },
 ]
 const FILLERS: Pick[] = [
   { key: 'circle', blurb: 'The rounder one wins', meta: 'Best of 5' },
