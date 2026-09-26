@@ -150,8 +150,8 @@ describe('gameScores', () => {
     const s = { ...withActs(act('A', 0, [[1, 1]])), finger: finger({ A: [true, true], B: [false, true] }) }
     const rows = gameScores(s)
     // The full roster, in playing order. Lights Out isn't here — it doesn't score.
-    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'clash', 'clock', 'mrmrs', 'chain', 'draw', 'bluff', 'meld'])
-    expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false, false, false, false, false])
+    expect(rows.map((g) => g.key)).toEqual(['list', 'finger', 'circle', 'wave', 'clash', 'clock', 'mrmrs', 'chain', 'draw', 'bluff', 'meld', 'describe'])
+    expect(rows.map((g) => g.played)).toEqual([true, true, false, false, false, false, false, false, false, false, false, false])
     expect(rows[0].points).toEqual({ A: shown(s, 'list', SCORING.listExact), B: 0 })
     expect(rows[0].team).toBe(shown(s, 'list', 1, 'us')) // the exact one is a team point too
     expect(rows[1].points).toEqual({ A: 0, B: shown(s, 'finger', SCORING.calledRight) })

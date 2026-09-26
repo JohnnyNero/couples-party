@@ -22,6 +22,8 @@ import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
 import { HomeButton } from './HomeButton'
 import { PlayMeldWrite } from '../play/phases/PlayMeldWrite'
+import { PlayDescribe } from '../play/phases/PlayDescribe'
+import { ScreenDescribeReady } from '../screen/phases/ScreenDescribe'
 import { PlayBluffWrite } from '../play/phases/PlayBluffWrite'
 import { PlayBluffPick } from '../play/phases/PlayBluffPick'
 import { ScreenBluffReveal } from '../screen/phases/ScreenBluff'
@@ -71,7 +73,12 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'CHAIN_RESULT':
     case 'BLUFF_RESULT':
     case 'MELD_RESULT':
+    case 'DESCRIBE_RESULT':
       return <PlayContinue s={s} me={me} />
+    case 'DESCRIBE_READY':
+      return <div className="h-full flex items-center p-5"><ScreenDescribeReady s={s} /></div>
+    case 'DESCRIBE_RUN':
+      return <PlayDescribe s={s} me={me} />
     case 'MELD_WRITE':
       return <PlayMeldWrite s={s} me={me} />
     case 'MELD_REVEAL':

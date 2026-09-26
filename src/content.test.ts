@@ -248,6 +248,11 @@ describe('the shipped content keeps its shape', () => {
     expect(new Set(parsed.bluffPrompts).size).toBe(parsed.bluffPrompts.length)
   })
 
+  it('gives Describe It plenty of words, none twice', () => {
+    expect(parsed.describeWords.length).toBeGreaterThanOrEqual(120)
+    expect(new Set(parsed.describeWords.map((w) => w.toLowerCase())).size).toBe(parsed.describeWords.length)
+  })
+
   it('gives Mind Meld enough prompts', () => {
     expect(parsed.meldPrompts.length).toBeGreaterThanOrEqual(30)
     expect(new Set(parsed.meldPrompts).size).toBe(parsed.meldPrompts.length)

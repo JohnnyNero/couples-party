@@ -74,6 +74,12 @@ const SIMS: Partial<Record<GameKey, Sim>> = {
       return { index: i + 1, statementId: 's', answer, predict: { A: call(answer.B), B: call(answer.A) } }
     }) },
   }),
+  describe: (rng, rounds) => ({
+    describe: { current: rounds - 1, deck: [], next: 0, turns: Array.from({ length: rounds }, (_, i) => {
+      const got = 3 + Math.floor(rng() * 7) // 3..9, about 6 in 45 seconds
+      return { index: i + 1, describer: PS[i % 2], got: Array(got).fill('w'), skipped: [] }
+    }) },
+  }),
   meld: (rng, rounds) => ({
     meld: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i) => {
       const r = rng()
@@ -110,7 +116,7 @@ describe('every game counts the same', () => {
   // Every night of Tonight's rotation, so every game turns up at its Tonight length.
   const lengths: Array<{ game: Game; night: number }> = [
     { game: 'full', night: 0 },
-    ...Array.from({ length: 12 }, (_, night) => ({ game: 'tonight' as Game, night })),
+    ...Array.from({ length: 18 }, (_, night) => ({ game: 'tonight' as Game, night })),
   ]
   for (const { game, night } of lengths) {
     for (const { key } of roster(game, night)) {

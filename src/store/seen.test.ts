@@ -30,6 +30,7 @@ const CONTENT: Content = {
   mrmrsQuestions: [],
   bluffPrompts: [],
   meldPrompts: [],
+  describeWords: [],
   lightsQuestions: ['q1', 'q2', 'q3'],
   clashCategories: [],
   chainCategories: [],
@@ -61,7 +62,7 @@ describe('shownIn / noteShown', () => {
   it('moves a re-shown item to the recent end, and reports no change for items already logged', () => {
     const logged = new Set<string>()
     const log = { likely: ['x', 'y'] }
-    const shown = { likely: ['x'], finger: [], mrmrs: [], lights: [], wave: [], draw: [], list: [], clash: [], chain: [], bluff: [], meld: [] }
+    const shown = { likely: ['x'], finger: [], mrmrs: [], lights: [], wave: [], draw: [], list: [], clash: [], chain: [], bluff: [], meld: [], describe: [] }
     const next = noteShown(log, shown, logged)
     expect(next.likely).toEqual(['y', 'x'])
     expect(noteShown(next, shown, logged)).toBe(next)

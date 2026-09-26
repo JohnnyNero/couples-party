@@ -1,5 +1,5 @@
 import type {
-  Action, BluffGame, MeldGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, BluffGame, DescribeGame, MeldGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   Phase, PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
@@ -64,6 +64,7 @@ function startGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'chain': return beginChain(state, now)
     case 'bluff': return beginBluff(state, now)
     case 'meld': return beginMeld(state, now)
+    case 'describe': return beginDescribe(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
@@ -87,7 +88,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'DESCRIBE_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -656,6 +657,41 @@ function advanceMeld(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Describe It
+
+function beginDescribe(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  if (s.describeWords.length === 0) return skipTo(s, now, 'describe')
+  const deck = oursFirst(makeRng(s.seed ^ 0xde5c), s.describeWords, s.ours, text)
+  s.describe = {
+    turns: Array.from({ length: roundsFor(s, 'describe') }, (_, i) => ({
+      index: i + 1,
+      describer: (s.seed + i) % 2 === 0 ? 'A' : 'B',
+      got: [],
+      skipped: [],
+    })),
+    current: 0,
+    deck,
+    next: 0,
+  }
+  s.phase = 'DESCRIBE_READY'
+  s.phaseEndsAt = now + DURATIONS.DESCRIBE_READY!
+  return s
+}
+
+const currentDescribe = (g: DescribeGame) => g.turns[g.current]
+export const describeWord = (g: DescribeGame) => g.deck[g.next % g.deck.length]
+
+function afterDescribeTurn(state: SessionState, now: number): SessionState {
+  const g = state.describe!
+  if (g.current >= g.turns.length - 1) return toScoreboard(state, 'DESCRIBE_RESULT')
+  const s = clone(state)
+  s.describe!.current += 1
+  s.phase = 'DESCRIBE_READY'
+  s.phaseEndsAt = now + DURATIONS.DESCRIBE_READY!
+  return s
+}
+
 // ---------------------------------------------------------------- Word Chain
 
 // Every round is dealt up front — its category, its answer list and the app's opening
@@ -1095,6 +1131,17 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       words[action.player] = word
       return words.A !== null && words.B !== null ? toMeldReveal(s, now) : s
     }
+    case 'DESCRIBE_GOT':
+    case 'DESCRIBE_SKIP': {
+      if (state.phase !== 'DESCRIBE_RUN' || !state.describe) return state
+      if (currentDescribe(state.describe).describer !== action.player) return state
+      const s = clone(state)
+      const g = s.describe!
+      const turn = currentDescribe(g)
+      ;(action.type === 'DESCRIBE_GOT' ? turn.got : turn.skipped).push(describeWord(g))
+      g.next += 1
+      return s
+    }
     case 'CHAIN_WORD': {
       if (state.phase !== 'CHAIN_TURN' || !state.chain) return state
       const live = state.chain.rounds[state.chain.current]
@@ -1194,6 +1241,13 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         }
         case 'CHAIN_END': return advanceChain(state, now)
         // Only what came in gets guessed at; anyone whose three never came is skipped.
+        case 'DESCRIBE_READY': {
+          const s = clone(state)
+          s.phase = 'DESCRIBE_RUN'
+          s.phaseEndsAt = now + DURATIONS.DESCRIBE_RUN!
+          return s
+        }
+        case 'DESCRIBE_RUN': return afterDescribeTurn(state, now)
         case 'MELD_WRITE': return toMeldReveal(state, now)
         case 'MELD_REVEAL': return advanceMeld(state, now)
         case 'BLUFF_WRITE': return nextBluffStep(state, now)

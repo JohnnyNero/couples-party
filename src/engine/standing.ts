@@ -256,6 +256,8 @@ export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   finger: { you: 1.3, us: 1.3 },
   // Mind Meld, per prompt: team only — 3 for meeting first time, 2 second, 1 third.
   meld: { you: 0, us: 1.45 },
+  // Describe It, per turn: every word got — to the describer, and to the team.
+  describe: { you: 6, us: 6 },
 }
 
 export type Scale = { you: number; us: number }
@@ -356,6 +358,13 @@ function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'cl
       for (const round of s.finger?.rounds ?? []) {
         for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: fingerRoundPoints(round, p) })
         us.push(fingerTeamRaw(round))
+      }
+      break
+    case 'describe':
+      for (const turn of s.describe?.turns ?? []) {
+        if (turn.got.length === 0) continue
+        you.push({ player: turn.describer, points: turn.got.length })
+        us.push(turn.got.length)
       }
       break
     case 'meld':

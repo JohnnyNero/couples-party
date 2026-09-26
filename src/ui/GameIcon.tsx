@@ -65,6 +65,12 @@ const GLYPHS: Record<GameKey, ReactElement> = {
       {P('m15 12 2.2 2.2L21 10')}
     </>
   ),
+  describe: (
+    <>
+      {P('M4 6h11v8H9l-3 3v-3H4z')}
+      {P('M17 9h3v7h-2v2.5L15.5 16H11')}
+    </>
+  ),
   meld: (
     <>
       <circle cx="9" cy="12" r="6" />
@@ -98,6 +104,7 @@ const TONES: Record<GameKey, string> = {
   chain: 'bg-tan-soft text-tan-ink',
   bluff: 'bg-sage-soft text-sage-ink',
   meld: 'bg-tan-soft text-tan-ink',
+  describe: 'bg-pb-soft text-pb-ink',
   circle: 'bg-pa-soft text-pa-ink',
   clock: 'bg-pa-soft text-pa-ink',
   lights: 'bg-fg text-bg',

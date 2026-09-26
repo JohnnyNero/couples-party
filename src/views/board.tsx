@@ -1,3 +1,4 @@
+import { ScreenDescribeReady, ScreenDescribeRun } from '../screen/phases/ScreenDescribe'
 import { ScreenMeldReveal, ScreenMeldWrite } from '../screen/phases/ScreenMeld'
 import { HomeButton } from './HomeButton'
 import { ScreenBluffPick, ScreenBluffReveal, ScreenBluffWrite } from '../screen/phases/ScreenBluff'
@@ -62,6 +63,10 @@ export function railText(s: SessionState): string {
     const f = s[key]
     if (!f || f.bestOf === 1) return label
     return `${label} · Round ${f.current + 1} · best of ${f.bestOf}`
+  }
+  if (key === 'describe') {
+    const g = s.describe
+    return g ? `${label} · Turn ${g.current + 1} of ${g.turns.length}` : label
   }
   // Clues and drawings go in pairs, one each: a round is a pair.
   if (key === 'wave' || key === 'draw') {
@@ -159,6 +164,12 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenMeldReveal s={s} />
     case 'MELD_RESULT':
       return <Scoreboard s={s} title="Mind Meld · done" />
+    case 'DESCRIBE_READY':
+      return <ScreenDescribeReady s={s} />
+    case 'DESCRIBE_RUN':
+      return <ScreenDescribeRun s={s} />
+    case 'DESCRIBE_RESULT':
+      return <Scoreboard s={s} title="Describe It · done" />
     case 'CIRCLE_DRAW':
       return <ScreenCircleDraw s={s} />
     case 'CIRCLE_REVEAL':

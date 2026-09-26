@@ -23,6 +23,7 @@ export function phaseKey(s: SessionState): string {
     s.chain?.current ?? 0,
     s.chain ? s.chain.rounds[s.chain.current].chain.length : 0,
     s.bluff?.current ?? 0,
+    s.describe?.current ?? 0,
     s.meld ? `${s.meld.current}.${s.meld.rounds[s.meld.current].tries.length}` : '',
     s.bluff ? s.bluff.rounds[s.bluff.current].turn : '',
     s.circle?.current ?? 0,

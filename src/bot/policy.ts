@@ -155,6 +155,13 @@ export function nextBotAction(
       return { type: 'SUBMIT_BLUFF', player: me, truth: pickFrom(rng, brain.nouns), lies: [pickFrom(rng, brain.nouns), pickFrom(rng, brain.nouns)] }
     }
 
+    case 'DESCRIBE_RUN': {
+      const g = s.describe
+      if (!g || g.turns[g.current].describer !== me) return null
+      // Gets most of them, passes on the odd one.
+      return { type: rng() < 0.75 ? 'DESCRIBE_GOT' : 'DESCRIBE_SKIP', player: me }
+    }
+
     case 'MELD_WRITE': {
       const g = s.meld
       if (!g) return null
@@ -212,6 +219,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'BLUFF_WRITE': return spread(15000, 40000)
     case 'BLUFF_PICK': return spread(3000, 9000)
     case 'MELD_WRITE': return spread(3000, 10000)
+    case 'DESCRIBE_RUN': return spread(3500, 9000)
     case 'CIRCLE_DRAW': return spread(2000, 6000)
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {

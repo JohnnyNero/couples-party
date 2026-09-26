@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -24,6 +24,7 @@ export type Phase =
   | 'CHAIN_TURN' | 'CHAIN_END' | 'CHAIN_RESULT'
   | 'BLUFF_WRITE' | 'BLUFF_PICK' | 'BLUFF_REVEAL' | 'BLUFF_RESULT'
   | 'MELD_WRITE' | 'MELD_REVEAL' | 'MELD_RESULT'
+  | 'DESCRIBE_READY' | 'DESCRIBE_RUN' | 'DESCRIBE_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
@@ -198,6 +199,22 @@ export type MeldRound = {
 }
 export type MeldGame = { rounds: MeldRound[]; current: number }
 
+// Describe It: one of you gets a word on your phone and describes it out loud without
+// saying it; the other shouts guesses. "Got it" or "Skip", against the clock, then swap.
+// Words come off one shared shuffled deck, so nothing comes up twice in a game.
+export type DescribeTurn = {
+  index: number // 1-based
+  describer: PlayerId
+  got: string[]
+  skipped: string[]
+}
+export type DescribeGame = {
+  turns: DescribeTurn[]
+  current: number
+  deck: string[]
+  next: number // the word on the describer's screen: deck[next]
+}
+
 // Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
 // the round. Only the longest stroke is kept — that's the circle; the rest is noise.
 export type CircleRound = {
@@ -249,6 +266,7 @@ export type Content = {
   chainCategories: ChainCategory[]
   bluffPrompts: string[]
   meldPrompts: string[]
+  describeWords: string[]
   // The couple's own cards (Our questions), by their text — a Wavelength scale as
   // "Low | High". Already in the pools above; this only says which to deal first.
   ours?: string[]
@@ -271,6 +289,7 @@ export type SessionState = {
   chain: ChainGame | null
   bluff: BluffGame | null
   meld: MeldGame | null
+  describe: DescribeGame | null
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
@@ -328,6 +347,9 @@ export type Action =
   | { type: 'PICK_BLUFF'; player: PlayerId; choice: number }
   // Mind Meld: your word for this try.
   | { type: 'SUBMIT_MELD'; player: PlayerId; word: string }
+  // Describe It: the describer's taps — they guessed it, or pass on this one.
+  | { type: 'DESCRIBE_GOT'; player: PlayerId }
+  | { type: 'DESCRIBE_SKIP'; player: PlayerId }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -353,6 +375,7 @@ export const EMPTY_CONTENT: Content = {
   chainCategories: [],
   bluffPrompts: [],
   meldPrompts: [],
+  describeWords: [],
 }
 
 export function initialState(
@@ -378,6 +401,7 @@ export function initialState(
     chain: null,
     bluff: null,
     meld: null,
+    describe: null,
     circle: null,
     clock: null,
     decider: null,

@@ -24,6 +24,8 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   BLUFF_PICK: 30000,  // three to choose from
   MELD_WRITE: 30000,  // one word
   MELD_REVEAL: 5000,  // the two words side by side
+  DESCRIBE_READY: 5000, // who's describing — get the phone in hand
+  DESCRIBE_RUN: 45000,  // as many as you can
   CHAIN_END: 7000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
   CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
   CIRCLE_REVEAL: 6000,

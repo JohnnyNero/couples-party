@@ -8,7 +8,7 @@ import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
 export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[]; eitherPairs: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | 'meld' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -28,6 +28,7 @@ function sectionFor(heading: string): Section {
     case 'word chain': return 'chain'
     case 'two lies & a truth': case 'two lies and a truth': return 'bluff'
     case 'mind meld': return 'meld'
+    case 'describe it': return 'describe'
     default: return null
   }
 }
@@ -46,6 +47,7 @@ export function parseContent(text: string): ParsedContent {
   const clashCategories: string[] = []
   const bluffPrompts: string[] = []
   const meldPrompts: string[] = []
+  const describeWords: string[] = []
   const chainCategories: ChainCategory[] = []
   let currentChain: ChainCategory | null = null
 
@@ -126,6 +128,9 @@ export function parseContent(text: string): ParsedContent {
       case 'meld':
         meldPrompts.push(item)
         break
+      case 'describe':
+        describeWords.push(item)
+        break
       case 'chain':
         currentChain?.words.push(item)
         break
@@ -134,6 +139,6 @@ export function parseContent(text: string): ParsedContent {
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories, bluffPrompts, meldPrompts,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories, bluffPrompts, meldPrompts, describeWords,
   }
 }

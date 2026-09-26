@@ -23,6 +23,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     { key: 'draw', rounds: 6 },
     { key: 'bluff', rounds: 3 },
     { key: 'meld', rounds: 4 },
+    { key: 'describe', rounds: 2 }, // one turn each
     { key: 'lights', rounds: 1 },
   ],
   // Tonight rotates — see tonight() below; this entry is never read.
@@ -38,6 +39,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   chain: [{ key: 'chain', rounds: 4 }],
   bluff: [{ key: 'bluff', rounds: 3 }],
   meld: [{ key: 'meld', rounds: 5 }],
+  describe: [{ key: 'describe', rounds: 4 }],
   // A filler on its own is a best of 5.
   circle: [{ key: 'circle', rounds: 5 }],
   clock: [{ key: 'clock', rounds: 5 }],
@@ -57,6 +59,7 @@ const TONIGHT_POOL: RosterEntry[] = [
   { key: 'chain', rounds: 2 },
   { key: 'bluff', rounds: 1 }, // one each
   { key: 'meld', rounds: 2 },
+  { key: 'describe', rounds: 2 },
 ]
 
 // One quick filler after the second game, Stop the Clock and Perfect Circle in turn.
@@ -108,6 +111,7 @@ export function gameOfPhase(phase: Phase): GameKey | null {
   if (phase.startsWith('CHAIN_')) return 'chain'
   if (phase.startsWith('BLUFF_')) return 'bluff'
   if (phase.startsWith('MELD_')) return 'meld'
+  if (phase.startsWith('DESCRIBE_')) return 'describe'
   if (phase.startsWith('CIRCLE_')) return 'circle'
   if (phase.startsWith('CLOCK_')) return 'clock'
   if (phase === 'LIGHTS_OUT') return 'lights'
@@ -125,6 +129,7 @@ export const GAME_LABELS: Record<GameKey, string> = {
   chain: 'Word Chain',
   bluff: 'Two Lies & a Truth',
   meld: 'Mind Meld',
+  describe: 'Describe It',
   circle: 'Perfect Circle',
   clock: 'Stop the Clock',
   lights: 'Lights Out',
