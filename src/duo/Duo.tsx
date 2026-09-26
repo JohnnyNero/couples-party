@@ -5,6 +5,7 @@ import type { SessionState } from '../engine/state'
 import { useSession, useMyPlayerId } from '../net'
 import { screenKey } from '../views/phaseKey'
 import { slide } from '../ui/transition'
+import { useActivitySender } from '../views/useActivitySender'
 import { BoardStage } from '../views/board'
 import { Controller } from '../views/controller'
 import { GameHeader } from '../views/GameHeader'
@@ -73,6 +74,7 @@ export function Duo() {
   const debug = new URLSearchParams(location.search).get('debug') === '1'
   const bot = resolveBot(location.search) || resolveMode(location.search) === 'solo'
   useRecordSession(live)
+  useActivitySender(screenKey(s))
   if (!me) return <PlayWaiting label="Connecting…" />
   if (s.paused?.away) return <AwayScreen s={s} />
   // The night's last card is dark and full-bleed: no header, no padding.

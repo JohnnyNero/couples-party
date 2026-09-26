@@ -115,6 +115,7 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
           onPointerMove={move}
           onPointerUp={end}
           onPointerCancel={end}
+          data-activity="drawing"
           className={`w-full ${CANVAS_ASPECT} ${PAPER} touch-none relative`}
         >
           <DrawingStrokes strokes={strokes} />

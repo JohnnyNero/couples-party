@@ -8,6 +8,7 @@ import { aLetter, rejectText } from '../../views/chain'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { btnAccent, eyebrow, field } from '../../ui/styles'
+import { TypingDots, useDoing } from '../../ui/kit'
 
 // Your turn: one box, the letter you need, and the clock. A word that doesn't pass
 // comes back with the reason and stays in the box to fix — the clock doesn't wait.
@@ -15,6 +16,8 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
   const g = s.chain!
   const round = g.rounds[g.current]
   const mine = round.turn === me
+  // On their turn: whether they're typing their word right now.
+  const theirDoing = useDoing(s, round.turn)
   const [word, setWord] = useState('')
   const send = () => {
     if (word.trim()) dispatch({ type: 'CHAIN_WORD', player: me, word })
@@ -68,8 +71,11 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
       ) : (
         <div className="pb-10 text-center">
           <div className="flex items-center justify-center gap-2 font-display text-2xl font-extrabold text-fg/70">
-            <Avatar p={round.turn} name={playerName(s, round.turn)} size="md" className="animate-pulse" />
+            <span className="animate-breathe"><Avatar p={round.turn} name={playerName(s, round.turn)} size="md" /></span>
             {playerName(s, round.turn)} needs {aLetter(round.need)}
+          </div>
+          <div className={'mt-1 h-5 inline-flex items-center gap-1.5 text-sm font-extrabold ' + inkOf(round.turn) + (theirDoing ? '' : ' invisible')}>
+            {theirDoing ?? ''}<TypingDots />
           </div>
           {reject && <div className="mt-2 text-sm font-bold text-fg/50">{rejectText(reject, round.need, round.category)}</div>}
         </div>

@@ -3,6 +3,28 @@ import type { PlayerId, SessionState } from '../engine/state'
 import { Avatar, inkOf } from './Avatar'
 import { card, eyebrow } from './styles'
 import { playerName } from '../views/list'
+import { useActivity, type ActivityKind } from '../net'
+import { screenKey } from '../views/phaseKey'
+
+// Three dots, hopping in turn: someone's in the middle of something.
+export function TypingDots({ className = '' }: { className?: string }) {
+  return (
+    <span className={'inline-flex items-end gap-[3px] ' + className} aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="w-[5px] h-[5px] rounded-full bg-current animate-hop" style={{ animationDelay: `${i * 160}ms` }} />
+      ))}
+    </span>
+  )
+}
+
+const DOING: Record<ActivityKind, string> = { typing: 'typing', drawing: 'drawing', deciding: 'deciding', thinking: 'thinking' }
+
+// What one of you is doing right now, on this screen (see useActivitySender) — "typing",
+// "drawing" — or null when they're not mid-anything.
+export function useDoing(s: SessionState, p: PlayerId): string | null {
+  const kind = useActivity(p, screenKey(s))
+  return kind ? DOING[kind] : null
+}
 
 // The question or statement a round is about, as a card: a small line over it, then the
 // words big. `size` steps down for long prompts on a phone.
@@ -20,11 +42,12 @@ export function PromptCard({ over, children, size = 'lg', className = '' }: { ov
 // Who's answered, as the two of you: a faded avatar until you're in, then a tick.
 // `waiting` names what each is doing until then ("predicts", "drawing…").
 export function WhoIsIn({ s, done, big = false, waiting }: { s: SessionState; done: Record<PlayerId, boolean>; big?: boolean; waiting?: (p: PlayerId) => string }) {
+  const doing = { A: useDoing(s, 'A'), B: useDoing(s, 'B') }
   return (
     <div className={'flex justify-center ' + (big ? 'gap-10' : 'gap-6')}>
       {(['A', 'B'] as PlayerId[]).map((p) => (
-        <span key={p} className={'flex items-center gap-2 font-bold transition-opacity ' + (big ? 'text-xl ' : 'text-sm ') + (done[p] ? '' : 'opacity-40')}>
-          <span className="relative">
+        <span key={p} className={'flex items-center gap-2 font-bold transition-opacity ' + (big ? 'text-xl ' : 'text-sm ') + (done[p] ? '' : doing[p] ? 'opacity-80' : 'opacity-40')}>
+          <span className={'relative ' + (done[p] ? '' : 'animate-breathe')}>
             <Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} />
             {done[p] && (
               <span className="absolute -right-1 -bottom-1 w-4 h-4 rounded-full bg-fg border-2 border-bg inline-flex items-center justify-center animate-pop">
@@ -32,7 +55,9 @@ export function WhoIsIn({ s, done, big = false, waiting }: { s: SessionState; do
               </span>
             )}
           </span>
-          <span className={done[p] ? inkOf(p) : ''}>{done[p] ? 'In' : waiting ? waiting(p) : 'Thinking…'}</span>
+          <span className={'inline-flex items-center gap-1.5 ' + (done[p] ? inkOf(p) : '')}>
+            {done[p] ? 'In' : doing[p] ? <>{doing[p]![0].toUpperCase() + doing[p]!.slice(1)}<TypingDots /></> : waiting ? waiting(p) : 'Thinking…'}
+          </span>
         </span>
       ))}
     </div>
@@ -60,13 +85,27 @@ export function Hand({ fingers, p, total = 5, big = false }: { fingers: number; 
 }
 
 // A soft full-screen "hang on" — for a phone with nothing to do this moment.
-export function Waiting({ title, sub }: { title: string; sub?: string }) {
+// With `them` (who you're waiting on, when there is someone): their avatar, breathing,
+// and a bubble with what they're doing right now — "Alex is typing…".
+export function Waiting({ title, sub, them }: { title: string; sub?: string; them?: { p: PlayerId; name: string; doing: string | null } | null }) {
   return (
     <div className="h-full flex flex-col items-center justify-center gap-3 p-8 text-center">
-      <div className="flex gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-pa animate-pulse" />
-        <span className="w-2.5 h-2.5 rounded-full bg-pb animate-pulse [animation-delay:200ms]" />
-      </div>
+      {them ? (
+        <div className="flex flex-col items-center gap-2 mb-1">
+          <span className="animate-breathe"><Avatar p={them.p} name={them.name} size="lg" /></span>
+          <span
+            key={them.doing ?? 'still'}
+            className={'inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-extrabold animate-pop ' + (them.doing ? (them.p === 'A' ? 'bg-pa-soft ' : 'bg-pb-soft ') + inkOf(them.p) : 'invisible')}
+          >
+            {them.doing ? <>{them.name} is {them.doing}<TypingDots /></> : '·'}
+          </span>
+        </div>
+      ) : (
+        <div className="flex gap-1.5 h-4 items-end">
+          <span className="w-2.5 h-2.5 rounded-full bg-pa animate-hop" />
+          <span className="w-2.5 h-2.5 rounded-full bg-pb animate-hop [animation-delay:160ms]" />
+        </div>
+      )}
       <div className="font-display text-2xl font-bold leading-tight">{title}</div>
       {sub && <div className="text-sm text-fg/60">{sub}</div>}
     </div>
@@ -88,10 +127,11 @@ export function Said({ s, p, children, big = false }: { s: SessionState; p: Play
 // One of you, busy: their avatar and what they're up to ("Guessing…"), or done.
 export function Doing({ s, p, finished, busy, done, big = false }: { s: SessionState; p: PlayerId; finished: boolean; busy: string; done: string; big?: boolean }) {
   const isDone = finished
+  const doing = useDoing(s, p)
   return (
     <div className={'flex items-center justify-center gap-2 font-bold ' + (big ? 'text-xl' : 'text-base') + (isDone ? ' ' + inkOf(p) : ' text-fg/60')}>
-      <Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} className={isDone ? '' : 'animate-pulse'} />
-      {isDone ? done : busy}
+      <span className={isDone ? '' : 'animate-breathe'}><Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} /></span>
+      {isDone ? done : doing ? <span className="inline-flex items-center gap-1.5">{playerName(s, p)} is {doing}<TypingDots /></span> : busy}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { localDate } from './dates'
 import { numbersOfTheDay } from './numbers'
 import type { useDailyNumbers } from './useDaily'
 import { loadNumberQuestions } from '../packs'
+import { Loading } from '../ui/Loading'
 
 export type NumbersScreen =
   | { kind: 'play'; puzzle: NumbersView; partner: string }
@@ -26,7 +27,7 @@ export function NumbersCard({
   useEffect(() => { void loadNumberQuestions().then(setPool) }, [])
 
   if (status.kind === 'loading') {
-    return <Card title="Their Numbers"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Their Numbers"><Loading className="h-24" /></Card>
   }
   if (status.kind === 'error') {
     if (status.error.kind === 'setup') return null // Their Word already says so
@@ -46,7 +47,7 @@ export function NumbersCard({
   const { partner, mine, theirs } = d
   const questions = d.questions ?? numbersOfTheDay(localDate(), pool)
   if (!questions) {
-    return <Card title="Their Numbers"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Their Numbers"><Loading className="h-24" /></Card>
   }
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 

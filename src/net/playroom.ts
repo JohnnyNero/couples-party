@@ -20,7 +20,7 @@ import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
 import { dayIndex, localDate } from '../daily/dates'
-import type { Live } from './live'
+import type { Activity, Live } from './live'
 
 const SESSION_KEY = 'session'
 // What one of you is doing right now, for the other to watch — a slider mid-drag, a
@@ -154,6 +154,19 @@ export function setLive(value: Live | null): void {
 export function useLive(): Live | null {
   const [live] = useMultiplayerState<Live | null>(LIVE_KEY, null)
   return live
+}
+
+// Each seat writes only its own activity, so the two never overwrite each other.
+const activityKey = (p: PlayerId) => `activity:${p}`
+
+export function setActivity(value: Activity | null, seatOverride?: PlayerId): void {
+  const seatOf = seatOverride ?? ((getState(SEATS_KEY) as Seats | undefined) ?? {})[myPlayer()?.id ?? '']
+  if (seatOf) setState(activityKey(seatOf), value, false)
+}
+
+export function useActivity(p: PlayerId): Activity | null {
+  const [value] = useMultiplayerState<Activity | null>(activityKey(p), null)
+  return value
 }
 
 export function dispatch(action: Action): void {

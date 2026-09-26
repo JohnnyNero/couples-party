@@ -7,6 +7,7 @@ import { QuestionSpin } from './Spin'
 import type { useDailyDial } from './useDaily'
 import { loadPacks } from '../packs'
 import type { WaveSpectrum } from '../engine/state'
+import { Loading } from '../ui/Loading'
 
 export type DialScreen =
   | { kind: 'play'; puzzle: DialView; partner: string; spectrum: string }
@@ -30,7 +31,7 @@ export function DialCard({
   useEffect(() => { void loadPacks().then((c) => setSpectrums(c.spectrums)) }, [])
 
   if (status.kind === 'loading') {
-    return <Card title="The Dial"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="The Dial"><Loading className="h-24" /></Card>
   }
   if (status.kind === 'error') {
     // Their Word already explains a setup problem on the same tab — a second copy of
@@ -57,7 +58,7 @@ export function DialCard({
   const picked = dialOfTheDay(localDate(), spectrums)
   const spectrum = d.prompt ?? (picked ? spectrumPrompt(picked) : null)
   if (!spectrum) {
-    return <Card title="The Dial"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="The Dial"><Loading className="h-24" /></Card>
   }
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
 

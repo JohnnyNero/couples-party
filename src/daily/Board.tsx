@@ -38,6 +38,7 @@ import { loadEitherPairs, loadNumberQuestions, loadPacks, loadWordPrompts } from
 import type { Content } from '../engine/state'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at, useFirstTime } from '../ui/fx'
+import { Loading } from '../ui/Loading'
 
 // The Today board: a scoreboard, then all six daily puzzles as tiles. Each tile is
 // the same two steps — solve the one your partner set you for today, then set one for
@@ -81,7 +82,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   useEffect(() => { if (pairState) void refreshProfile() }, [pairState])
 
   if (status.kind === 'loading') {
-    return <div className="h-40 grid place-items-center text-fg/30 animate-pulse">…</div>
+    return <Loading className="h-40" />
   }
   if (status.kind === 'error') {
     // The server doesn't have board() yet (migration 0010) — the one-a-day slot still works.
@@ -499,7 +500,7 @@ function SetScreen({ kind, forDate, partner, me, pools, ourWords, onClose }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!p) return <div className="h-full grid place-items-center text-fg/30 animate-pulse">…</div>
+  if (!p) return <Loading className="h-full" />
   switch (kind) {
     case 'word': {
       const template = p.prompt ?? ''

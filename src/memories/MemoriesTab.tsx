@@ -10,6 +10,7 @@ import type { PlayerId } from '../engine/state'
 import type { SessionMemory } from './summary'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { card, eyebrow } from '../ui/styles'
+import { Loading } from '../ui/Loading'
 
 // Everything you've played together, newest first: each night's session, and the daily
 // puzzles under the day they were for. Nothing here is new data — the sessions are what
@@ -34,7 +35,7 @@ export function MemoriesTab() {
   }, [])
   useEffect(load, [load])
 
-  if (status.kind === 'loading') return <div className="h-40 grid place-items-center text-fg/30 animate-pulse">…</div>
+  if (status.kind === 'loading') return <Loading className="h-40" />
   if (status.kind === 'error') {
     return (
       <Empty>

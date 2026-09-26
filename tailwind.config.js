@@ -160,6 +160,21 @@ export default {
           '50%': { transform: 'scale(0.96, 1.06) rotate(2deg)' },
           '75%': { transform: 'scale(1.05, 0.97) rotate(-1deg)' },
         },
+        // Someone you're waiting on: a slow breath in and out, rather than blinking at you.
+        breathe: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.08)' },
+        },
+        // Typing dots, each hopping in turn.
+        hop: {
+          '0%, 60%, 100%': { transform: 'translateY(0)', opacity: '0.45' },
+          '30%': { transform: 'translateY(-4px)', opacity: '1' },
+        },
+        // A placeholder while something loads: a sheen passing across it.
+        shimmer: {
+          '0%': { backgroundPosition: '100% 0' },
+          '100%': { backgroundPosition: '-100% 0' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',
@@ -179,6 +194,9 @@ export default {
         stamp: 'stamp 620ms cubic-bezier(0.2,0.8,0.3,1) both',
         flare: 'flare 900ms ease-out both',
         flicker: 'flicker 1.6s ease-in-out infinite',
+        breathe: 'breathe 2.6s ease-in-out infinite',
+        hop: 'hop 1.1s ease-in-out infinite',
+        shimmer: 'shimmer 1.4s linear infinite',
       },
     },
   },

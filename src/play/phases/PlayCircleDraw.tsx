@@ -80,6 +80,7 @@ export function PlayCircleDraw({ s, me }: { s: SessionState; me: PlayerId }) {
           onPointerUp={end}
           onPointerCancel={end}
           style={{ width: 'min(100cqw, 100cqh)', height: 'min(100cqw, 100cqh)' }}
+          data-activity="drawing"
           className={'bg-card border-2 border-fg rounded-3xl touch-none overflow-hidden shadow-[4px_4px_0_rgba(0,0,0,0.12)] ' + inkOf(me)}
         >
           <DrawingStrokes strokes={stroke.length ? [stroke] : []} />

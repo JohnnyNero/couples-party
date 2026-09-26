@@ -7,6 +7,7 @@ import { QuestionSpin } from './Spin'
 import type { useDailySketch } from './useDaily'
 import { loadPacks } from '../packs'
 import type { DrawPrompt } from '../engine/state'
+import { Loading } from '../ui/Loading'
 
 export type SketchScreen =
   | { kind: 'play'; puzzle: SketchView; partner: string; prompt: string }
@@ -33,7 +34,7 @@ export function SketchCard({
   useEffect(() => { void loadPacks().then((c) => setPool(c.drawPrompts)) }, [])
 
   if (status.kind === 'loading') {
-    return <Card title="Sketch"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Sketch"><Loading className="h-24" /></Card>
   }
   if (status.kind === 'error') {
     if (status.error.kind === 'setup') return null // Their Word already says so
@@ -53,7 +54,7 @@ export function SketchCard({
   const { partner, mine, theirs: theirsRaw } = d
   const prompt = d.prompt ?? sketchOfTheDay(localDate(), pool)
   if (!prompt) {
-    return <Card title="Sketch"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Sketch"><Loading className="h-24" /></Card>
   }
   const theirsOpen = theirsRaw && !('locked' in theirsRaw) ? theirsRaw : null
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerId, SessionState } from '../engine/state'
 import { currentAct } from '../engine/list'
-import { dispatch, getIsHost, useSession } from '../net'
+import { dispatch, getIsHost, setActivity, useSession, type ActivityKind } from '../net'
+import { screenKey } from '../views/phaseKey'
 import { BRAIN } from './brain'
 import { botDelay, nextBotAction } from './policy'
 
@@ -50,15 +51,27 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
     }
     const wait = botDelay(latest.current, Math.random)
     setPending(`${s.phase.toLowerCase()} · ${Math.round(wait / 1000)}s`)
+    // Busy where a person would be — typing, drawing — for the second half of the wait,
+    // so the other phone sees the same "typing…" it would from a partner.
+    const busy = botActivity(latest.current.phase)
+    const start = busy ? setTimeout(() => setActivity({ kind: busy, key: screenKey(latest.current) }, id), wait / 2) : null
     const timer = setTimeout(() => {
       const action = nextBotAction(latest.current, id, BRAIN, Math.random)
+      setActivity(null, id)
       if (action) dispatch(action, { quiet: true })
       setPending(null)
     }, wait)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); if (start) clearTimeout(start) }
   }, [key, id])
 
   return <Badge label={`${id} · ${pending ?? 'idle'}`} />
+}
+
+function botActivity(phase: SessionState['phase']): ActivityKind | null {
+  if (/WRITE|ANSWER|CLUE|GUESS|CHAIN_TURN|MM_/.test(phase)) return phase === 'WAVE_GUESS' ? 'deciding' : 'typing'
+  if (phase === 'DRAW_SKETCH' || phase === 'CIRCLE_DRAW') return 'drawing'
+  if (/ROUND|PICK|PLACE/.test(phase)) return 'thinking'
+  return null
 }
 
 function Badge({ label }: { label: string }) {

@@ -18,7 +18,7 @@ export function AwayScreen({ s }: { s: SessionState }) {
     <div className="h-full w-full flex flex-col items-center justify-center gap-5 p-8 text-center animate-fade-up">
       <div className="flex -space-x-2">
         {gone.length > 0
-          ? gone.map((p) => <Avatar key={p} p={p} name={playerName(s, p)} size="md" className="animate-pulse" />)
+          ? gone.map((p) => <span key={p} className="animate-breathe"><Avatar p={p} name={playerName(s, p)} size="md" /></span>)
           : <Logo className="w-16 animate-pulse" />}
       </div>
       <div className="font-display text-3xl font-extrabold leading-tight">
@@ -29,8 +29,8 @@ export function AwayScreen({ s }: { s: SessionState }) {
         you’ll carry on right where you left off.
       </div>
       <div className="flex gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-pa animate-pulse" />
-        <span className="w-2.5 h-2.5 rounded-full bg-pb animate-pulse [animation-delay:200ms]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-pa animate-hop" />
+        <span className="w-2.5 h-2.5 rounded-full bg-pb animate-hop [animation-delay:160ms]" />
       </div>
       {me && (
         <button className={btnOutline + ' !w-auto px-8 mt-2'} onClick={() => leaveTo(window.location.pathname)}>

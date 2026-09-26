@@ -67,6 +67,7 @@ export function WaveDial({
       <svg
         ref={ref}
         viewBox={`0 0 ${W} 172`}
+        data-activity={onChange ? 'deciding' : undefined}
         className={'w-full select-none ' + (onChange ? 'touch-none cursor-pointer' : '')}
         onPointerDown={(e) => { if (!onChange) return; (e.target as Element).setPointerCapture?.(e.pointerId); read(e) }}
         onPointerMove={(e) => { if (onChange && e.buttons) read(e) }}

@@ -83,7 +83,7 @@ function Seat({ s, p }: { s: SessionState; p: PlayerId }) {
           </span>
         </span>
       ) : (
-        <span className={'w-24 h-24 rounded-full border-[3px] border-dashed animate-pulse ' + (p === 'A' ? 'border-pa bg-pa-soft' : 'border-pb bg-pb-soft')} />
+        <span className={'w-24 h-24 rounded-full border-[3px] border-dashed animate-breathe ' + (p === 'A' ? 'border-pa bg-pa-soft' : 'border-pb bg-pb-soft')} />
       )}
       <span className="font-display text-lg font-bold truncate max-w-full">{pl.name || (pl.connected ? p : '')}</span>
       <span className={'text-xs font-extrabold ' + (pl.connected ? 'text-fg/55' : p === 'A' ? 'text-pa-ink' : 'text-pb-ink')}>

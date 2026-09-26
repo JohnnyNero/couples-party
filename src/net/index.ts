@@ -4,12 +4,12 @@ import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import * as playroom from './playroom'
-import { SOLO_PLAYER, initLocal, localDispatch, setLocalLive, useLocalLive, useLocalSession } from './local'
-import type { Live } from './live'
+import { SOLO_PLAYER, initLocal, localDispatch, setLocalActivity, setLocalLive, useLocalActivity, useLocalLive, useLocalSession } from './local'
+import type { Activity, ActivityKind, Live } from './live'
 import type { Saved } from '../store/progress'
 import { buzz } from '../ui/haptics'
 
-export type { Live }
+export type { Activity, ActivityKind, Live }
 
 // Every client talks to the game through this facade. Solo play runs the reducer in
 // process; two-phone play runs it over Playroom. The choice is made once at boot, before
@@ -67,4 +67,18 @@ export function useMyPlayerId(): PlayerId | null {
 // The authority: the client that owns the timers and runs the bot. Solo is its own.
 export function getIsHost(): boolean {
   return solo || playroom.getIsHost()
+}
+
+// What each of you is up to right now (see live.ts). `seat` is for the bot, which acts
+// for the other chair; everyone else only ever sets their own.
+export function setActivity(value: Activity | null, seat?: PlayerId): void {
+  if (solo) setLocalActivity(seat ?? SOLO_PLAYER, value)
+  else playroom.setActivity(value, seat)
+}
+
+// Theirs (or yours), but only while it's about the screen you're both on.
+export function useActivity(p: PlayerId, screen: string): ActivityKind | null {
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- `solo` is fixed before first render
+  const a = solo ? useLocalActivity(p) : playroom.useActivity(p)
+  return a && a.key === screen ? a.kind : null
 }

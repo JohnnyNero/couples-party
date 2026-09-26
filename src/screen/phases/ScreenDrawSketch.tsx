@@ -20,7 +20,7 @@ export function ScreenDrawSketch({ s }: { s: SessionState }) {
           <div key={r.index} className="flex flex-col gap-2">
             <div className={eyebrow + ' truncate'}>{drawQuestion(s, r, null)}</div>
             <div className={`w-full ${CANVAS_ASPECT} ${PAPER} !border-dashed !border-fg/25 !shadow-none flex flex-col items-center justify-center gap-2`}>
-              <Avatar p={r.drawer} name={playerName(s, r.drawer)} size="md" className={done[r.drawer] ? '' : 'animate-pulse'} />
+              <span className={done[r.drawer] ? '' : 'animate-breathe'}><Avatar p={r.drawer} name={playerName(s, r.drawer)} size="md" /></span>
               <span className="font-bold text-fg/55 text-sm">{done[r.drawer] ? 'Done' : 'Drawing…'}</span>
             </div>
           </div>

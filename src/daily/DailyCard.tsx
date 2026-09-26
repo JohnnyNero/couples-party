@@ -10,6 +10,7 @@ import { TileRow } from './Tiles'
 import type { useDaily } from './useDaily'
 import { MAX_GUESSES } from './wordle'
 import { loadWordPrompts } from '../packs'
+import { Loading } from '../ui/Loading'
 
 export type DailyScreen =
   | { kind: 'play'; puzzle: PuzzleView; partner: string; question: string; mine: string | null }
@@ -31,7 +32,7 @@ export function DailyCard({
   useEffect(() => { void loadWordPrompts().then(setPool) }, [])
 
   if (status.kind === 'loading') {
-    return <Card title="Their Word"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Their Word"><Loading className="h-24" /></Card>
   }
   if (status.kind === 'error') {
     return (
@@ -71,7 +72,7 @@ export function DailyCard({
   // day's pick from the pool — the same on both phones.
   const template = d.question ?? questionOfTheDay(localDate(), pool)
   if (!template) {
-    return <Card title="Their Word"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Their Word"><Loading className="h-24" /></Card>
   }
   const question = renderQuestion(template, partner)
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null

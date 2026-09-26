@@ -3,7 +3,7 @@ import type { Action, Content, Game, PlayerId, SessionState } from '../engine/st
 import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { dayIndex, localDate } from '../daily/dates'
-import type { Live } from './live'
+import type { Activity, Live } from './live'
 
 // Solo transport: one process, no room, no lobby, no network. The reducer, the timer
 // loop and the clock work exactly as they do over Playroom — this only removes the wire.
@@ -65,4 +65,20 @@ function subscribe(listener: () => void): () => void {
 
 export function useLocalSession(): SessionState {
   return useSyncExternalStore(subscribe, () => state, () => state)
+}
+
+// Solo: yours, and the bot's (which says it's thinking while it makes up its mind).
+const activity: Record<PlayerId, Activity | null> = { A: null, B: null }
+const activityListeners = new Set<() => void>()
+export function setLocalActivity(p: PlayerId, value: Activity | null): void {
+  if (activity[p]?.kind === value?.kind && activity[p]?.key === value?.key) return
+  activity[p] = value
+  for (const l of activityListeners) l()
+}
+export function useLocalActivity(p: PlayerId): Activity | null {
+  return useSyncExternalStore(
+    (l) => { activityListeners.add(l); return () => { activityListeners.delete(l) } },
+    () => activity[p],
+    () => activity[p],
+  )
 }

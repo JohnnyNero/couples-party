@@ -8,6 +8,7 @@ import { fiveify, itemsOfTheDay, themeOfTheDay } from './top5'
 import type { useDailyTop5 } from './useDaily'
 import { loadPacks } from '../packs'
 import type { Theme } from '../engine/state'
+import { Loading } from '../ui/Loading'
 
 export type Top5Screen =
   | { kind: 'play'; puzzle: Top5View; partner: string; theme: string }
@@ -29,7 +30,7 @@ export function Top5Card({
   useEffect(() => { void loadPacks().then((c) => setThemes(c.themes)) }, [])
 
   if (status.kind === 'loading') {
-    return <Card title="Top 5"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Top 5"><Loading className="h-24" /></Card>
   }
   if (status.kind === 'error') {
     // Their Word already explains a setup problem on the same tab.
@@ -51,7 +52,7 @@ export function Top5Card({
   const pickedTheme = themeOfTheDay(localDate(), themes)
   const theme = d.prompt ?? (pickedTheme ? fiveify(renderQuestion(pickedTheme.text, partner)) : null)
   if (!theme || !pickedTheme) {
-    return <Card title="Top 5"><div className="h-24 grid place-items-center text-fg/30 animate-pulse">…</div></Card>
+    return <Card title="Top 5"><Loading className="h-24" /></Card>
   }
   const dayItems = itemsOfTheDay(localDate(), pickedTheme)
   const theirsOpen = theirs && !('locked' in theirs) ? theirs : null
