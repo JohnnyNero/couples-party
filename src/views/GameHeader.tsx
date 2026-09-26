@@ -68,7 +68,7 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
 // The header's scores hold back while a reveal plays, then tick up — a bump, and the
 // points dropping off them — so the header never gives a verdict away before the board
 // has shown it. A new leader gets the crown with a hop.
-const HOLD_MS = 1400
+const HOLD_MS = 2500 // past the slowest verdict (Two Lies, after both lies are crossed off)
 
 type Held = { value: number; gain: number; at: number }
 
