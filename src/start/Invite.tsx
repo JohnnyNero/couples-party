@@ -97,7 +97,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
             </div>
 
             <div className="flex flex-col items-center gap-2">
-              <button onClick={() => picker.current?.click()} aria-label={photo ? 'Change photo' : 'Add a photo'} className="relative rounded-full active:translate-y-px">
+              <button onClick={() => picker.current?.click()} aria-label={photo ? 'Change photo' : 'Add a photo'} className="relative rounded-full press">
                 {photo || name.trim() ? (
                   <Avatar p="A" name={name.trim() || '?'} photo={photo} size="xl" className="!w-28 !h-28 !text-6xl" />
                 ) : (

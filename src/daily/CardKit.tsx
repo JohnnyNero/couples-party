@@ -42,7 +42,7 @@ export function Step({ n, label, children }: { n: number; label: string; childre
 
 export function BigButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button onClick={onClick} className="shrink-0 min-h-[44px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold text-sm active:translate-y-px">
+    <button onClick={onClick} className="shrink-0 min-h-[44px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold text-sm press">
       {children}
     </button>
   )
@@ -50,7 +50,7 @@ export function BigButton({ onClick, children }: { onClick: () => void; children
 
 export function SmallButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button onClick={onClick} className="shrink-0 min-h-[40px] px-3 rounded-xl border-2 border-fg/15 text-fg/60 text-xs font-bold uppercase tracking-widest active:translate-y-px">
+    <button onClick={onClick} className="shrink-0 min-h-[40px] px-3 rounded-xl border-2 border-fg/15 text-fg/60 text-xs font-bold uppercase tracking-widest press">
       {children}
     </button>
   )

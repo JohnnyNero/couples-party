@@ -131,7 +131,7 @@ function ProfileButton() {
   const profile = useProfile()
   const me = profile && profile.state !== 'single' ? profile.me : null
   return (
-    <button onClick={open} aria-label="Profile" className="shrink-0 rounded-full active:translate-y-px">
+    <button onClick={open} aria-label="Profile" className="shrink-0 rounded-full press">
       {me ? (
         <Avatar p="A" name={me.name} size="md" className="!w-10 !h-10" />
       ) : (
@@ -260,7 +260,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
       </div>
       <button
         onClick={onPlay}
-        className="w-full min-h-[52px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold tracking-wide active:translate-y-px"
+        className="w-full min-h-[52px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold tracking-wide press"
       >
         Play tonight
       </button>
@@ -304,7 +304,7 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
         </div>
         <button
           onClick={() => onPick('full')}
-          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
         >
           Play
         </button>
@@ -319,7 +319,7 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
               key={g.key}
               onClick={() => onPick(g.key)}
               className={
-                card + ' text-left p-4 flex active:translate-y-px ' +
+                card + ' text-left p-4 flex press ' +
                 (wide ? 'col-span-2 items-center gap-3' : 'flex-col gap-2')
               }
             >
@@ -340,7 +340,7 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
           <button
             key={g.key}
             onClick={() => onPick(g.key)}
-            className="text-left rounded-3xl border-2 border-dashed border-fg/30 px-4 py-3 flex items-center gap-3 active:translate-y-px"
+            className="text-left rounded-3xl border-2 border-dashed border-fg/30 px-4 py-3 flex items-center gap-3 press"
           >
             <GameGlyph game={g.key} className="w-7 h-7 shrink-0 text-accent-ink" />
             <div className="min-w-0">
@@ -369,7 +369,7 @@ function TabButton({ active, onClick, label, icon }: { active: boolean; onClick:
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={
-        'min-h-[60px] flex flex-col items-center justify-center gap-0.5 text-[0.68rem] uppercase tracking-[0.14em] font-extrabold ' +
+        'press min-h-[60px] flex flex-col items-center justify-center gap-0.5 text-[0.68rem] uppercase tracking-[0.14em] font-extrabold ' +
         (active ? 'text-accent-ink' : 'text-fg/40')
       }
     >

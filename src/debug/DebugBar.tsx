@@ -7,7 +7,7 @@ import { dispatch } from '../net'
 // back half of the session by hand every time is the single biggest tax on iteration,
 // so every phase gets a way past it.
 export function DebugBar({ s }: { s: SessionState }) {
-  const btn = 'px-3 py-1 border border-fg/30 uppercase tracking-wider hover:bg-fg/10 active:translate-y-px'
+  const btn = 'px-3 py-1 border border-fg/30 uppercase tracking-wider hover:bg-fg/10 press'
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[0.7rem] bg-bg/90 border border-fg/20 p-2">
       <button className={btn} onClick={() => dispatch({ type: 'TIMEOUT' })}>skip</button>

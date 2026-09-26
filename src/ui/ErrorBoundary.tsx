@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode; quiet?: bool
         <div className="font-display text-3xl font-extrabold leading-tight">Something went wrong</div>
         <div className="text-fg/60 max-w-xs">Sorry about that. Reloading usually sorts it. If it keeps happening, clear the saved game.</div>
         <button
-          className="min-h-[52px] px-8 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+          className="min-h-[52px] px-8 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
           onClick={() => window.location.replace(window.location.pathname)}
         >
           Reload

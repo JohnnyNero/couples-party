@@ -45,14 +45,14 @@ export function PairStart({ onDone }: { onDone: () => void }) {
           <button
             disabled={busy}
             onClick={() => run(() => api.createCouple(name.trim()))}
-            className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
+            className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold press disabled:opacity-50"
           >
             Start
           </button>
           <button
             disabled={busy}
             onClick={() => { setMode('join'); setError(null) }}
-            className="min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px"
+            className="min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold press"
           >
             I have a code
           </button>
@@ -73,13 +73,13 @@ export function PairStart({ onDone }: { onDone: () => void }) {
             <span className="text-xs text-fg/50">Your partner’s code — or, to use this device as you, a code from Profile on your other one.</span>
           </label>
           <div className="grid grid-cols-[auto_1fr] gap-2">
-            <button onClick={() => setMode('choose')} className="min-h-[52px] px-4 rounded-2xl border-2 border-fg/15 font-bold text-fg/60 active:translate-y-px">
+            <button onClick={() => setMode('choose')} className="min-h-[52px] px-4 rounded-2xl border-2 border-fg/15 font-bold text-fg/60 press">
               Back
             </button>
             <button
               disabled={busy || code.length !== 6}
               onClick={() => run(() => enterCode(code, name.trim()))}
-              className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px disabled:opacity-50"
+              className="min-h-[52px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold press disabled:opacity-50"
             >
               Pair
             </button>
@@ -103,7 +103,7 @@ export function PairWaiting({ code, me, onCancel }: { code: string; me: string; 
   return (
     <div className="flex flex-col items-center gap-3 text-center">
       <div className="text-sm text-fg/65">Send them a link — one tap and you’re paired.</div>
-      <button onClick={share} className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px">
+      <button onClick={share} className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press">
         {copied ? 'Link copied' : 'Send the invite link'}
       </button>
       <div className="mt-2 text-xs font-bold text-fg/45">Or they can tap <b>I have a code</b> and type</div>
@@ -111,7 +111,7 @@ export function PairWaiting({ code, me, onCancel }: { code: string; me: string; 
       <div className="text-sm font-bold text-fg/50 animate-pulse">Waiting for them…</div>
       <button
         onClick={async () => { await api.leaveCouple().catch(() => {}); onCancel() }}
-        className="px-4 min-h-[44px] rounded-2xl font-bold text-fg/50 active:translate-y-px"
+        className="px-4 min-h-[44px] rounded-2xl font-bold text-fg/50 press"
       >
         Cancel
       </button>

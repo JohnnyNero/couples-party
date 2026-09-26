@@ -113,14 +113,14 @@ export function ClashRevealControls({ s, me }: { s: SessionState; me: PlayerId }
       {canChallenge && (
         <button
           onClick={() => dispatch({ type: 'CHALLENGE', player: me, index: i })}
-          className="flex-1 min-h-[52px] rounded-2xl border-2 border-fg bg-card text-base sm:text-lg font-display font-extrabold active:translate-y-px truncate px-2"
+          className="flex-1 min-h-[52px] rounded-2xl border-2 border-fg bg-card text-base sm:text-lg font-display font-extrabold press truncate px-2"
         >
           That doesn’t count
         </button>
       )}
       <button
         onClick={() => dispatch({ type: 'ADVANCE_REVEAL', player: me })}
-        className="flex-1 min-h-[52px] rounded-2xl bg-fg text-bg font-display text-lg sm:text-2xl font-extrabold active:translate-y-px"
+        className="flex-1 min-h-[52px] rounded-2xl bg-fg text-bg font-display text-lg sm:text-2xl font-extrabold press"
       >
         {!lastRow ? 'Next' : lastRound ? 'Done' : 'Next round'}
       </button>

@@ -60,7 +60,7 @@ export function PlayListPlace({ s, me }: { s: SessionState; me: PlayerId }) {
                     ? 'border-fg/10 bg-fg/5 text-fg/70'
                     : placed
                       ? 'border-fg/10 text-fg/25'
-                      : 'border-fg/25 bg-card text-fg active:translate-y-px active:bg-pa-soft active:border-pa')
+                      : 'border-fg/25 bg-card text-fg press active:bg-pa-soft active:border-pa')
               }
             >
               <span

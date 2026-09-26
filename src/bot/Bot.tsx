@@ -52,7 +52,7 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
     setPending(`${s.phase.toLowerCase()} · ${Math.round(wait / 1000)}s`)
     const timer = setTimeout(() => {
       const action = nextBotAction(latest.current, id, BRAIN, Math.random)
-      if (action) dispatch(action)
+      if (action) dispatch(action, { quiet: true })
       setPending(null)
     }, wait)
     return () => clearTimeout(timer)

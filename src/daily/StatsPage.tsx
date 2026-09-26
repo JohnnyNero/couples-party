@@ -13,7 +13,7 @@ export function StatsPage({ d, onClose }: { d: Paired; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-bg flex flex-col enter-fallback">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
-        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
+        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 press">←</button>
         <div>
           <div className={eyebrow}>{d.me} & {d.partner}</div>
           <h1 className="font-display text-2xl font-extrabold leading-tight">Stats</h1>

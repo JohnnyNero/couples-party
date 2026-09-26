@@ -64,7 +64,7 @@ export function ScreenLightsOut({ s }: { s: SessionState }) {
         {me && s.phase === 'LIGHTS_OUT' && (
           <button
             onClick={() => dispatch({ type: 'CONTINUE', player: me })}
-            className="w-full min-h-[56px] rounded-2xl border-2 border-[#F0DED2]/35 font-display text-xl font-extrabold active:translate-y-px"
+            className="w-full min-h-[56px] rounded-2xl border-2 border-[#F0DED2]/35 font-display text-xl font-extrabold press"
           >
             Goodnight
           </button>

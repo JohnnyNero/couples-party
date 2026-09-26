@@ -57,7 +57,7 @@ export function RankFive({
                   ? 'border-accent bg-pa text-white animate-pop'
                   : filled !== null
                     ? 'border-fg/15 bg-fg/5 text-fg/70'
-                    : 'border-fg/20 text-fg active:translate-y-px active:bg-pa-soft')
+                    : 'border-fg/20 text-fg press active:bg-pa-soft')
               }
             >
               <span className={'w-6 shrink-0 text-xl font-bold tabular-nums ' + (isLive ? 'text-bg' : filled !== null ? 'text-fg/40' : 'text-accent-ink')}>

@@ -5,6 +5,7 @@ import { standing, teamScore } from '../engine/standing'
 import { GameIcon } from '../ui/GameIcon'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { Crown } from '../ui/fx'
+import { buzz } from '../ui/haptics'
 import { AnimatedNumber } from './AnimatedNumber'
 import { playerName } from './list'
 import { railText } from './board'
@@ -59,7 +60,7 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
         {s.phase !== 'JOIN' && <ScorePill s={s} big={big} />}
         <PauseButton s={s} onOpenLocal={() => setMenu(true)} />
       </div>
-      <TimerBar phaseEndsAt={s.phaseEndsAt} paused={!!s.paused} />
+      <TimerBar phaseEndsAt={s.phaseEndsAt} paused={!!s.paused} tick={!/REVEAL|RESULT|_END|INTRO|READY|JUDGE/.test(s.phase)} />
       <PauseMenu s={s} localOpen={menu} onCloseLocal={() => setMenu(false)} />
     </div>
   )
@@ -143,7 +144,7 @@ export function ScorePill({ s, big = false }: { s: SessionState; big?: boolean }
 // coral. Holds its space even when there's no clock, so nothing jumps.
 // Paused, it holds where it was; on resume it carries on from there rather than
 // starting a fresh bar for what's left.
-export function TimerBar({ phaseEndsAt, paused = false }: { phaseEndsAt: number | null; paused?: boolean }) {
+export function TimerBar({ phaseEndsAt, paused = false, tick = false }: { phaseEndsAt: number | null; paused?: boolean; tick?: boolean }) {
   const [left, setLeft] = useState(1)
   const [secs, setSecs] = useState<number | null>(null)
   const total = useRef(1)
@@ -167,6 +168,9 @@ export function TimerBar({ phaseEndsAt, paused = false }: { phaseEndsAt: number 
     return () => cancelAnimationFrame(raf)
   }, [phaseEndsAt, paused])
   const low = secs !== null && secs <= 5
+  // The last three seconds of a clock you're racing, felt as well as seen — not the
+  // clocks that just hold a reveal up.
+  useEffect(() => { if (tick && !paused && secs !== null && secs >= 1 && secs <= 3) buzz('tick') }, [secs, tick, paused])
   return (
     <div className={'flex items-center gap-2 ' + (secs === null ? 'invisible' : '')} aria-hidden={secs === null}>
       <div className="flex-1 h-1.5 rounded-full bg-fg/10 overflow-hidden">

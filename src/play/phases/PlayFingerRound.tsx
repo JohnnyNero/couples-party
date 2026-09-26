@@ -33,7 +33,7 @@ export function PlayFingerRound({ s, me }: { s: SessionState; me: PlayerId }) {
             onClick={() => set(v)}
             aria-pressed={value === v}
             className={
-              'min-h-[56px] rounded-2xl border-2 font-display text-xl font-extrabold active:translate-y-px transition-colors ' +
+              'min-h-[56px] rounded-2xl border-2 font-display text-xl font-extrabold press transition-colors ' +
               (value === v ? `${who === 'A' ? 'bg-pa' : 'bg-pb'} text-white border-transparent` : 'border-fg/20 bg-card')
             }
           >

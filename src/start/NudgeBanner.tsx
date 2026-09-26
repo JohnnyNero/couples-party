@@ -40,7 +40,7 @@ export function NudgeBanner({ onJoin }: { onJoin: (game: Game) => void }) {
       </div>
       <button
         onClick={() => onJoin(game)}
-        className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-white text-pb-ink font-display text-lg font-extrabold active:translate-y-px"
+        className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-white text-pb-ink font-display text-lg font-extrabold press"
       >
         Join
       </button>

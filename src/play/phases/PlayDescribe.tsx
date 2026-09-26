@@ -38,13 +38,13 @@ export function PlayDescribe({ s, me }: { s: SessionState; me: PlayerId }) {
       </div>
       <div className="grid grid-cols-[1fr_2fr] gap-3">
         <button
-          className="min-h-[72px] rounded-2xl border-2 border-fg/25 bg-card font-display text-xl font-extrabold text-fg/70 active:translate-y-px"
+          className="min-h-[72px] rounded-2xl border-2 border-fg/25 bg-card font-display text-xl font-extrabold text-fg/70 press"
           onClick={() => dispatch({ type: 'DESCRIBE_SKIP', player: me })}
         >
           Skip
         </button>
         <button
-          className="min-h-[72px] rounded-2xl bg-sage-ink text-white font-display text-2xl font-extrabold active:translate-y-px"
+          className="min-h-[72px] rounded-2xl bg-sage-ink text-white font-display text-2xl font-extrabold press"
           onClick={() => dispatch({ type: 'DESCRIBE_GOT', player: me })}
         >
           Got it ✓

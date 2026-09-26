@@ -58,7 +58,7 @@ export function PlayBluffPick({ s, me }: { s: SessionState; me: PlayerId }) {
                 onClick={() => { setSel(o.id); send(o.id) }}
                 aria-pressed={on}
                 className={
-                  'text-left rounded-2xl border-2 px-4 py-4 font-display text-xl font-extrabold leading-tight break-words active:translate-y-px transition-colors ' +
+                  'text-left rounded-2xl border-2 px-4 py-4 font-display text-xl font-extrabold leading-tight break-words press transition-colors ' +
                   (on ? `border-transparent ${me === 'A' ? 'bg-pa' : 'bg-pb'} text-white` : 'border-fg bg-card shadow-[3px_3px_0_rgba(0,0,0,0.12)] ' + inkOf(owner))
                 }
               >

@@ -38,7 +38,7 @@ export function PlayNumbers({
   return (
     <div className="h-full flex flex-col select-none">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
-        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
+        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 press">←</button>
         <div className="min-w-0">
           <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Their Numbers · from {partner}</div>
           <div className="font-display text-xl font-extrabold leading-tight">{partner}'s numbers</div>
@@ -69,7 +69,7 @@ export function PlayNumbers({
             })}
             <div className="font-display text-2xl font-bold text-accent-ink text-center mt-1">{summary(result.marks!)}</div>
             {extra}
-            <button onClick={onClose} className="w-full min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
+            <button onClick={onClose} className="w-full min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold press">
               Done
             </button>
           </div>

@@ -24,7 +24,7 @@ export function TheirGo({ puzzle, partner, me, onClose, back = 'Back to mine' }:
   return (
     <div className="h-full flex flex-col select-none">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
-        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
+        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 press">←</button>
         <div className="min-w-0">
           <div className={eyebrow}>{NAMES[puzzle.kind]} · {partner}’s go at yours</div>
           <div className="font-display text-xl font-extrabold leading-tight">{title(puzzle, partner, me)}</div>
@@ -32,7 +32,7 @@ export function TheirGo({ puzzle, partner, me, onClose, back = 'Back to mine' }:
       </header>
       <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-8 pt-2 flex flex-col items-center gap-4 animate-fade-up">
         <Replay puzzle={puzzle} partner={partner} me={me} />
-        <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
+        <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold press">
           {back}
         </button>
       </div>
@@ -156,7 +156,7 @@ export function TheirGoButton({ puzzle, partner, onOpen }: { puzzle: Mine | null
     <button
       onClick={onOpen}
       disabled={!finished}
-      className="w-full max-w-sm min-h-[52px] rounded-2xl bg-pb text-white font-display text-lg font-extrabold active:translate-y-px disabled:bg-fg/10 disabled:text-fg/45"
+      className="w-full max-w-sm min-h-[52px] rounded-2xl bg-pb text-white font-display text-lg font-extrabold press disabled:bg-fg/10 disabled:text-fg/45"
     >
       {finished ? `See how ${partner} did on yours` : playing ? `${partner}’s still playing yours` : `${partner} hasn’t played yours yet`}
     </button>

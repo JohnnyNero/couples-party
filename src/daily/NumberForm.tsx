@@ -38,7 +38,7 @@ export function NumberForm({
         </label>
       ))}
       <button
-        className="mt-1 w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px disabled:opacity-40"
+        className="mt-1 w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press disabled:opacity-40"
         onClick={() => onSubmit(values.map(Number))}
         disabled={!ready || busy}
       >

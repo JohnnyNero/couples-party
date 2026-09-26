@@ -39,7 +39,7 @@ export function PickForm({
                   disabled={busy}
                   onClick={() => setPicks((prev) => prev.map((old, k) => (k === i ? j : old)))}
                   className={
-                    'min-h-[56px] rounded-2xl border-2 px-3 py-2 font-display text-base font-extrabold leading-tight active:translate-y-px transition-colors ' +
+                    'min-h-[56px] rounded-2xl border-2 px-3 py-2 font-display text-base font-extrabold leading-tight press transition-colors ' +
                     (j === 1 ? 'col-start-3 row-start-1 ' : '') +
                     (on ? `${fillOf(p)} text-white border-transparent` : 'border-fg/20 bg-card')
                   }
@@ -53,7 +53,7 @@ export function PickForm({
         )
       })}
       <button
-        className="mt-1 w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px disabled:opacity-40"
+        className="mt-1 w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press disabled:opacity-40"
         onClick={() => onSubmit(picks.map((x) => x ?? 0))}
         disabled={!ready || busy}
       >

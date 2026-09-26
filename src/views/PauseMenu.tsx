@@ -22,7 +22,7 @@ export function PauseButton({ s, onOpenLocal }: { s: SessionState; onOpenLocal: 
     <button
       onClick={() => (pausable ? dispatch({ type: 'PAUSE', player: me }) : onOpenLocal())}
       aria-label={pausable ? 'Pause' : 'Menu'}
-      className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-fg/70 active:translate-y-px"
+      className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-fg/70 press"
     >
       {pausable ? (
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" /><rect x="14" y="5" width="4" height="14" rx="1.2" /></svg>
@@ -80,12 +80,12 @@ export function PauseMenu({ s, localOpen, onCloseLocal }: { s: SessionState; loc
                 You’ll go back to the home screen. {playerName(s, other(me))} can leave from their menu too.
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setLeaving(false)} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">Stay</button>
-                <button onClick={leave} className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px">Leave</button>
+                <button onClick={() => setLeaving(false)} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold press">Stay</button>
+                <button onClick={leave} className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold press">Leave</button>
               </div>
             </section>
           ) : (
-            <button onClick={() => setLeaving(true)} className="self-center min-h-[44px] px-5 font-bold text-fg/55 active:translate-y-px">
+            <button onClick={() => setLeaving(true)} className="self-center min-h-[44px] px-5 font-bold text-fg/55 press">
               Leave game
             </button>
           )

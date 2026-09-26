@@ -47,13 +47,13 @@ export function ContinueCard({ onResume }: { onResume: (saved: Saved) => void })
       <div className="flex gap-2">
         <button
           onClick={() => { clearSaved(); setSaved(null) }}
-          className="min-h-[48px] px-4 rounded-2xl border-2 border-fg/20 font-display font-extrabold text-fg/60 active:translate-y-px"
+          className="min-h-[48px] px-4 rounded-2xl border-2 border-fg/20 font-display font-extrabold text-fg/60 press"
         >
           Forget it
         </button>
         <button
           onClick={() => onResume(saved)}
-          className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+          className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
         >
           Carry on
         </button>

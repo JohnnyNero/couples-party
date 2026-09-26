@@ -65,7 +65,7 @@ function BotLink({ game }: { game: string }) {
   url.searchParams.set('game', game)
   url.searchParams.set('bot', '1')
   return (
-    <button onClick={() => leaveTo(url.toString())} className="self-center min-h-[44px] text-sm font-extrabold text-fg/50 active:translate-y-px">
+    <button onClick={() => leaveTo(url.toString())} className="self-center min-h-[44px] text-sm font-extrabold text-fg/50 press">
       Testing on your own? Play the bot
     </button>
   )

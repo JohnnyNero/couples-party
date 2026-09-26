@@ -6,7 +6,7 @@ export const card = 'rounded-3xl border-2 border-fg bg-card shadow-[4px_4px_0_rg
 export const quietCard = 'rounded-3xl border-2 border-fg/15'
 
 const btnBase =
-  'min-h-[56px] w-full rounded-2xl font-display font-extrabold text-xl tracking-wide active:translate-y-px disabled:opacity-40 transition-transform'
+  'min-h-[56px] w-full rounded-2xl font-display font-extrabold text-xl tracking-wide press disabled:opacity-40 transition-transform'
 // The main thing to do on this screen.
 export const btnPrimary = `${btnBase} bg-fg text-bg`
 // The one big "go": start, play, send.

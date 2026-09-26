@@ -7,6 +7,7 @@ import * as playroom from './playroom'
 import { SOLO_PLAYER, initLocal, localDispatch, setLocalLive, useLocalLive, useLocalSession } from './local'
 import type { Live } from './live'
 import type { Saved } from '../store/progress'
+import { buzz } from '../ui/haptics'
 
 export type { Live }
 
@@ -27,7 +28,21 @@ export function useSession(): SessionState {
   return solo ? useLocalSession() : playroom.useSession()
 }
 
-export function dispatch(action: Action): void {
+// What you feel when you act: a firm buzz for locking an answer in, a light one for moving
+// things on. The bot acts through `dispatch` too, and passes `quiet` — its moves aren't
+// yours to feel.
+const LOCK = new Set<Action['type']>([
+  'SUBMIT_GUESS', 'SUBMIT_CLUE', 'SUBMIT_DRAWING', 'SUBMIT_DRAW_GUESS', 'SUBMIT_CALLED', 'SUBMIT_MRMRS',
+  'SUBMIT_CLASH', 'SUBMIT_BLUFF', 'SUBMIT_MELD', 'SUBMIT_CIRCLE', 'PICK_LIKELY', 'PICK_BLUFF', 'PLACE_ITEM',
+  'CHAIN_WORD', 'STOP_CLOCK', 'JUDGE', 'CHALLENGE', 'COUNT_IT', 'DESCRIBE_GOT',
+])
+const TAP = new Set<Action['type']>(['READY', 'CONTINUE', 'ADVANCE_REVEAL', 'DESCRIBE_SKIP'])
+
+export function dispatch(action: Action, { quiet = false }: { quiet?: boolean } = {}): void {
+  if (!quiet) {
+    if (LOCK.has(action.type)) buzz('lock')
+    else if (TAP.has(action.type)) buzz('tap')
+  }
   if (solo) localDispatch(action)
   else playroom.dispatch(action)
 }

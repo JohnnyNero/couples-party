@@ -156,7 +156,7 @@ export function Scoreboard({
         called ? (
           <button
             onClick={() => dispatch({ type: 'CONTINUE', player: me })}
-            className="w-full min-h-[56px] rounded-2xl bg-fg text-bg font-display text-xl font-extrabold active:translate-y-px"
+            className="w-full min-h-[56px] rounded-2xl bg-fg text-bg font-display text-xl font-extrabold press"
           >
             {decider ? 'Tiebreaker!' : next === 'lights' ? 'Lights out' : 'Finish'}
           </button>
@@ -171,7 +171,7 @@ export function Scoreboard({
             </div>
             <button
               onClick={() => dispatch({ type: 'CONTINUE', player: me })}
-              className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold active:translate-y-px"
+              className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
             >
               Ready
             </button>

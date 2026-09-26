@@ -22,7 +22,7 @@ export function PlayLikelyRound({ s, me }: { s: SessionState; me: PlayerId }) {
           key={p}
           onClick={() => dispatch({ type: 'PICK_LIKELY', player: me, pick: p })}
           className={
-            'w-full min-h-[72px] rounded-2xl text-2xl font-bold uppercase tracking-widest active:translate-y-px ' +
+            'w-full min-h-[72px] rounded-2xl text-2xl font-bold uppercase tracking-widest press ' +
             (i === 0 ? 'bg-ink text-paper' : 'bg-accent text-paper')
           }
         >

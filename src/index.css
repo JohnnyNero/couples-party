@@ -160,6 +160,16 @@ body {
   to { background-color: rgb(var(--tan-soft)); border-color: rgb(var(--tan-ink)); }
 }
 
+/* A press: a quick squash while your finger's down, and a springy bounce back when it
+   lifts. On every button (it used to be a 1px nudge). */
+.press {
+  transition: transform 180ms cubic-bezier(0.34, 1.8, 0.64, 1), background-color 150ms, border-color 150ms, color 150ms, opacity 150ms;
+}
+.press:active:not(:disabled) {
+  transform: scale(0.95);
+  transition: transform 60ms ease-out, background-color 150ms, border-color 150ms, color 150ms, opacity 150ms;
+}
+
 /* Screen transitions (ui/transition.ts). The whole screen is one snapshot ("root"),
    except the parts that should hold still while it moves: Home's tab bar while the tabs
    slide, and a game's header while its next screen is dealt. They're only named for the

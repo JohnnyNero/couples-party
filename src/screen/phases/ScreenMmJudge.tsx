@@ -77,7 +77,7 @@ export function ScreenMmJudge({ s }: { s: SessionState }) {
 
 // "Does that count?" — asked only of the person the answer belongs to.
 export function Judge({ me, big = false }: { me: PlayerId; big?: boolean }) {
-  const btn = 'rounded-2xl font-display font-extrabold active:translate-y-px ' + (big ? 'flex-1 min-h-[60px] text-xl' : 'min-h-[44px] px-5 text-lg')
+  const btn = 'rounded-2xl font-display font-extrabold press ' + (big ? 'flex-1 min-h-[60px] text-xl' : 'min-h-[44px] px-5 text-lg')
   return (
     <div className={'flex flex-col gap-2 ' + (big ? 'w-full' : 'items-end')}>
       <span className="text-sm font-extrabold text-fg/60">{big ? 'Does that count?' : 'Count it?'}</span>

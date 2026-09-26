@@ -326,7 +326,7 @@ function Tile({
       onClick={() => { if (mode) onOpen(mode) }}
       disabled={mode === null}
       className={
-        'text-left rounded-[1.25rem] border-2 px-3.5 py-3 active:translate-y-px transition-colors flex ' +
+        'text-left rounded-[1.25rem] border-2 px-3.5 py-3 press transition-colors flex ' +
         (wide ? 'col-span-2 items-center gap-3 ' : 'flex-col gap-2.5 ') +
         (complete ? 'border-fg/15 bg-fg/[0.03]' : 'border-fg bg-card shadow-[3px_3px_0_rgba(0,0,0,0.12)]')
       }
@@ -434,7 +434,7 @@ function PuzzleScreen({
       : (
         <button
           onClick={() => onSwitch({ kind: screen.kind, mode: 'set' })}
-          className="w-full max-w-sm min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px"
+          className="w-full max-w-sm min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press"
         >
           Set {partner}’s for {k.mine ? 'tomorrow' : 'today'}
         </button>

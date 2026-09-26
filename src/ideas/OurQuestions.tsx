@@ -37,7 +37,7 @@ export function OurQuestions({ onClose, partner }: { onClose: () => void; partne
   return (
     <div className="fixed inset-0 z-50 bg-bg flex flex-col enter-fallback">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
-        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
+        <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 press">←</button>
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-extrabold leading-tight">Our questions</h1>
           <div className="text-sm text-fg/55">Shared with {partner}. New ones come up first.</div>
@@ -151,7 +151,7 @@ function AddIdea({ kind, info, example }: { kind: IdeaKind; info: KindInfo; exam
         <div className="flex items-start gap-2.5">
           {/* Pressing it mustn't take focus from the box: the keyboard stays up, and the
               next letter typed goes into the sentence, not to this button. */}
-          <button onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()} onClick={addPlayer} className="shrink-0 min-h-[36px] rounded-full border-2 border-fg/20 bg-card px-3 text-sm font-extrabold active:translate-y-px">
+          <button onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()} onClick={addPlayer} className="shrink-0 min-h-[36px] rounded-full border-2 border-fg/20 bg-card px-3 text-sm font-extrabold press">
             + Player
           </button>
           <span className="text-xs text-fg/55 leading-snug pt-1">

@@ -69,7 +69,7 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
         {canAdvance && (
           <button
             onClick={() => dispatch({ type: 'ADVANCE_REVEAL', player: me })}
-            className="min-h-[52px] px-6 rounded-2xl bg-fg text-bg font-display text-lg sm:text-2xl font-extrabold active:translate-y-px"
+            className="min-h-[52px] px-6 rounded-2xl bg-fg text-bg font-display text-lg sm:text-2xl font-extrabold press"
           >
             {last ? 'Done' : 'Next item'}
           </button>

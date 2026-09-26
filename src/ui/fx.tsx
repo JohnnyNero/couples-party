@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
+import { buzzAt } from './haptics'
 
 // The reveal kit: the little bits of theatre every game's reveal is built from. The
 // keyframes themselves live in tailwind.config.js (flip-in, slam, wiggle, float-up…)
@@ -21,6 +22,8 @@ const CONFETTI = ['--pa', '--pb', '--accent', '--tan-ink', '--sage-ink']
 // Positions are fixed per piece rather than random, so a re-render mid-flight (a
 // partner's tap, a live preview) never sends a piece somewhere else.
 export function Burst({ delay = 0, hearts = false, count = 18, spread = 1 }: { delay?: number; hearts?: boolean; count?: number; spread?: number }) {
+  // Felt as well as seen, on a phone that can buzz.
+  useEffect(() => buzzAt('hit', delay), [delay])
   return (
     <span className="pointer-events-none absolute left-1/2 top-1/2 w-0 h-0 z-10" aria-hidden="true">
       {Array.from({ length: count }, (_, i) => {
@@ -73,6 +76,7 @@ export function Crown({ className = 'w-7 h-5' }: { className?: string }) {
 // `relative`; it sits over the top-right corner.
 export function Stamp({ children, delay = 0, tone = 'sage' }: { children: string; delay?: number; tone?: 'sage' | 'accent' | 'tan' }) {
   const colour = { sage: 'text-sage-ink border-sage-ink', accent: 'text-accent-ink border-accent-ink', tan: 'text-tan-ink border-tan-ink' }[tone]
+  useEffect(() => buzzAt('stamp', delay + 300), [delay])
   return (
     <span className="pointer-events-none absolute -right-1 -top-4 z-20" aria-hidden="true">
       <span
@@ -92,6 +96,7 @@ const FALL = ['--pa', '--pb', '--accent', '--tan-ink', '--sage-ink', '--pa', '--
 // can clip it; it clears itself away when it's fallen.
 export function Shower({ delay = 0, hearts = false, count = 44 }: { delay?: number; hearts?: boolean; count?: number }) {
   const [on, setOn] = useState(true)
+  useEffect(() => buzzAt('win', delay), [delay])
   useEffect(() => {
     const id = setTimeout(() => setOn(false), delay + 4200)
     return () => clearTimeout(id)

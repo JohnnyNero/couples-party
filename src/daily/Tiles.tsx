@@ -1,4 +1,5 @@
 import type { Mark } from './wordle'
+import { buzz } from '../ui/haptics'
 
 // One row of letter tiles — five or six, as long as the answer. Coloured to match NYT
 // Wordle rather than the app's usual accent: green is right place, yellow is in the
@@ -87,9 +88,9 @@ export function Keyboard({
                 key={k}
                 type="button"
                 disabled={disabled}
-                onClick={() => onKey(k === '+' ? 'Enter' : k === '-' ? 'Backspace' : k)}
+                onClick={() => { buzz('tap'); onKey(k === '+' ? 'Enter' : k === '-' ? 'Backspace' : k) }}
                 className={
-                  'h-12 rounded-md font-bold uppercase active:translate-y-px disabled:opacity-50 ' +
+                  'h-12 rounded-md font-bold uppercase press disabled:opacity-50 ' +
                   (wide ? 'px-2 text-[0.65rem] tracking-wider flex-[1.5]' : 'flex-1 text-base') +
                   ' ' +
                   (mark === 'g'
