@@ -1,3 +1,4 @@
+import { replaceUrl } from '../ui/back'
 import type { Game } from '../engine/state'
 export type { Game } from '../engine/state'
 
@@ -34,5 +35,5 @@ export function stampMode(mode: PlayMode, game: Game, bot = false): void {
   url.searchParams.set('game', game)
   if (bot) url.searchParams.set('bot', '1')
   else url.searchParams.delete('bot')
-  window.history.replaceState(null, '', url.toString())
+  replaceUrl(url.toString())
 }

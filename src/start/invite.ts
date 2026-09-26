@@ -2,6 +2,8 @@
 // "…/couples-party/?pair=ABC234&from=Johnny". Opening it takes the other phone straight
 // to a welcome page that pairs them (see Invite.tsx); no code to type.
 
+import { replaceUrl } from '../ui/back'
+
 export type InviteLink = { code: string; from: string }
 
 export function inviteUrl(code: string, from: string): string {
@@ -25,7 +27,7 @@ export function forgetInvite(): void {
   url.searchParams.delete('pair')
   url.searchParams.delete('device')
   url.searchParams.delete('from')
-  window.history.replaceState(null, '', url.toString())
+  replaceUrl(url.toString())
 }
 
 // A device link: "…/?device=ABC234&from=Johnny" makes the device that opens it Johnny
