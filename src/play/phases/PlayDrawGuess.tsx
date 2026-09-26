@@ -2,20 +2,44 @@ import { useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { DRAW } from '../../engine/phases'
-import { dispatch } from '../../net'
+import { dispatch, useLive } from '../../net'
 import { DrawingCanvas } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
+import { useLiveSender } from '../../views/useLiveSender'
+import { inkOf } from '../../ui/Avatar'
 import { btnAccent, eyebrow, field } from '../../ui/styles'
 import { PlayWaiting } from './PlayWaiting'
 
+// The guesser types; whoever drew it watches the guess come together, letter by letter.
 export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   const d = s.draw!
   const round = d.rounds[d.current]
   const guesser = other(round.drawer)
+  const key = `draw:${s.seed}:${d.current}`
   const [text, setText] = useState('')
+  const send = useLiveSender(key)
+  const live = useLive(key)
 
-  if (me !== guesser) return <PlayWaiting label={`${playerName(s, guesser)} is guessing`} sub="Don’t give it away." />
+  if (me !== guesser) {
+    const typing = typeof live === 'string' ? live : ''
+    return (
+      <div className="h-full flex flex-col px-5 pb-6">
+        <div className="flex-1 flex flex-col justify-center gap-4">
+          <div>
+            <div className={eyebrow + ' text-accent-ink'}>{playerName(s, guesser)} is guessing yours</div>
+            <div className="mt-1 font-display text-2xl font-extrabold leading-tight break-words">
+              {drawQuestion(s, round, me)}: <span className="text-accent-ink">{round.answer}</span>
+            </div>
+          </div>
+          <DrawingCanvas strokes={round.strokes} />
+          <div className={'min-h-[2.5rem] text-center font-display text-3xl font-extrabold break-words ' + inkOf(guesser)}>
+            {typing ? `“${typing}”` : <span className="text-fg/35 text-base font-bold">Thinking…</span>}
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (round.guess !== null) return <PlayWaiting label="Locked in" sub="Let’s see…" />
 
   const submit = () => {
@@ -37,7 +61,7 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
         <input
           className={field}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => { setText(e.target.value); send(e.target.value) }}
           onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
           maxLength={DRAW.guessMaxLen}
           placeholder="your guess"

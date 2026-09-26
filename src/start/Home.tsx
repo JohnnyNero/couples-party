@@ -232,9 +232,9 @@ type Pick = { key: Exclude<Game, 'full' | 'tonight'>; blurb: string; meta: strin
 const HEAD_TO_HEAD: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },
   { key: 'finger', blurb: 'Five confessions. Keep your hand up.', meta: '5 rounds · 3 min' },
-  { key: 'wave', blurb: 'Name a thing on a scale. They find the spot.', meta: '7 rounds · 6 min' },
+  { key: 'wave', blurb: 'Name a thing on a scale. They find the spot.', meta: '3 rounds · 5 min' },
   { key: 'mrmrs', blurb: 'Your answer, and your guess at theirs.', meta: '5 rounds · 5 min' },
-  { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '6 rounds · 7 min' },
+  { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '3 rounds · 6 min' },
   { key: 'clash', blurb: 'One letter, six categories. Unique answers score.', meta: '3 rounds · 5 min' },
   { key: 'chain', blurb: 'Name things in turn. The last letter starts the next.', meta: '4 rounds · 4 min' },
   { key: 'bluff', blurb: 'Two lies and a truth about you. Can they spot it?', meta: '3 rounds · 8 min' },

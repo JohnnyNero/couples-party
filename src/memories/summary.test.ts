@@ -24,8 +24,9 @@ function playNight(): SessionState {
       s = reduce(s, { type: 'JUDGE', player: 'B', correct: true }, t)
       s = reduce(s, { type: 'TIMEOUT' }, t)
     } else if (s.phase === 'DRAW_SKETCH') {
-      const drawer = s.draw!.rounds[s.draw!.current].drawer
-      s = reduce(s, { type: 'SUBMIT_DRAWING', player: drawer, answer: 'otter', strokes: [[[0.12345, 0.6789], [0.5, 0.5]]] }, t)
+      for (const drawer of ['A', 'B'] as const) {
+        s = reduce(s, { type: 'SUBMIT_DRAWING', player: drawer, answer: 'otter', strokes: [[[0.12345, 0.6789], [0.5, 0.5]]] }, t)
+      }
     } else if (s.phase === 'DRAW_GUESS') {
       const guesser = s.draw!.rounds[s.draw!.current].drawer === 'A' ? 'B' : 'A'
       s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: guesser, text: 'otter' }, t)

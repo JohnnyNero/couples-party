@@ -15,7 +15,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     // game is you against each other. It still runs on its own (?game=likely).
     { key: 'finger', rounds: 5 },
     { key: 'circle', rounds: 1 }, // a filler after every second game
-    { key: 'wave', rounds: 7 },
+    { key: 'wave', rounds: 6 }, // three pairs: you each give a clue in every pair
     { key: 'clash', rounds: 3 },
     { key: 'clock', rounds: 3 }, // best of 3
     { key: 'mrmrs', rounds: 5 },
@@ -31,7 +31,7 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   likely: [{ key: 'likely', rounds: 6 }],
   finger: [{ key: 'finger', rounds: 5 }],
   mrmrs: [{ key: 'mrmrs', rounds: 5 }],
-  wave: [{ key: 'wave', rounds: 7 }],
+  wave: [{ key: 'wave', rounds: 6 }],
   draw: [{ key: 'draw', rounds: 6 }],
   clash: [{ key: 'clash', rounds: 3 }],
   chain: [{ key: 'chain', rounds: 4 }],

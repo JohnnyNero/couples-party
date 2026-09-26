@@ -61,6 +61,12 @@ export function railText(s: SessionState): string {
     if (!f || f.bestOf === 1) return label
     return `${label} · Round ${f.current + 1} · best of ${f.bestOf}`
   }
+  // Clues and drawings go in pairs, one each: a round is a pair.
+  if (key === 'wave' || key === 'draw') {
+    const g = s[key]
+    if (!g) return label
+    return `${label} · Round ${Math.floor(g.current / 2) + 1} of ${Math.ceil(g.rounds.length / 2)}`
+  }
   const game = key === 'lights' ? null
     : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff }[key]
   if (!game) return label

@@ -412,64 +412,78 @@ const atWaveClue = () => {
 }
 
 describe('wavelength', () => {
-  it('opens on round 1 of 7, A as psychic, and a 25s clock', () => {
+  // Both clues at once, then the pair is guessed one at a time.
+  const clues = (s: SessionState, t = 2000) => {
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, t)
+    return reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'desert' }, t)
+  }
+  it('opens on the first pair, both of you giving a clue, with a 25s clock', () => {
     const s = atWaveClue()
     expect(s.phase).toBe('WAVE_CLUE')
     expect(s.phaseEndsAt).toBe(1000 + 25000)
     expect(s.wave?.current).toBe(0)
     expect(s.wave?.rounds).toHaveLength(roundsFor({ game: 'wave' }, 'wave'))
-    expect(s.wave?.rounds[0].psychic).toBe('A')
     expect(s.wave?.rounds[0].target).toBeGreaterThanOrEqual(WAVE.targetMin)
     expect(s.wave?.rounds[0].target).toBeLessThanOrEqual(WAVE.targetMax)
   })
-  it('alternates psychic every round', () => {
+  it('gives you one clue each in every pair, swapping who goes first', () => {
     const s = atWaveClue()
-    expect(s.wave!.rounds.map((r) => r.psychic)).toEqual(['A', 'B', 'A', 'B', 'A', 'B', 'A'])
+    expect(s.wave!.rounds.map((r) => r.psychic)).toEqual(['A', 'B', 'B', 'A', 'A', 'B'])
   })
-  it('ignores a clue from the guesser', () => {
+  it('waits for both clues before anyone guesses', () => {
     let s = atWaveClue()
-    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'nope' }, 2000)
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'desert' }, 2000)
     expect(s.phase).toBe('WAVE_CLUE')
-    expect(s.wave?.rounds[0].clue).toBe(null)
-  })
-  it('a clue from the psychic opens the guess, and locks the clue', () => {
-    let s = atWaveClue()
-    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
+    expect(s.wave?.rounds[1].clue).toBe('desert')
+    expect(reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'again' }, 2000)).toBe(s) // one clue each
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 3000)
     expect(s.phase).toBe('WAVE_GUESS')
-    expect(s.phaseEndsAt).toBe(2000 + 20000)
+    expect(s.phaseEndsAt).toBe(3000 + 20000)
+    expect(s.wave?.current).toBe(0)
     expect(s.wave?.rounds[0].clue).toBe('ocean')
   })
   it('ignores a guess from the psychic', () => {
-    let s = atWaveClue()
-    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
+    let s = clues(atWaveClue())
     s = reduce(s, { type: 'SUBMIT_GUESS', player: 'A', value: 40 }, 2500)
     expect(s.phase).toBe('WAVE_GUESS')
     expect(s.wave?.rounds[0].guess).toBe(null)
   })
   it('a guess from the guesser reveals, with distance computed and the value clamped', () => {
-    let s = atWaveClue()
+    let s = clues(atWaveClue())
     const target = s.wave!.rounds[0].target
-    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 2000)
     s = reduce(s, { type: 'SUBMIT_GUESS', player: 'B', value: 150 }, 3000) // out of range
     expect(s.phase).toBe('WAVE_REVEAL')
     expect(s.phaseEndsAt).toBe(3000 + 5000)
     expect(s.wave?.rounds[0].guess).toBe(100) // clamped to the 0..100 scale
     expect(s.wave?.rounds[0].distance).toBe(Math.abs(target - 100))
   })
+  it('goes straight to guessing the second clue of the pair, then on to the next pair', () => {
+    let s = clues(atWaveClue())
+    s = reduce(s, { type: 'SUBMIT_GUESS', player: 'B', value: 50 }, 3000)
+    s = reduce(s, { type: 'TIMEOUT' }, 9000)
+    expect(s.phase).toBe('WAVE_GUESS')
+    expect(s.wave?.current).toBe(1)
+    s = reduce(s, { type: 'SUBMIT_GUESS', player: 'A', value: 50 }, 10000)
+    s = reduce(s, { type: 'TIMEOUT' }, 16000)
+    expect(s.phase).toBe('WAVE_CLUE')
+    expect(s.wave?.current).toBe(2)
+  })
   it('a clue nobody gives still lets the round play out, on timeout', () => {
     let s = atWaveClue()
-    s = reduce(s, { type: 'TIMEOUT' }, 5000) // clue -> guess, no clue given
+    s = reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'desert' }, 2000)
+    s = reduce(s, { type: 'TIMEOUT' }, 5000) // clue -> guess, A gave no clue
     expect(s.phase).toBe('WAVE_GUESS')
     expect(s.wave?.rounds[0].clue).toBe('(no clue)')
+    expect(s.wave?.rounds[1].clue).toBe('desert')
     s = reduce(s, { type: 'TIMEOUT' }, 6000) // guess -> reveal, defaults to dead centre
     expect(s.phase).toBe('WAVE_REVEAL')
     expect(s.wave?.rounds[0].guess).toBe(50)
   })
-  it('advances through all seven rounds to WAVE_RESULT, then DONE (standalone)', () => {
+  it('advances through every round to WAVE_RESULT, then DONE (standalone)', () => {
     let s = atWaveClue()
     for (let r = 0; r < roundsFor({ game: 'wave' }, 'wave'); r++) {
+      if (s.phase === 'WAVE_CLUE') s = clues(s, 1000)
       const round = s.wave!.rounds[s.wave!.current]
-      s = reduce(s, { type: 'SUBMIT_CLUE', player: round.psychic, text: 'clue' }, 1000)
       const guesser = round.psychic === 'A' ? 'B' : 'A'
       s = reduce(s, { type: 'SUBMIT_GUESS', player: guesser, value: round.target }, 1000) // dead on
       expect(s.phase).toBe('WAVE_REVEAL')
@@ -499,41 +513,42 @@ const atDrawSketch = () => {
 const STROKE = [[0.1, 0.1], [0.9, 0.9]] as [number, number][]
 
 describe('draw your answer', () => {
-  it('opens on round 1 of 6, A as drawer, and a 50s clock', () => {
+  // A draws first in the pair, B second; both at once.
+  const drawBoth = (s: SessionState, a = 'a house', b = 'a boat', t = 2000) => {
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: a, strokes: [STROKE] }, t)
+    return reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: b, strokes: [STROKE, STROKE] }, t)
+  }
+  it('opens on the first pair, both of you drawing, with a 50s clock', () => {
     const s = atDrawSketch()
     expect(s.phase).toBe('DRAW_SKETCH')
     expect(s.phaseEndsAt).toBe(1000 + 50000)
     expect(s.draw?.current).toBe(0)
     expect(s.draw?.rounds).toHaveLength(roundsFor({ game: 'draw' }, 'draw'))
-    expect(s.draw?.rounds[0].drawer).toBe('A')
   })
-  it('alternates drawer every round', () => {
+  it('gives you one drawing each in every pair, swapping who goes first', () => {
     const s = atDrawSketch()
-    expect(s.draw!.rounds.map((r) => r.drawer)).toEqual(['A', 'B', 'A', 'B', 'A', 'B'])
+    expect(s.draw!.rounds.map((r) => r.drawer)).toEqual(['A', 'B', 'B', 'A', 'A', 'B'])
   })
-  it('ignores a drawing from the guesser', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: 'a house', strokes: [STROKE] }, 2000)
-    expect(s.phase).toBe('DRAW_SKETCH')
-    expect(s.draw?.rounds[0].strokes).toHaveLength(0)
-  })
-  it('a drawing from the drawer opens the guess, with the strokes locked', () => {
+  it('waits for both drawings, then opens the first guess with the strokes locked', () => {
     let s = atDrawSketch()
     s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'a house', strokes: [STROKE] }, 2000)
+    expect(s.phase).toBe('DRAW_SKETCH')
+    expect(reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'again', strokes: [] }, 2000)).toBe(s)
+    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: 'a boat', strokes: [STROKE, STROKE] }, 3000)
     expect(s.phase).toBe('DRAW_GUESS')
-    expect(s.phaseEndsAt).toBe(2000 + 20000)
+    expect(s.phaseEndsAt).toBe(3000 + 20000)
+    expect(s.draw?.current).toBe(0)
     expect(s.draw?.rounds[0].strokes).toEqual([STROKE])
+    expect(s.draw?.rounds[1].strokes).toEqual([STROKE, STROKE])
   })
   it('ignores a guess from the drawer', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'a house', strokes: [STROKE] }, 2000)
+    let s = drawBoth(atDrawSketch())
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'A', text: 'a house' }, 2500)
     expect(s.phase).toBe('DRAW_GUESS')
     expect(s.draw?.rounds[0].guess).toBe(null)
   })
-  it('a correct guess reveals with correct: true and awards the guesser', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'a house', strokes: [STROKE] }, 2000)
+  it('a correct guess reveals with correct: true', () => {
+    let s = drawBoth(atDrawSketch())
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: ' A House ' }, 3000)
     expect(s.phase).toBe('DRAW_REVEAL')
     expect(s.phaseEndsAt).toBe(3000 + 8000)
@@ -541,14 +556,12 @@ describe('draw your answer', () => {
     expect(s.draw?.rounds[0].correct).toBe(true)
   })
   it('a wrong guess reveals with correct: false', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'a house', strokes: [STROKE] }, 2000)
+    let s = drawBoth(atDrawSketch())
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'a boat' }, 3000)
     expect(s.draw?.rounds[0].correct).toBe(false)
   })
-  it('checks the guess against the drawer\'s own answer, not the question', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'noodles', strokes: [STROKE] }, 2000)
+  it("checks the guess against the drawer's own answer, not the question", () => {
+    let s = drawBoth(atDrawSketch(), 'noodles')
     expect(s.draw?.rounds[0].answer).toBe('noodles')
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'Noodles' }, 3000)
     expect(s.draw?.rounds[0].correct).toBe(true)
@@ -556,11 +569,10 @@ describe('draw your answer', () => {
   it('refuses a drawing with no answer — it has to be OF something', () => {
     let s = atDrawSketch()
     s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: '   ', strokes: [STROKE] }, 2000)
-    expect(s.phase).toBe('DRAW_SKETCH')
+    expect(s.draw?.rounds[0].answer).toBe(null)
   })
   it('lets the drawer count a near miss, and only the drawer', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'noodles', strokes: [STROKE] }, 2000)
+    let s = drawBoth(atDrawSketch(), 'noodles')
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'ramen' }, 3000)
     expect(s.draw?.rounds[0].correct).toBe(false)
     expect(reduce(s, { type: 'COUNT_IT', player: 'B' }, 3500)).toBe(s) // the guesser can't
@@ -568,8 +580,7 @@ describe('draw your answer', () => {
     expect(s.draw?.rounds[0].correct).toBe(true)
   })
   it('will not count a guess nobody made', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'noodles', strokes: [STROKE] }, 2000)
+    let s = drawBoth(atDrawSketch(), 'noodles')
     s = reduce(s, { type: 'TIMEOUT' }, 3000) // no guess
     expect(reduce(s, { type: 'COUNT_IT', player: 'A' }, 3500)).toBe(s)
   })
@@ -581,12 +592,15 @@ describe('draw your answer', () => {
     s = reduce(s, { type: 'TIMEOUT' }, 6000) // guess -> reveal, no guess never matches
     expect(s.phase).toBe('DRAW_REVEAL')
     expect(s.draw?.rounds[0].correct).toBe(false)
+    s = reduce(s, { type: 'TIMEOUT' }, 7000) // the second drawing of the pair is guessed next
+    expect(s.phase).toBe('DRAW_GUESS')
+    expect(s.draw?.current).toBe(1)
   })
-  it('advances through all six rounds to DRAW_RESULT, then DONE (standalone)', () => {
+  it('advances through every round to DRAW_RESULT, then DONE (standalone)', () => {
     let s = atDrawSketch()
     for (let r = 0; r < roundsFor({ game: 'draw' }, 'draw'); r++) {
+      if (s.phase === 'DRAW_SKETCH') s = drawBoth(s, 'a house', 'a boat', 1000)
       const round = s.draw!.rounds[s.draw!.current]
-      s = reduce(s, { type: 'SUBMIT_DRAWING', player: round.drawer, answer: 'a house', strokes: [STROKE] }, 1000)
       const guesser = round.drawer === 'A' ? 'B' : 'A'
       s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: guesser, text: 'whatever' }, 1000)
       expect(s.phase).toBe('DRAW_REVEAL')

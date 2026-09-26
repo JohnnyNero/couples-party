@@ -1,4 +1,5 @@
 import { CLASH_POINTS } from './clash'
+import { roundsFor } from './roster'
 import { describe, it, expect } from 'vitest'
 import { initialState, type FingerGame, type ListAct, type ListItem, type PlayerId, type WaveRound } from './state'
 import { listAward, listItemPoints, standing, leader, fingerPoints, gameScores, waveAward, drawAward, SCORING } from './standing'
@@ -131,7 +132,7 @@ describe('waveAward', () => {
 describe('the four games are worth about the same', () => {
   const maxima = {
     Shortlist: 14 * SCORING.listExact, // 7 items, two acts
-    Wavelength: 7 * SCORING.waveBullseye,
+    Wavelength: roundsFor({ game: 'wave' }, 'wave') * SCORING.waveBullseye,
     'Put a Finger Down': 5 * SCORING.fingerKept,
     'Quick Draw': 6 * SCORING.drawCorrect,
     'Category Clash': 3 * 6 * CLASH_POINTS.unique, // three rounds of six

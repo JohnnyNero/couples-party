@@ -21,8 +21,13 @@ import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
 import { dayIndex, localDate } from '../daily/dates'
 import type { PlayMode } from '../start/mode'
+import type { Live } from './live'
 
 const SESSION_KEY = 'session'
+// What one of you is doing right now, for the other to watch — a slider mid-drag, a
+// guess being typed. Off the game state, and sent unreliably: it's only ever a preview,
+// and the next one replaces it.
+const LIVE_KEY = 'live'
 // Which device sits in which seat — decided by the host, read by everyone (see ids.ts).
 const SEATS_KEY = 'seats'
 // Who's in the room right now, by Playroom id. Every phone keeps this, not just the host,
@@ -122,6 +127,15 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
 export function useSession(): SessionState {
   const [session] = useMultiplayerState<SessionState>(SESSION_KEY, placeholderState())
   return session
+}
+
+export function setLive(value: Live | null): void {
+  setState(LIVE_KEY, value, false)
+}
+
+export function useLive(): Live | null {
+  const [live] = useMultiplayerState<Live | null>(LIVE_KEY, null)
+  return live
 }
 
 export function dispatch(action: Action): void {

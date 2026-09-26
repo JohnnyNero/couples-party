@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { DrawStroke, PlayerId, SessionState } from '../../engine/state'
 import { DRAW } from '../../engine/phases'
 import { dispatch } from '../../net'
+import { pairOf } from '../../engine/reducer'
+import { other } from '../../engine/state'
 import { CANVAS_ASPECT, DrawingStrokes, PAPER } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
@@ -9,14 +11,14 @@ import { btnAccent, btnOutline, eyebrow, field } from '../../ui/styles'
 import { PromptCard } from '../../ui/kit'
 import { PlayWaiting } from './PlayWaiting'
 
-// Two steps on the drawer's phone. First the answer — typed, private, one word — because
+// You both draw at once — each your own question, about yourself. Two steps on each phone. First the answer — typed, private, one word — because
 // that's what the guess will be checked against, and saying it first stops you drawing
 // something you can draw instead of the true answer. Then the canvas: pointer events,
 // not the native drag API, for reliable touch input, and nothing leaves the phone until
 // "Done".
 export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
   const d = s.draw!
-  const round = d.rounds[d.current]
+  const round = pairOf(d).find((r) => r.drawer === me)
   const [answer, setAnswer] = useState('')
   const [drawingNow, setDrawingNow] = useState(false)
   const [strokes, setStrokes] = useState<DrawStroke[]>([])
@@ -29,7 +31,7 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
   // round; nothing at all isn't.
   const latest = useRef({ answer, strokes })
   latest.current = { answer, strokes }
-  const isDrawer = me === round.drawer
+  const isDrawer = !!round && round.answer === null
   useEffect(() => {
     if (!isDrawer || s.phaseEndsAt == null) return
     const wait = s.phaseEndsAt - Date.now() - 600
@@ -40,7 +42,12 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
     return () => clearTimeout(id)
   }, [isDrawer, s.phaseEndsAt, me])
 
-  if (!isDrawer) return <PlayWaiting label={`${playerName(s, round.drawer)} is drawing`} sub="No peeking." />
+  const them = other(me)
+  if (!round) return <PlayWaiting label={`${playerName(s, them)} is drawing`} sub="No peeking." />
+  if (!isDrawer) {
+    const theirs = pairOf(d).find((r) => r.drawer === them)
+    return <PlayWaiting label="Sent" sub={theirs && theirs.answer === null ? `Waiting for ${playerName(s, them)} to finish theirs.` : 'Here we go…'} />
+  }
 
   const question = drawQuestion(s, round, me)
 
@@ -51,8 +58,8 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
         <div className="flex-1 flex flex-col justify-center gap-4">
           <PromptCard over="Your question" size="md">{question}</PromptCard>
           <div className="text-sm text-fg/70 leading-snug">
-            Answer it for real, in a word or two — only you see this. Then you draw it, and
-            they have to guess what you said.
+            Answer it for real, in a word or two — only you see this. Then draw it.
+            {' '}{playerName(s, them)} is doing theirs at the same time; then you each guess the other’s.
           </div>
         </div>
         <div className="flex flex-col gap-2.5">

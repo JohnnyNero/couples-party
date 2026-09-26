@@ -2,6 +2,7 @@ import type { Action, PlayerId, SessionState } from '../engine/state'
 import { other } from '../engine/state'
 import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
 import { freeFor } from '../engine/chain'
+import { pairOf } from '../engine/reducer'
 
 // A stand-in second player, so the loop can be played solo. It lives entirely outside
 // the engine — it only ever produces the same actions a phone would, and the reducer
@@ -80,8 +81,8 @@ export function nextBotAction(
     case 'WAVE_CLUE': {
       const w = s.wave
       if (!w) return null
-      const round = w.rounds[w.current]
-      if (round.psychic !== me || round.clue !== null) return null
+      // Both clues of the pair are given at once — find ours.
+      if (!pairOf(w).some((r) => r.psychic === me && r.clue === null)) return null
       return { type: 'SUBMIT_CLUE', player: me, text: pickFrom(rng, brain.nouns) }
     }
 
@@ -96,8 +97,7 @@ export function nextBotAction(
     case 'DRAW_SKETCH': {
       const d = s.draw
       if (!d) return null
-      const round = d.rounds[d.current]
-      if (round.drawer !== me) return null
+      if (!pairOf(d).some((r) => r.drawer === me && r.answer === null)) return null
       // A single scribbled stroke — good enough for a testing seat, never a real guess.
       return {
         type: 'SUBMIT_DRAWING',

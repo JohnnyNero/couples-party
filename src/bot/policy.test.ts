@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { initialState } from '../engine/state'
-import { roster } from '../engine/roster'
+import { roster, roundsFor } from '../engine/roster'
 import { reduce } from '../engine/reducer'
 import { makeRng } from '../engine/rng'
 import { nextBotAction, type BotBrain } from './policy'
@@ -72,7 +72,7 @@ describe('the bot plays a whole session through the real reducer', () => {
     expect(s.finger?.rounds.every((round) => round.applies.A !== null && round.applies.B !== null)).toBe(true)
   })
 
-  it('also gets a Wavelength session to DONE with all seven rounds resolved', () => {
+  it('also gets a Wavelength session to DONE with every round resolved', () => {
     const r = makeRng(17)
     const spectrums = [{ id: 'w01', low: 'Boring', high: 'Thrilling' }, { id: 'w02', low: 'Cheap', high: 'Expensive' }]
     let s = initialState(7, 'wave', { spectrums })
@@ -86,7 +86,7 @@ describe('the bot plays a whole session through the real reducer', () => {
       if (s === before) s = reduce(s, { type: 'TIMEOUT' }, steps)
     }
     expect(s.phase).toBe('DONE')
-    expect(s.wave?.rounds).toHaveLength(7)
+    expect(s.wave?.rounds).toHaveLength(roundsFor({ game: 'wave' }, 'wave'))
     expect(s.wave?.rounds.every((round) => round.clue !== null && round.guess !== null)).toBe(true)
     expect(s.wave?.rounds.every((round) => round.distance !== null)).toBe(true)
   })
@@ -127,7 +127,7 @@ describe('the bot plays a whole session through the real reducer', () => {
     expect(s.phase).toBe('DONE')
     expect(s.listActs).toHaveLength(2)
     expect(s.finger?.rounds).toHaveLength(5)
-    expect(s.wave?.rounds).toHaveLength(7)
+    expect(s.wave?.rounds).toHaveLength(roundsFor({ game: 'wave' }, 'wave'))
     expect(s.draw?.rounds).toHaveLength(6)
   })
 })

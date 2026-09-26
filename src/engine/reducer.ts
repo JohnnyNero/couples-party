@@ -364,6 +364,20 @@ function currentWaveRound(w: WaveGame) {
   return w.rounds[w.current]
 }
 
+// Wavelength and Draw Your Answer go in pairs of turns, one each: you both set yours at
+// once (a clue, a drawing), then they're solved one at a time — the first of the pair,
+// then the second — with whoever set it watching. Who goes first swaps every pair.
+export const setterOf = (i: number): PlayerId => {
+  const first: PlayerId = Math.floor(i / 2) % 2 === 0 ? 'A' : 'B'
+  return i % 2 === 0 ? first : other(first)
+}
+// The turns being set together: the live one and, if it opens a pair, the next.
+export const pairOf = <R,>(g: { rounds: R[]; current: number }): R[] =>
+  g.current % 2 === 0 ? g.rounds.slice(g.current, g.current + 2) : [g.rounds[g.current]]
+// After a reveal: the second of the pair is already set, so straight to solving it.
+const secondOfPair = (g: { rounds: unknown[]; current: number }) =>
+  g.current % 2 === 0 && g.current + 1 < g.rounds.length
+
 // Generated in full up front — spectrum, psychic and hidden target for every round —
 // the same way Put a Finger Down pre-picks its statements, and for the same reason:
 // exactly the roster's number of rounds happen, no branching on how any of them go.
@@ -377,7 +391,7 @@ function beginWave(state: SessionState, now: number): SessionState {
     const span = WAVE.targetMax - WAVE.targetMin
     return {
       index: i + 1,
-      psychic: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
+      psychic: setterOf(i),
       spectrumId: spectrum.id,
       target: WAVE.targetMin + Math.round(rng() * span),
       clue: null,
@@ -391,9 +405,10 @@ function beginWave(state: SessionState, now: number): SessionState {
   return s
 }
 
-function toWaveGuess(state: SessionState, now: number, clue: string): SessionState {
+// Both clues are in (or the clock ran out — a missing one plays as no clue at all).
+function toWaveGuess(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  currentWaveRound(s.wave!).clue = clue
+  for (const round of pairOf(s.wave!)) round.clue ??= '(no clue)'
   s.phase = 'WAVE_GUESS'
   s.phaseEndsAt = now + DURATIONS.WAVE_GUESS!
   return s
@@ -413,9 +428,10 @@ function advanceWave(state: SessionState, now: number): SessionState {
   const w = state.wave!
   if (w.current >= w.rounds.length - 1) return toScoreboard(state, 'WAVE_RESULT')
   const s = clone(state)
+  const second = secondOfPair(w)
   s.wave!.current += 1
-  s.phase = 'WAVE_CLUE'
-  s.phaseEndsAt = now + DURATIONS.WAVE_CLUE!
+  s.phase = second ? 'WAVE_GUESS' : 'WAVE_CLUE'
+  s.phaseEndsAt = now + DURATIONS[s.phase]!
   return s
 }
 
@@ -425,8 +441,8 @@ function currentDrawRound(d: DrawGame) {
   return d.rounds[d.current]
 }
 
-// Generated in full up front — question and drawer for every round. Drawers alternate,
-// so a two-round Tonight is one drawing each.
+// Generated in full up front — question and drawer for every round, in pairs (one each,
+// drawn at once), so a two-round Tonight is one drawing each.
 function beginDraw(state: SessionState, now: number): SessionState {
   const s = clone(state)
   if (s.drawPrompts.length === 0) return skipTo(s, now, 'draw')
@@ -434,7 +450,7 @@ function beginDraw(state: SessionState, now: number): SessionState {
   const prompts = shuffled(rng, s.drawPrompts)
   const rounds = Array.from({ length: roundsFor(s, 'draw') }, (_, i) => ({
     index: i + 1,
-    drawer: (i % 2 === 0 ? 'A' : 'B') as PlayerId,
+    drawer: setterOf(i),
     promptId: prompts[i % prompts.length].id,
     answer: null,
     strokes: [] as DrawStroke[],
@@ -447,11 +463,11 @@ function beginDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
-function toDrawGuess(state: SessionState, now: number, answer: string, strokes: DrawStroke[]): SessionState {
+// Both drawings are in (or the clock ran out — a drawing that never came is of nothing,
+// so no guess can match it).
+function toDrawGuess(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  const round = currentDrawRound(s.draw!)
-  round.answer = answer
-  round.strokes = strokes
+  for (const round of pairOf(s.draw!)) round.answer ??= ''
   s.phase = 'DRAW_GUESS'
   s.phaseEndsAt = now + DURATIONS.DRAW_GUESS!
   return s
@@ -473,9 +489,10 @@ function advanceDraw(state: SessionState, now: number): SessionState {
   const d = state.draw!
   if (d.current >= d.rounds.length - 1) return toScoreboard(state, 'DRAW_RESULT')
   const s = clone(state)
+  const second = secondOfPair(d)
   s.draw!.current += 1
-  s.phase = 'DRAW_SKETCH'
-  s.phaseEndsAt = now + DURATIONS.DRAW_SKETCH!
+  s.phase = second ? 'DRAW_GUESS' : 'DRAW_SKETCH'
+  s.phaseEndsAt = now + DURATIONS[s.phase]!
   return s
 }
 
@@ -897,11 +914,14 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       if (state.phase !== 'WAVE_CLUE') return state
       const w = state.wave
       if (!w) return state
-      const round = currentWaveRound(w)
-      if (action.player !== round.psychic || round.clue !== null) return state
+      const i = pairOf(w).findIndex((r) => r.psychic === action.player && r.clue === null)
+      if (i < 0) return state
       const text = action.text.trim().slice(0, WAVE.clueMaxLen)
       if (text.length === 0) return state
-      return toWaveGuess(state, now, text)
+      const s = clone(state)
+      const pair = pairOf(s.wave!)
+      pair[i].clue = text
+      return pair.every((r) => r.clue !== null) ? toWaveGuess(s, now) : s
     }
     case 'SUBMIT_GUESS': {
       if (state.phase !== 'WAVE_GUESS') return state
@@ -916,11 +936,15 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       if (state.phase !== 'DRAW_SKETCH') return state
       const d = state.draw
       if (!d) return state
-      const round = currentDrawRound(d)
-      if (action.player !== round.drawer) return state
+      const i = pairOf(d).findIndex((r) => r.drawer === action.player && r.answer === null)
+      if (i < 0) return state
       const answer = action.answer.trim().slice(0, DRAW.guessMaxLen)
       if (answer.length === 0) return state // the drawing has to be OF something
-      return toDrawGuess(state, now, answer, action.strokes)
+      const s = clone(state)
+      const pair = pairOf(s.draw!)
+      pair[i].answer = answer
+      pair[i].strokes = action.strokes
+      return pair.every((r) => r.answer !== null) ? toDrawGuess(s, now) : s
     }
     case 'SUBMIT_DRAW_GUESS': {
       if (state.phase !== 'DRAW_GUESS') return state
@@ -1063,16 +1087,13 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         }
         // A clue nobody gave still lets the round play out — a blind guess costs nothing
         // it wouldn't have anyway.
-        case 'WAVE_CLUE': return toWaveGuess(state, now, currentWaveRound(state.wave!).clue ?? '(no clue)')
+        case 'WAVE_CLUE': return toWaveGuess(state, now)
         // A guess nobody made defaults to dead centre — a genuinely neutral non-answer.
         case 'WAVE_GUESS': return toWaveReveal(state, now, currentWaveRound(state.wave!).guess ?? 50)
         case 'WAVE_REVEAL': return advanceWave(state, now)
         // A drawing nobody finished still lets the round play out — sketching nothing,
         // of nothing, so no guess can match it.
-        case 'DRAW_SKETCH': {
-          const round = currentDrawRound(state.draw!)
-          return toDrawGuess(state, now, round.answer ?? '', round.strokes)
-        }
+        case 'DRAW_SKETCH': return toDrawGuess(state, now)
         // A guess nobody made just misses — an empty guess never accidentally matches.
         case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
         case 'DRAW_REVEAL': return advanceDraw(state, now)

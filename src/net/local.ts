@@ -3,6 +3,7 @@ import type { Action, Content, Game, PlayerId, SessionState } from '../engine/st
 import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { dayIndex, localDate } from '../daily/dates'
+import type { Live } from './live'
 
 // Solo transport: one process, no room, no lobby, no network. The reducer, the timer
 // loop and the clock work exactly as they do over Playroom — this only removes the wire.
@@ -36,6 +37,21 @@ export function initLocal(content: Content, game: Game): void {
     if (state.phaseEndsAt == null) return
     if (Date.now() >= state.phaseEndsAt) set(reduce(state, { type: 'TIMEOUT' }, Date.now()))
   }, 200)
+}
+
+// Solo: the only one typing or dragging is you, but the same preview shows on the board.
+let live: Live | null = null
+const liveListeners = new Set<() => void>()
+export function setLocalLive(value: Live | null): void {
+  live = value
+  for (const l of liveListeners) l()
+}
+export function useLocalLive(): Live | null {
+  return useSyncExternalStore(
+    (l) => { liveListeners.add(l); return () => { liveListeners.delete(l) } },
+    () => live,
+    () => live,
+  )
 }
 
 export function localDispatch(action: Action): void {

@@ -59,7 +59,7 @@ export function DebugBar({ s }: { s: SessionState }) {
       {s.phase === 'WAVE_CLUE' && s.wave && (
         <button
           className={btn}
-          onClick={() => dispatch({ type: 'SUBMIT_CLUE', player: s.wave!.rounds[s.wave!.current].psychic, text: 'debug clue' })}
+          onClick={() => { for (const p of ['A', 'B'] as const) dispatch({ type: 'SUBMIT_CLUE', player: p, text: 'debug clue' }) }}
         >
           fill-clue
         </button>
@@ -79,12 +79,11 @@ export function DebugBar({ s }: { s: SessionState }) {
       {s.phase === 'DRAW_SKETCH' && s.draw && (
         <button
           className={btn}
-          onClick={() => dispatch({
-            type: 'SUBMIT_DRAWING',
-            player: s.draw!.rounds[s.draw!.current].drawer,
-            answer: 'debug',
-            strokes: [[[0.2, 0.2], [0.8, 0.8]]],
-          })}
+          onClick={() => {
+            for (const p of ['A', 'B'] as const) {
+              dispatch({ type: 'SUBMIT_DRAWING', player: p, answer: 'debug', strokes: [[[0.2, 0.2], [0.8, 0.8]]] })
+            }
+          }}
         >
           fill-drawing
         </button>

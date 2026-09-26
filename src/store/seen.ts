@@ -73,6 +73,7 @@ export function freshen(content: Content, log: SeenLog = loadSeen()): Content {
 // including the live one, not ones drawn for later that you may never reach.
 export function shownIn(s: SessionState): Record<PoolKey, string[]> {
   const upTo = <R,>(g: { rounds: R[]; current: number } | null) => (g ? g.rounds.slice(0, g.current + 1) : [])
+  const withPair = <R,>(g: { rounds: R[]; current: number } | null) => (g ? g.rounds.slice(0, g.current + (g.current % 2 === 0 ? 2 : 1)) : [])
   const spectrum = new Map(s.spectrums.map((w) => [w.id, waveKey(w)]))
   const prompt = new Map(s.drawPrompts.map((p) => [p.id, p.text]))
   const theme = new Map(s.themes.map((t) => [t.id, t.text]))
@@ -82,8 +83,9 @@ export function shownIn(s: SessionState): Record<PoolKey, string[]> {
     finger: upTo(s.finger).map((r) => r.statementId),
     mrmrs: upTo(s.mrmrs).map((r) => r.question),
     lights: s.lights ? [s.lights.question] : [],
-    wave: upTo(s.wave).map((r) => spectrum.get(r.spectrumId)).filter(known),
-    draw: upTo(s.draw).map((r) => prompt.get(r.promptId)).filter(known),
+    // Clues and drawings are set in pairs, so both of a pair's prompts are shown at once.
+    wave: withPair(s.wave).map((r) => spectrum.get(r.spectrumId)).filter(known),
+    draw: withPair(s.draw).map((r) => prompt.get(r.promptId)).filter(known),
     list: s.listActs.map((a) => theme.get(a.themeId)).filter(known),
     clash: s.clash ? s.clash.rounds.slice(0, s.clash.current + 1).flatMap((r) => r.categories) : [],
     chain: s.chain ? s.chain.rounds.slice(0, s.chain.current + 1).map((r) => r.category) : [],

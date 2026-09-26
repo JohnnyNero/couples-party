@@ -1,24 +1,32 @@
 import type { SessionState } from '../../engine/state'
+import { pairOf } from '../../engine/reducer'
 import { playerName } from '../../views/list'
 import { drawQuestion } from '../../views/draw'
-import { useMyPlayerId } from '../../net'
-import { PromptCard } from '../../ui/kit'
 import { Avatar } from '../../ui/Avatar'
+import { WhoIsIn } from '../../ui/kit'
+import { eyebrow } from '../../ui/styles'
 import { CANVAS_ASPECT, PAPER } from '../../views/DrawingCanvas'
 
-// The board shows the question — it's about the drawer, and knowing it is half the
-// guess — but never their answer or the drawing in progress.
+// You're both drawing at once. The board shows each question — it's about the drawer,
+// and knowing it is half the guess — but never an answer or a drawing in progress.
 export function ScreenDrawSketch({ s }: { s: SessionState }) {
-  const me = useMyPlayerId()
-  const d = s.draw!
-  const round = d.rounds[d.current]
+  const pair = pairOf(s.draw!)
+  const done = { A: false, B: false }
+  for (const r of pair) done[r.drawer] = r.answer !== null
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-5">
-      <PromptCard over={`${playerName(s, round.drawer)} is answering`}>{drawQuestion(s, round, me)}</PromptCard>
-      <div className={`w-full ${CANVAS_ASPECT} ${PAPER} !border-dashed !border-fg/25 !shadow-none flex flex-col items-center justify-center gap-2`}>
-        <Avatar p={round.drawer} name={playerName(s, round.drawer)} size="md" className="animate-pulse" />
-        <span className="font-bold text-fg/55">Drawing…</span>
+    <div className="w-full max-w-2xl mx-auto flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5">
+        {pair.map((r) => (
+          <div key={r.index} className="flex flex-col gap-2">
+            <div className={eyebrow + ' truncate'}>{drawQuestion(s, r, null)}</div>
+            <div className={`w-full ${CANVAS_ASPECT} ${PAPER} !border-dashed !border-fg/25 !shadow-none flex flex-col items-center justify-center gap-2`}>
+              <Avatar p={r.drawer} name={playerName(s, r.drawer)} size="md" className={done[r.drawer] ? '' : 'animate-pulse'} />
+              <span className="font-bold text-fg/55 text-sm">{done[r.drawer] ? 'Done' : 'Drawing…'}</span>
+            </div>
+          </div>
+        ))}
       </div>
+      <WhoIsIn s={s} done={done} waiting={() => 'Drawing…'} big />
     </div>
   )
 }

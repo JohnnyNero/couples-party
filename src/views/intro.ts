@@ -19,9 +19,9 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
     'Every finger you keep up is worth 8.',
   ],
   wave: [
-    'One of you sees a hidden mark on a scale, like Cold ↔ Hot.',
-    'They name one thing that sits right on it.',
-    'The other slides to where they reckon it is. Closer scores more.',
+    'You each get a scale, like Cold ↔ Hot, with a hidden mark on it.',
+    'At the same time, you each name one thing that sits right on yours.',
+    'Then one at a time, the other slides to where they reckon it is. Closer scores more.',
   ],
   mrmrs: [
     'A question about yourselves, like “your comfort meal?”.',
@@ -29,9 +29,9 @@ export const INTRO_STEPS: Record<Exclude<GameKey, 'lights'>, [string, string, st
     'They rule on your guess. Right is worth 8.',
   ],
   draw: [
-    'You get a question about yourself — say, your dream pet.',
-    'Answer it in secret, then draw your answer. No words.',
-    'They get one guess. If they get it, they score 6.',
+    'You each get a question about yourself — say, your dream pet.',
+    'At the same time, answer it in secret and draw your answer. No words.',
+    'Then one at a time, the other gets one guess. Getting it scores 6.',
   ],
   clash: [
     'A letter and six categories.',
@@ -67,8 +67,8 @@ export function introSub(s: SessionState, key: GameKey): string {
   const r = roundsFor(s, key)
   switch (key) {
     case 'list': return r === 2 ? 'Two acts — you each rank once.' : `${n(r)} acts.`
-    case 'wave': return r === 2 ? 'Two rounds, one each as the one who knows.' : `${n(r)} rounds, taking turns as the one who knows.`
-    case 'draw': return r === 2 ? 'Two rounds, one drawing each.' : `${n(r)} rounds, taking turns to draw.`
+    case 'wave': return r === 2 ? 'One clue each.' : `${n(Math.ceil(r / 2))} rounds — a clue each in every one.`
+    case 'draw': return r === 2 ? 'One drawing each.' : `${n(Math.ceil(r / 2))} rounds — a drawing each in every one.`
     case 'circle': return r === 1 ? 'A quick one — thirty seconds.' : `Best of ${r}.`
     case 'clock': return `A quick one — first to ${Math.ceil(r / 2)} rounds.`
     default: return `${n(r)} round${r === 1 ? '' : 's'}.`

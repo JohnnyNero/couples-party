@@ -21,7 +21,7 @@ import { CHAIN } from './phases'
 //     play        Shortlist   Wavelength   Finger   Draw
 //     ok               15.5         17.4     20.0    18.0
 //     good             26.0         23.0     22.0    28.8
-//     maximum            42           42       40      36
+//     maximum            42           36       40      36
 //
 // Who's More Likely (6 × 7 = 42) and Mr & Mrs (5 × 8 = 40) were set to the same ceiling.
 // Who's More Likely pays you both when you agree, so it lifts the total without moving
