@@ -104,7 +104,7 @@ function SeenRecorder({ keep, mode }: { keep: boolean; mode: PlayMode }) {
 function Connecting() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center gap-4">
-      <Logo className="w-20 animate-pulse" />
+      <Logo className="w-20" link="loop" />
       <div className="font-display text-xl font-bold text-fg/50">Getting the room ready…</div>
     </div>
   )

@@ -97,8 +97,17 @@ body {
   overscroll-behavior: none;
 }
 
-/* The whole app is a fixed board — never rubber-band or scroll the page itself. */
-#root { overflow: hidden; }
+/* The whole app is a fixed board — never rubber-band or scroll the page itself. It's
+   pinned to the part of the screen you can see, which shrinks when a keyboard comes up
+   (ui/viewport.ts), so the header and its clock never scroll out of sight. */
+#root {
+  overflow: hidden;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--vv-top, 0px);
+  height: var(--vv-h, 100%);
+}
 
 /* A drawn stroke inking itself in (DrawingCanvas, paired with pathLength=1 so the dash
    offset is a 0..1 fraction of the stroke). Applied via inline `style` with a per-stroke
@@ -133,6 +142,36 @@ body {
   75% { transform: translate(var(--sway), 78vh) rotate(calc(var(--spin) * 0.75)); opacity: 1; }
   100% { transform: translate(0, 108vh) rotate(var(--spin)); opacity: 0; }
 }
+
+/* The logo's two links coming together (ui/Logo.tsx): each slides in from its own
+   side, overshoots, and hooks on. `logo-link` plays once; `logo-link-loop` keeps
+   linking and unlinking for a screen that's waiting. */
+@keyframes logo-in-left {
+  0% { transform: translateX(-18px); opacity: 0; }
+  60% { transform: translateX(2.5px); opacity: 1; }
+  80% { transform: translateX(-1px); }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes logo-in-right {
+  0% { transform: translateX(18px); opacity: 0; }
+  60% { transform: translateX(-2.5px); opacity: 1; }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes logo-loop-left {
+  0%, 100% { transform: translateX(-14px); opacity: 0.35; }
+  35% { transform: translateX(2px); opacity: 1; }
+  45%, 75% { transform: translateX(0); opacity: 1; }
+}
+@keyframes logo-loop-right {
+  0%, 100% { transform: translateX(14px); opacity: 0.35; }
+  35% { transform: translateX(-2px); opacity: 1; }
+  45%, 75% { transform: translateX(0); opacity: 1; }
+}
+.logo-link .logo-left { animation: logo-in-left 700ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.logo-link .logo-right { animation: logo-in-right 700ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.logo-link-loop .logo-left { animation: logo-loop-left 2.2s ease-in-out infinite; }
+.logo-link-loop .logo-right { animation: logo-loop-right 2.2s ease-in-out infinite; }
 
 /* The Wavelength needle swinging up from the left edge to the guess, overshooting a
    touch. --to is the guess as an angle off vertical. */

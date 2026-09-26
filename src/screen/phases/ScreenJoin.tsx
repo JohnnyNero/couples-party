@@ -4,6 +4,8 @@ import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
 import { LobbyInvite } from '../../views/LobbyInvite'
+import { useState } from 'react'
+import { Burst } from '../../ui/fx'
 import { resolveBot, resolveMode } from '../../start/mode'
 import { leaveTo } from '../../ui/back'
 
@@ -73,10 +75,15 @@ function BotLink({ game }: { game: string }) {
 
 function Seat({ s, p }: { s: SessionState; p: PlayerId }) {
   const pl = s.players[p]
+  // Whoever was already here when the lobby opened just sits there; whoever arrives
+  // after drops into their seat, with a little burst.
+  const [here] = useState(pl.connected)
+  const arrived = pl.connected && !here
   return (
     <div className="flex flex-col items-center gap-2 w-28">
       {pl.connected ? (
-        <span className="relative">
+        <span className={'relative ' + (arrived ? 'animate-seat-in' : '')}>
+          {arrived && <Burst delay={350} count={14} spread={0.8} />}
           <Avatar p={p} name={pl.name || '?'} size="xl" className={'ring-[6px] ' + (p === 'A' ? 'ring-pa-soft' : 'ring-pb-soft')} />
           <span className="absolute -right-0.5 -bottom-0.5 w-8 h-8 rounded-full bg-fg border-[3px] border-bg inline-flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="rgb(var(--bg))" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>

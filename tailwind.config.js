@@ -175,6 +175,30 @@ export default {
           '0%': { backgroundPosition: '100% 0' },
           '100%': { backgroundPosition: '-100% 0' },
         },
+        // A title card's icon spinning in, and its name sweeping across.
+        'spin-in': {
+          '0%': { transform: 'rotate(-160deg) scale(0.3)', opacity: '0' },
+          '60%': { transform: 'rotate(12deg) scale(1.1)', opacity: '1' },
+          '80%': { transform: 'rotate(-4deg) scale(0.97)' },
+          '100%': { transform: 'rotate(0) scale(1)', opacity: '1' },
+        },
+        sweep: {
+          '0%': { transform: 'translateX(-60px) skewX(-14deg)', opacity: '0' },
+          '60%': { transform: 'translateX(6px) skewX(4deg)', opacity: '1' },
+          '100%': { transform: 'translateX(0) skewX(0)', opacity: '1' },
+        },
+        // Someone taking their seat in the lobby: dropped in, a squash, settled.
+        'seat-in': {
+          '0%': { transform: 'translateY(-36px) scale(1.25)', opacity: '0' },
+          '55%': { transform: 'translateY(4px) scale(0.9, 1.08)', opacity: '1' },
+          '75%': { transform: 'translateY(-3px) scale(1.04, 0.96)' },
+          '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+        },
+        // The clock's last seconds: the bar throbbing.
+        throb: {
+          '0%, 100%': { transform: 'scaleY(1)', opacity: '1' },
+          '50%': { transform: 'scaleY(1.9)', opacity: '0.75' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',
@@ -197,6 +221,10 @@ export default {
         breathe: 'breathe 2.6s ease-in-out infinite',
         hop: 'hop 1.1s ease-in-out infinite',
         shimmer: 'shimmer 1.4s linear infinite',
+        'spin-in': 'spin-in 650ms cubic-bezier(0.2,0.8,0.3,1) both',
+        sweep: 'sweep 520ms cubic-bezier(0.2,0.8,0.3,1) both',
+        'seat-in': 'seat-in 600ms cubic-bezier(0.2,0.8,0.3,1) both',
+        throb: 'throb 1s ease-in-out infinite',
       },
     },
   },

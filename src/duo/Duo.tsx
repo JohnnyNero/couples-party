@@ -90,7 +90,9 @@ export function Duo() {
   return (
     <div className="h-full w-full flex flex-col select-none">
       <GameHeader s={s} />
-      <div className="flex-1 min-h-0">
+      {/* Scrolls rather than clips when a keyboard leaves it short — the header above
+          (and its clock) stays put either way. */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {BOARD_ONLY.has(s.phase) ? (
           <div className="h-full overflow-y-auto p-5 flex flex-col">
             <div className="my-auto w-full">

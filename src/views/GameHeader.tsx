@@ -173,10 +173,11 @@ export function TimerBar({ phaseEndsAt, paused = false, tick = false }: { phaseE
   useEffect(() => { if (tick && !paused && secs !== null && secs >= 1 && secs <= 3) buzz('tick') }, [secs, tick, paused])
   return (
     <div className={'flex items-center gap-2 ' + (secs === null ? 'invisible' : '')} aria-hidden={secs === null}>
-      <div className="flex-1 h-1.5 rounded-full bg-fg/10 overflow-hidden">
+      {/* The last five seconds: coral, throbbing, and each second bumping as it goes. */}
+      <div className={'flex-1 h-1.5 rounded-full bg-fg/10 overflow-hidden ' + (low && !paused ? 'animate-throb' : '')}>
         <div className={'h-full rounded-full ' + (low ? 'bg-pa' : 'bg-fg')} style={{ width: `${left * 100}%` }} />
       </div>
-      <span className={'w-6 text-right text-xs font-extrabold tabular-nums ' + (low ? 'text-pa-ink' : 'text-fg/55')}>{secs ?? ''}</span>
+      <span key={low ? secs ?? '' : 'calm'} className={'w-6 text-right text-xs font-extrabold tabular-nums ' + (low ? 'text-pa-ink text-sm animate-bump' : 'text-fg/55')}>{secs ?? ''}</span>
     </div>
   )
 }

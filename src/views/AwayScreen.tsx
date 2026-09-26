@@ -19,7 +19,7 @@ export function AwayScreen({ s }: { s: SessionState }) {
       <div className="flex -space-x-2">
         {gone.length > 0
           ? gone.map((p) => <span key={p} className="animate-breathe"><Avatar p={p} name={playerName(s, p)} size="md" /></span>)
-          : <Logo className="w-16 animate-pulse" />}
+          : <Logo className="w-16" link="loop" />}
       </div>
       <div className="font-display text-3xl font-extrabold leading-tight">
         {gone.length > 0 ? `Waiting for ${who}` : 'Getting back in…'}
