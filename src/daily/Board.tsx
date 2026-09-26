@@ -20,6 +20,7 @@ import { useIdeas } from '../ideas/store'
 import { TheirGo, TheirGoButton } from './TheirGo'
 import { refreshProfile } from '../profile/store'
 import { api } from './api'
+import { useBackLayer } from '../ui/back'
 import { caughtUpOn, markCaughtUp, settle, type Pin } from './pins'
 import { SetDialClue } from './SetDialClue'
 import { SetEither } from './SetEither'
@@ -64,6 +65,13 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   }, [])
 
   const { status, refresh } = board
+  // Back from a puzzle, or from setting one, is the board.
+  const closeScreen = () => {
+    setScreen(null)
+    setSyncing(true)
+    void refresh().finally(() => setSyncing(false))
+  }
+  useBackLayer(screen !== null, closeScreen)
   // Pairing (or unpairing) shows up here first, on the poll — let the profile, and so
   // every avatar and the header, catch up straight away.
   const pairState = status.kind === 'ready' ? status.data.state : null
@@ -104,11 +112,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   // Setting the next one is a button under your result now (see PuzzleScreen), so
   // closing just closes.
   const kinds = kindsOf(d)
-  const close = () => {
-    setScreen(null)
-    setSyncing(true)
-    void refresh().finally(() => setSyncing(false))
-  }
+  const close = closeScreen
 
   return (
     <>

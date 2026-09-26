@@ -8,6 +8,7 @@ import { FullscreenRow } from './FullscreenToggle'
 import { playerName } from './list'
 import { Avatar } from '../ui/Avatar'
 import { btnAccent, eyebrow } from '../ui/styles'
+import { leaveTo } from '../ui/back'
 
 // The button at the top right of every game screen. Mid-game it pauses the game for
 // both of you — the clock stops and the menu comes up on both phones (and the TV). At a
@@ -39,7 +40,7 @@ export function PauseMenu({ s, localOpen, onCloseLocal }: { s: SessionState; loc
   if (!s.paused && !localOpen) return null
   const by = s.paused?.by
   const resume = () => (s.paused && me ? dispatch({ type: 'RESUME', player: me }) : onCloseLocal())
-  const leave = () => { window.location.href = window.location.pathname }
+  const leave = () => leaveTo(window.location.pathname)
 
   return (
     <div className="fixed inset-0 z-50 bg-bg/80 backdrop-blur-md flex items-center justify-center p-5 animate-fade-up" role="dialog" aria-modal="true" aria-label={s.paused ? 'Paused' : 'Menu'}>

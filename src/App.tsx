@@ -15,6 +15,7 @@ import { DeviceLink } from './start/DeviceLink'
 import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
+import { leaveTo, useBackLayer } from './ui/back'
 
 export default function App() {
   // Game and mode both come from the URL (a shared link carries both) or the launch
@@ -27,6 +28,13 @@ export default function App() {
   // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
   const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
+  // From Home, a game (its mode picker, then the game itself) is one step in: back from
+  // the picker returns Home, and back from a game that's over leaves it for Home too.
+  // Mid-game, back pauses instead (see GameHeader) — this only answers once that's gone.
+  useBackLayer(!!game, () => {
+    if (mode) leaveTo(window.location.pathname)
+    else setGame(null)
+  })
 
   useEffect(() => {
     if (!mode || !game) return

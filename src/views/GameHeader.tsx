@@ -7,6 +7,9 @@ import { Avatar } from '../ui/Avatar'
 import { playerName } from './list'
 import { railText } from './board'
 import { PauseButton, PauseMenu } from './PauseMenu'
+import { canPause } from '../engine/reducer'
+import { dispatch, useMyPlayerId } from '../net'
+import { useBackLayer } from '../ui/back'
 
 const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
@@ -31,6 +34,18 @@ export function headerInfo(s: SessionState): { icon: GameKey | null; title: stri
 export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean }) {
   const { icon, title, sub } = headerInfo(s)
   const [menu, setMenu] = useState(false)
+  // Back never drops you out of a game: mid-game it pauses (the same as the button),
+  // and with the menu up it resumes. Leaving is the menu's own button.
+  const me = useMyPlayerId()
+  const menuUp = !!s.paused || menu
+  useBackLayer(!big && !menuUp, () => {
+    if (me && canPause(s)) dispatch({ type: 'PAUSE', player: me })
+    else setMenu(true)
+  })
+  useBackLayer(!big && menuUp, () => {
+    if (s.paused && me) dispatch({ type: 'RESUME', player: me })
+    else setMenu(false)
+  })
   return (
     <div className={'shrink-0 flex flex-col gap-2.5 ' + (big ? 'px-8 pt-6 pb-3' : 'px-5 pt-4 pb-2')}>
       <div className="flex items-center gap-2.5">

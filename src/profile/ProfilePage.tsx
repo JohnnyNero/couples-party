@@ -9,6 +9,7 @@ import { shrinkPhoto } from './photo'
 import { OurQuestions } from '../ideas/OurQuestions'
 import { clearIdeas } from '../ideas/store'
 import { deviceUrl } from '../start/invite'
+import { useBackLayer } from '../ui/back'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -19,6 +20,7 @@ const localName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } ca
 export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUnpaired: () => void }) {
   const profile = useProfile()
   const [ideasOpen, setIdeasOpen] = useState(false)
+  useBackLayer(ideasOpen, () => setIdeasOpen(false))
   useEffect(() => { void refreshProfile() }, [])
 
   const paired = profile?.state === 'paired' ? profile : null

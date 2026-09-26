@@ -3,6 +3,7 @@ import type { Game } from './mode'
 import type { GameKey } from '../engine/state'
 import { GAME_LABELS, roster } from '../engine/roster'
 import { ProfilePage } from '../profile/ProfilePage'
+import { useBackLayer } from '../ui/back'
 import { refreshProfile, useProfile } from '../profile/store'
 import { refreshIdeas } from '../ideas/store'
 import { Avatar } from '../ui/Avatar'
@@ -47,6 +48,9 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
     setTab(t)
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
   }
+  // Back from Games or Memories is Today; back from the profile page closes it.
+  useBackLayer(tab !== 'today', () => choose('today'))
+  useBackLayer(profileOpen, () => setProfileOpen(false))
 
   return (
     <div className="h-full w-full flex flex-col select-none">
