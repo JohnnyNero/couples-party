@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { api, DailyError, type DialView } from './api'
 import { closeness } from './DialCard'
 import { parseSpectrumPrompt } from './dial'
@@ -11,11 +11,13 @@ export function PlayDial({
   partner,
   spectrum,
   onClose,
+  extra,
 }: {
   puzzle: DialView
   partner: string
   spectrum: string
   onClose: () => void
+  extra?: ReactNode // under your result: the way to see how they did on yours
 }) {
   const { low, high } = parseSpectrumPrompt(spectrum)
   const [value, setValue] = useState(50)
@@ -54,6 +56,7 @@ export function PlayDial({
           </div>
           <div className="font-display text-3xl font-bold text-accent-ink">{closeness(result.distance!)}</div>
           <div className="text-sm text-fg/60">You placed it {result.distance} away from the mark.</div>
+          {extra}
           <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
             Done
           </button>

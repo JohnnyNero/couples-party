@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { api, DailyError, type SketchView } from './api'
 import { SKETCH_GUESSES } from './sketch'
 import { theirs } from './SketchCard'
@@ -11,11 +11,13 @@ export function PlaySketch({
   partner,
   prompt,
   onClose,
+  extra,
 }: {
   puzzle: SketchView
   partner: string
   prompt: string
   onClose: () => void
+  extra?: ReactNode // under your result: the way to see how they did on yours
 }) {
   const [puzzle, setPuzzle] = useState(initial)
   const [guess, setGuess] = useState('')
@@ -80,6 +82,7 @@ export function PlaySketch({
             </div>
             <div className="font-display text-4xl font-bold uppercase tracking-wide text-accent-ink break-words">{puzzle.answer}</div>
             {puzzle.status === 'failed' && <div className="text-sm text-fg/60">Ask {partner} why.</div>}
+            {extra}
             <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
               Done
             </button>

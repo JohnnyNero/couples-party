@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { api, DailyError, type PuzzleView } from './api'
 import { Keyboard, TileRow } from './Tiles'
 import { cleanWord, keyStates, lengthWord, loadWords, MAX_GUESSES } from './wordle'
@@ -11,12 +11,14 @@ export function WordPlay({
   question,
   mine,
   onClose,
+  extra,
 }: {
   puzzle: PuzzleView
   partner: string
   question: string // as the solver reads it: the setter by name ("Rocko’s comfort food")
   mine: string | null // what you answered, for the side-by-side at the end
   onClose: () => void
+  extra?: ReactNode // under your result: the way to see how they did on yours
 }) {
   const [puzzle, setPuzzle] = useState(initial)
   const [typed, setTyped] = useState('')
@@ -110,6 +112,7 @@ export function WordPlay({
             </div>
           )}
           <div className="text-sm text-fg/60">Ask {partner} why.</div>
+          {extra}
           <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
             Done
           </button>

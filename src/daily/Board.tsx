@@ -15,6 +15,7 @@ import { PlayTop5 } from './PlayTop5'
 import { questionFromThem, questionOfTheDay, renderQuestion } from './question'
 import { say } from '../say'
 import { useIdeas } from '../ideas/store'
+import { TheirGo, TheirGoButton } from './TheirGo'
 import { refreshProfile } from '../profile/store'
 import { SetDialClue } from './SetDialClue'
 import { SetNumbers } from './SetNumbers'
@@ -40,7 +41,8 @@ const NAMES: Record<Kind, string> = {
   word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers',
 }
 
-type Screen = { kind: Kind; mode: 'play' | 'set' }
+// 'theirs': how your partner did on the one you set them today (TheirGo).
+type Screen = { kind: Kind; mode: 'play' | 'set' | 'theirs' }
 type Pools = { content: Content; words: string[]; numbers: string[] }
 
 export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
@@ -118,6 +120,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
             data={d}
             pools={pools}
             onClose={() => close(screen.mode === 'play' ? screen.kind : undefined)}
+            onSwitch={setScreen}
           />
         </div>,
         document.body,
@@ -307,11 +310,13 @@ function PuzzleScreen({
   data,
   pools,
   onClose,
+  onSwitch,
 }: {
   screen: Screen
   data: Extract<BoardData, { state: 'paired' }>
   pools: Pools
   onClose: () => void
+  onSwitch: (s: Screen) => void
 }) {
   const { partner, me, kinds } = data
   const tomorrow = localDate(1)
@@ -323,16 +328,23 @@ function PuzzleScreen({
   // component below (see e.g. SetDialClue's `forDate` prop).
   const setDate = (k: Kind): string | undefined => (kinds[k].mine ? tomorrow : undefined)
 
-  if (screen.mode === 'play') {
+  if (screen.mode === 'theirs') {
+    const mine = kinds[screen.kind].mine
+    if (mine) return <TheirGo puzzle={mine} partner={partner} me={me} onClose={() => onSwitch({ kind: screen.kind, mode: 'play' })} />
+  }
+
+  if (screen.mode === 'play' || screen.mode === 'theirs') {
+    // Under your own result: the way to see how they did on the one you set them.
+    const extra = <TheirGoButton puzzle={kinds[screen.kind].mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
     switch (screen.kind) {
       case 'word': {
         const p = kinds.word.solve!
-        return <WordPlay puzzle={p} partner={partner} question={questionFromThem(p.prompt, partner, me)} mine={kinds.word.mine?.answer ?? null} onClose={onClose} />
+        return <WordPlay puzzle={p} partner={partner} question={questionFromThem(p.prompt, partner, me)} mine={kinds.word.mine?.answer ?? null} onClose={onClose} extra={extra} />
       }
-      case 'dial': return <PlayDial puzzle={kinds.dial.solve!} partner={partner} spectrum={kinds.dial.solve!.prompt} onClose={onClose} />
-      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={say(kinds.top5.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} />
-      case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} />
-      case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} me={me} onClose={onClose} />
+      case 'dial': return <PlayDial puzzle={kinds.dial.solve!} partner={partner} spectrum={kinds.dial.solve!.prompt} onClose={onClose} extra={extra} />
+      case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={say(kinds.top5.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} extra={extra} />
+      case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} extra={extra} />
+      case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} me={me} onClose={onClose} extra={extra} />
     }
   }
 

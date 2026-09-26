@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { questionFromThem } from './question'
 import { api, DailyError, type NumbersView } from './api'
 import { NumberForm } from './NumberForm'
@@ -11,11 +11,13 @@ export function PlayNumbers({
   partner,
   me = 'you',
   onClose,
+  extra,
 }: {
   puzzle: NumbersView
   partner: string
   me?: string
   onClose: () => void
+  extra?: ReactNode // under your result: the way to see how they did on yours
 }) {
   const [result, setResult] = useState<NumbersView | null>(puzzle.status === 'open' ? null : puzzle)
   const [busy, setBusy] = useState(false)
@@ -66,6 +68,7 @@ export function PlayNumbers({
               )
             })}
             <div className="font-display text-2xl font-bold text-accent-ink text-center mt-1">{summary(result.marks!)}</div>
+            {extra}
             <button onClick={onClose} className="w-full min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
               Done
             </button>
