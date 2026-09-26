@@ -1,4 +1,6 @@
-import type { DialView, NumbersView, PuzzleView, SketchView, Top5View } from './api'
+import type { DialView, EitherView, NumbersView, PuzzleView, SketchView, Top5View } from './api'
+import { EitherResult } from './EitherKit'
+import { eitherSummary } from './either'
 import { TileRow } from './Tiles'
 import { closeness } from './DialCard'
 import { outcome } from './Top5Card'
@@ -14,9 +16,9 @@ import { eyebrow } from '../ui/styles'
 // your side: your answer or mark or order, next to what they did with it. Opened from
 // your own finished puzzle's result, once they've finished yours.
 
-export type Mine = PuzzleView | DialView | Top5View | SketchView | NumbersView
+export type Mine = PuzzleView | DialView | Top5View | SketchView | NumbersView | EitherView
 
-const NAMES = { word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers' } as const
+const NAMES = { word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That' } as const
 
 export function TheirGo({ puzzle, partner, me, onClose }: { puzzle: Mine; partner: string; me: string; onClose: () => void }) {
   return (
@@ -46,6 +48,7 @@ function title(p: Mine, partner: string, me: string): string {
     case 'top5': return say(p.prompt, { self: true, subject: me, partner })
     case 'sketch': return `Your ${p.prompt}`
     case 'numbers': return 'Your numbers'
+    case 'either': return 'Your picks'
   }
 }
 
@@ -127,6 +130,19 @@ function Replay({ puzzle: p, partner, me }: { puzzle: Mine; partner: string; me:
             )
           })}
         </div>
+      )
+    case 'either':
+      return (
+        <>
+          <EitherResult
+            questions={p.questions}
+            answers={p.answers ?? []}
+            guesses={p.guesses ?? []}
+            setter={{ p: 'A', name: 'You' }}
+            guesser={{ p: 'B', name: partner }}
+          />
+          <Verdict>{eitherSummary(p.matches ?? 0)}</Verdict>
+        </>
       )
   }
 }

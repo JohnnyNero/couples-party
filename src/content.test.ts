@@ -233,6 +233,13 @@ describe('the shipped content keeps its shape', () => {
     expect(new Set(parsed.numberQuestions).size).toBe(parsed.numberQuestions.length)
   })
 
+  it('gives This or That enough fair, short pairs', () => {
+    expect(parsed.eitherPairs.length).toBeGreaterThanOrEqual(30)
+    const sides = parsed.eitherPairs.flatMap((p) => p.split(' | '))
+    expect(sides.filter((x) => words(x) > 3 || /\byou\b|@|\{/i.test(x))).toEqual([])
+    expect(new Set(parsed.eitherPairs.map((p) => p.toLowerCase())).size).toBe(parsed.eitherPairs.length)
+  })
+
   it('keeps the newer games short enough to read at a glance', () => {
     // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
     expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])

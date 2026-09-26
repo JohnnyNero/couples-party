@@ -6,9 +6,9 @@ import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './
 // line is just skipped rather than breaking the whole file.
 
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
-export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[] }
+export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[]; eitherPairs: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'clash' | 'chain' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -23,6 +23,7 @@ function sectionFor(heading: string): Section {
     case 'lights out': return 'lights'
     case 'their word': return 'word'
     case 'their numbers': return 'numbers'
+    case 'this or that': return 'either'
     case 'category clash': return 'clash'
     case 'word chain': return 'chain'
     default: return null
@@ -39,6 +40,7 @@ export function parseContent(text: string): ParsedContent {
   const lightsQuestions: string[] = []
   const wordPrompts: string[] = []
   const numberQuestions: string[] = []
+  const eitherPairs: string[] = [] // "Tea | Coffee", tidied
   const clashCategories: string[] = []
   const chainCategories: ChainCategory[] = []
   let currentChain: ChainCategory | null = null
@@ -106,6 +108,11 @@ export function parseContent(text: string): ParsedContent {
       case 'numbers':
         numberQuestions.push(item)
         break
+      case 'either': {
+        const [a, b, ...rest] = item.split('|').map((x) => x.trim())
+        if (a && b && rest.length === 0) eitherPairs.push(`${a} | ${b}`)
+        break
+      }
       case 'clash':
         clashCategories.push(item)
         break
@@ -117,6 +124,6 @@ export function parseContent(text: string): ParsedContent {
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, clashCategories, chainCategories,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories,
   }
 }

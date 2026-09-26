@@ -9,6 +9,7 @@
       WHO IS "YOU" below). 7+ items each.
     - "- " is one entry.
     - A Wavelength entry is two poles: "- Low | High".
+    - A This or That entry is two choices: "- Tea | Coffee".
 
   ---------------------------------------------------------------------------
   WHO IS "YOU"
@@ -2494,3 +2495,75 @@ money and anything with a right answer to be embarrassed about.
 - Out of 10, how ticklish [you are|@ is]
 - Out of 10, how much [you like|@ likes] kissing in public
 - Out of 10, how good a kisser [you are|@ is]
+
+# This or That
+
+The daily either/ors. Five of these come up each day, the same five for both of
+you. You each pick your side of every pair, then predict the other's picks.
+
+Two short choices, "- This | That", one to three words each. Both sides have to
+be a fair pick. If nearly everyone would choose the same one, there's nothing to
+predict. No names and no "you": it's always about whoever's picking.
+
+- Tea | Coffee
+- Early bird | Night owl
+- Beach | City break
+- Sweet | Savoury
+- Call | Text
+- Cats | Dogs
+- Big night out | Night in
+- Sunrise | Sunset
+- Films | TV series
+- Bath | Shower
+- Mountains | Seaside
+- Chips | Mash
+- Summer | Winter
+- Plan everything | Wing it
+- Books | Podcasts
+- Pizza | Curry
+- Window seat | Aisle seat
+- Pub quiz | Karaoke
+- Breakfast in bed | Brunch out
+- Rom-com | Horror
+- Board games | Video games
+- Cook | Wash up
+- Camping | Hotel
+- Toast | Cereal
+- Crisps | Chocolate
+- Road trip | Flight
+- Gym | Long walk
+- Hoodie | Jumper
+- Hours early | Just in time
+- Spend | Save
+- Cinema | Gig
+- Fries | Onion rings
+- Surprise party | Quiet dinner
+- Tidy | Cosy chaos
+- Text first | Play it cool
+- Big spoon | Little spoon
+- Morning sex | Night-time sex
+- Neck kisses | Lip kisses
+- Lights on | Lights off
+- Dance floor | Bar
+- Burger | Kebab
+- Ketchup | Mayo
+- Bubble bath | Hot tub
+- Sleep in | Early start
+- Spontaneous trip | Planned holiday
+- Fancy restaurant | Sofa takeaway
+- Beer | Wine
+- Gin | Vodka
+- Roast dinner | Full English
+- Thunderstorm | Snow day
+- Silence | Background music
+- Flowers | Chocolates
+- Handwritten note | Voice note
+- Hug | Kiss
+- Sunday lie-in | Sunday adventure
+- Heels | Trainers
+- Theme park | Museum
+- Talk it out | Sleep on it
+- Dessert | Starter
+- Online shopping | High street
+- Warm bedroom | Cool bedroom
+- Cuddle to sleep | Own side

@@ -16,6 +16,7 @@ import m0013 from './migrations/0013_profile.sql?raw'
 import m0014 from './migrations/0014_our_questions.sql?raw'
 import m0015 from './migrations/0015_more_than_one_device.sql?raw'
 import m0016 from './migrations/0016_week_and_team.sql?raw'
+import m0017 from './migrations/0017_this_or_that.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -79,6 +80,7 @@ beforeAll(async () => {
   await db.exec(m0014)
   await db.exec(m0015)
   await db.exec(m0016)
+  await db.exec(m0017)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -473,7 +475,7 @@ describe('the board: solve theirs, then set tomorrow', () => {
   it('starts empty: nothing to solve, nothing set, no points', async () => {
     const b = await call(ROBIN, 'board', [today()])
     expect(b).toMatchObject({ state: 'paired', me: 'Robin', partner: 'Jess', today: { me: 0, them: 0 }, total: { me: 0, them: 0 }, streak: 0 })
-    expect(Object.keys(b.kinds).sort()).toEqual(['dial', 'numbers', 'sketch', 'top5', 'word'])
+    expect(Object.keys(b.kinds).sort()).toEqual(['dial', 'either', 'numbers', 'sketch', 'top5', 'word'])
     expect(b.kinds.word).toEqual({ solve: null, mine: null, next: null })
   })
   it("sets tomorrow's for the partner, shown as next", async () => {
@@ -755,12 +757,44 @@ describe('board_stats', () => {
     await call(ALEX, 'submit_dial', [ya.theirs.id, 45]) // 5 away: 7 points
     const stats = await call(SAM, 'board_stats', [today()])
     expect(stats.bestDay).toBe(17)
-    expect(stats.daysLast7).toBe(1)
+    // Both played yesterday (solved) and the day before (set yesterday's).
+    expect(stats.daysLast7).toBe(2)
     const monday = new Date(today()); const dow = (monday.getUTCDay() + 6) % 7
     const yesterdayThisWeek = dow >= 1
     expect(stats.week).toEqual(yesterdayThisWeek ? { me: 10, them: 7 } : { me: 0, them: 0 })
     expect(stats.lastWeek).toEqual(yesterdayThisWeek ? { me: 0, them: 0 } : { me: 10, them: 7 })
     expect((await call(ALEX, 'board_stats', [today()])).week).toEqual(yesterdayThisWeek ? { me: 7, them: 10 } : { me: 0, them: 0 })
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('this or that: five either/ors about yourself', () => {
+  const QS = ['Tea | Coffee', 'Early bird | Night owl', 'Beach | City', 'Sweet | Savoury', 'Call | Text']
+  it('pins the pairs, hides the picks, and scores 2 a match', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    await expect(call(SAM, 'set_either', [today(), QS.slice(0, 4), [0, 1, 0, 1]])).rejects.toThrow(/five pairs/)
+    await expect(call(SAM, 'set_either', [today(), QS, [0, 1, 0, 1, 2]])).rejects.toThrow(/pick one of each/)
+    await call(SAM, 'set_either', [today(), QS, [1, 1, 1, 1, 1]])
+    await call(SAM, 'set_either', [today(), QS, [0, 1, 0, 1, 0]])
+    // Alex's own five land under the same pairs, whatever Alex's phone sent.
+    await call(ALEX, 'set_either', [today(), ['a|b', 'c|d', 'e|f', 'g|h', 'i|j'], [1, 1, 0, 0, 1]])
+    const alex = await call(ALEX, 'board', [today()])
+    expect(Object.keys(alex.kinds)).toContain('either')
+    expect(alex.kinds.either.mine).toMatchObject({ questions: QS, answers: [1, 1, 0, 0, 1] })
+    const theirs = alex.kinds.either.solve
+    expect(theirs).toMatchObject({ kind: 'either', questions: QS, answers: null, status: 'open', points: null })
+
+    const view = await call(ALEX, 'submit_either', [theirs.id, [0, 1, 1, 1, 1]])
+    expect(view).toMatchObject({ status: 'solved', answers: [0, 1, 0, 1, 0], guesses: [0, 1, 1, 1, 1], matches: 3 })
+    expect(await call(ALEX, 'submit_either', [theirs.id, [0, 0, 0, 0, 0]])).toMatchObject({ matches: 3 })
+    await expect(call(SAM, 'set_either', [today(), QS, [1, 1, 1, 1, 1]])).rejects.toThrow(/already started/)
+    await expect(call(EVE, 'submit_either', [theirs.id, [0, 0, 0, 0, 0]])).rejects.toThrow(/no such puzzle/)
+
+    const board = await call(ALEX, 'board', [today()])
+    expect(board.kinds.either.solve.points).toBe(6)
+    expect(board.today.me).toBe(6)
+    await expect(as(SAM, `select public.either_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
     await call(SAM, 'leave_couple')
   })
 })

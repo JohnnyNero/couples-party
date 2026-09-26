@@ -39,15 +39,17 @@ begin
      group by p.for_date
   ) days;
 
-  -- Of the last seven days (today included), how many you both played — the same rule
-  -- as the streak: both of you set the same kind of puzzle that day.
-  select count(distinct d) into played from (
-    select p.for_date as d
-      from public.puzzles p
-     where p.couple_id = my_row.couple_id and p.for_date between p_today - 6 and p_today
-     group by p.for_date, p.kind
-    having count(distinct p.setter) = 2
-  ) pairs;
+  -- Of the last seven days (today included), how many you both played — the streak's
+  -- own rule: each of you solved one of that day's puzzles or set one for the next.
+  select count(*) into played
+    from generate_series(p_today - 6, p_today, interval '1 day') g(day)
+   where (select count(distinct who) from (
+            select p.solver as who from public.puzzles p
+             where p.couple_id = my_row.couple_id and p.for_date = g.day::date and p.status <> 'open'
+            union
+            select p.setter from public.puzzles p
+             where p.couple_id = my_row.couple_id and p.for_date = g.day::date + 1
+          ) t) = 2;
 
   return jsonb_build_object(
     'state', 'paired',

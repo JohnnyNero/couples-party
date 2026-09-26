@@ -80,7 +80,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
             <div>
               <h1 className="font-display text-4xl font-extrabold leading-tight">You’re paired!</h1>
               <p className="mt-2 text-fg/65 leading-snug">
-                You and {step.partner} are in. Every day there are five little puzzles you set for each
+                You and {step.partner} are in. Every day there are six little puzzles you set for each
                 other — and a game night whenever you want one.
               </p>
             </div>

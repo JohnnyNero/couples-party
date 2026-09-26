@@ -143,6 +143,20 @@ export type DailyNumbers =
       theirs: NumbersView | { locked: true } | null
     }
 
+// This or That: five either/ors ("Tea | Coffee"), the setter's picks (0 for the first
+// of each pair, 1 for the second) and the solver's predictions. The pairs are never
+// hidden; the picks are, until the predictions are in.
+export type EitherView = {
+  id: string
+  forDate: string
+  kind: 'either'
+  questions: string[]
+  answers: number[] | null
+  guesses: number[] | null
+  matches: number | null
+  status: 'open' | 'solved'
+}
+
 // The Today board: every kind at once. For each, `solve` is your partner's puzzle for
 // you today, `mine` is yours for them today, `next` is what you've set them for
 // tomorrow. Finished puzzles carry `points` (out of 10) for whoever solved them.
@@ -153,6 +167,8 @@ export type BoardKinds = {
   top5: { solve: (Top5View & Scored) | null; mine: (Top5View & Scored) | null; next: (Top5View & Scored) | null }
   sketch: { solve: (SketchView & Scored) | null; mine: (SketchView & Scored) | null; next: (SketchView & Scored) | null }
   numbers: { solve: (NumbersView & Scored) | null; mine: (NumbersView & Scored) | null; next: (NumbersView & Scored) | null }
+  // Missing on a server without migration 0017.
+  either?: { solve: (EitherView & Scored) | null; mine: (EitherView & Scored) | null; next: (EitherView & Scored) | null }
 }
 export type Board =
   | { state: 'single' }
@@ -189,7 +205,7 @@ export type Memories =
       partner: string
       since: string // the oldest day this window covers
       sessions: { key: string; playedOn: string; payload: unknown }[]
-      puzzles: Array<(PuzzleView | DialView | Top5View | SketchView | NumbersView) & { mine: boolean; points?: number | null }>
+      puzzles: Array<(PuzzleView | DialView | Top5View | SketchView | NumbersView | EitherView) & { mine: boolean; points?: number | null }>
     }
 
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
@@ -260,6 +276,8 @@ function friendly(message: string): string {
   if (/1 to 30 characters/.test(message)) return 'A word or two — up to 30 characters.'
   if (/draw something/.test(message)) return 'Draw something first.'
   if (/five whole numbers/.test(message)) return 'Whole numbers, 0 to 9999, all five.'
+  if (/five pairs/.test(message)) return 'That needs five pairs.'
+  if (/pick one of each/.test(message)) return 'Pick one of each pair.'
   if (/another device/.test(message)) return "That's this device's own code — type it on the other one."
   if (/already linked/.test(message)) return 'This device is already linked to someone.'
   if (/2 to 120 characters/.test(message)) return 'A few words — up to 120 characters.'
@@ -331,6 +349,10 @@ export const api = {
     rpc<void>('set_numbers', { p_for_date: forDate, p_questions: questions, p_answers: answers }),
   submitNumbers: (puzzleId: string, guesses: number[]) =>
     rpc<NumbersView>('submit_numbers', { p_puzzle: puzzleId, p_guesses: guesses }),
+  setEither: (forDate: string, questions: string[], picks: number[]) =>
+    rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
+  submitEither: (puzzleId: string, guesses: number[]) =>
+    rpc<EitherView>('submit_either', { p_puzzle: puzzleId, p_guesses: guesses }),
 }
 
 // One box for any code: a device code (from your own Profile, on another device) makes

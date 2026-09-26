@@ -7,8 +7,10 @@ import { Avatar, inkOf } from '../ui/Avatar'
 import { localDate } from './dates'
 import { dialOfTheDay, spectrumPrompt } from './dial'
 import { numbersOfTheDay } from './numbers'
+import { eitherOfTheDay } from './either'
 import { PairStart, PairWaiting } from './Pairing'
 import { PlayDial } from './PlayDial'
+import { PlayEither } from './PlayEither'
 import { PlayNumbers } from './PlayNumbers'
 import { PlaySketch } from './PlaySketch'
 import { PlayTop5 } from './PlayTop5'
@@ -18,6 +20,7 @@ import { useIdeas } from '../ideas/store'
 import { TheirGo, TheirGoButton } from './TheirGo'
 import { refreshProfile } from '../profile/store'
 import { SetDialClue } from './SetDialClue'
+import { SetEither } from './SetEither'
 import { SetNumbers } from './SetNumbers'
 import { SetSketch } from './SetSketch'
 import { SetTop5 } from './SetTop5'
@@ -27,23 +30,25 @@ import { fiveify, itemsOfTheDay, themeOfTheDay } from './top5'
 import { useBoard } from './useDaily'
 import { WordAnswer } from './WordAnswer'
 import { WordPlay } from './WordPlay'
-import { loadNumberQuestions, loadPacks, loadWordPrompts } from '../packs'
+import { loadEitherPairs, loadNumberQuestions, loadPacks, loadWordPrompts } from '../packs'
 import type { Content } from '../engine/state'
 
-// The Today board: a scoreboard, then all five daily puzzles as tiles. Each tile is
+// The Today board: a scoreboard, then all six daily puzzles as tiles. Each tile is
 // the same two steps — solve the one your partner set you for today, then set one for
 // them for tomorrow. On day one (or a day they missed) there's nothing to solve, so the
 // tile goes straight to setting.
 
 type Kind = keyof BoardKinds
-const KINDS: Kind[] = ['word', 'dial', 'top5', 'sketch', 'numbers']
+const KINDS: Kind[] = ['word', 'dial', 'top5', 'sketch', 'numbers', 'either']
 const NAMES: Record<Kind, string> = {
-  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers',
+  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That',
 }
+// The kinds this server knows — This or That needs migration 0017.
+const kindsOf = (d: { kinds: BoardKinds }) => KINDS.filter((k) => d.kinds[k])
 
 // 'theirs': how your partner did on the one you set them today (TheirGo).
 type Screen = { kind: Kind; mode: 'play' | 'set' | 'theirs' }
-type Pools = { content: Content; words: string[]; numbers: string[] }
+type Pools = { content: Content; words: string[]; numbers: string[]; either: string[] }
 
 export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const [screen, setScreen] = useState<Screen | null>(null)
@@ -52,8 +57,8 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const [syncing, setSyncing] = useState(false)
   const [pools, setPools] = useState<Pools | null>(null)
   useEffect(() => {
-    void Promise.all([loadPacks(), loadWordPrompts(), loadNumberQuestions()])
-      .then(([content, words, numbers]) => setPools({ content, words, numbers }))
+    void Promise.all([loadPacks(), loadWordPrompts(), loadNumberQuestions(), loadEitherPairs()])
+      .then(([content, words, numbers, either]) => setPools({ content, words, numbers, either }))
   }, [])
 
   const { status, refresh } = board
@@ -83,7 +88,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
     return (
       <Card title="Pair up" sub="Daily puzzles for two">
         <p className="text-sm text-fg/60 mb-4">
-          Link your two phones once. Then every day there are five puzzles your partner set
+          Link your two phones once. Then every day there are six puzzles your partner set
           for you — solve them, then set theirs for tomorrow.
         </p>
         <PairStart onDone={() => void refresh()} />
@@ -96,6 +101,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
 
   // Setting the next one is a button under your result now (see PuzzleScreen), so
   // closing just closes.
+  const kinds = kindsOf(d)
   const close = () => {
     setScreen(null)
     setSyncing(true)
@@ -121,13 +127,13 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
       <div className="flex flex-col gap-3">
         <Scoreboard d={d} />
         <div className="grid grid-cols-2 gap-3">
-          {KINDS.map((k, i) => (
+          {kinds.map((k, i) => (
             <Tile
               key={k}
               kind={k}
               partner={d.partner}
-              slot={d.kinds[k]}
-              wide={i === KINDS.length - 1}
+              slot={d.kinds[k]!}
+              wide={kinds.length % 2 === 1 && i === kinds.length - 1}
               onOpen={(mode) => { if (!syncing) setScreen({ kind: k, mode }) }}
             />
           ))}
@@ -144,8 +150,9 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
 // ahead since Monday and resets every Monday. All-time and last week are one tap deeper.
 function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   const [open, setOpen] = useState(false)
-  const played = KINDS.map((k) => {
-    const s = d.kinds[k].solve
+  const kinds = kindsOf(d)
+  const played = kinds.map((k) => {
+    const s = d.kinds[k]!.solve
     return !!s && s.status !== 'open'
   })
   const done = played.filter(Boolean).length
@@ -166,7 +173,7 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
               <span key={i} className={'h-2 w-3.5 min-[400px]:w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
             ))}
           </div>
-          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of {KINDS.length}</span>
+          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of {kinds.length}</span>
         </div>
       </div>
 
@@ -241,7 +248,7 @@ function Side({ p, name, label, points, crown, flip = false }: {
 
 // ---------------------------------------------------------------- tiles
 
-type Slot = BoardKinds[Kind]
+type Slot = NonNullable<BoardKinds[Kind]>
 
 function Tile({
   kind,
@@ -299,7 +306,7 @@ function Tile({
     >
       <div className={'flex items-center gap-2 min-w-0 ' + (wide ? 'flex-1' : '')}>
         <span className="shrink-0 w-8 h-8 rounded-[10px] bg-fg/[0.05] inline-flex items-center justify-center"><KindIcon kind={kind} /></span>
-        <span className="flex-1 min-w-0 font-display text-base font-bold leading-tight truncate">{NAMES[kind]}</span>
+        <span className="flex-1 min-w-0 font-display text-base font-bold leading-tight break-words">{NAMES[kind]}</span>
       </div>
       <div className={wide ? 'shrink-0' : 'self-start max-w-full'}>{chip}</div>
     </button>
@@ -347,6 +354,13 @@ function KindIcon({ kind }: { kind: Kind }) {
           <text x="12" y="16.5" textAnchor="middle" fontSize="11" fontWeight="800" fill="rgb(var(--bg))" fontFamily="Nunito, Arial">123</text>
         </svg>
       )
+    case 'either':
+      return (
+        <svg viewBox="0 0 24 24" className={box} aria-hidden="true">
+          <rect x="1.5" y="5" width="10" height="14" rx="3" fill="rgb(var(--pa))" />
+          <rect x="12.5" y="5" width="10" height="14" rx="3" fill="rgb(var(--pb))" />
+        </svg>
+      )
   }
 }
 
@@ -376,17 +390,17 @@ function PuzzleScreen({
   // all yet (day one, or a day you both missed), set that one for today instead, so
   // there's something to play right away. `undefined` here means "today" to every Set…
   // component below (see e.g. SetDialClue's `forDate` prop).
-  const setDate = (k: Kind): string | undefined => (kinds[k].mine ? tomorrow : undefined)
+  const setDate = (k: Kind): string | undefined => (kinds[k]?.mine ? tomorrow : undefined)
 
   if (screen.mode === 'theirs') {
-    const mine = kinds[screen.kind].mine
+    const mine = kinds[screen.kind]?.mine
     if (mine) return <TheirGo puzzle={mine} partner={partner} me={me} onClose={() => onSwitch({ kind: screen.kind, mode: 'play' })} />
   }
 
   if (screen.mode === 'play' || screen.mode === 'theirs') {
     // Under your own result: first, the button to set theirs for tomorrow; only once
     // that's done, the way to see how they did on the one you set them today.
-    const k = kinds[screen.kind]
+    const k = kinds[screen.kind]!
     const extra = k.next
       ? <TheirGoButton puzzle={k.mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
       : (
@@ -406,6 +420,7 @@ function PuzzleScreen({
       case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={say(kinds.top5.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} extra={extra} />
       case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} extra={extra} />
       case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} me={me} onClose={onClose} extra={extra} />
+      case 'either': return <PlayEither puzzle={kinds.either!.solve!} partner={partner} onClose={onClose} extra={extra} />
     }
   }
 
@@ -439,6 +454,11 @@ function PuzzleScreen({
       const date = setDate('numbers')
       const questions = kinds.numbers.next?.questions ?? numbersOfTheDay(date ?? localDate(), pools.numbers) ?? []
       return <SetNumbers partner={partner} questions={questions} onClose={onClose} forDate={date} />
+    }
+    case 'either': {
+      const date = setDate('either')
+      const questions = kinds.either?.next?.questions ?? eitherOfTheDay(date ?? localDate(), pools.either) ?? []
+      return <SetEither partner={partner} questions={questions} onClose={onClose} forDate={date} />
     }
   }
 }

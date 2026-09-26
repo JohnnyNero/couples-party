@@ -21,6 +21,10 @@ export async function loadNumberQuestions(): Promise<string[]> {
   return parseContent(await fetchContent()).numberQuestions
 }
 
+export async function loadEitherPairs(): Promise<string[]> {
+  return parseContent(await fetchContent()).eitherPairs
+}
+
 // Both calls above can happen in one visit; the file only needs fetching once.
 let text: Promise<string> | null = null
 function fetchContent(): Promise<string> {
