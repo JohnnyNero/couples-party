@@ -47,10 +47,6 @@ type Pools = { content: Content; words: string[]; numbers: string[] }
 
 export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const [screen, setScreen] = useState<Screen | null>(null)
-  // After closing a solve, open tomorrow's set straight away — but only once the fresh
-  // board confirms the solve actually finished (backing out of a half-done Wordle
-  // shouldn't push you on to setting).
-  const [thenSet, setThenSet] = useState<{ kind: Kind; stale: unknown } | null>(null)
   const [pools, setPools] = useState<Pools | null>(null)
   useEffect(() => {
     void Promise.all([loadPacks(), loadWordPrompts(), loadNumberQuestions()])
@@ -62,14 +58,6 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   // every avatar and the header, catch up straight away.
   const pairState = status.kind === 'ready' ? status.data.state : null
   useEffect(() => { if (pairState) void refreshProfile() }, [pairState])
-  useEffect(() => {
-    // `stale` is the board as it was when the solve closed — wait for the refetch.
-    if (!thenSet || status === thenSet.stale) return
-    if (status.kind !== 'ready' || status.data.state !== 'paired') return setThenSet(null)
-    const k = status.data.kinds[thenSet.kind]
-    if (k.solve && k.solve.status !== 'open' && !k.next) setScreen({ kind: thenSet.kind, mode: 'set' })
-    setThenSet(null)
-  }, [status, thenSet])
 
   if (status.kind === 'loading') {
     return <div className="h-40 grid place-items-center text-fg/30 animate-pulse">…</div>
@@ -103,9 +91,10 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
     return <Card title="Pair your phones"><PairWaiting code={d.code} me={d.me} onCancel={() => void refresh()} /></Card>
   }
 
-  const close = (then?: Kind) => {
+  // Setting the next one is a button under your result now (see PuzzleScreen), so
+  // closing just closes.
+  const close = () => {
     setScreen(null)
-    if (then) setThenSet({ kind: then, stale: status })
     void refresh()
   }
 
@@ -119,7 +108,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
             screen={screen}
             data={d}
             pools={pools}
-            onClose={() => close(screen.mode === 'play' ? screen.kind : undefined)}
+            onClose={close}
             onSwitch={setScreen}
           />
         </div>,
@@ -228,7 +217,8 @@ function Tile({
     // "for today" only where there's room for it; a half-width tile just says whose.
     const what = !mine && wide ? `Set ${partner}'s for today` : solved ? `Now set ${partner}'s` : `Set ${partner}'s`
     chip = <span className="inline-block align-top px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">{what}</span>
-    mode = 'set'
+    // Finished theirs? The tile opens your result — setting theirs is the button there.
+    mode = solved ? 'play' : 'set'
   } else {
     chip = (
       <span className="text-xs font-extrabold text-fg/50">
@@ -334,8 +324,19 @@ function PuzzleScreen({
   }
 
   if (screen.mode === 'play' || screen.mode === 'theirs') {
-    // Under your own result: the way to see how they did on the one you set them.
-    const extra = <TheirGoButton puzzle={kinds[screen.kind].mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
+    // Under your own result: first, the button to set theirs for tomorrow; only once
+    // that's done, the way to see how they did on the one you set them today.
+    const k = kinds[screen.kind]
+    const extra = k.next
+      ? <TheirGoButton puzzle={k.mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
+      : (
+        <button
+          onClick={() => onSwitch({ kind: screen.kind, mode: 'set' })}
+          className="w-full max-w-sm min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold active:translate-y-px"
+        >
+          Set {partner}’s for {k.mine ? 'tomorrow' : 'today'}
+        </button>
+      )
     switch (screen.kind) {
       case 'word': {
         const p = kinds.word.solve!
