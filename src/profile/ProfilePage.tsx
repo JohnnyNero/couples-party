@@ -12,6 +12,7 @@ import { clearIdeas } from '../ideas/store'
 import { deviceUrl } from '../start/invite'
 import { useBackLayer } from '../ui/back'
 import { slide } from '../ui/transition'
+import { InstallRow } from '../start/InstallCard'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -85,6 +86,7 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
             <ThemeChoice />
             <FullscreenRow />
             <HapticsRow />
+            <InstallRow />
           </section>
 
           {onServer && <Unpair partner={paired?.partner.name ?? null} onDone={onUnpaired} />}

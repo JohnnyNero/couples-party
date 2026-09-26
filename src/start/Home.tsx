@@ -20,6 +20,7 @@ import { GameIcon, GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
+import { InstallCard } from './InstallCard'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
@@ -161,6 +162,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
+      <InstallCard />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
   )
