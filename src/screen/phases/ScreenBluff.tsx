@@ -1,10 +1,10 @@
 import type { SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
 import { bluffAward, SCORING } from '../../engine/standing'
-import { dispatch, useMyPlayerId } from '../../net'
+import { dispatch, useLive, useMyPlayerId } from '../../net'
 import { asYou } from '../../say'
 import { playerName } from '../../views/list'
-import { bluffOptions, bluffPrompt } from '../../views/bluff'
+import { bluffLiveKey, bluffOptions, bluffPrompt } from '../../views/bluff'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { Doing, PromptCard, WhoIsIn } from '../../ui/kit'
 import { btnAccent, eyebrow } from '../../ui/styles'
@@ -24,14 +24,23 @@ export function ScreenBluffWrite({ s }: { s: SessionState }) {
 export function ScreenBluffPick({ s }: { s: SessionState }) {
   const round = s.bluff!.rounds[s.bluff!.current]
   const owner = round.turn
+  const live = useLive(bluffLiveKey(s))
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
       <div className={eyebrow + ' text-center'}>Two lies and a truth</div>
       <div className="text-center font-display text-2xl sm:text-4xl font-extrabold leading-tight break-words">{bluffPrompt(s, round, owner, null)}</div>
       <div className="flex flex-col gap-2.5">
         {bluffOptions(round, owner).map((o, i) => (
-          <div key={o.id} style={{ animationDelay: `${i * 150}ms` }} className={'rounded-2xl border-2 border-fg bg-card px-5 py-4 font-display text-xl sm:text-3xl font-extrabold leading-tight break-words animate-fade-up ' + inkOf(owner)}>
-            {o.text}
+          <div
+            key={o.id}
+            style={{ animationDelay: `${i * 150}ms` }}
+            className={
+              'rounded-2xl border-2 px-5 py-4 flex items-center gap-3 font-display text-xl sm:text-3xl font-extrabold leading-tight break-words animate-fade-up transition-colors ' +
+              (live === o.id ? 'border-pb bg-pb-soft' : 'border-fg bg-card ' + inkOf(owner))
+            }
+          >
+            <span className="flex-1 min-w-0">{o.text}</span>
+            {live === o.id && <Avatar p={other(owner)} name={playerName(s, other(owner))} size="sm" className="shrink-0" />}
           </div>
         ))}
       </div>

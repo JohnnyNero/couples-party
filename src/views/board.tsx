@@ -1,3 +1,4 @@
+import { HomeButton } from './HomeButton'
 import { ScreenBluffPick, ScreenBluffReveal, ScreenBluffWrite } from '../screen/phases/ScreenBluff'
 import type { SessionState } from '../engine/state'
 import { GAME_LABELS, gameOfPhase, roundsFor } from '../engine/roster'
@@ -171,7 +172,12 @@ function BoardStageContent({ s }: { s: SessionState }) {
     case 'DONE':
       // Terminal for now: the same board every game ends on, held up until the souvenir
       // (M5) gives it somewhere to go.
-      return <Scoreboard s={s} title="That's the night" />
+      return (
+        <>
+          <Scoreboard s={s} title="That's the night" />
+          <HomeButton />
+        </>
+      )
     default:
       return <div className="text-2xl uppercase text-fg/50">{s.phase}</div>
   }

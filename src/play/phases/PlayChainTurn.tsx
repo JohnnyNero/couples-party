@@ -35,8 +35,15 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"><ChainTrail round={round} max={5} /></div>
       {mine ? (
         <div className="flex flex-col gap-2.5">
-          <div className="text-center font-display text-2xl font-extrabold">
-            Your go · you need <span className={inkOf(me)}>{aLetter(round.need)}</span>
+          {/* The clock again, right by the box: with the keyboard up, the top of the
+              screen is scrolled out of sight. */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="font-display text-2xl font-extrabold">
+              Your go · you need <span className={inkOf(me)}>{aLetter(round.need)}</span>
+            </span>
+            <span className="shrink-0 min-w-[3rem] h-10 px-2 rounded-full bg-fg text-bg inline-flex items-center justify-center font-display text-xl font-extrabold tabular-nums">
+              <Clock phaseEndsAt={s.phaseEndsAt} />
+            </span>
           </div>
           <input
             className={field + ' text-2xl'}

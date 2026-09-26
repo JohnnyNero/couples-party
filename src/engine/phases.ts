@@ -89,8 +89,8 @@ export const CLASH = {
 }
 
 export const CHAIN = {
-  // The turn clock tightens as the chain grows: 10 s, then 7 s after ten words, then 5 s.
-  turnMs: [10000, 7000, 5000],
+  // The turn clock tightens as the chain grows: 20 s, then 14 s after ten words, then 10 s.
+  turnMs: [20000, 14000, 10000],
   tightenEvery: 10,
   maxLen: 30,
   winPoints: 10,

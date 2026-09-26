@@ -20,6 +20,7 @@ import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
+import { HomeButton } from './HomeButton'
 import { PlayBluffWrite } from '../play/phases/PlayBluffWrite'
 import { PlayBluffPick } from '../play/phases/PlayBluffPick'
 import { ScreenBluffReveal } from '../screen/phases/ScreenBluff'
@@ -107,7 +108,12 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'DRAW_REVEAL':
       return <PlayDrawReveal s={s} me={me} />
     case 'DONE':
-      return <PlayWaiting label="That’s the night" sub="Thanks for playing." />
+      return (
+        <div className="h-full flex flex-col">
+          <div className="flex-1 min-h-0"><PlayWaiting label="That’s the night" sub="Thanks for playing." /></div>
+          <div className="px-5 pb-6"><HomeButton /></div>
+        </div>
+      )
     default:
       return <PlayWaiting label="Eyes on the board" />
   }

@@ -16,3 +16,10 @@ export function bluffOptions(round: BluffRound, owner: PlayerId): { id: number; 
 export function bluffPrompt(s: SessionState, round: BluffRound, owner: PlayerId, reader: PlayerId | null): string {
   return say(round.prompt, { self: reader === owner, subject: playerName(s, owner), partner: playerName(s, other(owner)) })
 }
+
+// The live preview's key (see net/live.ts): which of the three the guesser has tapped,
+// for this session, round and person.
+export const bluffLiveKey = (s: SessionState): string => {
+  const g = s.bluff!
+  return `bluff:${s.seed}:${g.current}:${g.rounds[g.current].turn}`
+}
