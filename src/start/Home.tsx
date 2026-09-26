@@ -4,6 +4,8 @@ import type { GameKey } from '../engine/state'
 import { GAME_LABELS, roster } from '../engine/roster'
 import { ProfilePage } from '../profile/ProfilePage'
 import { useBackLayer } from '../ui/back'
+import { ContinueCard } from './ContinueCard'
+import type { Saved } from '../store/progress'
 import { refreshProfile, useProfile } from '../profile/store'
 import { refreshIdeas } from '../ideas/store'
 import { Avatar } from '../ui/Avatar'
@@ -35,7 +37,7 @@ function loadTab(): Tab {
 // Opens the profile page, from the avatar in any tab's header.
 const OpenProfile = createContext<() => void>(() => {})
 
-export function Home({ onPick }: { onPick: (g: Game) => void }) {
+export function Home({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
   const [profileOpen, setProfileOpen] = useState(false)
   // Bumped after unpairing, so Today fetches its board again from scratch.
@@ -57,7 +59,7 @@ export function Home({ onPick }: { onPick: (g: Game) => void }) {
       <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
         <OpenProfile.Provider value={() => setProfileOpen(true)}>
           <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto animate-fade-up">
-            {tab === 'today' ? <Today onPick={onPick} /> : tab === 'games' ? <Games onPick={onPick} /> : <Memories />}
+            {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : <Memories />}
           </div>
         </OpenProfile.Provider>
       </main>
@@ -134,7 +136,7 @@ function ProfileButton() {
   )
 }
 
-function Today({ onPick }: { onPick: (g: Game) => void }) {
+function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
   const board = useBoard()
   const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
   // Short weekday, so it fits beside the streak on a phone.
@@ -147,6 +149,7 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
         logo={!paired}
         right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
+      <ContinueCard onResume={onResume} />
       <Board board={board} />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
@@ -248,10 +251,11 @@ const FILLERS: Pick[] = [
   { key: 'clock', blurb: 'Closest tap wins', meta: 'Best of 5' },
 ]
 
-function Games({ onPick }: { onPick: (g: Game) => void }) {
+function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <TabHeader title="Games" sub="Every one of them is you against each other." />
+      <ContinueCard onResume={onResume} />
       <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
         <div className="flex-1 min-w-0">
           <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>

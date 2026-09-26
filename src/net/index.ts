@@ -6,6 +6,7 @@ import { ideasForGame, withIdeas } from '../ideas/store'
 import * as playroom from './playroom'
 import { SOLO_PLAYER, initLocal, localDispatch, setLocalLive, useLocalLive, useLocalSession } from './local'
 import type { Live } from './live'
+import type { Saved } from '../store/progress'
 
 export type { Live }
 
@@ -15,9 +16,9 @@ export type { Live }
 // always take the same branch on every render.
 let solo = false
 
-export async function initNet(mode: PlayMode, game: Game, roomCode?: string): Promise<void> {
+export async function initNet(mode: PlayMode, game: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   solo = mode === 'solo'
-  if (!solo) return playroom.initNet(mode, game, roomCode)
+  if (!solo) return playroom.initNet(mode, game, roomCode, resume)
   initLocal(freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
 }
 

@@ -16,6 +16,7 @@ import { Screen } from './screen/Screen'
 import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
 import { leaveTo, useBackLayer } from './ui/back'
+import { loadSaved, useKeepProgress, type Saved } from './store/progress'
 
 export default function App() {
   // Game and mode both come from the URL (a shared link carries both) or the launch
@@ -23,6 +24,12 @@ export default function App() {
   const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
   const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
   const [ready, setReady] = useState(false)
+  // Carrying on a saved game (Home's "Carry on"), or reloading the page mid-game: this
+  // phone's copy of it, for the room to pick up if it's the first one back in.
+  const [resume, setResume] = useState<Saved | null>(() => {
+    const saved = loadSaved()
+    return saved && saved.game === game && saved.mode === mode ? saved : null
+  })
   // An invite link (?pair=CODE&from=Name) opens on its own welcome page first.
   const [invite, setInvite] = useState(() => readInvite(window.location.search))
   // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
@@ -46,13 +53,13 @@ export default function App() {
     const sharedLink = /(?:^|[#&])r=/.test(window.location.hash)
     const wantsCode = mode === 'duo' && !sharedLink
     ;(wantsCode ? api.coupleCode().catch(() => null) : Promise.resolve(null)).then((code) => {
-      initNet(mode, game, code ?? undefined).then(() => setReady(true))
+      initNet(mode, game, code ?? undefined, resume).then(() => setReady(true))
     })
   }, [mode, game])
 
   return (
     <>
-      {ready && <SeenRecorder keep={mode !== 'solo' && !getIsStreamScreen()} />}
+      {ready && <SeenRecorder keep={mode !== 'solo' && !getIsStreamScreen()} mode={mode!} />}
       {renderApp()}
     </>
   )
@@ -60,7 +67,19 @@ export default function App() {
   function renderApp() {
     if (deviceLink && !game) return <DeviceLink link={deviceLink} onDone={() => setDeviceLink(null)} />
     if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
-    if (!game) return <Home onPick={setGame} />
+    if (!game) {
+      return (
+        <Home
+          onPick={(g) => { setResume(null); setGame(g) }}
+          onResume={(saved) => {
+            stampMode(saved.mode, saved.game, false)
+            setResume(saved)
+            setMode(saved.mode)
+            setGame(saved.game)
+          }}
+        />
+      )
+    }
     if (!mode) {
       return (
         <ModePicker
@@ -85,8 +104,9 @@ export default function App() {
 // Logs every prompt the session puts in front of you, so the next one draws new ones —
 // and, on a paired phone, keeps the session for Memories. A TV isn't anyone's phone and
 // solo play is a testing seat, so neither keeps anything.
-function SeenRecorder({ keep }: { keep: boolean }) {
+function SeenRecorder({ keep, mode }: { keep: boolean; mode: PlayMode }) {
   const session = useSession()
+  useKeepProgress(session, useMyPlayerId(), mode, keep)
   useEffect(() => recordSeen(session), [session])
   useKeepMemory(session, keep)
   useProfileName(keep)

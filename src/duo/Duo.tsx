@@ -8,6 +8,7 @@ import { resolveBot, resolveMode } from '../start/mode'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
 import { useRecordSession } from '../store/useRecordSession'
 import { ScreenLightsOut } from '../screen/phases/ScreenLightsOut'
+import { AwayScreen } from '../views/AwayScreen'
 
 // Phones-only renderer: one device, one screen, one thing on it at a time. A phase
 // either has something private to ask this player for (the board and the controller
@@ -40,6 +41,7 @@ export function Duo() {
   const bot = resolveBot(location.search) || resolveMode(location.search) === 'solo'
   useRecordSession(s)
   if (!me) return <PlayWaiting label="Connecting…" />
+  if (s.paused?.away) return <AwayScreen s={s} />
   // The night's last card is dark and full-bleed: no header, no padding.
   if (s.phase === 'LIGHTS_OUT') {
     return (

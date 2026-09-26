@@ -38,6 +38,7 @@ export function PauseMenu({ s, localOpen, onCloseLocal }: { s: SessionState; loc
   const me = useMyPlayerId()
   const [leaving, setLeaving] = useState(false)
   if (!s.paused && !localOpen) return null
+  if (s.paused?.away) return null // that's the waiting screen, not this menu
   const by = s.paused?.by
   const resume = () => (s.paused && me ? dispatch({ type: 'RESUME', player: me }) : onCloseLocal())
   const leave = () => leaveTo(window.location.pathname)

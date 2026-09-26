@@ -262,7 +262,9 @@ export type SessionState = {
   intros: boolean // title cards on — set by the host for real sessions; tests leave them off
   // Paused by either of you, from the menu: the clock stops (what was left of it is kept
   // here) and nothing moves until one of you resumes.
-  paused: { by: PlayerId; leftMs: number | null } | null
+  // `away`: paused because one of you left the game (see AWAY) — it carries on by itself
+  // once you're both back, and nobody can resume it before then.
+  paused: { by: PlayerId; leftMs: number | null; away?: boolean } | null
   game: Game
   night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
 } & Content
@@ -315,6 +317,9 @@ export type Action =
   | { type: 'STOP_CLOCK'; player: PlayerId; elapsedMs: number }
   | { type: 'TIMEOUT' }
   | { type: 'PAUSE'; player: PlayerId }
+  // One of you has left the room (backed out, closed the app, lost signal): the game
+  // pauses and waits for them. Sent by the host, never by a player.
+  | { type: 'AWAY'; player: PlayerId }
   | { type: 'RESUME'; player: PlayerId }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 

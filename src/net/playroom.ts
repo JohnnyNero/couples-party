@@ -14,7 +14,8 @@ import {
 } from 'playroomkit'
 import type { Action, Content, Game, PlayerId, SessionState } from '../engine/state'
 import { EMPTY_CONTENT, initialState } from '../engine/state'
-import { reduce } from '../engine/reducer'
+import { adopt, reduce } from '../engine/reducer'
+import type { Saved } from '../store/progress'
 import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
@@ -61,7 +62,7 @@ function placeholderState(): SessionState {
   return initialState(0, game, content)
 }
 
-export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: string): Promise<void> {
+export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   if (started) return
   started = true
   game = chosenGame
@@ -84,14 +85,21 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
     ...(roomCode ? { roomCode, skipLobby: true } : {}),
   })
 
-  // Before anyone's seated, so the first JOIN lands in the session that stays.
+  // Before anyone's seated, so the first JOIN lands in the session that stays. Host at
+  // this point means the room was empty — your partner isn't in it waiting.
   if (isHost()) {
-    // A paired couple's room is the same room every night, so it can still hold an old
-    // session. A finished one, one from another day, or a different game starts over;
-    // one still going from today — a host reloading mid-game — carries on.
+    // Carrying on a saved game: the room's own copy if it still has it, else this
+    // phone's. Either way it waits, paused, until you've both joined (see adopt) — and
+    // you sit back down in the seat you had, so the scores stay with the right person.
+    // Anything else starts a new session.
     const existing = getState(SESSION_KEY) as SessionState | undefined
-    const stale = !existing || existing.phase === 'DONE' || existing.game !== game || existing.night !== dayIndex(localDate())
-    setState(SESSION_KEY, stale ? hostFreshState() : existing, true)
+    if (resume) {
+      const room = existing && existing.seed === resume.state.seed && existing.phase !== 'DONE' ? existing : null
+      setState(SEATS_KEY, { [myPlayer().id]: resume.seat }, true)
+      setState(SESSION_KEY, adopt(room ?? resume.state, Date.now()), true)
+    } else {
+      setState(SESSION_KEY, hostFreshState(), true)
+    }
   }
 
   // Ruling P1: Playroom collects each player's name at join, so JOIN is dispatched
@@ -100,28 +108,43 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
   onPlayerJoin((player: PlayerState) => {
     present.add(player.id)
     if (isHost()) seat(player)
+    // Gone — backed out, closed the app, lost signal: the game pauses and waits for them
+    // (see AWAY). If it was the host who went, another phone takes over as host, so this
+    // gives that a moment to happen.
     player.onQuit(() => {
       present.delete(player.id)
+      let tries = 0
+      const away = () => {
+        if (!isHost()) {
+          if (++tries < 6) setTimeout(away, 500)
+          return
+        }
+        const seatOf = ((getState(SEATS_KEY) as Seats | undefined) ?? {})[player.id]
+        if (seatOf) hostReduce({ type: 'AWAY', player: seatOf })
+      }
+      setTimeout(away, 300)
     })
   })
 
-  if (isHost()) {
+  // Every phone listens, but only the host acts — the host can change hands (the host
+  // leaving hands it to whoever's left), and the new one has to pick all this up.
+  RPC.register('dispatch', async (action: Action) => {
+    if (isHost()) hostReduce(action)
+    return null
+  })
 
-    RPC.register('dispatch', async (action: Action) => {
-      const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
-      setState(SESSION_KEY, reduce(current, action, Date.now()), true)
-      return null
-    })
+  // Host timer loop: fire TIMEOUT once the current phase's deadline has passed.
+  setInterval(() => {
+    if (!isHost()) return
+    const current = getState(SESSION_KEY) as SessionState | undefined
+    if (!current || current.phaseEndsAt == null) return
+    if (Date.now() >= current.phaseEndsAt) hostReduce({ type: 'TIMEOUT' })
+  }, 200)
+}
 
-    // Host timer loop: fire TIMEOUT once the current phase's deadline has passed.
-    setInterval(() => {
-      const current = getState(SESSION_KEY) as SessionState | undefined
-      if (!current || current.phaseEndsAt == null) return
-      if (Date.now() >= current.phaseEndsAt) {
-        setState(SESSION_KEY, reduce(current, { type: 'TIMEOUT' }, Date.now()), true)
-      }
-    }, 200)
-  }
+function hostReduce(action: Action): void {
+  const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
+  setState(SESSION_KEY, reduce(current, action, Date.now()), true)
 }
 
 export function useSession(): SessionState {
@@ -140,8 +163,7 @@ export function useLive(): Live | null {
 
 export function dispatch(action: Action): void {
   if (isHost()) {
-    const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
-    setState(SESSION_KEY, reduce(current, action, Date.now()), true)
+    hostReduce(action)
   } else {
     void RPC.call('dispatch', action, RPC.Mode.HOST)
   }

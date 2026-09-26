@@ -819,7 +819,38 @@ function beginLights(state: SessionState, now: number): SessionState {
 const UNPAUSABLE = new Set<Phase>(['BOOT', 'JOIN', 'DONE', 'LIGHTS_OUT', 'CLOCK_READY', 'CLOCK_RUN', 'DECIDER_READY', 'DECIDER_RUN'])
 export const canPause = (s: SessionState): boolean => !s.paused && !UNPAUSABLE.has(s.phase)
 
+const bothHere = (s: SessionState) => s.players.A.connected && s.players.B.connected
+
+// Nothing's in play before the game starts or after it's over, so leaving then doesn't
+// pause anything — it just marks you gone.
+const NOTHING_TO_HOLD = new Set<Phase>(['BOOT', 'JOIN', 'DONE'])
+
+// Paused for someone who's away: the clock stops where it was, and (see JOIN) starts
+// again when you're both back.
+function holdFor(state: SessionState, player: PlayerId, now: number): SessionState {
+  const s = clone(state)
+  s.players[player].connected = false
+  if (NOTHING_TO_HOLD.has(s.phase)) return s
+  s.paused = s.paused
+    ? { ...s.paused, away: true }
+    : { by: player, leftMs: state.phaseEndsAt === null ? null : Math.max(0, state.phaseEndsAt - now), away: true }
+  s.phaseEndsAt = null
+  return s
+}
+
+// A saved game, picked up again (from the room, or from a phone's own copy): nobody's in
+// it yet, so it waits — paused, clock stopped — until you've both joined.
+export function adopt(saved: SessionState, now: number): SessionState {
+  let s = saved
+  for (const p of PLAYERS) s = holdFor({ ...s, players: { ...s.players, [p]: { ...s.players[p], connected: true } } }, p, now)
+  return s
+}
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
+  if (action.type === 'AWAY') {
+    if (!state.players[action.player].connected) return state
+    return holdFor(state, action.player, now)
+  }
   if (action.type === 'PAUSE') {
     if (!canPause(state)) return state
     const s = clone(state)
@@ -829,6 +860,7 @@ export function reduce(state: SessionState, action: Action, now: number): Sessio
   }
   if (action.type === 'RESUME') {
     if (!state.paused) return state
+    if (state.paused.away && !bothHere(state)) return state // not without them
     const s = clone(state)
     // At least a couple of seconds back on the clock, so nobody resumes into a timeout.
     s.phaseEndsAt = state.paused.leftMs === null ? null : now + Math.max(state.paused.leftMs, 2000)
@@ -845,9 +877,15 @@ function step(state: SessionState, action: Action, now: number): SessionState {
     case 'JOIN': {
       const s = clone(state)
       s.players[action.player] = { name: action.name, connected: true }
-      const both = s.players.A.connected && s.players.B.connected
+      const both = bothHere(s)
       // Straight into the first game in this session's roster.
       if (both && s.phase === 'JOIN') return beginGame(s, now, roster(s.game, s.night)[0]?.key ?? null)
+      // Back after leaving: once you're both here again, carry on — with a few seconds
+      // back on the clock to find your place.
+      if (both && s.paused?.away) {
+        s.phaseEndsAt = s.paused.leftMs === null ? null : now + Math.max(s.paused.leftMs, 5000)
+        s.paused = null
+      }
       return s
     }
     case 'PLACE_ITEM': {
