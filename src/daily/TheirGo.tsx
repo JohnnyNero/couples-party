@@ -20,7 +20,7 @@ export type Mine = PuzzleView | DialView | Top5View | SketchView | NumbersView |
 
 const NAMES = { word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That' } as const
 
-export function TheirGo({ puzzle, partner, me, onClose }: { puzzle: Mine; partner: string; me: string; onClose: () => void }) {
+export function TheirGo({ puzzle, partner, me, onClose, back = 'Back to mine' }: { puzzle: Mine; partner: string; me: string; onClose: () => void; back?: string }) {
   return (
     <div className="h-full flex flex-col select-none">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
@@ -33,7 +33,7 @@ export function TheirGo({ puzzle, partner, me, onClose }: { puzzle: Mine; partne
       <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-8 pt-2 flex flex-col items-center gap-4 animate-fade-up">
         <Replay puzzle={puzzle} partner={partner} me={me} />
         <button onClick={onClose} className="mt-2 w-full max-w-sm min-h-[52px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold active:translate-y-px">
-          Back to mine
+          {back}
         </button>
       </div>
     </div>

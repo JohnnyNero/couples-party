@@ -17,6 +17,7 @@ import m0014 from './migrations/0014_our_questions.sql?raw'
 import m0015 from './migrations/0015_more_than_one_device.sql?raw'
 import m0016 from './migrations/0016_week_and_team.sql?raw'
 import m0017 from './migrations/0017_this_or_that.sql?raw'
+import m0018 from './migrations/0018_day_prompts.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -81,6 +82,7 @@ beforeAll(async () => {
   await db.exec(m0015)
   await db.exec(m0016)
   await db.exec(m0017)
+  await db.exec(m0018)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -795,6 +797,27 @@ describe('this or that: five either/ors about yourself', () => {
     expect(board.kinds.either.solve.points).toBe(6)
     expect(board.today.me).toBe(6)
     await expect(as(SAM, `select public.either_view(null::public.puzzles, null::uuid)`)).rejects.toThrow(/permission/)
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('day_prompts', () => {
+  it("tells you the question your partner already set for a day, never their answer", async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    expect(await call(ALEX, 'day_prompts', [today()])).toEqual({})
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
+    await call(SAM, 'set_top5', [today(), 'five foods', ['a', 'b', 'c', 'd', 'e'], [4, 3, 2, 1, 0]])
+    await call(SAM, 'set_either', [today(), ['Tea | Coffee', 'a|b', 'c|d', 'e|f', 'g|h'], [0, 0, 0, 0, 0]])
+    const p = await call(ALEX, 'day_prompts', [today()])
+    expect(p.word).toEqual({ prompt: 'Your comfort food' })
+    expect(p.top5).toEqual({ prompt: 'five foods', items: ['a', 'b', 'c', 'd', 'e'] })
+    expect(p.either.questions[0]).toBe('Tea | Coffee')
+    expect(JSON.stringify(p)).not.toContain('pasta')
+    expect(JSON.stringify(p)).not.toContain('rank')
+    // Your own don't come back to you — it's the other one's question you need.
+    expect(await call(SAM, 'day_prompts', [today()])).toEqual({})
+    expect(await call(EVE, 'day_prompts', [today()])).toEqual({})
     await call(SAM, 'leave_couple')
   })
 })

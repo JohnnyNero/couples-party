@@ -4,22 +4,25 @@ import { localDate } from './dates'
 import { parseSpectrumPrompt } from './dial'
 import { WaveDial } from '../ui/WaveDial'
 
-// Setting today's mark: a point on the scale is rolled at random the moment this opens
-// — nobody chooses it, same as the live game — and all you do is name one thing that
-// sits right on it.
+// Setting today's mark: a point on the scale rolled at random — nobody chooses it, same
+// as the live game — and all you do is name one thing that sits right on it. The mark is
+// rolled once per day and kept (see pins.ts), so backing out doesn't re-roll it.
 export function SetDialClue({
   partner,
   spectrum,
+  target: given,
   onClose,
   forDate,
 }: {
   partner: string
   spectrum: string // "Low | High", as stored
+  target?: number // 0..100; rolled here if not given (the old one-a-day card)
   onClose: () => void
   forDate?: string // who it's for and when: tomorrow, on the Today board
 }) {
   const { low, high } = parseSpectrumPrompt(spectrum)
-  const [target] = useState(() => Math.floor(Math.random() * 101))
+  const [rolled] = useState(() => Math.floor(Math.random() * 101))
+  const target = given ?? rolled
   const [clue, setClue] = useState('')
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)

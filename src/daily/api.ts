@@ -349,6 +349,9 @@ export const api = {
     rpc<void>('set_numbers', { p_for_date: forDate, p_questions: questions, p_answers: answers }),
   submitNumbers: (puzzleId: string, guesses: number[]) =>
     rpc<NumbersView>('submit_numbers', { p_puzzle: puzzleId, p_guesses: guesses }),
+  // The questions your partner already set for a day, kind by kind (migration 0018).
+  dayPrompts: (date: string) =>
+    rpc<Partial<Record<'word' | 'dial' | 'top5' | 'sketch' | 'numbers' | 'either', { prompt?: string; items?: string[]; questions?: string[] }>>>('day_prompts', { p_date: date }),
   setEither: (forDate: string, questions: string[], picks: number[]) =>
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>

@@ -19,6 +19,8 @@ import { say } from '../say'
 import { useIdeas } from '../ideas/store'
 import { TheirGo, TheirGoButton } from './TheirGo'
 import { refreshProfile } from '../profile/store'
+import { api } from './api'
+import { caughtUpOn, markCaughtUp, settle, type Pin } from './pins'
 import { SetDialClue } from './SetDialClue'
 import { SetEither } from './SetEither'
 import { SetNumbers } from './SetNumbers'
@@ -134,6 +136,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
               partner={d.partner}
               slot={d.kinds[k]!}
               wide={kinds.length % 2 === 1 && i === kinds.length - 1}
+              caught={caughtUpOn(localDate(), k)}
               onOpen={(mode) => { if (!syncing) setScreen({ kind: k, mode }) }}
             />
           ))}
@@ -255,28 +258,45 @@ function Tile({
   partner,
   slot,
   wide,
+  caught,
   onOpen,
 }: {
   kind: Kind
   partner: string
   slot: Slot
   wide: boolean
-  onOpen: (mode: 'play' | 'set') => void
+  caught: boolean // you set theirs for today, today (see markCaughtUp)
+  onOpen: (mode: Screen['mode']) => void
 }) {
   const { solve, mine, next } = slot
   const started = !!solve && 'guesses' in solve && Array.isArray(solve.guesses) && solve.guesses.length > 0
   const solved = !!solve && solve.status !== 'open'
-  const complete = (solved || !solve) && !!next
+  // Set theirs for today (day one, or a day they missed): that was your one for the day.
+  // Tomorrow's is set tomorrow — never a second straight after the first.
+  const caughtUp = caught && !!mine && !next
+  const complete = ((solved || !solve) && !!next) || (caughtUp && (!solve || solved))
 
   // What the tile asks of you, as a chip: something to play (filled), something to set
   // for them (outlined), or nothing left (quiet).
   let chip: ReactNode
   // null: nothing to do here — you've set theirs and there's nothing of yours to see yet.
   // A set puzzle is never reopened to change; a finished one only ever shows its result.
-  let mode: 'play' | 'set' | null
+  let mode: Screen['mode'] | null
   if (solve && !solved) {
     chip = <span className="px-2.5 py-1 rounded-full bg-pa text-white text-xs font-extrabold">{started ? 'Carry on' : 'Play'}</span>
     mode = 'play'
+  } else if (caughtUp) {
+    if (solved) {
+      // Your result, where the button is their go.
+      chip = <span className="text-xs font-extrabold text-fg/50">Done · <span className="text-accent-ink">+{solve!.points ?? 0}</span></span>
+      mode = 'play'
+    } else if (mine.status !== 'open') {
+      chip = <span className="inline-block align-top px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">See {partner}’s go</span>
+      mode = 'theirs'
+    } else {
+      chip = <span className="text-xs font-extrabold text-fg/50">Sent ✓</span>
+      mode = null
+    }
   } else if (!next) {
     // Nothing set for today yet (day one, or a missed day) → set one for today, so
     // there's something to play right away, instead of only ever setting for tomorrow.
@@ -366,9 +386,7 @@ function KindIcon({ kind }: { kind: Kind }) {
 
 // ---------------------------------------------------------------- screens
 
-// Solve screens show the puzzle as stored. Set screens work out tomorrow's question the
-// same way both phones do, unless one's already been set (then it's changing that one —
-// and the server keeps you both on the same question either way).
+// Solve screens show the puzzle as stored; set screens go through SetScreen below.
 function PuzzleScreen({
   screen,
   data,
@@ -394,14 +412,17 @@ function PuzzleScreen({
 
   if (screen.mode === 'theirs') {
     const mine = kinds[screen.kind]?.mine
-    if (mine) return <TheirGo puzzle={mine} partner={partner} me={me} onClose={() => onSwitch({ kind: screen.kind, mode: 'play' })} />
+    // Back to your own result — or, with nothing of theirs to play today, the board.
+    const own = !!kinds[screen.kind]?.solve
+    if (mine) return <TheirGo puzzle={mine} partner={partner} me={me} onClose={own ? () => onSwitch({ kind: screen.kind, mode: 'play' }) : onClose} back={own ? 'Back to mine' : 'Done'} />
   }
 
   if (screen.mode === 'play' || screen.mode === 'theirs') {
     // Under your own result: first, the button to set theirs for tomorrow; only once
     // that's done, the way to see how they did on the one you set them today.
     const k = kinds[screen.kind]!
-    const extra = k.next
+    const doneToday = !!k.next || (!!k.mine && caughtUpOn(localDate(), screen.kind))
+    const extra = doneToday
       ? <TheirGoButton puzzle={k.mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
       : (
         <button
@@ -424,41 +445,70 @@ function PuzzleScreen({
     }
   }
 
-  switch (screen.kind) {
+  return <SetScreen kind={screen.kind} forDate={setDate(screen.kind)} partner={partner} me={me} pools={pools} ourWords={ourWords} onClose={onClose} />
+}
+
+// Setting one: the question is settled before the screen opens — your partner's, if they
+// already set that day's (the server would file yours under theirs anyway), else the one
+// you were shown last time, else the day's own — and then it stays put (see pins.ts).
+function SetScreen({ kind, forDate, partner, me, pools, ourWords, onClose }: {
+  kind: Kind
+  forDate: string | undefined // undefined = today (see setDate)
+  partner: string
+  me: string
+  pools: Pools
+  ourWords: string[]
+  onClose: () => void
+}) {
+  const day = forDate ?? localDate()
+  const [p, setP] = useState<Pin | null>(null)
+  useEffect(() => {
+    let live = true
+    if (!forDate) markCaughtUp(day, kind)
+    const fresh = (): Pin => {
+      switch (kind) {
+        case 'word': return { prompt: questionOfTheDay(day, pools.words, ourWords) ?? '' }
+        case 'dial': {
+          const picked = dialOfTheDay(day, pools.content.spectrums)
+          return { prompt: picked ? spectrumPrompt(picked) : '', target: Math.floor(Math.random() * 101) }
+        }
+        case 'top5': {
+          const theme = themeOfTheDay(day, pools.content.themes)
+          return theme ? { prompt: fiveify(theme.text), items: itemsOfTheDay(day, theme) } : {}
+        }
+        case 'sketch': return { prompt: sketchOfTheDay(day, pools.content.drawPrompts) ?? '' }
+        case 'numbers': return { questions: numbersOfTheDay(day, pools.numbers) ?? [] }
+        case 'either': return { questions: eitherOfTheDay(day, pools.either) ?? [] }
+      }
+    }
+    // A server without migration 0018, or no signal: carry on without it after a moment.
+    const ask = Promise.race([
+      api.dayPrompts(day).catch(() => ({})),
+      new Promise<Record<string, never>>((resolve) => setTimeout(() => resolve({}), 4000)),
+    ])
+    void ask.then((server) => { if (live) setP(settle(day, kind, (server as Record<string, Pin>)[kind], fresh)) })
+    return () => { live = false }
+    // Settled once, when the screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!p) return <div className="h-full grid place-items-center text-fg/30 animate-pulse">…</div>
+  switch (kind) {
     case 'word': {
-      const date = setDate('word')
-      const template = kinds.word.next?.prompt ?? questionOfTheDay(date ?? localDate(), pools.words, ourWords) ?? ''
-      return <WordAnswer partner={partner} template={template} question={renderQuestion(template, partner)} onClose={onClose} forDate={date} />
+      const template = p.prompt ?? ''
+      return <WordAnswer partner={partner} template={template} question={renderQuestion(template, partner)} onClose={onClose} forDate={forDate} />
     }
-    case 'dial': {
-      const date = setDate('dial')
-      const picked = dialOfTheDay(date ?? localDate(), pools.content.spectrums)
-      const spectrum = kinds.dial.next?.prompt ?? (picked ? spectrumPrompt(picked) : 'Cold | Hot')
-      return <SetDialClue partner={partner} spectrum={spectrum} onClose={onClose} forDate={date} />
-    }
+    case 'dial':
+      return <SetDialClue partner={partner} spectrum={p.prompt || 'Cold | Hot'} target={p.target ?? 50} onClose={onClose} forDate={forDate} />
     case 'top5': {
-      const date = setDate('top5')
-      const next = kinds.top5.next
-      const theme = themeOfTheDay(date ?? localDate(), pools.content.themes)
-      const template = next?.prompt ?? (theme ? fiveify(theme.text) : '')
-      const items = next?.items ?? (theme ? itemsOfTheDay(date ?? localDate(), theme) : [])
-      const title = say(template, { self: true, subject: me, partner })
-      return <SetTop5 partner={partner} theme={title} template={template} items={items} onClose={onClose} forDate={date} />
+      const template = p.prompt ?? ''
+      return <SetTop5 partner={partner} theme={say(template, { self: true, subject: me, partner })} template={template} items={p.items ?? []} onClose={onClose} forDate={forDate} />
     }
-    case 'sketch': {
-      const date = setDate('sketch')
-      const prompt = kinds.sketch.next?.prompt ?? sketchOfTheDay(date ?? localDate(), pools.content.drawPrompts) ?? 'comfort food'
-      return <SetSketch partner={partner} prompt={prompt} onClose={onClose} forDate={date} />
-    }
-    case 'numbers': {
-      const date = setDate('numbers')
-      const questions = kinds.numbers.next?.questions ?? numbersOfTheDay(date ?? localDate(), pools.numbers) ?? []
-      return <SetNumbers partner={partner} questions={questions} onClose={onClose} forDate={date} />
-    }
-    case 'either': {
-      const date = setDate('either')
-      const questions = kinds.either?.next?.questions ?? eitherOfTheDay(date ?? localDate(), pools.either) ?? []
-      return <SetEither partner={partner} questions={questions} onClose={onClose} forDate={date} />
-    }
+    case 'sketch':
+      return <SetSketch partner={partner} prompt={p.prompt || 'comfort food'} onClose={onClose} forDate={forDate} />
+    case 'numbers':
+      return <SetNumbers partner={partner} questions={p.questions ?? []} onClose={onClose} forDate={forDate} />
+    case 'either':
+      return <SetEither partner={partner} questions={p.questions ?? []} onClose={onClose} forDate={forDate} />
   }
 }
