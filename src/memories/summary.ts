@@ -1,7 +1,7 @@
 import { aboutReader } from '../views/voice'
 import { themeText } from '../views/list'
 import type { DrawStroke, Game, PlayerId, SessionState } from '../engine/state'
-import { gameScores, standing } from '../engine/standing'
+import { gameScores, standing, teamScore } from '../engine/standing'
 import { chainRoundWinner } from '../engine/chain'
 import { asYou } from '../say'
 
@@ -16,7 +16,9 @@ export type SessionMemory = {
   game: Game
   players: Pair<string>
   score: Pair<number>
-  games: { label: string; points: Pair<number> }[]
+  team?: number // points together — nights saved before team points have none
+  finished?: boolean // every scored game played to the end
+  games: { label: string; points: Pair<number>; team?: number }[]
   shortlist?: { theme: string; author: PlayerId; ranked: string[] }[]
   mrmrs?: { question: string; answer: Pair<string | null>; predict: Pair<string | null>; verdict: Pair<boolean | null> }[]
   draw?: { question: string; drawer: PlayerId; answer: string | null; strokes: DrawStroke[]; guess: string | null; correct: boolean | null }[]
@@ -43,7 +45,9 @@ export function sessionMemory(s: SessionState): SessionMemory {
     game: s.game,
     players: { A: name('A'), B: name('B') },
     score: standing(s),
-    games: gameScores(s).filter((g) => g.played).map((g) => ({ label: g.label, points: g.points })),
+    team: teamScore(s),
+    finished: gameScores(s).every((g) => g.played) && (s.phase.endsWith('_RESULT') || s.phase === 'LIGHTS_OUT' || s.phase === 'DONE'),
+    games: gameScores(s).filter((g) => g.played).map((g) => ({ label: g.label, points: g.points, team: g.team })),
   }
 
   const acts = s.listActs.filter((a) => a.displacement !== null)

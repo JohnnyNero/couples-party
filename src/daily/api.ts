@@ -194,6 +194,19 @@ export type BoardStats = {
   daysLast7: number
 }
 
+// One saved night, for the records page: names and scores by seat (A/B), since which
+// seat was whose can change from night to night.
+export type RecordRow = {
+  playedOn: string
+  game: string
+  players: { A: string; B: string }
+  score: { A: number; B: number }
+  team?: number | null
+  finished?: boolean | null
+  games?: { label: string; points: { A: number; B: number }; team?: number }[] | null
+  longestChain?: number | null
+}
+
 // Your partner waiting for you in a game's lobby (see nudge).
 export type Nudge = { game: string; mode: 'duo' | 'screen'; at: string; from: string }
 
@@ -303,7 +316,7 @@ export type Profile =
   | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number }
 
 // Our questions: the couple's own cards for the games — from migration 0014.
-export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word'
+export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word' | 'meld' | 'describe'
 export type Idea = { id: string; kind: IdeaKind; text: string; mine: boolean; createdAt: string }
 
 export const api = {
@@ -359,6 +372,8 @@ export const api = {
   nudge: (game: string, mode: string) => rpc<void>('nudge', { p_game: game, p_mode: mode }),
   clearNudge: () => rpc<void>('clear_nudge'),
   nudged: () => rpc<Nudge | null>('nudged'),
+  // Every saved night, trimmed to the scores (migration 0020).
+  records: () => rpc<RecordRow[]>('records'),
   setEither: (forDate: string, questions: string[], picks: number[]) =>
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>

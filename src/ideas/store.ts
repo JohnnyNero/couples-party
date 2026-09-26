@@ -81,6 +81,8 @@ export function withIdeas(content: Content, ideas: Idea[]): Content {
     fingerStatements: add(content.fingerStatements, of('finger')),
     lightsQuestions: add(content.lightsQuestions, of('lights')),
     clashCategories: add(content.clashCategories, of('clash')),
+    meldPrompts: add(content.meldPrompts, of('meld')),
+    describeWords: add(content.describeWords, of('describe')),
     spectrums: [...content.spectrums, ...scales.filter((w) => !haveScale.has(`${w.low} | ${w.high}`.toLowerCase()))],
     ours: ideas.filter((i) => i.kind !== 'word').map((i) => i.text),
   }

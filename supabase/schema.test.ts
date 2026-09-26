@@ -19,6 +19,7 @@ import m0016 from './migrations/0016_week_and_team.sql?raw'
 import m0017 from './migrations/0017_this_or_that.sql?raw'
 import m0018 from './migrations/0018_day_prompts.sql?raw'
 import m0019 from './migrations/0019_nudge.sql?raw'
+import m0020 from './migrations/0020_records.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -85,6 +86,7 @@ beforeAll(async () => {
   await db.exec(m0017)
   await db.exec(m0018)
   await db.exec(m0019)
+  await db.exec(m0020)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -840,6 +842,25 @@ describe('nudge', () => {
     await call(SAM, 'nudge', ['wave', 'duo'])
     await call(ALEX, 'clear_nudge', [])
     expect(await call(ALEX, 'nudged', [])).toBeNull()
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('records', () => {
+  it('lists every saved night, trimmed to the scores, and takes ideas for the new games', async () => {
+    expect(await call(EVE, 'records', [])).toEqual([])
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    const night = { v: 1, game: 'tonight', players: { A: 'Sam', B: 'Alex' }, score: { A: 30, B: 22 }, team: 41, finished: true,
+      games: [{ label: 'Word Chain', points: { A: 10, B: 0 }, team: 12 }], chain: [{ category: 'c', words: ['a', 'b', 'c'], winner: 'A' }],
+      draw: [{ strokes: [[[0, 0], [1, 1]]] }] }
+    await call(SAM, 'save_moment', ['s1', today(), night])
+    const rows = await call(ALEX, 'records', [])
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ game: 'tonight', team: 41, finished: true, score: { A: 30, B: 22 }, longestChain: 3 })
+    expect(rows[0].draw).toBeUndefined() // no drawings — just the numbers
+    expect(await call(SAM, 'add_idea', ['describe', 'our first flat'])).toMatchObject({ kind: 'describe' })
+    expect(await call(SAM, 'add_idea', ['meld', 'Our go-to snack'])).toMatchObject({ kind: 'meld' })
     await call(SAM, 'leave_couple')
   })
 })

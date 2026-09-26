@@ -19,9 +19,11 @@ const KINDS: Record<IdeaKind, KindInfo> = {
   lights: { label: 'Lights Out', icon: 'lights', help: 'The last question of the night, to talk about with the phones down.', example: 'What are you looking forward to this month?', player: 'one of you, picked each time' },
   wave: { label: 'Wavelength', icon: 'wave', help: 'Two opposite ends of a scale. One of you names something that sits on it.', example: 'Cringe | Cool', player: null },
   clash: { label: 'Category Clash', icon: 'clash', help: 'A category with lots of answers, for the letter round.', example: 'Things in our fridge', player: 'one of you, picked each time' },
+  meld: { label: 'Mind Meld', icon: 'meld', help: 'A prompt with a few obvious answers, so you can both say the same thing. Ones about the two of you are best.', example: 'Our go-to Friday takeaway', player: null },
+  describe: { label: 'Describe It', icon: 'describe', help: 'A word or thing to describe out loud without saying it. Your in-jokes and places work brilliantly.', example: 'our first flat', player: null },
   word: { label: 'Their Word', icon: 'word', help: 'A question for the daily word puzzle, answered in five or six letters. Every other day uses one of yours.', example: 'Your go-to takeaway', player: 'the one solving it' },
 }
-const ORDER: IdeaKind[] = ['mrmrs', 'finger', 'lights', 'wave', 'clash', 'word']
+const ORDER: IdeaKind[] = ['mrmrs', 'finger', 'meld', 'describe', 'lights', 'wave', 'clash', 'word']
 
 export function OurQuestions({ onClose, partner }: { onClose: () => void; partner: string }) {
   const ideas = useIdeas()

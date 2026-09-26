@@ -8,6 +8,7 @@ import { parseSpectrumPrompt } from '../daily/dial'
 import { DrawingCanvas } from '../views/DrawingCanvas'
 import type { PlayerId } from '../engine/state'
 import type { SessionMemory } from './summary'
+import { RecordsCard } from './Records'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { card, eyebrow } from '../ui/styles'
 
@@ -70,6 +71,7 @@ export function MemoriesTab() {
 
   return (
     <div className="flex flex-col gap-6 pt-1">
+      <RecordsCard />
       {days.length === 0 && (
         <Empty>
           Nothing yet. Play Tonight together and it's kept here as you go; the daily puzzles
@@ -144,6 +146,9 @@ function SessionCard({ m }: { m: SessionMemory }) {
             <span className={lead === 'B' ? inkOf('B') : ''}>{m.score.B}</span>
           </span>
           <Avatar p="B" name={n('B')} size="sm" />
+          {typeof m.team === 'number' && (
+            <span className="ml-1 rounded-full bg-tan-soft text-tan-ink px-2 py-0.5 text-sm font-display font-extrabold" aria-label={`Together ${m.team}`}>{m.team}</span>
+          )}
         </div>
         <span className="shrink-0 text-fg/40 text-lg">{open ? '▴' : '▾'}</span>
       </button>
