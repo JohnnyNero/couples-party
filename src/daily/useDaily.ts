@@ -68,6 +68,13 @@ export function useDailyNumbers() {
   return useDailyOf<DailyNumbers>(() => api.dailyNumbers(localDate()))
 }
 
+// The board, with the week's numbers alongside — those are extra, so a server without
+// migration 0016 just goes without them.
 export function useBoard() {
-  return useDailyOf<Board>(() => api.board(localDate()))
+  return useDailyOf<Board>(async () => {
+    const today = localDate()
+    const [board, stats] = await Promise.all([api.board(today), api.boardStats(today).catch(() => null)])
+    if (board.state !== 'paired') return board
+    return { ...board, stats: stats && stats.state === 'paired' ? stats : null }
+  })
 }

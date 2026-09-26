@@ -165,7 +165,18 @@ export type Board =
       today: { me: number; them: number }
       total: { me: number; them: number }
       streak: number
+      // From board_stats (migration 0016); null on a server without it.
+      stats?: BoardStats | null
     }
+
+// The week (the crown resets each Monday), your best day together, and how many of the
+// last seven days you both played.
+export type BoardStats = {
+  week: { me: number; them: number }
+  lastWeek: { me: number; them: number }
+  bestDay: number
+  daysLast7: number
+}
 
 // Memories: the live sessions you've played together, and your past daily puzzles.
 // A puzzle carries `mine` (you set it) alongside its usual view.
@@ -308,6 +319,7 @@ export const api = {
   submitSketch: (puzzleId: string, guess: string) =>
     rpc<SketchView>('submit_sketch', { p_puzzle: puzzleId, p_guess: guess }),
   board: (today: string) => rpc<Board>('board', { p_today: today }),
+  boardStats: (today: string) => rpc<({ state: 'paired' } & BoardStats) | { state: 'single' | 'waiting' }>('board_stats', { p_today: today }),
   coupleCode: () => rpc<string | null>('my_couple_code'),
   saveMoment: (key: string, playedOn: string, payload: unknown) =>
     rpc<void>('save_moment', { p_session_key: key, p_played_on: playedOn, p_payload: payload }),

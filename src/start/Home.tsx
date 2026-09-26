@@ -133,14 +133,15 @@ function ProfileButton() {
 function Today({ onPick }: { onPick: (g: Game) => void }) {
   const board = useBoard()
   const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
-  const date = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
+  // Short weekday, so it fits beside the streak on a phone.
+  const date = new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
   return (
     <div className="flex flex-col gap-4">
       <TabHeader
         over={date}
         title={paired ? `Hey ${paired.me} & ${paired.partner}` : 'Coupled'}
         logo={!paired}
-        right={paired && paired.streak > 0 ? <Streak n={paired.streak} /> : null}
+        right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
       <Board board={board} />
       <TonightCard onPlay={() => onPick('tonight')} />
@@ -148,13 +149,33 @@ function Today({ onPick }: { onPick: (g: Game) => void }) {
   )
 }
 
-function Streak({ n }: { n: number }) {
+// The streak, never with blame: it's the two of you, and it never says who missed. Beside
+// the count, how many of the last seven days you both played — so one missed day (which
+// the streak forgives anyway) doesn't read as failing. When it does lapse: life happens.
+function Streak({ n, last7 }: { n: number; last7: number | null }) {
+  const flame = (
+    <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3c1 3 4.5 4.5 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.2 1.6 1 2.6 2 2.6 0-3.2-.8-4.6.5-7.1z" />
+    </svg>
+  )
+  if (n === 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-fg/[0.06] text-fg/70 px-3 py-1 text-xs font-extrabold leading-tight whitespace-nowrap">
+        {flame}
+        <span className="flex flex-col">
+          <span>Life happens</span>
+          <span className="font-bold text-fg/50">Play today to start again</span>
+        </span>
+      </span>
+    )
+  }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-pa-soft text-pa-ink px-2.5 py-1.5 text-xs font-extrabold whitespace-nowrap">
-      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M12 3c1 3 4.5 4.5 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.2 1.6 1 2.6 2 2.6 0-3.2-.8-4.6.5-7.1z" />
-      </svg>
-      {n}-day streak
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-pa-soft text-pa-ink px-3 py-1 text-xs font-extrabold leading-tight whitespace-nowrap">
+      {flame}
+      <span className="flex flex-col">
+        <span>{n}-day streak</span>
+        {last7 !== null && <span className="font-bold opacity-70">{last7} of the last 7 days</span>}
+      </span>
     </span>
   )
 }

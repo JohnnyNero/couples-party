@@ -15,6 +15,7 @@ import m0012 from './migrations/0012_memories.sql?raw'
 import m0013 from './migrations/0013_profile.sql?raw'
 import m0014 from './migrations/0014_our_questions.sql?raw'
 import m0015 from './migrations/0015_more_than_one_device.sql?raw'
+import m0016 from './migrations/0016_week_and_team.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -77,6 +78,7 @@ beforeAll(async () => {
   await db.exec(m0013)
   await db.exec(m0014)
   await db.exec(m0015)
+  await db.exec(m0016)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -734,6 +736,31 @@ describe('more than one device', () => {
     await call(SAM2, 'unlink_device')
     expect(await call(SAM2, 'profile')).toEqual({ state: 'single', linked: false })
     expect(await call(SAM, 'profile')).toMatchObject({ state: 'paired', devices: 0 })
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('board_stats', () => {
+  const day = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)
+  it('counts this week and last, your best day together, and the days you both played', async () => {
+    expect(await call(EVE, 'board_stats', [today()])).toEqual({ state: 'single' })
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    // Yesterday: both set a Dial for each other, and both solved — 10 each on a bullseye.
+    await call(SAM, 'set_dial', [day(-1), 'Cold | Hot', 50, 'soup'])
+    await call(ALEX, 'set_dial', [day(-1), 'Cold | Hot', 20, 'ice'])
+    const y = await call(SAM, 'daily_dial', [day(-1)])
+    await call(SAM, 'submit_dial', [y.theirs.id, 20])
+    const ya = await call(ALEX, 'daily_dial', [day(-1)])
+    await call(ALEX, 'submit_dial', [ya.theirs.id, 45]) // 5 away: 7 points
+    const stats = await call(SAM, 'board_stats', [today()])
+    expect(stats.bestDay).toBe(17)
+    expect(stats.daysLast7).toBe(1)
+    const monday = new Date(today()); const dow = (monday.getUTCDay() + 6) % 7
+    const yesterdayThisWeek = dow >= 1
+    expect(stats.week).toEqual(yesterdayThisWeek ? { me: 10, them: 7 } : { me: 0, them: 0 })
+    expect(stats.lastWeek).toEqual(yesterdayThisWeek ? { me: 0, them: 0 } : { me: 10, them: 7 })
+    expect((await call(ALEX, 'board_stats', [today()])).week).toEqual(yesterdayThisWeek ? { me: 7, them: 10 } : { me: 0, them: 0 })
     await call(SAM, 'leave_couple')
   })
 })

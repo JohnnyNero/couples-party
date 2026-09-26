@@ -139,48 +139,101 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
 
 // ---------------------------------------------------------------- scoreboard
 
-// You against them, all-time, with today's haul under each — and the day's five as a
-// strip of pips.
+// Today's head-to-head, with the team total beside it: the two of you added together,
+// against your best day as a couple. The crown is this week's — it goes to whoever's
+// ahead since Monday and resets every Monday. All-time and last week are one tap deeper.
 function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
+  const [open, setOpen] = useState(false)
   const played = KINDS.map((k) => {
     const s = d.kinds[k].solve
     return !!s && s.status !== 'open'
   })
   const done = played.filter(Boolean).length
-  const lead = d.total.me === d.total.them ? null : d.total.me > d.total.them ? 'A' : 'B'
+  const stats = d.stats ?? null
+  const week = stats?.week ?? null
+  const crown = !week || week.me === week.them ? null : week.me > week.them ? 'A' : 'B'
+  const team = d.today.me + d.today.them
+  const best = stats?.bestDay ?? 0
+  const newBest = stats !== null && best > 0 && team > best
+
   return (
     <section className={card + ' px-4 py-4 flex flex-col gap-3'}>
       <div className="flex items-center justify-between gap-3">
-        <div className="font-display text-[1.05rem] font-bold whitespace-nowrap">Today's puzzles</div>
+        <div className="font-display text-[1.05rem] font-bold whitespace-nowrap">Today</div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
             {played.map((p, i) => (
               <span key={i} className={'h-2 w-3.5 min-[400px]:w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
             ))}
           </div>
-          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of 5</span>
+          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of {KINDS.length}</span>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Side p="A" name={d.me} label="You" total={d.total.me} lead={lead === 'A'} />
+
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-2 text-left">
+        <Side p="A" name={d.me} label="You" points={d.today.me} crown={crown === 'A'} />
         <span className="font-display font-bold text-sm text-fg/30">vs</span>
-        <Side p="B" name={d.partner} label={d.partner} total={d.total.them} lead={lead === 'B'} flip />
-      </div>
+        <Side p="B" name={d.partner} label={d.partner} points={d.today.them} crown={crown === 'B'} flip />
+      </button>
+
+      {stats && (
+        <div className="flex items-center gap-3 rounded-2xl bg-tan-soft text-tan-ink px-3.5 py-2.5">
+          <span className="text-lg" aria-hidden="true">🤝</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-extrabold">Together today</div>
+            <div className="text-xs font-bold opacity-75">
+              {newBest ? 'A new best day!' : best > 0 ? `Your best day: ${best}` : 'Your first day together counts'}
+            </div>
+          </div>
+          <span className="font-display text-2xl font-extrabold tabular-nums">{team}</span>
+        </div>
+      )}
+
+      {stats && (
+        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="text-left text-xs font-bold text-fg/55 flex items-center justify-between gap-2">
+          <span className="truncate">
+            {crown
+              ? <>👑 {crown === 'A' ? 'You’re' : `${d.partner}’s`} ahead this week, {Math.max(week!.me, week!.them)}–{Math.min(week!.me, week!.them)}</>
+              : week && week.me + week.them > 0 ? <>Level this week, {week.me}–{week.them}</> : 'A new week — the crown’s up for grabs'}
+          </span>
+          <span className="shrink-0">{open ? 'Less' : 'More'} ›</span>
+        </button>
+      )}
+
+      {open && (
+        <div className="rounded-2xl bg-fg/[0.04] px-3.5 py-3 text-sm flex flex-col gap-1.5 animate-fade-up">
+          <Line label="This week" me={week?.me ?? 0} them={week?.them ?? 0} partner={d.partner} note="resets Monday" />
+          {stats && <Line label="Last week" me={stats.lastWeek.me} them={stats.lastWeek.them} partner={d.partner} />}
+          <Line label="All time" me={d.total.me} them={d.total.them} partner={d.partner} />
+        </div>
+      )}
     </section>
   )
 }
 
-function Side({ p, name, label, total, lead, flip = false }: {
-  p: 'A' | 'B'; name: string; label: string; total: number; lead: boolean; flip?: boolean
+function Line({ label, me, them, partner, note }: { label: string; me: number; them: number; partner: string; note?: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex-1 flex flex-col">
+        <span className="font-bold text-fg/60">{label}</span>
+        {note && <span className="text-xs text-fg/40">{note}</span>}
+      </span>
+      <span className="tabular-nums"><b className="text-pa-ink">You {me}</b> · <b className="text-pb-ink">{partner} {them}</b></span>
+    </div>
+  )
+}
+
+function Side({ p, name, label, points, crown, flip = false }: {
+  p: 'A' | 'B'; name: string; label: string; points: number; crown: boolean; flip?: boolean
 }) {
   return (
     <div className={'flex-1 min-w-0 flex items-center gap-2.5 ' + (flip ? 'flex-row-reverse text-right' : '')}>
       <Avatar p={p} name={name} />
       <div className="min-w-0">
         <div className="text-xs font-bold text-fg/60 truncate">
-          {lead && <span aria-label="leading">👑 </span>}{label}
+          {crown && <span aria-label="ahead this week">👑 </span>}{label}
         </div>
-        <div className={'font-display text-[1.75rem] font-extrabold leading-none tabular-nums ' + inkOf(p)}>{total}</div>
+        <div className={'font-display text-[1.75rem] font-extrabold leading-none tabular-nums ' + inkOf(p)}>{points}</div>
       </div>
     </div>
   )
