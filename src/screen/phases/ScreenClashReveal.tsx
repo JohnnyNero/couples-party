@@ -7,7 +7,7 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { LetterTile } from '../../ui/kit'
 import { card, eyebrow } from '../../ui/styles'
-import { at } from '../../ui/fx'
+import { Stamp, at } from '../../ui/fx'
 
 // The round's six categories as a table that fills in one row per tap: both answers
 // side by side, each marked with what it scored. The live row is where a challenge
@@ -16,6 +16,10 @@ export function ScreenClashReveal({ s }: { s: SessionState }) {
   const me = useMyPlayerId()
   const g = s.clash!
   const round = g.rounds[g.current]
+  // Every category scored, once the last row is up: a clean sweep, stamped for whoever
+  // did it (both of you, if you both did).
+  const lastRow = round.revealIndex >= round.categories.length - 1
+  const swept = lastRow ? (['A', 'B'] as const).filter((p) => round.categories.every((_, i) => clashVerdict(round, p, i) === 'scores')) : []
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -25,7 +29,8 @@ export function ScreenClashReveal({ s }: { s: SessionState }) {
         </span>
       </div>
 
-      <section className={card + ' px-3 py-1.5'}>
+      <section className={'relative ' + card + ' px-3 py-1.5'}>
+        {swept.length > 0 && <Stamp delay={1200}>{swept.length === 2 ? 'Both swept!' : `${playerName(s, swept[0])} swept it`}</Stamp>}
         <div className="flex items-center py-1.5">
           <span className="flex-1 min-w-0" />
           {(['A', 'B'] as const).map((p) => (

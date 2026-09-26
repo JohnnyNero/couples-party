@@ -19,6 +19,7 @@ import { MemoriesTab } from '../memories/MemoriesTab'
 import { GameIcon, GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
+import { Burst, Shower, at } from '../ui/fx'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
@@ -168,11 +169,36 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
 // The streak, never with blame: it's the two of you, and it never says who missed. Beside
 // the count, how many of the last seven days you both played — so one missed day (which
 // the streak forgives anyway) doesn't read as failing. When it does lapse: life happens.
+//
+// The flame grows with it — bigger at three days, flickering from a week, glowing from a
+// fortnight — and catches whenever the count goes up. The milestones get confetti.
+const MILESTONES = [3, 7, 14, 30, 50, 100, 150, 200, 365]
+const STREAK_KEY = 'coupled:streak-seen'
+
+// What the streak was the last time this phone showed it, when it's gone up since.
+function useStreakRise(n: number): number | null {
+  const [prev] = useState(() => {
+    try {
+      const v = localStorage.getItem(STREAK_KEY)
+      return v === null ? null : Number(v)
+    } catch { return null }
+  })
+  useEffect(() => { try { localStorage.setItem(STREAK_KEY, String(n)) } catch { /* not kept */ } }, [n])
+  return prev !== null && Number.isFinite(prev) && n > prev ? prev : null
+}
+
 function Streak({ n, last7 }: { n: number; last7: number | null }) {
+  const rose = useStreakRise(n)
+  const milestone = rose !== null ? MILESTONES.filter((m) => rose < m && m <= n).pop() ?? null : null
+  const size = n >= 14 ? 'w-6 h-6' : n >= 3 ? 'w-5 h-5' : 'w-4 h-4'
+  const glow = n >= 14 ? ' drop-shadow-[0_0_4px_rgba(255,111,97,0.7)]' : ''
+  const fire = n >= 7 ? ' animate-flicker' : ''
   const flame = (
-    <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3c1 3 4.5 4.5 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.2 1.6 1 2.6 2 2.6 0-3.2-.8-4.6.5-7.1z" />
-    </svg>
+    <span key={rose ?? 'still'} className={'shrink-0 inline-flex ' + (rose !== null ? 'animate-flare' : '')}>
+      <svg viewBox="0 0 24 24" className={size + glow + fire} fill={n >= 30 ? '#F2B544' : n >= 7 ? 'currentColor' : 'none'} fillOpacity={n >= 30 ? 1 : 0.25} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3c1 3 4.5 4.5 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.2 1.6 1 2.6 2 2.6 0-3.2-.8-4.6.5-7.1z" />
+      </svg>
+    </span>
   )
   if (n === 0) {
     return (
@@ -186,12 +212,16 @@ function Streak({ n, last7 }: { n: number; last7: number | null }) {
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-pa-soft text-pa-ink px-3 py-1 text-xs font-extrabold leading-tight whitespace-nowrap">
+    <span className="relative inline-flex items-center gap-1.5 rounded-full bg-pa-soft text-pa-ink px-3 py-1 text-xs font-extrabold leading-tight whitespace-nowrap">
       {flame}
       <span className="flex flex-col">
-        <span>{n}-day streak</span>
+        <span key={rose ?? 'still'} style={rose !== null ? at(350) : undefined} className={'origin-left ' + (rose !== null ? 'animate-slam' : '')}>
+          {milestone ? `${n} days in a row!` : `${n}-day streak`}
+        </span>
         {last7 !== null && <span className="font-bold opacity-70">{last7} of the last 7 days</span>}
       </span>
+      {rose !== null && <Burst delay={300} count={milestone ? 20 : 10} spread={milestone ? 1 : 0.6} />}
+      {milestone && <Shower delay={400} />}
     </span>
   )
 }

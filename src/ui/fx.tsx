@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 
 // The reveal kit: the little bits of theatre every game's reveal is built from. The
 // keyframes themselves live in tailwind.config.js (flip-in, slam, wiggle, float-up…)
@@ -66,4 +67,75 @@ export function Crown({ className = 'w-7 h-5' }: { className?: string }) {
       <path d="M3 16L2 5l5 4 5-7 5 7 5-4-1 11z" />
     </svg>
   )
+}
+
+// PERFECT, FIRST TRY: a rubber stamp brought down on whatever earned it. Give the parent
+// `relative`; it sits over the top-right corner.
+export function Stamp({ children, delay = 0, tone = 'sage' }: { children: string; delay?: number; tone?: 'sage' | 'accent' | 'tan' }) {
+  const colour = { sage: 'text-sage-ink border-sage-ink', accent: 'text-accent-ink border-accent-ink', tan: 'text-tan-ink border-tan-ink' }[tone]
+  return (
+    <span className="pointer-events-none absolute -right-1 -top-4 z-20" aria-hidden="true">
+      <span
+        style={at(delay)}
+        className={'block rounded-lg border-[3px] bg-bg/85 px-2.5 py-0.5 font-display text-lg sm:text-2xl font-extrabold uppercase tracking-[0.12em] animate-stamp ' + colour}
+      >
+        {children}
+      </span>
+    </span>
+  )
+}
+
+const FALL = ['--pa', '--pb', '--accent', '--tan-ink', '--sage-ink', '--pa', '--pb']
+
+// The big occasions — a new best night, a streak milestone, everything done for the
+// day: confetti falling over the whole screen. Onto <body>, so nothing it sits inside
+// can clip it; it clears itself away when it's fallen.
+export function Shower({ delay = 0, hearts = false, count = 44 }: { delay?: number; hearts?: boolean; count?: number }) {
+  const [on, setOn] = useState(true)
+  useEffect(() => {
+    const id = setTimeout(() => setOn(false), delay + 4200)
+    return () => clearTimeout(id)
+  }, [delay])
+  if (!on || typeof document === 'undefined') return null
+  return createPortal(
+    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden" aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => {
+        const colour = FALL[i % FALL.length]
+        const style = {
+          left: `${((i * 61) % 100) + ((i % 3) - 1) * 1.5}%`,
+          '--sway': `${12 + ((i * 29) % 26)}px`,
+          '--spin': `${((i * 137) % 540) + 180}deg`,
+          animation: `fall ${2300 + ((i * 97) % 1300)}ms linear ${delay + ((i * 83) % 1400)}ms both`,
+          color: `rgb(var(${colour}))`,
+          backgroundColor: hearts && i % 2 ? undefined : `rgb(var(${colour}))`,
+        } as CSSProperties
+        return hearts && i % 2 ? (
+          <span key={i} style={style} className="absolute top-0 text-2xl leading-none">♥</span>
+        ) : (
+          <span key={i} style={style} className={'absolute top-0 rounded-[2px] ' + (i % 3 === 0 ? 'w-2.5 h-4' : 'w-3 h-3')} />
+        )
+      })}
+    </div>,
+    document.body,
+  )
+}
+
+// Whether this is the first time this phone has seen `key` — so a celebration plays
+// once (the first time you open Today after finishing the lot), not every visit. It's
+// noted as seen once shown; a phone that won't store things just celebrates each time.
+export function useFirstTime(key: string | null): boolean {
+  // Decided once per key, the first time this screen sees it — a key can turn up while
+  // the screen is already open (the last puzzle finished, the board refreshed).
+  const decided = useRef(new Map<string, boolean>())
+  if (key && !decided.current.has(key)) {
+    let first = true
+    try { first = localStorage.getItem(`coupled:seen:${key}`) === null } catch { /* celebrate */ }
+    decided.current.set(key, first)
+  }
+  const first = !!key && decided.current.get(key) === true
+  useEffect(() => {
+    if (!key || !first) return
+    try { localStorage.setItem(`coupled:seen:${key}`, '1') } catch { /* nowhere to keep it */ }
+  }, [key, first])
+  return first
 }

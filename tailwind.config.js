@@ -140,6 +140,26 @@ export default {
           '75%': { transform: 'translateY(-2px) scale(0.95) rotate(-3deg)' },
           '100%': { transform: 'translateY(0) scale(1) rotate(0)', opacity: '1' },
         },
+        // A rubber stamp coming down on the screen: PERFECT, FIRST TRY.
+        stamp: {
+          '0%': { transform: 'scale(3.2) rotate(-28deg)', opacity: '0' },
+          '55%': { transform: 'scale(0.88) rotate(-9deg)', opacity: '1' },
+          '75%': { transform: 'scale(1.06) rotate(-13deg)' },
+          '100%': { transform: 'scale(1) rotate(-12deg)', opacity: '1' },
+        },
+        // The streak's flame catching as the count goes up.
+        flare: {
+          '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 0 rgba(255,111,97,0))' },
+          '35%': { transform: 'scale(1.7) rotate(-8deg)', filter: 'drop-shadow(0 0 6px rgba(255,111,97,0.9))' },
+          '60%': { transform: 'scale(1.25) rotate(6deg)' },
+        },
+        // …and flickering, once it's a proper fire.
+        flicker: {
+          '0%, 100%': { transform: 'scale(1) rotate(0)' },
+          '25%': { transform: 'scale(1.08, 0.94) rotate(-3deg)' },
+          '50%': { transform: 'scale(0.96, 1.06) rotate(2deg)' },
+          '75%': { transform: 'scale(1.05, 0.97) rotate(-1deg)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',
@@ -156,6 +176,9 @@ export default {
         'nudge-r': 'nudge-r 420ms ease-in-out both',
         'nudge-l': 'nudge-l 420ms ease-in-out both',
         'crown-hop': 'crown-hop 600ms cubic-bezier(0.34,1.56,0.64,1) both',
+        stamp: 'stamp 620ms cubic-bezier(0.2,0.8,0.3,1) both',
+        flare: 'flare 900ms ease-out both',
+        flicker: 'flicker 1.6s ease-in-out infinite',
       },
     },
   },

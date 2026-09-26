@@ -1,4 +1,6 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useProfile } from '../profile/store'
+import { fetchBaseline } from '../memories/baseline'
 import type { SessionState } from '../engine/state'
 import { useSession, useMyPlayerId } from '../net'
 import { screenKey } from '../views/phaseKey'
@@ -61,6 +63,10 @@ function useDealt(live: SessionState): SessionState {
 }
 
 export function Duo() {
+  const profile = useProfile()
+  const myName = profile?.state === 'paired' ? profile.me.name : ''
+  const solo = resolveMode(location.search) === 'solo'
+  useEffect(() => { if (!solo) fetchBaseline(myName) }, [myName, solo])
   const live = useSession()
   const s = useDealt(live)
   const me = useMyPlayerId()

@@ -124,6 +124,16 @@ body {
   100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 36px)) scale(0.9) rotate(calc(var(--rot) * 1.6)); opacity: 0; }
 }
 
+/* The big-occasion confetti (ui/fx.tsx Shower): each piece falls the height of the
+   screen from its own --x, swaying and spinning as it goes. */
+@keyframes fall {
+  0% { transform: translate(0, -8vh) rotate(0); opacity: 1; }
+  25% { transform: translate(var(--sway), 22vh) rotate(calc(var(--spin) * 0.25)); }
+  50% { transform: translate(calc(var(--sway) * -1), 50vh) rotate(calc(var(--spin) * 0.5)); }
+  75% { transform: translate(var(--sway), 78vh) rotate(calc(var(--spin) * 0.75)); opacity: 1; }
+  100% { transform: translate(0, 108vh) rotate(var(--spin)); opacity: 0; }
+}
+
 /* The Wavelength needle swinging up from the left edge to the guess, overshooting a
    touch. --to is the guess as an angle off vertical. */
 @keyframes needle-swing {

@@ -37,6 +37,7 @@ import { WordPlay } from './WordPlay'
 import { loadEitherPairs, loadNumberQuestions, loadPacks, loadWordPrompts } from '../packs'
 import type { Content } from '../engine/state'
 import { slide } from '../ui/transition'
+import { Burst, Shower, at, useFirstTime } from '../ui/fx'
 
 // The Today board: a scoreboard, then all six daily puzzles as tiles. Each tile is
 // the same two steps — solve the one your partner set you for today, then set one for
@@ -174,6 +175,11 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   const team = d.today.me + d.today.them
   const best = stats?.bestDay ?? 0
   const newBest = stats !== null && best > 0 && team > best
+  // The day's two occasions, each celebrated once — the first time this phone sees it.
+  const today = localDate()
+  const allDone = kinds.length > 0 && done === kinds.length
+  const cheerDone = useFirstTime(allDone ? `alldone:${today}` : null)
+  const cheerBest = useFirstTime(newBest ? `newbest:${today}` : null)
 
   return (
     <section className={card + ' px-4 py-4 flex flex-col gap-3'}>
@@ -182,11 +188,20 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
             {played.map((p, i) => (
-              <span key={i} className={'h-2 w-3.5 min-[400px]:w-5 rounded-full ' + (p ? 'bg-fg' : 'bg-fg/15')} />
+              <span
+                key={i}
+                style={cheerDone ? at(i * 90) : undefined}
+                className={'h-2 w-3.5 min-[400px]:w-5 rounded-full ' + (allDone ? 'bg-accent' : p ? 'bg-fg' : 'bg-fg/15') + (cheerDone ? ' animate-bump' : '')}
+              />
             ))}
           </div>
-          <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of {kinds.length}</span>
+          {allDone ? (
+            <span style={cheerDone ? at(kinds.length * 90) : undefined} className={'text-xs font-extrabold text-accent-ink whitespace-nowrap ' + (cheerDone ? 'animate-slam' : '')}>All done ✓</span>
+          ) : (
+            <span className="text-xs font-bold text-fg/55 tabular-nums whitespace-nowrap">{done} of {kinds.length}</span>
+          )}
         </div>
+        {cheerDone && <Shower delay={300} />}
       </div>
 
       <button onClick={() => setOpen(true)} className="flex items-center gap-2 text-left">
@@ -196,15 +211,16 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
       </button>
 
       {stats && (
-        <div className="flex items-center gap-3 rounded-2xl bg-tan-soft text-tan-ink px-3.5 py-2.5">
+        <div className="relative flex items-center gap-3 rounded-2xl bg-tan-soft text-tan-ink px-3.5 py-2.5">
           <span className="text-lg" aria-hidden="true">🤝</span>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-extrabold">Together today</div>
-            <div className="text-xs font-bold opacity-75">
+            <div style={cheerBest ? at(250) : undefined} className={'text-xs font-bold opacity-75 ' + (cheerBest ? 'origin-left animate-slam' : '')}>
               {newBest ? 'A new best day!' : best > 0 ? `Your best day: ${best}` : 'Your first day together counts'}
             </div>
           </div>
-          <span className="font-display text-2xl font-extrabold tabular-nums">{team}</span>
+          <span key={cheerBest ? 'best' : 'plain'} className={'font-display text-2xl font-extrabold tabular-nums ' + (cheerBest ? 'animate-bump' : '')} style={cheerBest ? at(500) : undefined}>{team}</span>
+          {cheerBest && <Burst hearts delay={500} count={16} />}
         </div>
       )}
 

@@ -5,7 +5,7 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { PromptCard, WhoIsIn } from '../../ui/kit'
 import { eyebrow } from '../../ui/styles'
-import { Burst, at, verdictFx } from '../../ui/fx'
+import { Burst, Stamp, at, verdictFx } from '../../ui/fx'
 
 const PS: PlayerId[] = ['A', 'B']
 
@@ -73,6 +73,7 @@ export function ScreenMeldReveal({ s }: { s: SessionState }) {
           </div>
         ))}
         {met && <Burst hearts delay={MET_AT + 100} count={16} />}
+        {met && t === 0 && <Stamp tone="tan" delay={MET_AT + 500}>First try!</Stamp>}
       </div>
       <div style={at(MET_AT + 150)} className={'font-display text-3xl font-extrabold ' + verdictFx(met) + (met ? ' text-tan-ink' : ' text-fg/60')}>
         {met

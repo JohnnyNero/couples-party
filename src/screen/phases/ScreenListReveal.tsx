@@ -6,7 +6,7 @@ import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { themeText, playerName, rankerOf } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { card } from '../../ui/styles'
-import { Burst } from '../../ui/fx'
+import { Burst, Stamp } from '../../ui/fx'
 
 // The reveal walks the items in the order they were handed out, one tap at a time. Each
 // new row shows the ranker's real slot first and the guess a beat later — the pause is
@@ -22,6 +22,8 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
   const total = shown.reduce((n, i) => n + scaled(s, 'list', listItemPoints(i)), 0)
   const last = act.revealIndex >= act.items.length - 1
   const ranker = rankerOf(act)
+  // Every item on its exact slot: a perfect read, stamped once the last one lands.
+  const perfect = last && act.items.every((i) => listItemPoints(i) === SCORING.listExact)
   // A TV has nobody to tap it (`me` is null on a stream screen), and the act is over by
   // the time this is held up on DONE — in both cases the button would do nothing.
   const canAdvance = me !== null && s.phase === 'LIST_REVEAL'
@@ -32,7 +34,8 @@ export function ScreenListReveal({ s }: { s: SessionState }) {
         {themeText(s, act, me)}
       </div>
 
-      <section className={card + ' px-4 py-2'}>
+      <section className={'relative ' + card + ' px-4 py-2'}>
+        {perfect && <Stamp delay={1100}>Perfect</Stamp>}
         <div className="flex items-center py-1.5 text-xs sm:text-base font-extrabold">
           <span className="flex-1 min-w-0" />
           {/* Too narrow for names on a phone: the avatar says whose, the label says it in full. */}

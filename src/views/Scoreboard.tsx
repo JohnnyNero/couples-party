@@ -9,7 +9,8 @@ import { leaderboardView } from './leaderboardView'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
-import { Burst, Crown, FloatPoints, at } from '../ui/fx'
+import { Burst, Crown, FloatPoints, Shower, at, useFirstTime } from '../ui/fx'
+import { baseline } from '../memories/baseline'
 
 // The card that closes every game. Not just this game's score — the shape of the whole
 // night so far: the two of you head to head, every game's points, what's next.
@@ -47,6 +48,12 @@ export function Scoreboard({
   const added = current ? games.find((g) => g.key === current) ?? null : null
   // The totals count up first; then the verdict, the crown, and what this game added.
   const LAND = 1050
+  // Called, a Tonight or full session is measured against your best before tonight.
+  const night = s.game === 'tonight' || s.game === 'full' ? s.game : null
+  const before = called && night ? baseline() : null
+  const prior = before && night ? before.together[night] : null
+  const record: 'best' | 'first' | null = !before || together <= 0 ? null : !prior ? 'first' : together > prior.value ? 'best' : null
+  const cheer = useFirstTime(record ? `bestnight:${s.seed}` : null)
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-4">
@@ -77,6 +84,24 @@ export function Scoreboard({
           </div>
         )).reduce<ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, <Vs key="vs" />, el]), [])}
       </section>
+
+      {record && night && (
+        <section
+          style={cheer ? at(LAND + 900) : undefined}
+          className={'rounded-2xl bg-ink text-paper px-4 py-3 flex items-center gap-3 ' + (cheer ? 'animate-slam' : '')}
+        >
+          <span className="text-2xl" aria-hidden="true">🏆</span>
+          <div className="flex-1 min-w-0">
+            <div className="font-display text-lg font-extrabold leading-tight">
+              {record === 'first' ? `Your first ${night === 'tonight' ? 'Tonight' : 'full session'} together` : `Your best ${night === 'tonight' ? 'Tonight' : 'full session'} yet!`}
+            </div>
+            <div className="text-xs font-bold text-paper/65">
+              {record === 'first' ? `${together} together — the one to beat` : `${together} together, beating ${prior!.value}`}
+            </div>
+          </div>
+          {cheer && <Shower hearts delay={LAND + 1000} />}
+        </section>
+      )}
 
       {/* Yours together: every time a game showed you know each other. */}
       <section className="flex items-center gap-3 rounded-2xl bg-tan-soft text-tan-ink px-4 py-3">
