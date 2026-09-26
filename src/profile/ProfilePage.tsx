@@ -10,6 +10,7 @@ import { OurQuestions } from '../ideas/OurQuestions'
 import { clearIdeas } from '../ideas/store'
 import { deviceUrl } from '../start/invite'
 import { useBackLayer } from '../ui/back'
+import { slide } from '../ui/transition'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -19,7 +20,8 @@ const localName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } ca
 
 export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUnpaired: () => void }) {
   const profile = useProfile()
-  const [ideasOpen, setIdeasOpen] = useState(false)
+  const [ideasOpen, setIdeasOpenNow] = useState(false)
+  const setIdeasOpen = (v: boolean) => slide(v ? 'forward' : 'back', () => setIdeasOpenNow(v))
   useBackLayer(ideasOpen, () => setIdeasOpen(false))
   useEffect(() => { void refreshProfile() }, [])
 
@@ -28,7 +30,7 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
   const savedName = onServer ? onServer.me.name : localName()
 
   return (
-    <div className="fixed inset-0 z-40 bg-bg flex flex-col animate-fade-up">
+    <div className="fixed inset-0 z-40 bg-bg flex flex-col enter-fallback">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
         <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
         <h1 className="font-display text-2xl font-extrabold">Profile</h1>

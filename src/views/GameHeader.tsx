@@ -49,7 +49,7 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
     else setMenu(false)
   })
   return (
-    <div className={'shrink-0 flex flex-col gap-2.5 ' + (big ? 'px-8 pt-6 pb-3' : 'px-5 pt-4 pb-2')}>
+    <div className={'vt-header shrink-0 flex flex-col gap-2.5 ' + (big ? 'px-8 pt-6 pb-3' : 'px-5 pt-4 pb-2')}>
       <div className="flex items-center gap-2.5">
         {icon && <GameIcon game={icon} size={big ? 'lg' : 'sm'} />}
         <div className="flex-1 min-w-0">

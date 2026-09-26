@@ -13,6 +13,7 @@ import { readDeviceLink, readInvite } from './start/invite'
 import { DeviceLink } from './start/DeviceLink'
 import { Duo } from './duo/Duo'
 import { leaveTo, useBackLayer } from './ui/back'
+import { slide } from './ui/transition'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
 
 export default function App() {
@@ -63,22 +64,22 @@ export default function App() {
     if (!game || !mode) {
       // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
       // link (location.href + #r=CODE) carries both to the joining device.
-      const start = (g: Game) => {
+      const start = (g: Game) => slide('forward', () => {
         stampMode('duo', g, false)
         setResume(null)
         setMode('duo')
         setGame(g)
-      }
+      })
       return (
         <Home
           onPick={start}
           onJoin={start}
-          onResume={(saved) => {
+          onResume={(saved) => slide('forward', () => {
             stampMode(saved.mode, saved.game, false)
             setResume(saved)
             setMode(saved.mode)
             setGame(saved.game)
-          }}
+          })}
         />
       )
     }

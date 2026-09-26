@@ -1,4 +1,8 @@
+import { useLayoutEffect, useRef, useState } from 'react'
+import type { SessionState } from '../engine/state'
 import { useSession, useMyPlayerId } from '../net'
+import { screenKey } from '../views/phaseKey'
+import { slide } from '../ui/transition'
 import { BoardStage } from '../views/board'
 import { Controller } from '../views/controller'
 import { GameHeader } from '../views/GameHeader'
@@ -36,12 +40,33 @@ const BOARD_ONLY = new Set([
   'DONE',
 ])
 
+// What's on screen trails the live session by a frame at each new screen: the change is
+// handed to a screen transition, which snapshots the old screen first and then deals the
+// new one in. Anything smaller (a tap, a tick) goes straight through.
+function useDealt(live: SessionState): SessionState {
+  const [shown, setShown] = useState(live)
+  const latest = useRef(live)
+  latest.current = live
+  const key = useRef(screenKey(live))
+  useLayoutEffect(() => {
+    const next = screenKey(live)
+    if (next === key.current) {
+      if (shown !== live) setShown(live)
+      return
+    }
+    key.current = next
+    slide('deal', () => setShown(latest.current))
+  })
+  return screenKey(shown) === key.current ? live : shown
+}
+
 export function Duo() {
-  const s = useSession()
+  const live = useSession()
+  const s = useDealt(live)
   const me = useMyPlayerId()
   const debug = new URLSearchParams(location.search).get('debug') === '1'
   const bot = resolveBot(location.search) || resolveMode(location.search) === 'solo'
-  useRecordSession(s)
+  useRecordSession(live)
   if (!me) return <PlayWaiting label="Connecting…" />
   if (s.paused?.away) return <AwayScreen s={s} />
   // The night's last card is dark and full-bleed: no header, no padding.

@@ -31,3 +31,29 @@ export function phaseKey(s: SessionState): string {
     s.decider?.current ?? 0,
   ].join('|')
 }
+
+// Coarser: when a game has moved to a genuinely new screen — a new phase, round, turn or
+// try — the screen transition deals it in (see useDealt). What phaseKey adds on top of
+// this (the next word in a chain, the next row of a reveal) is the same screen moving
+// on, which only freshens in place.
+export function screenKey(s: SessionState): string {
+  return [
+    s.phase,
+    s.intro?.key ?? '',
+    s.listActs.length,
+    s.likely?.current ?? 0,
+    s.finger?.current ?? 0,
+    s.mrmrs?.current ?? 0,
+    s.wave?.current ?? 0,
+    s.draw?.current ?? 0,
+    s.clash?.current ?? 0,
+    s.chain?.current ?? 0,
+    s.bluff?.current ?? 0,
+    s.bluff ? s.bluff.rounds[s.bluff.current].turn : '',
+    s.describe?.current ?? 0,
+    s.meld ? `${s.meld.current}.${s.meld.rounds[s.meld.current].tries.length}` : '',
+    s.circle?.current ?? 0,
+    s.clock?.current ?? 0,
+    s.decider?.current ?? 0,
+  ].join('|')
+}

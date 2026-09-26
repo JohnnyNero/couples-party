@@ -150,6 +150,56 @@ body {
   to { background-color: rgb(var(--tan-soft)); border-color: rgb(var(--tan-ink)); }
 }
 
+/* Screen transitions (ui/transition.ts). The whole screen is one snapshot ("root"),
+   except the parts that should hold still while it moves: Home's tab bar while the tabs
+   slide, and a game's header while its next screen is dealt. They're only named for the
+   transition they sit out — named for good, the tab bar would ride on top of every page
+   that opens over Home. */
+/* A page's own fade-in, for browsers without view transitions — where they exist, the
+   transition brings the page in instead, and a fade on top would only wash it out. */
+@supports not (view-transition-name: none) {
+  .enter-fallback { animation: fade-up 280ms ease-out both; }
+}
+
+:root[data-slide]::view-transition-old(root),
+:root[data-slide]::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-fill-mode: both;
+}
+:root[data-slide="left"] .vt-tabbar,
+:root[data-slide="right"] .vt-tabbar { view-transition-name: tabbar; }
+:root[data-slide="deal"] .vt-header { view-transition-name: game-header; }
+::view-transition-group(tabbar),
+::view-transition-group(game-header) { animation-duration: 200ms; }
+
+/* A page opening: pushed in from the right over this one, which drifts back and dims. */
+:root[data-slide="forward"]::view-transition-old(root) { animation-name: vt-drift-left; }
+:root[data-slide="forward"]::view-transition-new(root) { animation-name: vt-in-right; }
+/* …and closing: it slides off to the right, uncovering the page it opened over. */
+:root[data-slide="back"]::view-transition-old(root) { animation-name: vt-out-right; z-index: 2; }
+:root[data-slide="back"]::view-transition-new(root) { animation-name: vt-drift-in; }
+/* Tabs: a short slide towards the tab you tapped, crossing over. */
+:root[data-slide="left"]::view-transition-old(root) { animation-name: vt-tab-out-left; animation-duration: 260ms; }
+:root[data-slide="left"]::view-transition-new(root) { animation-name: vt-tab-in-right; animation-duration: 260ms; }
+:root[data-slide="right"]::view-transition-old(root) { animation-name: vt-tab-out-right; animation-duration: 260ms; }
+:root[data-slide="right"]::view-transition-new(root) { animation-name: vt-tab-in-left; animation-duration: 260ms; }
+/* A game's next screen: the last one tossed aside, the next dealt in with a tilt. */
+:root[data-slide="deal"]::view-transition-old(root) { animation-name: vt-toss; animation-duration: 300ms; }
+:root[data-slide="deal"]::view-transition-new(root) { animation-name: vt-deal; animation-duration: 420ms; animation-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1); }
+
+@keyframes vt-in-right { from { transform: translateX(100%); } }
+@keyframes vt-drift-left { to { transform: translateX(-25%); filter: brightness(0.92); } }
+@keyframes vt-out-right { to { transform: translateX(100%); } }
+@keyframes vt-drift-in { from { transform: translateX(-25%); filter: brightness(0.92); } }
+@keyframes vt-tab-out-left { to { transform: translateX(-16%); opacity: 0; } }
+@keyframes vt-tab-in-right { from { transform: translateX(16%); opacity: 0; } }
+@keyframes vt-tab-out-right { to { transform: translateX(16%); opacity: 0; } }
+@keyframes vt-tab-in-left { from { transform: translateX(-16%); opacity: 0; } }
+@keyframes vt-toss { to { transform: translateX(-14%) scale(0.94) rotate(-2.5deg); opacity: 0; } }
+@keyframes vt-deal { from { transform: translateX(26%) scale(0.96) rotate(3.5deg); opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

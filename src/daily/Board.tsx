@@ -36,6 +36,7 @@ import { WordAnswer } from './WordAnswer'
 import { WordPlay } from './WordPlay'
 import { loadEitherPairs, loadNumberQuestions, loadPacks, loadWordPrompts } from '../packs'
 import type { Content } from '../engine/state'
+import { slide } from '../ui/transition'
 
 // The Today board: a scoreboard, then all six daily puzzles as tiles. Each tile is
 // the same two steps — solve the one your partner set you for today, then set one for
@@ -68,7 +69,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   const { status, refresh } = board
   // Back from a puzzle, or from setting one, is the board.
   const closeScreen = () => {
-    setScreen(null)
+    slide('back', () => setScreen(null))
     setSyncing(true)
     void refresh().finally(() => setSyncing(false))
   }
@@ -126,7 +127,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
             data={d}
             pools={pools}
             onClose={close}
-            onSwitch={setScreen}
+            onSwitch={(next) => slide('forward', () => setScreen(next))}
           />
         </div>,
         document.body,
@@ -142,7 +143,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
               slot={d.kinds[k]!}
               wide={kinds.length % 2 === 1 && i === kinds.length - 1}
               caught={caughtUpOn(localDate(), k)}
-              onOpen={(mode) => { if (!syncing) setScreen({ kind: k, mode }) }}
+              onOpen={(mode) => { if (!syncing) slide('forward', () => setScreen({ kind: k, mode })) }}
             />
           ))}
         </div>
@@ -158,7 +159,8 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
 // ahead since Monday and resets every Monday. All-time and last week are one tap deeper.
 function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   // "More" opens the Stats page; back closes it.
-  const [open, setOpen] = useState(false)
+  const [open, setOpenNow] = useState(false)
+  const setOpen = (v: boolean) => slide(v ? 'forward' : 'back', () => setOpenNow(v))
   useBackLayer(open, () => setOpen(false))
   const kinds = kindsOf(d)
   const played = kinds.map((k) => {

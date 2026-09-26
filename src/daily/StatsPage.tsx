@@ -11,7 +11,7 @@ export function StatsPage({ d, onClose }: { d: Paired; onClose: () => void }) {
   const stats = d.stats ?? null
   const team = d.today.me + d.today.them
   return (
-    <div className="fixed inset-0 z-50 bg-bg flex flex-col animate-fade-up">
+    <div className="fixed inset-0 z-50 bg-bg flex flex-col enter-fallback">
       <header className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-2">
         <button onClick={onClose} aria-label="Back" className="shrink-0 w-10 h-10 rounded-full border-2 border-fg/15 bg-card inline-flex items-center justify-center text-xl text-fg/70 active:translate-y-px">←</button>
         <div>

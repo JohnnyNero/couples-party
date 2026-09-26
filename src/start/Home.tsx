@@ -18,12 +18,14 @@ import { dayIndex, localDate } from '../daily/dates'
 import { MemoriesTab } from '../memories/MemoriesTab'
 import { GameIcon, GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
+import { slide } from '../ui/transition'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
 // everything you've played together so far.
 
 type Tab = 'today' | 'games' | 'memories'
+const TAB_ORDER: Tab[] = ['today', 'games', 'memories']
 
 const TAB_KEY = 'couples-party:tab'
 
@@ -49,31 +51,35 @@ export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; 
   const profile = useProfile()
   const myName = profile && profile.state !== 'single' ? profile.me.name : ''
   const choose = (t: Tab) => {
-    setTab(t)
+    if (t === tab) return
+    // The tabs slide towards the one you tapped.
+    slide(TAB_ORDER.indexOf(t) > TAB_ORDER.indexOf(tab) ? 'left' : 'right', () => setTab(t))
     try { localStorage.setItem(TAB_KEY, t) } catch { /* private mode — just don't remember */ }
   }
+  const openProfile = () => slide('forward', () => setProfileOpen(true))
+  const closeProfile = () => slide('back', () => setProfileOpen(false))
   // Back from Games or Memories is Today; back from the profile page closes it.
   useBackLayer(tab !== 'today', () => choose('today'))
-  useBackLayer(profileOpen, () => setProfileOpen(false))
+  useBackLayer(profileOpen, closeProfile)
 
   return (
     <div className="h-full w-full flex flex-col select-none">
       <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-5 pb-6">
-        <OpenProfile.Provider value={() => setProfileOpen(true)}>
-          <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto animate-fade-up">
+        <OpenProfile.Provider value={openProfile}>
+          <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto enter-fallback">
             {tab !== 'memories' && <div className="mb-4 empty:hidden"><ErrorBoundary quiet><NudgeBanner onJoin={onJoin} /></ErrorBoundary></div>}
             {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : <Memories />}
           </div>
         </OpenProfile.Provider>
       </main>
-      <nav className="shrink-0 border-t border-fg/10 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
+      <nav className="vt-tabbar shrink-0 border-t border-fg/10 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === 'today'} onClick={() => choose('today')} label="Today" icon={<MoonIcon />} />
         <TabButton active={tab === 'games'} onClick={() => choose('games')} label="Games" icon={<GridIcon />} />
         <TabButton active={tab === 'memories'} onClick={() => choose('memories')} label="Memories" icon={<BookIcon />} />
       </nav>
       {profileOpen && (
         <ProfilePage
-          onClose={() => setProfileOpen(false)}
+          onClose={closeProfile}
           onUnpaired={() => { setProfileOpen(false); setEpoch((n) => n + 1); choose('today') }}
         />
       )}
