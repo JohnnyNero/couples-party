@@ -4,6 +4,8 @@ import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
 import { LobbyInvite } from '../../views/LobbyInvite'
+import { resolveBot, resolveMode } from '../../start/mode'
+import { leaveTo } from '../../ui/back'
 
 const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
@@ -48,7 +50,24 @@ export function ScreenJoin({ s }: { s: SessionState }) {
 
       <p className="text-center text-sm text-fg/60">Starts the moment you're both here.</p>
       <LobbyInvite s={s} />
+      {!both && <BotLink game={s.game} />}
     </div>
+  )
+}
+
+// Solo play is a testing seat, so it's a quiet link here rather than a way to play: it
+// leaves this room and starts the same game again against the bot.
+function BotLink({ game }: { game: string }) {
+  const search = window.location.search
+  if (resolveBot(search) || resolveMode(search) === 'solo') return null
+  const url = new URL(window.location.pathname, window.location.origin)
+  url.searchParams.set('mode', 'solo')
+  url.searchParams.set('game', game)
+  url.searchParams.set('bot', '1')
+  return (
+    <button onClick={() => leaveTo(url.toString())} className="self-center min-h-[44px] text-sm font-extrabold text-fg/50 active:translate-y-px">
+      Testing on your own? Play the bot
+    </button>
   )
 }
 

@@ -34,7 +34,8 @@ export function loadSaved(): Saved | null {
       clearSaved()
       return null
     }
-    return saved
+    // A game started back when there was a TV mode carries on on phones.
+    return { ...saved, mode: saved.mode === 'solo' ? 'solo' : 'duo' }
   } catch {
     return null
   }

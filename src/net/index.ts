@@ -11,14 +11,14 @@ import type { Saved } from '../store/progress'
 export type { Live }
 
 // Every client talks to the game through this facade. Solo play runs the reducer in
-// process; screen and duo run it over Playroom. The choice is made once at boot, before
+// process; two-phone play runs it over Playroom. The choice is made once at boot, before
 // anything renders, and never changes for the life of the page — so the hooks below
 // always take the same branch on every render.
 let solo = false
 
 export async function initNet(mode: PlayMode, game: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   solo = mode === 'solo'
-  if (!solo) return playroom.initNet(mode, game, roomCode, resume)
+  if (!solo) return playroom.initNet(game, roomCode, resume)
   initLocal(freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
 }
 
@@ -52,8 +52,4 @@ export function useMyPlayerId(): PlayerId | null {
 // The authority: the client that owns the timers and runs the bot. Solo is its own.
 export function getIsHost(): boolean {
   return solo || playroom.getIsHost()
-}
-
-export function getIsStreamScreen(): boolean {
-  return !solo && playroom.getIsStreamScreen()
 }

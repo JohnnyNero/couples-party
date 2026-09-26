@@ -1,28 +1,25 @@
 import { useEffect, useState } from 'react'
-import { initNet, getIsStreamScreen, useSession, useMyPlayerId, dispatch } from './net'
+import { initNet, useSession, useMyPlayerId, dispatch } from './net'
 import { useThemeSync } from './views/ThemeToggle'
 import { refreshProfile, useProfile } from './profile/store'
 import { recordSeen } from './store/seen'
 import { useKeepMemory } from './memories/useKeepMemory'
 import { api } from './daily/api'
 import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from './start/mode'
-import { ModePicker } from './start/ModePicker'
 import { Home } from './start/Home'
 import { Invite } from './start/Invite'
 import { Logo } from './ui/Logo'
 import { readDeviceLink, readInvite } from './start/invite'
 import { DeviceLink } from './start/DeviceLink'
-import { Screen } from './screen/Screen'
-import { Play } from './play/Play'
 import { Duo } from './duo/Duo'
 import { leaveTo, useBackLayer } from './ui/back'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
 
 export default function App() {
-  // Game and mode both come from the URL (a shared link carries both) or the launch
-  // screens in sequence — what you're playing (the home screen), then how.
-  const [mode, setMode] = useState<PlayMode | null>(() => resolveMode(window.location.search))
+  // Game and mode both come from the URL (a shared link carries both) or Home. A game
+  // is played on two phones unless the link says it's the testing seat.
   const [game, setGame] = useState<Game | null>(() => resolveGame(window.location.search))
+  const [mode, setMode] = useState<PlayMode | null>(() => game && (resolveMode(window.location.search) ?? 'duo'))
   const [ready, setReady] = useState(false)
   // Carrying on a saved game (Home's "Carry on"), or reloading the page mid-game: this
   // phone's copy of it, for the room to pick up if it's the first one back in.
@@ -35,13 +32,9 @@ export default function App() {
   // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
   const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
-  // From Home, a game (its mode picker, then the game itself) is one step in: back from
-  // the picker returns Home, and back from a game that's over leaves it for Home too.
+  // From Home, a game is one step in: back from a game that's over leaves it for Home.
   // Mid-game, back pauses instead (see GameHeader) — this only answers once that's gone.
-  useBackLayer(!!game, () => {
-    if (mode) leaveTo(window.location.pathname)
-    else setGame(null)
-  })
+  useBackLayer(!!game, () => leaveTo(window.location.pathname))
 
   useEffect(() => {
     if (!mode || !game) return
@@ -59,7 +52,7 @@ export default function App() {
 
   return (
     <>
-      {ready && <SeenRecorder keep={mode !== 'solo' && !getIsStreamScreen()} mode={mode!} />}
+      {ready && <SeenRecorder keep={mode !== 'solo'} mode={mode!} />}
       {renderApp()}
     </>
   )
@@ -67,16 +60,19 @@ export default function App() {
   function renderApp() {
     if (deviceLink && !game) return <DeviceLink link={deviceLink} onDone={() => setDeviceLink(null)} />
     if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
-    if (!game) {
+    if (!game || !mode) {
+      // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
+      // link (location.href + #r=CODE) carries both to the joining device.
+      const start = (g: Game) => {
+        stampMode('duo', g, false)
+        setResume(null)
+        setMode('duo')
+        setGame(g)
+      }
       return (
         <Home
-          onPick={(g) => { setResume(null); setGame(g) }}
-          onJoin={(g, m) => {
-            stampMode(m, g, false)
-            setResume(null)
-            setMode(m)
-            setGame(g)
-          }}
+          onPick={start}
+          onJoin={start}
           onResume={(saved) => {
             stampMode(saved.mode, saved.game, false)
             setResume(saved)
@@ -86,30 +82,15 @@ export default function App() {
         />
       )
     }
-    if (!mode) {
-      return (
-        <ModePicker
-          game={game}
-          onBack={() => setGame(null)}
-          onPick={(m, bot) => {
-            // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's
-            // share link (location.href + #r=CODE) carries both to the joining device.
-            stampMode(m, game, !!bot)
-            setMode(m)
-          }}
-        />
-      )
-    }
     if (!ready) return <Connecting />
-    if (mode === 'screen') return getIsStreamScreen() ? <Screen /> : <Play />
     // Duo and solo share a layout: the board on top, your own controller underneath.
     return <Duo />
   }
 }
 
 // Logs every prompt the session puts in front of you, so the next one draws new ones —
-// and, on a paired phone, keeps the session for Memories. A TV isn't anyone's phone and
-// solo play is a testing seat, so neither keeps anything.
+// and, on a paired phone, keeps the session for Memories. Solo play is a testing seat,
+// so it keeps nothing.
 function SeenRecorder({ keep, mode }: { keep: boolean; mode: PlayMode }) {
   const session = useSession()
   useKeepProgress(session, useMyPlayerId(), mode, keep)

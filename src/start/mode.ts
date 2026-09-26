@@ -2,16 +2,17 @@ import { replaceUrl } from '../ui/back'
 import type { Game } from '../engine/state'
 export type { Game } from '../engine/state'
 
-// The play mode is chosen once (launch picker or a shared link's ?mode= param) and
-// determines how the transport is initialised. It lives in the URL query string so
+// The play mode is fixed once per page and determines how the transport is initialised.
+// Two phones is the only real way to play; 'solo' is a testing seat — one device, a bot
+// in the other chair, and no network at all. It lives in the URL query string so
 // Playroom's share link — which is `location.href` up to the hash + "#r=CODE" —
 // carries it to the joining device.
-// 'solo' is a testing seat: one device, a bot in the other chair, and no network at all.
-export type PlayMode = 'screen' | 'duo' | 'solo'
+export type PlayMode = 'duo' | 'solo'
 
+// There used to be a TV mode too; an old link or save that asks for it plays on phones.
 export function resolveMode(search: string): PlayMode | null {
   const m = new URLSearchParams(search).get('mode')
-  return m === 'screen' || m === 'duo' || m === 'solo' ? m : null
+  return m === 'solo' ? 'solo' : m === 'duo' || m === 'screen' ? 'duo' : null
 }
 
 const GAMES: readonly Game[] = ['full', 'tonight', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw', 'clash', 'chain', 'bluff', 'meld', 'describe', 'circle', 'clock']

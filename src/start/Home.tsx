@@ -7,7 +7,6 @@ import { useBackLayer } from '../ui/back'
 import { ContinueCard } from './ContinueCard'
 import { ErrorBoundary } from '../ui/ErrorBoundary'
 import { NudgeBanner } from './NudgeBanner'
-import type { PlayMode } from './mode'
 import type { Saved } from '../store/progress'
 import { refreshProfile, useProfile } from '../profile/store'
 import { refreshIdeas } from '../ideas/store'
@@ -40,7 +39,7 @@ function loadTab(): Tab {
 // Opens the profile page, from the avatar in any tab's header.
 const OpenProfile = createContext<() => void>(() => {})
 
-export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void; onJoin: (g: Game, mode: PlayMode) => void }) {
+export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void; onJoin: (g: Game) => void }) {
   const [tab, setTab] = useState<Tab>(loadTab)
   const [profileOpen, setProfileOpen] = useState(false)
   // Bumped after unpairing, so Today fetches its board again from scratch.

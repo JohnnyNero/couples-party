@@ -4,7 +4,6 @@ import { GAME_LABELS } from '../engine/roster'
 import { useMyPlayerId } from '../net'
 import { api } from '../daily/api'
 import { useProfile } from '../profile/store'
-import { resolveMode } from '../start/mode'
 import { btnAccent, btnOutline } from '../ui/styles'
 
 const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'the full session' }
@@ -52,8 +51,7 @@ export function LobbyInvite({ s }: { s: SessionState }) {
     setNudge('sending')
     setNote(null)
     try {
-      const mode = resolveMode(window.location.search) === 'screen' ? 'screen' : 'duo'
-      await api.nudge(s.game, mode)
+      await api.nudge(s.game, 'duo')
       setNudge('sent')
     } catch {
       setNudge('idle')

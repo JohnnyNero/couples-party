@@ -208,7 +208,7 @@ export type RecordRow = {
 }
 
 // Your partner waiting for you in a game's lobby (see nudge).
-export type Nudge = { game: string; mode: 'duo' | 'screen'; at: string; from: string }
+export type Nudge = { game: string; mode: string; at: string; from: string }
 
 // Memories: the live sessions you've played together, and your past daily puzzles.
 // A puzzle carries `mine` (you set it) alongside its usual view.

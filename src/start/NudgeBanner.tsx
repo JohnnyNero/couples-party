@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, type Nudge } from '../daily/api'
-import { resolveGame, type Game, type PlayMode } from './mode'
+import { resolveGame, type Game } from './mode'
 import { gameName } from '../views/LobbyInvite'
 import { Avatar } from '../ui/Avatar'
 
@@ -27,7 +27,7 @@ function useNudge(): Nudge | null {
 }
 
 // "Johnny's waiting for you" — top of Home, with a button straight into their lobby.
-export function NudgeBanner({ onJoin }: { onJoin: (game: Game, mode: PlayMode) => void }) {
+export function NudgeBanner({ onJoin }: { onJoin: (game: Game) => void }) {
   const nudge = useNudge()
   const game = nudge ? resolveGame(`?game=${nudge.game}`) : null
   if (!nudge || !game) return null
@@ -39,7 +39,7 @@ export function NudgeBanner({ onJoin }: { onJoin: (game: Game, mode: PlayMode) =
         <div className="text-sm font-bold text-white/80 truncate">in {gameName(nudge.game)}</div>
       </div>
       <button
-        onClick={() => onJoin(game, nudge.mode)}
+        onClick={() => onJoin(game)}
         className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-white text-pb-ink font-display text-lg font-extrabold active:translate-y-px"
       >
         Join

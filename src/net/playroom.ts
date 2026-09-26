@@ -3,7 +3,6 @@
 import {
   insertCoin,
   isHost,
-  isStreamScreen,
   myPlayer,
   onPlayerJoin,
   useMultiplayerState,
@@ -21,7 +20,6 @@ import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
 import { dayIndex, localDate } from '../daily/dates'
-import type { PlayMode } from '../start/mode'
 import type { Live } from './live'
 
 const SESSION_KEY = 'session'
@@ -62,7 +60,7 @@ function placeholderState(): SessionState {
   return initialState(0, game, content)
 }
 
-export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
+export async function initNet(chosenGame: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   if (started) return
   started = true
   game = chosenGame
@@ -71,16 +69,13 @@ export async function initNet(mode: PlayMode, chosenGame: Game, roomCode?: strin
   // pools to what it hasn't seen yet; see store/seen.
   content = freshen(withIdeas(await loadPacks(), await ideasForGame()))
 
-  // Screen mode = Playroom Stream Mode (TV is the stream screen, phones are
-  // controllers). Duo mode = regular multiplayer (both devices are equal players,
-  // no stream screen). The reducer/host wiring below is identical either way.
+  // Regular multiplayer: both phones are equal players.
   //
   // roomCode + skipLobby: a paired couple's own code (see api.coupleCode), so both
   // phones land in the same room without Playroom's own share-a-link lobby screen —
   // that's the whole point of already being paired. Unpaired phones get no roomCode
   // and see Playroom's usual lobby, unchanged.
   await insertCoin({
-    ...(mode === 'screen' ? { streamMode: true } : {}),
     maxPlayersPerRoom: 2,
     ...(roomCode ? { roomCode, skipLobby: true } : {}),
   })
@@ -171,10 +166,6 @@ export function dispatch(action: Action): void {
 
 // Plain functions (not hooks): only called after initNet has run, so they never touch
 // Playroom before insertCoin.
-export function getIsStreamScreen(): boolean {
-  return isStreamScreen()
-}
-
 // The authority. Anything that acts on its own — the timer loop, the bot — runs here and
 // nowhere else, or every client does it at once.
 export function getIsHost(): boolean {
