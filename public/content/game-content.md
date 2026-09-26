@@ -2621,3 +2621,59 @@ already know.
 - A job [you'd|@ would] be secretly brilliant at
 - The best compliment [you've|@ has] ever had
 - The last time [you|@] laughed so hard it hurt
+
+# Mind Meld
+
+A live game, and a team one. One prompt at a time: you both type an answer at
+once, and the goal is to say the same thing. If you don't, you both see the two
+answers and go again, aiming for the word between them.
+
+Prompts need a handful of obvious answers, not hundreds: "a pizza topping" works,
+"an animal" doesn't. The best ones are about the two of you, where knowing each
+other is how you meet.
+
+- A pizza topping
+- A breakfast food
+- A Christmas film
+- Something yellow
+- A famous detective
+- A board game
+- A type of pasta
+- A crisp flavour
+- A chocolate bar
+- A superhero
+- A Disney film
+- Something in a toolbox
+- A dog breed
+- A cocktail
+- Something you find at a wedding
+- A holiday destination
+- Something in a first-aid kit
+- A takeaway
+- A British seaside town
+- A sandwich filling
+- A cereal
+- Something in a bathroom
+- A fairy tale
+- A Beatles song
+- A card game
+- A smell that means home
+- Our go-to takeaway
+- Where we'd go for a weekend away
+- Something we always argue about
+- Our song
+- The best meal we've had together
+- The film we'd watch tonight
+- Our dream holiday
+- A word that sums us up
+- Something we both hate
+- Our best date so far
+- The chore nobody wants
+- Our favourite place to eat
+- A TV show we binged together
+- The thing we'd buy if we won the lottery
+- Something that always makes us laugh
+- Where we'd live if we could live anywhere
+- Our perfect Sunday
+- A pet we'd get
+- Our go-to drink on a night out

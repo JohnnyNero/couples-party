@@ -21,6 +21,7 @@ import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
 import { HomeButton } from './HomeButton'
+import { PlayMeldWrite } from '../play/phases/PlayMeldWrite'
 import { PlayBluffWrite } from '../play/phases/PlayBluffWrite'
 import { PlayBluffPick } from '../play/phases/PlayBluffPick'
 import { ScreenBluffReveal } from '../screen/phases/ScreenBluff'
@@ -69,7 +70,12 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'CLASH_RESULT':
     case 'CHAIN_RESULT':
     case 'BLUFF_RESULT':
+    case 'MELD_RESULT':
       return <PlayContinue s={s} me={me} />
+    case 'MELD_WRITE':
+      return <PlayMeldWrite s={s} me={me} />
+    case 'MELD_REVEAL':
+      return <PlayWaiting label="Eyes on the board" sub="Did you meet?" />
     case 'BLUFF_WRITE':
       return <PlayBluffWrite s={s} me={me} />
     case 'BLUFF_PICK':

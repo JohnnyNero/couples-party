@@ -55,6 +55,11 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
     'You each write the truth and two believable lies, at the same time.',
     `Then one at a time: spot their truth for ${pts('bluff', SCORING.bluffSpotted)}, or they score ${pts('bluff', SCORING.bluffFooled)} for fooling you.`,
   ],
+  meld: [
+    'A prompt, like “our go-to takeaway”. You both type an answer at once.',
+    'Say the same thing and it’s a mind meld. If not, you see both — go again for the word in between.',
+    `Three tries a prompt. It’s a team game: ${team('meld', 3)} for meeting first time, less for each extra try.`,
+  ],
   circle: [
     'One go each at drawing a perfect circle.',
     'Lifting your finger sends it.',

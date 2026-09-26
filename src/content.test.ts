@@ -248,6 +248,11 @@ describe('the shipped content keeps its shape', () => {
     expect(new Set(parsed.bluffPrompts).size).toBe(parsed.bluffPrompts.length)
   })
 
+  it('gives Mind Meld enough prompts', () => {
+    expect(parsed.meldPrompts.length).toBeGreaterThanOrEqual(30)
+    expect(new Set(parsed.meldPrompts).size).toBe(parsed.meldPrompts.length)
+  })
+
   it('keeps the newer games short enough to read at a glance', () => {
     // Who's More Likely is the end of "Who's more likely to…", so it must not repeat it.
     expect(parsed.likelyStatements.filter((t) => words(t) > 8 || /more likely/i.test(t))).toEqual([])

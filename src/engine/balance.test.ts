@@ -74,6 +74,13 @@ const SIMS: Partial<Record<GameKey, Sim>> = {
       return { index: i + 1, statementId: 's', answer, predict: { A: call(answer.B), B: call(answer.A) } }
     }) },
   }),
+  meld: (rng, rounds) => ({
+    meld: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i) => {
+      const r = rng()
+      const matched = r < 0.25 ? 0 : r < 0.5 ? 1 : r < 0.7 ? 2 : null
+      return { index: i + 1, prompt: 'p', tries: [{ A: 'a', B: 'b' }], matched }
+    }) },
+  }),
   bluff: (rng, rounds) => ({
     bluff: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): BluffRound => ({
       index: i + 1, prompt: 'p', first: 'A', turn: 'B',
@@ -103,15 +110,18 @@ describe('every game counts the same', () => {
   // Every night of Tonight's rotation, so every game turns up at its Tonight length.
   const lengths: Array<{ game: Game; night: number }> = [
     { game: 'full', night: 0 },
-    ...Array.from({ length: 9 }, (_, night) => ({ game: 'tonight' as Game, night })),
+    ...Array.from({ length: 12 }, (_, night) => ({ game: 'tonight' as Game, night })),
   ]
   for (const { game, night } of lengths) {
     for (const { key } of roster(game, night)) {
       if (!SIMS[key]) continue
       it(`${key} in ${game}${game === 'tonight' ? ` (night ${night})` : ''}`, () => {
         const avg = average(game, key, night)
-        expect(avg.you).toBeGreaterThan(PER_GAME.you * 0.85)
-        expect(avg.you).toBeLessThan(PER_GAME.you * 1.15)
+        if (key === 'meld') expect(avg.you).toBe(0) // a team game: shared points only
+        else {
+          expect(avg.you).toBeGreaterThan(PER_GAME.you * 0.85)
+          expect(avg.you).toBeLessThan(PER_GAME.you * 1.15)
+        }
         expect(avg.us).toBeGreaterThan(PER_GAME.us * 0.85)
         expect(avg.us).toBeLessThan(PER_GAME.us * 1.15)
       })

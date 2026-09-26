@@ -1,3 +1,4 @@
+import { ScreenMeldReveal, ScreenMeldWrite } from '../screen/phases/ScreenMeld'
 import { HomeButton } from './HomeButton'
 import { ScreenBluffPick, ScreenBluffReveal, ScreenBluffWrite } from '../screen/phases/ScreenBluff'
 import type { SessionState } from '../engine/state'
@@ -69,7 +70,7 @@ export function railText(s: SessionState): string {
     return `${label} · Round ${Math.floor(g.current / 2) + 1} of ${Math.ceil(g.rounds.length / 2)}`
   }
   const game = key === 'lights' ? null
-    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff }[key]
+    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff, meld: s.meld }[key]
   if (!game) return label
   return `${label} · Round ${game.current + 1} of ${game.rounds.length}`
 }
@@ -152,6 +153,12 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenBluffReveal s={s} />
     case 'BLUFF_RESULT':
       return <Scoreboard s={s} title="Two Lies & a Truth · done" />
+    case 'MELD_WRITE':
+      return <ScreenMeldWrite s={s} />
+    case 'MELD_REVEAL':
+      return <ScreenMeldReveal s={s} />
+    case 'MELD_RESULT':
+      return <Scoreboard s={s} title="Mind Meld · done" />
     case 'CIRCLE_DRAW':
       return <ScreenCircleDraw s={s} />
     case 'CIRCLE_REVEAL':

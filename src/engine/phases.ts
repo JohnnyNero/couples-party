@@ -22,6 +22,8 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   CLASH_WRITE: 60000, // six answers, one letter (the reveal waits for taps)
   BLUFF_WRITE: 120000, // three things to make up (or own up to) — the reveal waits for taps
   BLUFF_PICK: 30000,  // three to choose from
+  MELD_WRITE: 30000,  // one word
+  MELD_REVEAL: 5000,  // the two words side by side
   CHAIN_END: 7000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
   CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
   CIRCLE_REVEAL: 6000,
@@ -50,6 +52,11 @@ export const MRMRS = {
 
 export const BLUFF = {
   maxLen: 60, // one line each: a lie needs a little detail to be believable
+}
+
+export const MELD = {
+  tries: 3,   // to meet on the same word
+  maxLen: 30,
 }
 
 export const DRAW = {

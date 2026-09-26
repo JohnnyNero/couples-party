@@ -120,19 +120,19 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('plays four of the seven head-to-head games, a different three out each night, with a filler after the second', () => {
-    const pool = ['finger', 'wave', 'mrmrs', 'draw', 'clash', 'chain', 'bluff']
+  it('plays four of the head-to-head games each night, a different set out each night, with a filler after the second', () => {
+    const pool = ['finger', 'wave', 'mrmrs', 'draw', 'clash', 'chain', 'bluff', 'meld']
     const out: string[] = []
-    for (const night of [0, 1, 2, 3, 4, 5, 6]) {
+    for (let night = 0; night < pool.length; night++) {
       const keys = roster('tonight', night).map((e) => e.key)
       expect(keys).toHaveLength(6)
       expect(keys[2]).toBe(night % 2 === 0 ? 'clock' : 'circle')
       expect(keys[5]).toBe('lights')
       out.push(...pool.filter((k) => !keys.includes(k as never)))
     }
-    // Over seven nights, each game sits out exactly three times.
-    for (const k of pool) expect(out.filter((o) => o === k)).toHaveLength(3)
-    expect(roster('tonight', -3)).toEqual(roster('tonight', 11)) // negative day numbers too
+    // Over as many nights as there are games, each sits out the same number of times.
+    for (const k of pool) expect(out.filter((o) => o === k)).toHaveLength(pool.length - 4)
+    expect(roster('tonight', -3)).toEqual(roster('tonight', -3 + 8 * 2)) // negative day numbers too
   })
   const playThrough = (state: SessionState) => {
     let s = state

@@ -1,11 +1,11 @@
 import type {
-  Action, BluffGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, BluffGame, MeldGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   Phase, PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
-import { BLUFF, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
+import { BLUFF, MELD, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
 import { checkWord, nextLetter, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
@@ -63,6 +63,7 @@ function startGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'clash': return beginClash(state, now)
     case 'chain': return beginChain(state, now)
     case 'bluff': return beginBluff(state, now)
+    case 'meld': return beginMeld(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
     case 'lights': return beginLights(state, now)
@@ -86,7 +87,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -608,6 +609,53 @@ function toBluffReveal(state: SessionState, choice: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Mind Meld
+
+function beginMeld(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const prompts = oursFirst(makeRng(s.seed ^ 0x3e1d), s.meldPrompts, s.ours, text).slice(0, roundsFor(s, 'meld'))
+  if (prompts.length === 0) return skipTo(s, now, 'meld')
+  s.meld = {
+    rounds: prompts.map((prompt, i) => ({ index: i + 1, prompt: namedFor(s, prompt), tries: [{ A: null, B: null }], matched: null })),
+    current: 0,
+  }
+  s.phase = 'MELD_WRITE'
+  s.phaseEndsAt = now + DURATIONS.MELD_WRITE!
+  return s
+}
+
+const currentMeld = (g: MeldGame) => g.rounds[g.current]
+
+// Both words in (or the clock ran out — a missing word never matches): side by side.
+function toMeldReveal(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const round = currentMeld(s.meld!)
+  const t = round.tries.length - 1
+  const words = round.tries[t]
+  for (const p of PLAYERS) words[p] ??= ''
+  if (words.A && words.B && isMatch(words.A, words.B)) round.matched = t
+  s.phase = 'MELD_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.MELD_REVEAL!
+  return s
+}
+
+// Met, or out of tries: the next prompt. Otherwise, another go at meeting in the middle.
+function advanceMeld(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const g = s.meld!
+  const round = currentMeld(g)
+  if (round.matched === null && round.tries.length < MELD.tries) {
+    round.tries.push({ A: null, B: null })
+  } else if (g.current >= g.rounds.length - 1) {
+    return toScoreboard(s, 'MELD_RESULT')
+  } else {
+    g.current += 1
+  }
+  s.phase = 'MELD_WRITE'
+  s.phaseEndsAt = now + DURATIONS.MELD_WRITE!
+  return s
+}
+
 // ---------------------------------------------------------------- Word Chain
 
 // Every round is dealt up front — its category, its answer list and the app's opening
@@ -1035,6 +1083,18 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       if (![0, 1, 2].includes(action.choice)) return state
       return toBluffReveal(state, action.choice)
     }
+    case 'SUBMIT_MELD': {
+      if (state.phase !== 'MELD_WRITE' || !state.meld) return state
+      const live = currentMeld(state.meld)
+      const t = live.tries.length - 1
+      if (live.tries[t][action.player] !== null) return state // sent is sent
+      const word = String(action.word ?? '').trim().slice(0, MELD.maxLen)
+      if (!word) return state
+      const s = clone(state)
+      const words = currentMeld(s.meld!).tries[t]
+      words[action.player] = word
+      return words.A !== null && words.B !== null ? toMeldReveal(s, now) : s
+    }
     case 'CHAIN_WORD': {
       if (state.phase !== 'CHAIN_TURN' || !state.chain) return state
       const live = state.chain.rounds[state.chain.current]
@@ -1134,6 +1194,8 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         }
         case 'CHAIN_END': return advanceChain(state, now)
         // Only what came in gets guessed at; anyone whose three never came is skipped.
+        case 'MELD_WRITE': return toMeldReveal(state, now)
+        case 'MELD_REVEAL': return advanceMeld(state, now)
         case 'BLUFF_WRITE': return nextBluffStep(state, now)
         // No pick in time counts as fooled.
         case 'BLUFF_PICK': return toBluffReveal(state, -1)

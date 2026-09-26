@@ -1,5 +1,5 @@
 import type {
-  BluffGame, BluffRound, ClashRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
+  BluffGame, BluffRound, ClashRound, MeldRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
   MrMrsRound, PlayerId, SessionState, WaveRound,
 } from './state'
 import { other } from './state'
@@ -132,6 +132,10 @@ export function waveTeamRaw(round: WaveRound): number {
   if (d === null) return 0
   return d <= 5 ? 2 : d <= 15 ? 1 : 0
 }
+// Mind Meld: 3 for meeting on the first try, 2 on the second, 1 on the third.
+export const meldTeamRaw = (round: MeldRound) => (round.matched === null ? 0 : MELD_POINTS[round.matched] ?? 0)
+export const MELD_POINTS = [3, 2, 1]
+
 // The same answer from you both — a mind meld, even though it scores neither of you.
 export function clashTeamRaw(round: ClashRound, upTo = round.categories.length - 1): number {
   let n = 0
@@ -250,6 +254,8 @@ export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   bluff: { you: 14, us: 0.8 },
   // Called It, per statement: two calls, each right about two times in three.
   finger: { you: 1.3, us: 1.3 },
+  // Mind Meld, per prompt: team only — 3 for meeting first time, 2 second, 1 third.
+  meld: { you: 0, us: 1.45 },
 }
 
 export type Scale = { you: number; us: number }
@@ -351,6 +357,9 @@ function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'cl
         for (const p of ['A', 'B'] as PlayerId[]) you.push({ player: p, points: fingerRoundPoints(round, p) })
         us.push(fingerTeamRaw(round))
       }
+      break
+    case 'meld':
+      for (const round of s.meld?.rounds ?? []) us.push(meldTeamRaw(round))
       break
     case 'chain':
       for (const round of s.chain?.rounds ?? []) {

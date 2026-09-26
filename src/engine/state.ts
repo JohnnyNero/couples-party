@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'circle' | 'clock' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -23,6 +23,7 @@ export type Phase =
   | 'CLASH_WRITE' | 'CLASH_REVEAL' | 'CLASH_RESULT'
   | 'CHAIN_TURN' | 'CHAIN_END' | 'CHAIN_RESULT'
   | 'BLUFF_WRITE' | 'BLUFF_PICK' | 'BLUFF_REVEAL' | 'BLUFF_RESULT'
+  | 'MELD_WRITE' | 'MELD_REVEAL' | 'MELD_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
@@ -185,6 +186,18 @@ export type BluffRound = {
 }
 export type BluffGame = { rounds: BluffRound[]; current: number }
 
+// Mind Meld: a prompt ("our go-to takeaway"), and you both type an answer at once. Say
+// the same thing and it's a mind meld. If not, you both see the two answers and go
+// again, aiming for the word between them — three tries a prompt. It only ever scores
+// for the team.
+export type MeldRound = {
+  index: number // 1-based
+  prompt: string
+  tries: Record<PlayerId, string | null>[] // the live one last; null = not in yet
+  matched: number | null // which try you met on (0-based), once you have
+}
+export type MeldGame = { rounds: MeldRound[]; current: number }
+
 // Perfect Circle, a filler: you both draw one circle at once and the rounder one takes
 // the round. Only the longest stroke is kept — that's the circle; the rest is noise.
 export type CircleRound = {
@@ -235,6 +248,7 @@ export type Content = {
   clashCategories: string[]
   chainCategories: ChainCategory[]
   bluffPrompts: string[]
+  meldPrompts: string[]
   // The couple's own cards (Our questions), by their text — a Wavelength scale as
   // "Low | High". Already in the pools above; this only says which to deal first.
   ours?: string[]
@@ -256,6 +270,7 @@ export type SessionState = {
   clash: ClashGame | null
   chain: ChainGame | null
   bluff: BluffGame | null
+  meld: MeldGame | null
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
@@ -311,6 +326,8 @@ export type Action =
   // then, on your partner's turn, which of theirs you think is true (0, 1 or 2).
   | { type: 'SUBMIT_BLUFF'; player: PlayerId; truth: string; lies: [string, string] }
   | { type: 'PICK_BLUFF'; player: PlayerId; choice: number }
+  // Mind Meld: your word for this try.
+  | { type: 'SUBMIT_MELD'; player: PlayerId; word: string }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -335,6 +352,7 @@ export const EMPTY_CONTENT: Content = {
   clashCategories: [],
   chainCategories: [],
   bluffPrompts: [],
+  meldPrompts: [],
 }
 
 export function initialState(
@@ -359,6 +377,7 @@ export function initialState(
     clash: null,
     chain: null,
     bluff: null,
+    meld: null,
     circle: null,
     clock: null,
     decider: null,

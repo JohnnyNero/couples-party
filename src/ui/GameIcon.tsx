@@ -65,6 +65,12 @@ const GLYPHS: Record<GameKey, ReactElement> = {
       {P('m15 12 2.2 2.2L21 10')}
     </>
   ),
+  meld: (
+    <>
+      <circle cx="9" cy="12" r="6" />
+      <circle cx="15" cy="12" r="6" />
+    </>
+  ),
   circle: (
     <>
       <circle cx="12" cy="12" r="8" />
@@ -91,6 +97,7 @@ const TONES: Record<GameKey, string> = {
   clash: 'bg-sage-soft text-sage-ink',
   chain: 'bg-tan-soft text-tan-ink',
   bluff: 'bg-sage-soft text-sage-ink',
+  meld: 'bg-tan-soft text-tan-ink',
   circle: 'bg-pa-soft text-pa-ink',
   clock: 'bg-pa-soft text-pa-ink',
   lights: 'bg-fg text-bg',

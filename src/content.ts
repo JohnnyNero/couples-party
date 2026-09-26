@@ -8,7 +8,7 @@ import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
 export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[]; eitherPairs: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | 'meld' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -27,6 +27,7 @@ function sectionFor(heading: string): Section {
     case 'category clash': return 'clash'
     case 'word chain': return 'chain'
     case 'two lies & a truth': case 'two lies and a truth': return 'bluff'
+    case 'mind meld': return 'meld'
     default: return null
   }
 }
@@ -44,6 +45,7 @@ export function parseContent(text: string): ParsedContent {
   const eitherPairs: string[] = [] // "Tea | Coffee", tidied
   const clashCategories: string[] = []
   const bluffPrompts: string[] = []
+  const meldPrompts: string[] = []
   const chainCategories: ChainCategory[] = []
   let currentChain: ChainCategory | null = null
 
@@ -121,6 +123,9 @@ export function parseContent(text: string): ParsedContent {
       case 'bluff':
         bluffPrompts.push(item)
         break
+      case 'meld':
+        meldPrompts.push(item)
+        break
       case 'chain':
         currentChain?.words.push(item)
         break
@@ -129,6 +134,6 @@ export function parseContent(text: string): ParsedContent {
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
-    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories, bluffPrompts,
+    likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories, bluffPrompts, meldPrompts,
   }
 }

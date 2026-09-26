@@ -155,6 +155,18 @@ export function nextBotAction(
       return { type: 'SUBMIT_BLUFF', player: me, truth: pickFrom(rng, brain.nouns), lies: [pickFrom(rng, brain.nouns), pickFrom(rng, brain.nouns)] }
     }
 
+    case 'MELD_WRITE': {
+      const g = s.meld
+      if (!g) return null
+      const round = g.rounds[g.current]
+      const t = round.tries.length - 1
+      if (round.tries[t][me] !== null) return null
+      // Now and then it thinks what you're thinking — a meld has to be possible solo.
+      const theirs = round.tries[t][other(me)]
+      const word = theirs && rng() < 0.35 ? theirs : pickFrom(rng, brain.nouns)
+      return { type: 'SUBMIT_MELD', player: me, word }
+    }
+
     case 'BLUFF_PICK': {
       const g = s.bluff
       if (!g) return null
@@ -199,6 +211,7 @@ export function botDelay(s: SessionState, rng: () => number): number {
     case 'CHAIN_TURN': return spread(1500, 5000)
     case 'BLUFF_WRITE': return spread(15000, 40000)
     case 'BLUFF_PICK': return spread(3000, 9000)
+    case 'MELD_WRITE': return spread(3000, 10000)
     case 'CIRCLE_DRAW': return spread(2000, 6000)
     case 'CLOCK_RUN':
     case 'DECIDER_RUN': {
