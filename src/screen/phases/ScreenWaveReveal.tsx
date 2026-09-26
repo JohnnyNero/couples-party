@@ -8,6 +8,7 @@ import { playerName } from '../../views/list'
 import { WaveDial } from '../../ui/WaveDial'
 import { Said } from '../../ui/kit'
 import { fillOf, inkOf } from '../../ui/Avatar'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 export function ScreenWaveReveal({ s }: { s: SessionState }) {
   const w = s.wave!
@@ -28,14 +29,15 @@ export function ScreenWaveReveal({ s }: { s: SessionState }) {
         guesser={guesser}
         reveal
       />
-      <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs sm:text-base font-extrabold">
+      <div style={at(1100)} className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs sm:text-base font-extrabold animate-fade-up">
         <span className="flex items-center gap-1.5"><span className={'w-3 h-3 rounded ' + fillOf(round.psychic)} />{playerName(s, round.psychic)}’s mark · {round.target}</span>
         <span className="flex items-center gap-1.5"><span className={'w-3.5 h-1 rounded ' + fillOf(guesser)} />{playerName(s, guesser)}’s guess · {round.guess}</span>
       </div>
-      <div className="animate-fade-up" style={{ animationDelay: '700ms' }}>
-        <div className="font-display text-4xl sm:text-6xl font-extrabold leading-none">{verdict(d)}</div>
-        <div className="mt-1.5 text-base sm:text-xl text-fg/70">
-          <span className="tabular-nums"><AnimatedNumber value={d} /></span> away
+      <div className="relative">
+        <div style={at(1500)} className={'font-display text-4xl sm:text-6xl font-extrabold leading-none ' + verdictFx(d <= 15)}>{verdict(d)}</div>
+        {d <= 5 && <Burst delay={1600} count={d === 0 ? 28 : 16} spread={d === 0 ? 1.4 : 1} />}
+        <div style={at(1700)} className="mt-1.5 text-base sm:text-xl text-fg/70 animate-fade-up">
+          <span className="tabular-nums"><AnimatedNumber value={d} delayMs={1700} /></span> away
           {award ? (
             <> · <b className={inkOf(award.player)}>{playerName(s, award.player)} +{scaled(s, 'wave', award.points)}</b>{award.player === round.psychic ? ' for the clue' : ''}</>
           ) : ' · no points'}

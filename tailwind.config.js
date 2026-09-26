@@ -79,6 +79,67 @@ export default {
           '70%': { transform: 'translateY(1px) scale(1.1)', opacity: '1' },
           '100%': { transform: 'translateY(0) scale(1)' },
         },
+        // A hidden card turning over to show what's on it.
+        'flip-in': {
+          '0%': { transform: 'perspective(700px) rotateY(95deg) scale(0.9)', opacity: '0' },
+          '55%': { transform: 'perspective(700px) rotateY(-14deg) scale(1.04)', opacity: '1' },
+          '80%': { transform: 'perspective(700px) rotateY(5deg) scale(1)' },
+          '100%': { transform: 'perspective(700px) rotateY(0) scale(1)', opacity: '1' },
+        },
+        // The verdict landing: dropped from a height, a squash, and settled.
+        slam: {
+          '0%': { transform: 'scale(2.1) rotate(-5deg)', opacity: '0' },
+          '50%': { transform: 'scale(0.88) rotate(1.5deg)', opacity: '1' },
+          '70%': { transform: 'scale(1.07) rotate(-0.5deg)' },
+          '100%': { transform: 'scale(1) rotate(0)', opacity: '1' },
+        },
+        // A miss: arrives, then a rueful little wobble.
+        wiggle: {
+          '0%': { transform: 'scale(0.85)', opacity: '0' },
+          '20%': { transform: 'scale(1)', opacity: '1' },
+          '35%': { transform: 'rotate(-6deg)' },
+          '50%': { transform: 'rotate(5deg)' },
+          '65%': { transform: 'rotate(-3deg)' },
+          '80%': { transform: 'rotate(1.5deg)' },
+          '100%': { transform: 'rotate(0)', opacity: '1' },
+        },
+        // Points, rising off whatever earned them and fading.
+        'float-up': {
+          '0%': { transform: 'translateY(6px) scale(0.5)', opacity: '0' },
+          '18%': { transform: 'translateY(0) scale(1.2)', opacity: '1' },
+          '30%': { transform: 'translateY(-2px) scale(1)', opacity: '1' },
+          '75%': { opacity: '1' },
+          '100%': { transform: 'translateY(-30px) scale(1)', opacity: '0' },
+        },
+        // …or dropping down off the header (there's nowhere to rise to up there).
+        'float-down': {
+          '0%': { transform: 'translateY(-4px) scale(0.5)', opacity: '0' },
+          '18%': { transform: 'translateY(0) scale(1.2)', opacity: '1' },
+          '30%': { transform: 'translateY(2px) scale(1)', opacity: '1' },
+          '75%': { opacity: '1' },
+          '100%': { transform: 'translateY(22px) scale(1)', opacity: '0' },
+        },
+        // A number that just went up.
+        bump: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '40%': { transform: 'scale(1.45)' },
+        },
+        // Two matching cards knocking together.
+        'nudge-r': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '40%': { transform: 'translateX(14px) rotate(3deg)' },
+        },
+        'nudge-l': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '40%': { transform: 'translateX(-14px) rotate(-3deg)' },
+        },
+        // The crown hopping onto a new leader.
+        'crown-hop': {
+          '0%': { transform: 'translateY(-14px) scale(0.4) rotate(-25deg)', opacity: '0' },
+          '55%': { transform: 'translateY(2px) scale(1.15) rotate(8deg)', opacity: '1' },
+          '75%': { transform: 'translateY(-2px) scale(0.95) rotate(-3deg)' },
+          '100%': { transform: 'translateY(0) scale(1) rotate(0)', opacity: '1' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 280ms ease-out both',
@@ -86,6 +147,15 @@ export default {
         'reveal-pop': 'reveal-pop 380ms cubic-bezier(0.34,1.56,0.64,1) both',
         'finger-fold': 'finger-fold 420ms ease-in-out both',
         'drop-in': 'drop-in 420ms cubic-bezier(0.34,1.56,0.64,1) both',
+        'flip-in': 'flip-in 560ms ease-out both',
+        slam: 'slam 560ms cubic-bezier(0.2,0.8,0.3,1) both',
+        wiggle: 'wiggle 800ms ease-in-out both',
+        'float-up': 'float-up 1500ms ease-out both',
+        'float-down': 'float-down 1500ms ease-out both',
+        bump: 'bump 450ms cubic-bezier(0.34,1.56,0.64,1)',
+        'nudge-r': 'nudge-r 420ms ease-in-out both',
+        'nudge-l': 'nudge-l 420ms ease-in-out both',
+        'crown-hop': 'crown-hop 600ms cubic-bezier(0.34,1.56,0.64,1) both',
       },
     },
   },

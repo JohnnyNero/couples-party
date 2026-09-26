@@ -5,6 +5,7 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { PromptCard, WhoIsIn } from '../../ui/kit'
 import { eyebrow } from '../../ui/styles'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 const PS: PlayerId[] = ['A', 'B']
 
@@ -42,6 +43,10 @@ export function ScreenMeldWrite({ s }: { s: SessionState }) {
   )
 }
 
+// The two words turn over one after the other; on a meld the cards light up and knock
+// together.
+const MET_AT = 1300
+
 export function ScreenMeldReveal({ s }: { s: SessionState }) {
   const g = s.meld!
   const round = g.rounds[g.current]
@@ -56,15 +61,20 @@ export function ScreenMeldReveal({ s }: { s: SessionState }) {
         <div className="mt-1 text-xs font-bold text-fg/45">Try {t + 1} of {MELD.tries}</div>
       </div>
       <MeldTrail s={s} round={round} upTo={t} />
-      <div className="grid grid-cols-2 gap-3">
-        {PS.map((p) => (
-          <div key={p} className={'rounded-3xl border-2 px-3 py-5 flex flex-col items-center gap-2 ' + (met ? 'border-tan-ink bg-tan-soft' : 'border-fg bg-card')}>
+      <div className="relative grid grid-cols-2 gap-3">
+        {PS.map((p, i) => (
+          <div
+            key={p}
+            style={met ? { animation: `light-tan 350ms ease-out ${MET_AT}ms both, ${i === 0 ? 'nudge-r' : 'nudge-l'} 420ms ease-in-out ${MET_AT}ms both` } : undefined}
+            className="rounded-3xl border-2 border-fg bg-card px-3 py-5 flex flex-col items-center gap-2"
+          >
             <Avatar p={p} name={playerName(s, p)} />
-            <div className={'font-display text-3xl sm:text-4xl font-extrabold break-words animate-reveal-pop ' + inkOf(p)}>{words[p] || '—'}</div>
+            <div style={at(200 + i * 550)} className={'font-display text-3xl sm:text-4xl font-extrabold break-words animate-flip-in ' + inkOf(p)}>{words[p] || '—'}</div>
           </div>
         ))}
+        {met && <Burst hearts delay={MET_AT + 100} count={16} />}
       </div>
-      <div className={'font-display text-3xl font-extrabold animate-pop ' + (met ? 'text-tan-ink' : 'text-fg/60')}>
+      <div style={at(MET_AT + 150)} className={'font-display text-3xl font-extrabold ' + verdictFx(met) + (met ? ' text-tan-ink' : ' text-fg/60')}>
         {met
           ? `Mind meld! 🤝 +${shown(s, 'meld', MELD_POINTS[t], 'us')}`
           : last ? 'Not this time' : 'So close — go again, and meet in the middle'}

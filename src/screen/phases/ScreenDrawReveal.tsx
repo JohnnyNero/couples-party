@@ -9,6 +9,7 @@ import { playerName } from '../../views/list'
 import { Said } from '../../ui/kit'
 import { inkOf } from '../../ui/Avatar'
 import { btnOutline, eyebrow } from '../../ui/styles'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 // The answer, the drawing, the guess. Matching is deliberately strict ("ramen" is not
 // "noodles"), so on a miss the drawer — and only the drawer, whose answer it was — gets
@@ -30,13 +31,14 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
       </div>
       <DrawingCanvas strokes={round.strokes} />
       {round.guess ? <Said s={s} p={guesser}>{round.guess}</Said> : <div className="font-bold text-fg/50">{playerName(s, guesser)} didn’t guess</div>}
-      <div className="animate-fade-up" style={{ animationDelay: '400ms' }}>
+      <div className="relative">
+        {award && <Burst delay={1000} />}
         {award ? (
-          <span className="inline-block rounded-full bg-sage-soft text-sage-ink px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold">
+          <span style={at(900)} className={'inline-block rounded-full bg-sage-soft text-sage-ink px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold ' + verdictFx(true)}>
             Got it! · {playerName(s, award.player)} +{scaled(s, 'draw', award.points)}
           </span>
         ) : (
-          <span className="inline-block rounded-full bg-fg/10 text-fg/60 px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold">
+          <span style={at(900)} className={'inline-block rounded-full bg-fg/10 text-fg/60 px-4 py-1.5 font-display text-xl sm:text-2xl font-extrabold ' + verdictFx(false)}>
             Not this time
           </span>
         )}

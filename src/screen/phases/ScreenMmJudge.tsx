@@ -6,6 +6,7 @@ import { dispatch, useMyPlayerId } from '../../net'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { card } from '../../ui/styles'
+import { Burst, verdictFx } from '../../ui/fx'
 
 const ORDER: PlayerId[] = ['A', 'B']
 
@@ -47,7 +48,7 @@ export function ScreenMmJudge({ s }: { s: SessionState }) {
                 {round.predict[predictor] ?? '—'}
               </span>
             </div>
-            <div className="mt-3 flex justify-end">
+            <div className="relative mt-3 flex justify-end">
               {verdict === null ? (
                 me === subject ? (
                   <Judge me={me} />
@@ -55,11 +56,14 @@ export function ScreenMmJudge({ s }: { s: SessionState }) {
                   <span className="text-sm font-bold text-fg/50">{playerName(s, subject)} is deciding…</span>
                 )
               ) : verdict ? (
-                <span className="rounded-full bg-sage-soft text-sage-ink px-3 py-1 text-sm sm:text-lg font-extrabold animate-reveal-pop">
-                  Got it · {playerName(s, predictor)} +{points}
-                </span>
+                <>
+                  <span className={'rounded-full bg-sage-soft text-sage-ink px-3 py-1 text-sm sm:text-lg font-extrabold ' + verdictFx(true)}>
+                    Got it · {playerName(s, predictor)} +{points}
+                  </span>
+                  <span className="absolute right-16 top-1/2"><Burst count={12} spread={0.7} /></span>
+                </>
               ) : (
-                <span className="rounded-full bg-fg/10 text-fg/60 px-3 py-1 text-sm sm:text-lg font-extrabold animate-reveal-pop">
+                <span className={'rounded-full bg-fg/10 text-fg/60 px-3 py-1 text-sm sm:text-lg font-extrabold ' + verdictFx(false)}>
                   Not quite
                 </span>
               )}

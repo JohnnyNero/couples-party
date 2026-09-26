@@ -116,6 +116,40 @@ body {
   40%, 80% { transform: translateX(6px); }
 }
 
+/* Confetti (ui/fx.tsx): each piece flies out along its own --dx/--dy, spins, and falls a
+   little as it fades. Plain CSS rather than a Tailwind keyframe because of the vars. */
+@keyframes burst {
+  0% { transform: translate(-50%, -50%) scale(0.3) rotate(0); opacity: 1; }
+  55% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 36px)) scale(0.9) rotate(calc(var(--rot) * 1.6)); opacity: 0; }
+}
+
+/* The Wavelength needle swinging up from the left edge to the guess, overshooting a
+   touch. --to is the guess as an angle off vertical. */
+@keyframes needle-swing {
+  0% { transform: rotate(-90deg); }
+  65% { transform: rotate(calc(var(--to) + 7deg)); }
+  82% { transform: rotate(calc(var(--to) - 3deg)); }
+  100% { transform: rotate(var(--to)); }
+}
+
+/* A lie being crossed out: the line draws on and the words fade back. */
+@keyframes strike {
+  from { text-decoration-color: transparent; opacity: 1; }
+  to { text-decoration-color: currentColor; opacity: 0.4; }
+}
+
+/* A card lighting up as the answer it holds turns out to be the one: to the sage "right"
+   or the tan "together" tint. */
+@keyframes light-sage {
+  from { background-color: rgb(var(--card)); border-color: rgb(var(--fg) / 0.15); }
+  to { background-color: rgb(var(--sage-soft)); border-color: rgb(var(--sage-ink)); }
+}
+@keyframes light-tan {
+  from { background-color: rgb(var(--card)); border-color: rgb(var(--fg)); }
+  to { background-color: rgb(var(--tan-soft)); border-color: rgb(var(--tan-ink)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

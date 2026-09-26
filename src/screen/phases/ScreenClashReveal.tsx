@@ -7,6 +7,7 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { LetterTile } from '../../ui/kit'
 import { card, eyebrow } from '../../ui/styles'
+import { at } from '../../ui/fx'
 
 // The round's six categories as a table that fills in one row per tap: both answers
 // side by side, each marked with what it scored. The live row is where a challenge
@@ -68,15 +69,21 @@ function Row({ s, round, i, cat, live }: { s: SessionState; round: ClashRound; i
       <span className={'flex-1 min-w-0 pr-2 text-xs sm:text-base font-extrabold leading-tight line-clamp-2 ' + (live ? 'text-fg' : 'text-fg/50')}>
         {cat}
       </span>
-      {(['A', 'B'] as const).map((p) => {
+      {(['A', 'B'] as const).map((p, k) => {
         const v = clashVerdict(round, p, i)
         const pts = scaled(s, 'clash', clashCellPoints(round, p, i))
         return (
           <span key={p} className="w-[6.5rem] sm:w-44 shrink-0 text-center leading-tight">
-            <span className={'block font-display text-base sm:text-2xl font-extrabold leading-tight truncate ' + (v === 'scores' || v === 'challenged' ? inkOf(p) : 'text-fg/40 line-through decoration-2')}>
+            <span
+              style={live ? at(150 + k * 300) : undefined}
+              className={'block font-display text-base sm:text-2xl font-extrabold leading-tight truncate ' + (live ? 'animate-flip-in ' : '') + (v === 'scores' || v === 'challenged' ? inkOf(p) : 'text-fg/40 line-through decoration-2')}
+            >
               {round.answers[p]?.[i] || '—'}
             </span>
-            <span className="block text-[0.65rem] sm:text-sm font-bold text-fg/50">
+            <span
+              style={live ? at(800 + k * 120) : undefined}
+              className={'block text-[0.65rem] sm:text-sm font-bold text-fg/50 ' + (live ? (pts ? 'animate-slam' : 'animate-wiggle') : '')}
+            >
               {LABEL[v] ? `${LABEL[v]} · ` : ''}<span className={pts ? 'text-sage-ink font-extrabold' : ''}>{pts ? `+${pts}` : '0'}</span>
             </span>
           </span>

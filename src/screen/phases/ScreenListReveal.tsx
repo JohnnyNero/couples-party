@@ -6,6 +6,7 @@ import { AnimatedNumber } from '../../views/AnimatedNumber'
 import { themeText, playerName, rankerOf } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { card } from '../../ui/styles'
+import { Burst } from '../../ui/fx'
 
 // The reveal walks the items in the order they were handed out, one tap at a time. Each
 // new row shows the ranker's real slot first and the guess a beat later — the pause is
@@ -98,10 +99,11 @@ function Row({ s, item, live }: { s: SessionState; item: ListItem; live: boolean
       <span
         style={live ? { animationDelay: '550ms' } : undefined}
         className={
-          'w-[5.5rem] sm:w-32 text-center shrink-0 font-display text-lg sm:text-3xl font-extrabold tabular-nums ' +
+          'relative w-[5.5rem] sm:w-32 text-center shrink-0 font-display text-lg sm:text-3xl font-extrabold tabular-nums ' +
           (live ? 'animate-reveal-pop' : '')
         }
       >
+        {live && exact && <Burst delay={700} count={12} spread={0.6} />}
         {item.predictedSlot ?? '—'}
         {points > 0 && (
           <span className={'ml-1.5 align-middle inline-block rounded-full px-1.5 text-[0.7rem] sm:text-base font-extrabold ' + (exact ? 'bg-sage-soft text-sage-ink' : 'bg-tan-soft text-tan-ink')}>

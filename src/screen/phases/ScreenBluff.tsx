@@ -8,6 +8,7 @@ import { bluffLiveKey, bluffOptions, bluffPrompt } from '../../views/bluff'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { Doing, PromptCard, WhoIsIn } from '../../ui/kit'
 import { btnAccent, eyebrow } from '../../ui/styles'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 // Writing: the prompt, and who's ready.
 export function ScreenBluffWrite({ s }: { s: SessionState }) {
@@ -49,8 +50,11 @@ export function ScreenBluffPick({ s }: { s: SessionState }) {
   )
 }
 
-// The truth comes out: the three again, the true one lit up, the pick marked. No clock —
-// the tap to move on is whenever you've finished saying "wait, really?".
+// The truth comes out: the three again with the pick marked, then the lies crossed off
+// one at a time until only the truth is left, lit up. No clock — the tap to move on is
+// whenever you've finished saying "wait, really?".
+const STRIKE_AT = 700
+const STRIKE_GAP = 650
 export function ScreenBluffReveal({ s }: { s: SessionState }) {
   const me = useMyPlayerId()
   const g = s.bluff!
@@ -66,26 +70,32 @@ export function ScreenBluffReveal({ s }: { s: SessionState }) {
       : `Fooled! · ${playerName(s, owner)} +${scaled(s, 'bluff', SCORING.bluffFooled)}`
   const more = round.pick[guesser] === null && round.entry[guesser] !== null
   const next = more ? `Next: ${playerName(s, guesser)}’s three` : g.current < g.rounds.length - 1 ? 'Next round' : 'See the scores'
+  const options = bluffOptions(round, owner)
+  const lies = options.filter((o) => o.id !== 0).map((o) => o.id)
+  const truthAt = STRIKE_AT + lies.length * STRIKE_GAP
+  const verdictAt = truthAt + 400
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
       <div className="text-center font-display text-2xl sm:text-4xl font-extrabold leading-tight break-words">{bluffPrompt(s, round, owner, me)}</div>
       <div className="flex flex-col gap-2.5">
-        {bluffOptions(round, owner).map((o) => {
+        {options.map((o) => {
           const truth = o.id === 0
           const picked = o.id === pick
+          const when = truth ? truthAt : STRIKE_AT + lies.indexOf(o.id) * STRIKE_GAP
           return (
             <div
               key={o.id}
-              className={
-                'rounded-2xl border-2 px-5 py-3.5 flex items-center gap-3 ' +
-                (truth ? 'border-sage-ink bg-sage-soft animate-reveal-pop' : 'border-fg/15 bg-card')
-              }
+              style={truth ? { animation: `light-sage 350ms ease-out ${when}ms both` } : undefined}
+              className="rounded-2xl border-2 border-fg/15 bg-card px-5 py-3.5 flex items-center gap-3"
             >
               <div className="flex-1 min-w-0">
-                <div className={'font-display text-xl sm:text-3xl font-extrabold leading-tight break-words ' + (truth ? 'text-fg' : 'text-fg/40 line-through decoration-2')}>
+                <div
+                  style={truth ? undefined : { animation: `strike 350ms ease-out ${when}ms both` }}
+                  className={'font-display text-xl sm:text-3xl font-extrabold leading-tight break-words text-fg ' + (truth ? '' : 'line-through decoration-2')}
+                >
                   {o.text}
                 </div>
-                <div className={'text-xs sm:text-sm font-extrabold ' + (truth ? 'text-sage-ink' : 'text-fg/40')}>{truth ? 'The truth' : 'A lie'}</div>
+                <div style={at(when)} className={'text-xs sm:text-sm font-extrabold animate-fade-up ' + (truth ? 'text-sage-ink' : 'text-fg/40')}>{truth ? 'The truth' : 'A lie'}</div>
               </div>
               {picked && (
                 <span className="shrink-0 flex flex-col items-center gap-0.5">
@@ -97,11 +107,16 @@ export function ScreenBluffReveal({ s }: { s: SessionState }) {
           )
         })}
       </div>
-      <div className={'text-center font-display text-2xl sm:text-3xl font-extrabold ' + (award ? inkOf(award.player) : '')}>{verdict}</div>
+      <div className="relative text-center">
+        <div style={at(verdictAt)} className={'font-display text-2xl sm:text-3xl font-extrabold ' + verdictFx(pick !== -1) + ' ' + (award ? inkOf(award.player) : '')}>{verdict}</div>
+        {pick === 0 && <Burst delay={verdictAt + 100} />}
+      </div>
       {me !== null && s.phase === 'BLUFF_REVEAL' && (
-        <button className={btnAccent} onClick={() => dispatch({ type: 'ADVANCE_REVEAL', player: me })}>
-          {next}
-        </button>
+        <div style={at(verdictAt + 300)} className="animate-fade-up">
+          <button className={btnAccent + ' w-full'} onClick={() => dispatch({ type: 'ADVANCE_REVEAL', player: me })}>
+            {next}
+          </button>
+        </div>
       )}
     </div>
   )

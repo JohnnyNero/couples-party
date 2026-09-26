@@ -5,6 +5,7 @@ import { CHAIN } from '../../engine/phases'
 import { ChainTrail } from '../../views/ChainTrail'
 import { playerName } from '../../views/list'
 import { eyebrow } from '../../ui/styles'
+import { Burst, at } from '../../ui/fx'
 
 export function ScreenChainEnd({ s }: { s: SessionState }) {
   const g = s.chain!
@@ -17,11 +18,12 @@ export function ScreenChainEnd({ s }: { s: SessionState }) {
         {round.category} · {words} word{words === 1 ? '' : 's'}
       </div>
       <ChainTrail round={round} max={12} broken={round.loser !== null} />
-      <div>
-        <div className="font-display text-4xl sm:text-6xl font-extrabold leading-tight animate-pop">
+      <div className="relative">
+        <div style={at(300)} className={'font-display text-4xl sm:text-6xl font-extrabold leading-tight ' + (round.loser ? 'animate-wiggle' : 'animate-slam')}>
           {round.loser ? 'Chain broken!' : 'Out of words!'}
         </div>
-        <div className="mt-1 text-base sm:text-2xl text-fg/65">
+        {winner && <Burst delay={900} />}
+        <div style={at(800)} className="mt-1 text-base sm:text-2xl text-fg/65 animate-fade-up">
           {round.loser ? `${playerName(s, round.loser)} ran out of time` : 'Nothing left that could follow'}
           {' · '}
           {winner ? <b className="text-sage-ink">{playerName(s, winner)} +{scaled(s, 'chain', CHAIN.winPoints)}</b> : 'no points'}

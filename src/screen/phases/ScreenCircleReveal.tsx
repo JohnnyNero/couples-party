@@ -5,6 +5,7 @@ import { DrawingStrokes } from '../../views/DrawingCanvas'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { Pips } from '../../ui/kit'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 // Both circles side by side, each over a faint copy of the perfect circle that fits it,
 // with the score counting up underneath.
@@ -20,8 +21,11 @@ export function ScreenCircleReveal({ s }: { s: SessionState }) {
           <Panel key={p} s={s} p={p} stroke={round.drawn[p] ?? []} score={round.score[p] ?? 0} won={winner === p} />
         ))}
       </div>
-      <div className="mt-5 sm:mt-8 font-display text-3xl sm:text-5xl font-extrabold leading-tight animate-reveal-pop" style={{ animationDelay: '1500ms' }}>
-        {winner ? `${playerName(s, winner)} wins${c.bestOf > 1 ? ' the round' : ''}!` : 'Dead level'}
+      <div className="relative mt-5 sm:mt-8">
+        <div className={'font-display text-3xl sm:text-5xl font-extrabold leading-tight ' + verdictFx(!!winner)} style={at(1800)}>
+          {winner ? `${playerName(s, winner)} wins${c.bestOf > 1 ? ' the round' : ''}!` : 'Dead level'}
+        </div>
+        {winner && <Burst delay={1900} />}
       </div>
       {c.bestOf > 1 && (
         <div className="mt-3"><Pips s={s} wins={wins} need={Math.ceil(c.bestOf / 2)} /></div>

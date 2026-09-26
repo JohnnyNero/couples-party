@@ -1,11 +1,13 @@
 import type { PlayerId, SessionState } from '../../engine/state'
 import { likelyRoundPoints, shown as scaled } from '../../engine/standing'
 import { playerName } from '../../views/list'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 const ORDER: PlayerId[] = ['A', 'B']
 
-// Each of you, and the name you tapped — the second one lands a beat after the first,
-// so there's a moment where you know your own answer and not theirs.
+// Each of you, and the name you tapped — the second card turns over a beat after the
+// first, so there's a moment where you know your own answer and not theirs. Then the
+// verdict: hearts if you're on the same page.
 export function ScreenLikelyReveal({ s }: { s: SessionState }) {
   const g = s.likely!
   const round = g.rounds[g.current]
@@ -27,8 +29,8 @@ export function ScreenLikelyReveal({ s }: { s: SessionState }) {
                 {playerName(s, p)} said
               </div>
               <div
-                style={{ animationDelay: `${i * 450}ms` }}
-                className="text-2xl sm:text-5xl font-display font-extrabold leading-tight animate-reveal-pop truncate"
+                style={at(250 + i * 550)}
+                className="text-2xl sm:text-5xl font-display font-extrabold leading-tight animate-flip-in truncate"
               >
                 {pick ? playerName(s, pick) : '—'}
               </div>
@@ -36,11 +38,14 @@ export function ScreenLikelyReveal({ s }: { s: SessionState }) {
           )
         })}
       </div>
-      <div
-        style={{ animationDelay: '900ms' }}
-        className="mt-8 sm:mt-12 text-lg sm:text-3xl font-display font-extrabold leading-tight text-accent-ink animate-reveal-pop"
-      >
-        {points > 0 ? `Same page · +${points} each` : 'Different pages'}
+      <div className="relative mt-8 sm:mt-12">
+        <div
+          style={at(1350)}
+          className={'text-lg sm:text-3xl font-display font-extrabold leading-tight ' + (points > 0 ? 'text-accent-ink ' : 'text-fg/60 ') + verdictFx(points > 0)}
+        >
+          {points > 0 ? `Same page · +${points} each` : 'Different pages'}
+        </div>
+        {points > 0 && <Burst hearts delay={1450} />}
       </div>
     </div>
   )

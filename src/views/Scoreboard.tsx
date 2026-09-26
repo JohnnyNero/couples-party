@@ -9,6 +9,7 @@ import { leaderboardView } from './leaderboardView'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
+import { Burst, Crown, FloatPoints, at } from '../ui/fx'
 
 // The card that closes every game. Not just this game's score — the shape of the whole
 // night so far: the two of you head to head, every game's points, what's next.
@@ -42,26 +43,35 @@ export function Scoreboard({
   // A TV has nobody to tap it, and once the session is DONE the tap would do nothing.
   const canContinue = me !== null && s.phase !== 'DONE'
   const lead: PlayerId | null = total.A === total.B ? null : total.A > total.B ? 'A' : 'B'
+  // What the game just finished added, floated up off the totals once they've counted.
+  const added = current ? games.find((g) => g.key === current) ?? null : null
+  // The totals count up first; then the verdict, the crown, and what this game added.
+  const LAND = 1050
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-4">
-      <div className="text-center">
+      <div className="relative text-center">
         <div className={eyebrow}>{title}</div>
-        <div className="mt-1 font-display text-[1.9rem] sm:text-5xl font-extrabold leading-tight">
+        <div style={at(LAND)} className="mt-1 font-display text-[1.9rem] sm:text-5xl font-extrabold leading-tight animate-slam">
           {headline(s, lead, called)}
         </div>
         {flourish}
+        {/* The night's result gets confetti. */}
+        {called && lead && <Burst delay={LAND + 150} count={26} spread={1.4} />}
       </div>
 
       <section className={card + ' px-5 py-5 flex items-end justify-around'}>
         {ORDER.map((p, i) => (
           <div key={p} className="flex flex-col items-center gap-1.5">
-            <span className={'h-6 ' + (lead === p ? 'animate-pop' : 'invisible')} aria-hidden={lead !== p}>
+            <span className={'h-6 ' + (lead === p ? 'animate-crown-hop' : 'invisible')} style={at(LAND)} aria-hidden={lead !== p}>
               <Crown />
             </span>
             <Avatar p={p} name={playerName(s, p)} size="lg" />
-            <span className={'font-display text-5xl font-extrabold leading-none tabular-nums ' + inkOf(p)}>
-              <AnimatedNumber value={total[p]} durationMs={900} delayMs={i * 140} />
+            <span className={'relative font-display text-5xl font-extrabold leading-none tabular-nums ' + inkOf(p)}>
+              <span style={at(LAND - 100)} className={'inline-block ' + (lead === p ? 'animate-bump' : '')}>
+                <AnimatedNumber value={total[p]} durationMs={900} delayMs={i * 140} />
+              </span>
+              {added?.played && <FloatPoints points={added.points[p]} delay={LAND + 200 + i * 150} className="text-2xl" />}
             </span>
             <span className="text-sm font-extrabold">{playerName(s, p)}</span>
           </div>
@@ -75,7 +85,10 @@ export function Scoreboard({
           <div className="font-display text-lg font-extrabold leading-tight">Together</div>
           <div className="text-xs font-bold opacity-75">Points for knowing each other</div>
         </div>
-        <span className="font-display text-4xl font-extrabold tabular-nums"><AnimatedNumber value={together} durationMs={900} delayMs={280} /></span>
+        <span className="relative font-display text-4xl font-extrabold tabular-nums">
+          <AnimatedNumber value={together} durationMs={900} delayMs={280} />
+          {added?.played && <FloatPoints points={added.team} delay={LAND + 500} className="text-2xl" />}
+        </span>
       </section>
 
       <section className="flex flex-col">
@@ -91,7 +104,7 @@ export function Scoreboard({
             <div
               key={g.key}
               style={{ animationDelay: `${250 + i * 60}ms` }}
-              className={'flex items-center gap-2.5 py-2 px-1 border-b border-fg/10 last:border-0 animate-fade-up ' + (g.played ? '' : 'text-fg/40')}
+              className={'flex items-center gap-2.5 py-2 px-1 border-b border-fg/10 last:border-0 animate-fade-up ' + (g.played ? '' : 'text-fg/40') + (g === added ? ' rounded-lg bg-accent/10' : '')}
             >
               <GameGlyph game={g.key === 'decider' ? 'clock' : (g.key as GameKey)} className={'w-5 h-5 shrink-0 ' + (g.played ? 'text-accent-ink' : '')} />
               <span className="flex-1 min-w-0 truncate text-sm font-bold">{g.label}</span>
@@ -156,14 +169,6 @@ function headline(s: SessionState, lead: PlayerId | null, called: boolean): stri
 
 function Vs() {
   return <span className="mb-10 font-display text-base font-extrabold text-fg/25">vs</span>
-}
-
-function Crown() {
-  return (
-    <svg viewBox="0 0 24 18" className="w-7 h-5" fill="#F2B544" stroke="rgb(var(--fg))" strokeWidth={1.6} strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 16L2 5l5 4 5-7 5 7 5-4-1 11z" />
-    </svg>
-  )
 }
 
 // The longer run, on this phone: this week, and every night you've played.

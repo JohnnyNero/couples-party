@@ -3,7 +3,9 @@ import type { GameKey, SessionState } from '../engine/state'
 import { GAME_LABELS, gameOfPhase } from '../engine/roster'
 import { standing, teamScore } from '../engine/standing'
 import { GameIcon } from '../ui/GameIcon'
-import { Avatar } from '../ui/Avatar'
+import { Avatar, inkOf } from '../ui/Avatar'
+import { Crown } from '../ui/fx'
+import { AnimatedNumber } from './AnimatedNumber'
 import { playerName } from './list'
 import { railText } from './board'
 import { PauseButton, PauseMenu } from './PauseMenu'
@@ -63,22 +65,74 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
   )
 }
 
+// The header's scores hold back while a reveal plays, then tick up — a bump, and the
+// points dropping off them — so the header never gives a verdict away before the board
+// has shown it. A new leader gets the crown with a hop.
+const HOLD_MS = 1400
+
+type Held = { value: number; gain: number; at: number }
+
+function useHeld(value: number): Held {
+  const [held, setHeld] = useState<Held>({ value, gain: 0, at: 0 })
+  const latest = useRef(held)
+  latest.current = held
+  useEffect(() => {
+    if (value === latest.current.value) return
+    const id = setTimeout(() => {
+      const gain = value - latest.current.value
+      setHeld({ value, gain: gain > 0 ? gain : 0, at: Date.now() })
+    }, HOLD_MS)
+    return () => clearTimeout(id)
+  }, [value])
+  return held
+}
+
+function HeldNumber({ held, className = '' }: { held: Held; className?: string }) {
+  // Keyed on the change, so the bump replays each time — and the count restarts from
+  // where it was.
+  return (
+    <span className={'relative inline-block ' + className}>
+      <span key={held.at} className={'inline-block ' + (held.gain ? 'animate-bump' : '')}>
+        <AnimatedNumber value={held.value} from={held.value - held.gain} durationMs={500} />
+      </span>
+      {held.gain > 0 && (
+        <span key={`g${held.at}`} className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 z-20" aria-hidden="true">
+          <span className="block font-display text-sm font-extrabold animate-float-down">+{held.gain}</span>
+        </span>
+      )}
+    </span>
+  )
+}
+
 export function ScorePill({ s, big = false }: { s: SessionState; big?: boolean }) {
   const t = standing(s)
-  const together = teamScore(s)
+  const a = useHeld(t.A)
+  const b = useHeld(t.B)
+  const together = useHeld(teamScore(s))
+  const lead = a.value === b.value ? null : a.value > b.value ? 'A' : 'B'
+  const avatar = (p: 'A' | 'B') => (
+    <span className="relative inline-flex">
+      <Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} />
+      {lead === p && (
+        <span key={lead} className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+          <span className="block animate-crown-hop"><Crown className={big ? 'w-5 h-4' : 'w-3.5 h-2.5'} /></span>
+        </span>
+      )}
+    </span>
+  )
   return (
     <div
       className={'shrink-0 flex items-center gap-1.5 rounded-full border-2 border-fg/10 bg-card pl-1 pr-1 py-1 ' + (big ? 'text-2xl' : 'text-[0.95rem]')}
       aria-label={`${playerName(s, 'A')} ${t.A}, ${playerName(s, 'B')} ${t.B}`}
     >
-      <Avatar p="A" name={playerName(s, 'A')} size={big ? 'md' : 'sm'} />
-      <span className="font-display font-extrabold tabular-nums">{t.A}</span>
+      {avatar('A')}
+      <HeldNumber held={a} className={'font-display font-extrabold tabular-nums ' + inkOf('A')} />
       <span className="text-fg/25">·</span>
-      <span className="font-display font-extrabold tabular-nums">{t.B}</span>
-      <Avatar p="B" name={playerName(s, 'B')} size={big ? 'md' : 'sm'} />
+      <HeldNumber held={b} className={'font-display font-extrabold tabular-nums ' + inkOf('B')} />
+      {avatar('B')}
       {/* Yours together. */}
-      <span className={'ml-0.5 rounded-full bg-tan-soft text-tan-ink font-display font-extrabold tabular-nums ' + (big ? 'px-3 py-0.5' : 'px-2 py-0.5 text-[0.85rem]')} aria-label={`Together ${together}`}>
-        {together}
+      <span className={'ml-0.5 rounded-full bg-tan-soft text-tan-ink font-display font-extrabold tabular-nums ' + (big ? 'px-3 py-0.5' : 'px-2 py-0.5 text-[0.85rem]')} aria-label={`Together ${teamScore(s)}`}>
+        <HeldNumber held={together} />
       </span>
     </div>
   )

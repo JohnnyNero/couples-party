@@ -77,7 +77,9 @@ export function WaveDial({
         {/* Colours go in `style`: a CSS variable isn't read in an SVG attribute. */}
         <path d={wedge(0, 100)} style={{ fill: rgb('--card') }} />
         {target != null && (
-          <g className={reveal ? 'animate-pop' : ''} style={{ transformOrigin: `${CX}px ${CY}px` }}>
+          // At the reveal the mark lands after the needle has swung to the guess — you
+          // watch where you pointed, then find out where it was.
+          <g className={reveal ? 'animate-reveal-pop' : ''} style={{ transformOrigin: `${CX}px ${CY}px`, ...(reveal ? { animationDelay: '1000ms' } : {}) }}>
             <path d={wedge(target - 15, target + 15)} style={{ fill: rgb(soft) }} />
             <path d={wedge(target - 5, target + 5)} style={{ fill: rgb(full, 0.5) }} />
             <path d={wedge(target - 1, target + 1)} style={{ fill: rgb(full) }} />
@@ -90,7 +92,24 @@ export function WaveDial({
           return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} style={{ stroke: rgb('--fg', 0.25) }} strokeWidth={2} strokeLinecap="round" />
         })}
         <path d={wedge(0, 100)} fill="none" style={{ stroke: rgb('--fg') }} strokeWidth={2.5} strokeLinejoin="round" />
-        {guess != null && (
+        {guess != null && reveal && (
+          <line
+            x1={CX}
+            y1={CY}
+            x2={CX}
+            y2={CY - (R - 12)}
+            strokeWidth={6}
+            strokeLinecap="round"
+            style={{
+              stroke: rgb(needle),
+              transformOrigin: `${CX}px ${CY}px`,
+              transform: `rotate(${((guess - 50) * 1.8).toFixed(1)}deg)`,
+              ['--to' as string]: `${((guess - 50) * 1.8).toFixed(1)}deg`,
+              animation: 'needle-swing 900ms cubic-bezier(0.3,0.7,0.4,1) 150ms both',
+            }}
+          />
+        )}
+        {guess != null && !reveal && (
           <line
             x1={CX}
             y1={CY}
@@ -98,8 +117,7 @@ export function WaveDial({
             y2={ny}
             strokeWidth={6}
             strokeLinecap="round"
-            className={reveal ? 'animate-fade-up' : ''}
-            style={{ stroke: rgb(needle), ...(reveal ? { animationDelay: '500ms' } : {}) }}
+            style={{ stroke: rgb(needle) }}
           />
         )}
         <circle cx={CX} cy={CY} r={9} style={{ fill: rgb('--fg') }} />

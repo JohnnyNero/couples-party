@@ -40,7 +40,8 @@ export function ScreenDescribeRun({ s }: { s: SessionState }) {
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center text-center gap-5">
       <div className={eyebrow}>{playerName(s, turn.describer)} is describing</div>
-      <div className={'font-display text-8xl font-extrabold tabular-nums ' + inkOf(turn.describer)}>{turn.got.length}</div>
+      {/* Keyed on the count, so each word got bumps it. */}
+      <div key={turn.got.length} className={'font-display text-8xl font-extrabold tabular-nums ' + (turn.got.length ? 'animate-bump ' : '') + inkOf(turn.describer)}>{turn.got.length}</div>
       <div className="font-bold text-fg/55">got so far</div>
       <div className="w-20 h-20 rounded-full border-2 border-fg bg-card inline-flex items-center justify-center font-display text-4xl">
         <Clock phaseEndsAt={s.phaseEndsAt} />

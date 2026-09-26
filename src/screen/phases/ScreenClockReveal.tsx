@@ -6,6 +6,7 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { Pips } from '../../ui/kit'
 import { card, eyebrow } from '../../ui/styles'
+import { Burst, at, verdictFx } from '../../ui/fx'
 
 export function ScreenClockReveal({ s }: { s: SessionState }) {
   const live = liveClock(s)!
@@ -22,7 +23,7 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
         Target {seconds(round.targetMs)}
       </div>
       <div className="grid grid-cols-2 gap-4 sm:gap-8">
-        {(['A', 'B'] as const).map((p) => {
+        {(['A', 'B'] as const).map((p, i) => {
           const t = round.stopped[p] ?? 2 * round.targetMs
           const missed = t >= 2 * round.targetMs
           const off = t - round.targetMs
@@ -32,7 +33,7 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
               <div className="flex items-center gap-2 font-display text-lg sm:text-2xl font-extrabold truncate">
                 <Avatar p={p} name={playerName(s, p)} size="sm" /> {playerName(s, p)}
               </div>
-              <div className={'font-display text-4xl sm:text-6xl font-extrabold tabular-nums animate-reveal-pop ' + (won ? inkOf(p) : 'text-fg/60')}>
+              <div style={at(150 + i * 450)} className={'font-display text-4xl sm:text-6xl font-extrabold tabular-nums animate-flip-in ' + (won ? inkOf(p) : 'text-fg/60')}>
                 {missed ? '—' : seconds(t)}
               </div>
               <div className="text-sm sm:text-lg font-bold text-fg/50 tabular-nums">
@@ -42,7 +43,10 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
           )
         })}
       </div>
-      <div className="mt-5 sm:mt-8 font-display text-3xl sm:text-5xl font-extrabold leading-tight animate-pop">{headline}</div>
+      <div className="relative mt-5 sm:mt-8">
+        <div style={at(1200)} className={'font-display text-3xl sm:text-5xl font-extrabold leading-tight ' + verdictFx(!!winner)}>{headline}</div>
+        {winner && <Burst delay={1300} />}
+      </div>
       {!live.decider && (
         <div className="mt-3"><Pips s={s} wins={wins} need={Math.ceil(g.bestOf / 2)} /></div>
       )}
