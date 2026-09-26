@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import type { GameKey } from '../engine/state'
 import { other } from '../engine/state'
-import { GAME_LABELS } from '../engine/roster'
+import { GAME_LABELS, SESSION_NAMES } from '../engine/roster'
 import { standing } from '../engine/standing'
 import { headerInfo } from '../views/GameHeader'
 import { clearSaved, loadSaved, type Saved } from '../store/progress'
 import { GameIcon } from '../ui/GameIcon'
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
 function ago(ms: number): string {
   const min = Math.round(ms / 60000)

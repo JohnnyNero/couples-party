@@ -52,4 +52,24 @@ describe('describe it', () => {
     expect(describers[0]).not.toBe(describers[1])
     expect(seen.size).toBe(describers.length * 5)
   })
+  it('counts a tap only for the word it was meant for, however late or often it arrives', () => {
+    let s = reduce(start(), { type: 'TIMEOUT' }, 7000)
+    const d = turn(s).describer
+    const at = s.describe!.next
+    s = reduce(s, { type: 'DESCRIBE_GOT', player: d, at }, 8000)
+    // The same press, arriving twice more (a slow phone, an impatient thumb): nothing.
+    expect(reduce(s, { type: 'DESCRIBE_GOT', player: d, at }, 8100)).toBe(s)
+    expect(reduce(s, { type: 'DESCRIBE_SKIP', player: d, at }, 8200)).toBe(s)
+    expect(turn(s).got).toHaveLength(1)
+    expect(s.describe!.next).toBe(at + 1)
+  })
+  it('starts the next describer on a fresh word, not the one the last was stuck on', () => {
+    let s = reduce(start(), { type: 'TIMEOUT' }, 7000)
+    s = reduce(s, { type: 'DESCRIBE_GOT', player: turn(s).describer }, 8000)
+    const stuck = describeWord(s.describe!)
+    s = reduce(s, { type: 'TIMEOUT' }, 1e6) // time's up mid-word
+    s = reduce(s, { type: 'TIMEOUT' }, 2e6) // the next get-ready
+    expect(s.phase).toBe('DESCRIBE_RUN')
+    expect(describeWord(s.describe!)).not.toBe(stuck)
+  })
 })

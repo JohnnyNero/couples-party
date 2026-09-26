@@ -11,6 +11,7 @@ import type { SessionMemory } from './summary'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { card, eyebrow } from '../ui/styles'
 import { Loading } from '../ui/Loading'
+import { SESSION_NAMES } from '../engine/roster'
 
 // Everything you've played together, newest first: each night's session, and the daily
 // puzzles under the day they were for. Nothing here is new data — the sessions are what
@@ -124,7 +125,6 @@ function Empty({ children }: { children: ReactNode }) {
 
 // ---------------------------------------------------------------- a night's session
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
 function SessionCard({ m }: { m: SessionMemory }) {
   const [open, setOpen] = useState(false)

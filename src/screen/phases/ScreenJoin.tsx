@@ -1,5 +1,5 @@
 import type { PlayerId, SessionState } from '../../engine/state'
-import { GAME_LABELS, roster } from '../../engine/roster'
+import { GAME_LABELS, roster, SESSION_NAMES } from '../../engine/roster'
 import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
@@ -9,7 +9,6 @@ import { Burst } from '../../ui/fx'
 import { resolveBot, resolveMode } from '../../start/mode'
 import { leaveTo } from '../../ui/back'
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
 // The lobby: two seats, and what's coming. It starts by itself the moment you're both in.
 export function ScreenJoin({ s }: { s: SessionState }) {

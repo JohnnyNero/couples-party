@@ -159,7 +159,7 @@ export function nextBotAction(
       const g = s.describe
       if (!g || g.turns[g.current].describer !== me) return null
       // Gets most of them, passes on the odd one.
-      return { type: rng() < 0.75 ? 'DESCRIBE_GOT' : 'DESCRIBE_SKIP', player: me }
+      return { type: rng() < 0.75 ? 'DESCRIBE_GOT' : 'DESCRIBE_SKIP', player: me, at: s.describe?.next }
     }
 
     case 'MELD_WRITE': {

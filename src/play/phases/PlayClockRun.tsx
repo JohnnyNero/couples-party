@@ -28,12 +28,22 @@ export function PlayClockRun({ s, me }: { s: SessionState; me: PlayerId }) {
     return () => cancelAnimationFrame(raf)
   }, [done])
 
+  const sentMs = useRef<number | null>(null)
   const stop = () => {
     if (done) return
     const ms = performance.now() - startedAt.current
+    sentMs.current = ms
     setTapped(true)
     dispatch({ type: 'STOP_CLOCK', player: me, elapsedMs: ms })
   }
+  // Until the game has your tap, keep sending it (the same time each go — only the first
+  // to arrive counts). It lands even once the reveal is up; see STOP_CLOCK.
+  const confirmed = round.stopped[me] !== null && round.stopped[me] !== 2 * round.targetMs
+  useEffect(() => {
+    if (!tapped || confirmed || sentMs.current === null) return
+    const again = setInterval(() => dispatch({ type: 'STOP_CLOCK', player: me, elapsedMs: sentMs.current! }, { quiet: true }), 1200)
+    return () => clearInterval(again)
+  }, [tapped, confirmed, me])
 
   const visible = elapsed < round.hideAfterMs
   return (

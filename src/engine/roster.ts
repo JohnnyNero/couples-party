@@ -1,4 +1,5 @@
 import type { Game, GameKey, Phase } from './state'
+import { makeRng, shuffled } from './rng'
 
 // What each kind of session actually plays, in order, and how long each game runs in it.
 // This is the only place a session's shape is decided — the reducer walks it and the
@@ -26,8 +27,9 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     { key: 'describe', rounds: 2 }, // one turn each
     { key: 'lights', rounds: 1 },
   ],
-  // Tonight rotates — see tonight() below; this entry is never read.
+  // Tonight rotates, and a quick game is dealt — see below; these entries are never read.
   tonight: [],
+  quick: [],
   // A single game on its own runs at its full-session length.
   list: [{ key: 'list', rounds: 2 }],
   likely: [{ key: 'likely', rounds: 6 }],
@@ -80,11 +82,25 @@ function tonight(night: number): RosterEntry[] {
   return [...games.slice(0, 2), filler, ...games.slice(2), { key: 'lights', rounds: 1 }]
 }
 
-// `night` only matters to Tonight: the day number the host started the session on
-// (dayIndex of its local date), carried in the session so both phones agree.
-export function roster(game: Game, night = 0): RosterEntry[] {
-  return game === 'tonight' ? tonight(night) : ROSTERS[game]
+// A quick game: a handful of games to play right now, dealt at random from Tonight's
+// mix — three of them, with a filler before the last — and no question at the end.
+const QUICK_GAMES = 3
+
+function quick(seed: number): RosterEntry[] {
+  const games = shuffled(makeRng(seed ^ 0x9a1c), TONIGHT_POOL).slice(0, QUICK_GAMES)
+  const filler = TONIGHT_FILLERS[mod(seed, TONIGHT_FILLERS.length)]
+  return [...games.slice(0, 2), filler, ...games.slice(2)]
 }
+
+// `night` only matters to Tonight — the day number the host started the session on
+// (dayIndex of its local date) — and to a quick game, whose line-up it deals (it's the
+// session's seed there). Carried in the session, so both phones agree.
+export function roster(game: Game, night = 0): RosterEntry[] {
+  return game === 'tonight' ? tonight(night) : game === 'quick' ? quick(night) : ROSTERS[game]
+}
+
+// What each kind of session is called, where a single game would just use its own name.
+export const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session', quick: 'A quick game' }
 
 export type RosterOf = { game: Game; night?: number }
 

@@ -3,6 +3,7 @@ import { initialState, type Content, type Game, type SessionState } from './stat
 import { reduce } from './reducer'
 import { roster, roundsFor } from './roster'
 import { SCORING, likelyPoints, mrmrsPoints, shown, standing } from './standing'
+import { DURATIONS } from './phases'
 
 const CONTENT: Partial<Content> = {
   likelyStatements: ['cry at an advert', 'fall asleep first', 'burn dinner', 'snore', 'get lost', 'go viral'],
@@ -91,7 +92,7 @@ describe('mr & mrs', () => {
     s = reduce(s, { type: 'JUDGE', player: 'A', correct: true }, 3000)
     expect(s.mrmrs!.rounds[0].verdict.B).toBe(true)
     expect(mrmrsPoints(s.mrmrs)).toEqual({ A: SCORING.mrmrsRight, B: SCORING.mrmrsRight })
-    expect(s.phaseEndsAt).toBe(3000 + 5000) // now it lingers, then moves on
+    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.MM_JUDGE!) // now it lingers, then moves on
   })
   it('refuses a blank answer of your own', () => {
     const s = start('mrmrs')

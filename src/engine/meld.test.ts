@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
 import { roundsFor } from './roster'
+import { MELD } from './phases'
 import { MELD_POINTS, shown, standing, teamScore } from './standing'
 
 const start = () => {
@@ -53,5 +54,28 @@ describe('mind meld', () => {
     expect(s.phase).toBe('MELD_RESULT')
     expect(s.meld!.rounds).toHaveLength(roundsFor(s, 'meld'))
     expect(s.meld!.rounds.every((r) => r.matched === null)).toBe(true)
+  })
+  it('lets either of you count a near miss — "same thing, different words" — as a meld', () => {
+    let s = say(start(), 'sofa', 'couch')
+    expect(s.phase).toBe('MELD_REVEAL')
+    expect(s.meld!.rounds[0].matched).toBe(null)
+    expect(s.phaseEndsAt).toBe(2000 + MELD.missRevealMs) // a miss waits longer, for the argument
+    // Only about the go that's up.
+    expect(reduce(s, { type: 'COUNT_MELD', player: 'B', try: 1 }, 3000)).toBe(s)
+    s = reduce(s, { type: 'COUNT_MELD', player: 'B', try: 0 }, 3000)
+    expect(s.meld!.rounds[0].matched).toBe(0)
+    expect(s.meld!.rounds[0].counted).toBe(true)
+    expect(teamScore(s)).toBe(shown(s, 'meld', MELD_POINTS[0], 'us'))
+    // Once is enough.
+    expect(reduce(s, { type: 'COUNT_MELD', player: 'A', try: 0 }, 3100)).toBe(s)
+    // …and the round is done: the next prompt, not another try.
+    s = reduce(s, { type: 'TIMEOUT' }, 9e9)
+    expect(s.meld!.current).toBe(1)
+  })
+  it('never counts a blank', () => {
+    let s = reduce(start(), { type: 'SUBMIT_MELD', player: 'A', word: 'sofa' }, 2000)
+    s = reduce(s, { type: 'TIMEOUT' }, 9e9)
+    expect(s.phase).toBe('MELD_REVEAL')
+    expect(reduce(s, { type: 'COUNT_MELD', player: 'A', try: 0 }, 9e9)).toBe(s)
   })
 })

@@ -163,7 +163,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
       <InstallCard />
-      <TonightCard onPlay={() => onPick('tonight')} />
+      <TonightCard onPlay={() => onPick('tonight')} onQuick={() => onPick('quick')} />
     </div>
   )
 }
@@ -229,7 +229,7 @@ function Streak({ n, last7 }: { n: number; last7: number | null }) {
 }
 
 // Tonight's line-up as icons, fillers marked out, and one big button.
-function TonightCard({ onPlay }: { onPlay: () => void }) {
+function TonightCard({ onPlay, onQuick }: { onPlay: () => void; onQuick: () => void }) {
   const lineup = roster('tonight', dayIndex(localDate())).filter((e) => e.key !== 'lights')
   const games = lineup.filter((e) => e.key !== 'circle' && e.key !== 'clock').length
   return (
@@ -266,6 +266,9 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
       >
         Play tonight
       </button>
+      <button onClick={onQuick} className="press -mt-1 self-center min-h-[40px] px-3 text-sm font-extrabold text-paper/70">
+        Or a quick game — three at random, now ›
+      </button>
     </section>
   )
 }
@@ -275,7 +278,7 @@ const SHORT: Record<GameKey, string> = {
   draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
 }
 
-type Pick = { key: Exclude<Game, 'full' | 'tonight'>; blurb: string; meta: string }
+type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
 
 const HEAD_TO_HEAD: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },
@@ -299,6 +302,24 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
     <div className="flex flex-col gap-4">
       <TabHeader title="Games" sub="Every one of them is you against each other." />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
+      {/* A quick game: dealt fresh each time — three games and a filler, no question at the end. */}
+      <section className={card + ' p-5 flex items-center gap-4'}>
+        <span className="shrink-0 w-12 h-12 rounded-2xl bg-pa-soft text-pa-ink inline-flex items-center justify-center" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+          </svg>
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-xl font-extrabold leading-tight">A quick game</div>
+          <div className="mt-0.5 text-sm text-fg/60">Three at random, right now · about 6 min</div>
+        </div>
+        <button
+          onClick={() => onPick('quick')}
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
+        >
+          Deal
+        </button>
+      </section>
       <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
         <div className="flex-1 min-w-0">
           <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>

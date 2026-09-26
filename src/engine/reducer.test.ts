@@ -4,6 +4,7 @@ import { reduce } from './reducer'
 import { WAVE } from './phases'
 import { SCORING, shown, standing, teamScore } from './standing'
 import { roundsFor } from './roster'
+import { DURATIONS } from './phases'
 
 const POOL = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 const THEMES = [
@@ -31,14 +32,14 @@ describe('join → act I start', () => {
   it('both joining begins Act III · Shortlist directly, on author A', () => {
     const s = bothJoined()
     expect(s.phase).toBe('LIST_INTRO') // the theme card, then the items
-    expect(s.phaseEndsAt).toBe(1000 + 4000)
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.LIST_INTRO!)
     expect(s.listActs).toHaveLength(1)
     expect(s.listActs[0].author).toBe('A')
   })
   it('the theme card runs out into the first item, on a fresh clock', () => {
     const s = reduce(bothJoined(), { type: 'TIMEOUT' }, 5000)
     expect(s.phase).toBe('LIST_PLACE')
-    expect(s.phaseEndsAt).toBe(5000 + 15000)
+    expect(s.phaseEndsAt).toBe(5000 + DURATIONS.LIST_PLACE!)
     expect(s.listActs[0].placeIndex).toBe(0)
   })
   it('nothing can be placed while the theme card is still up', () => {
@@ -85,7 +86,7 @@ describe('act III · placement', () => {
   it('opens on author A with a theme, seven random items, and a 15s clock', () => {
     const s = atListPlace()
     expect(s.phase).toBe('LIST_PLACE')
-    expect(s.phaseEndsAt).toBe(1000 + 15000)
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.LIST_PLACE!)
     expect(s.listActs).toHaveLength(1)
     expect(s.listActs[0].author).toBe('A')
     expect(s.listActs[0].placeIndex).toBe(0)
@@ -123,10 +124,10 @@ describe('act III · placement', () => {
     const ranker = act.author === 'A' ? 'B' : 'A'
     s = reduce(s, { type: 'PLACE_ITEM', player: ranker, slot: 1 }, 1000)
     expect(s.listActs[0].placeIndex).toBe(0)
-    expect(s.phaseEndsAt).toBe(1000 + 15000) // unchanged — still waiting on the author
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.LIST_PLACE!) // unchanged — still waiting on the author
     s = reduce(s, { type: 'PLACE_ITEM', player: act.author, slot: 2 }, 2000)
     expect(s.listActs[0].placeIndex).toBe(1)
-    expect(s.phaseEndsAt).toBe(2000 + 15000) // a fresh clock for item two
+    expect(s.phaseEndsAt).toBe(2000 + DURATIONS.LIST_PLACE!) // a fresh clock for item two
   })
   it('timing out the live item fills in whoever has not gone with their lowest free slot', () => {
     let s = atListPlace()
@@ -345,7 +346,7 @@ describe('called it', () => {
   it('opens on the first statement with a 20s clock', () => {
     const s = atFingerRound()
     expect(s.phase).toBe('FINGER_ROUND')
-    expect(s.phaseEndsAt).toBe(1000 + 20000)
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.FINGER_ROUND!)
     expect(s.finger?.rounds).toHaveLength(roundsFor({ game: 'finger' }, 'finger'))
   })
   it('waits for both, then reveals; sent is sent', () => {
@@ -399,7 +400,7 @@ describe('wavelength', () => {
   it('opens on the first pair, both of you giving a clue, with a 25s clock', () => {
     const s = atWaveClue()
     expect(s.phase).toBe('WAVE_CLUE')
-    expect(s.phaseEndsAt).toBe(1000 + 25000)
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.WAVE_CLUE!)
     expect(s.wave?.current).toBe(0)
     expect(s.wave?.rounds).toHaveLength(roundsFor({ game: 'wave' }, 'wave'))
     expect(s.wave?.rounds[0].target).toBeGreaterThanOrEqual(WAVE.targetMin)
@@ -417,7 +418,7 @@ describe('wavelength', () => {
     expect(reduce(s, { type: 'SUBMIT_CLUE', player: 'B', text: 'again' }, 2000)).toBe(s) // one clue each
     s = reduce(s, { type: 'SUBMIT_CLUE', player: 'A', text: 'ocean' }, 3000)
     expect(s.phase).toBe('WAVE_GUESS')
-    expect(s.phaseEndsAt).toBe(3000 + 20000)
+    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.WAVE_GUESS!)
     expect(s.wave?.current).toBe(0)
     expect(s.wave?.rounds[0].clue).toBe('ocean')
   })
@@ -432,7 +433,7 @@ describe('wavelength', () => {
     const target = s.wave!.rounds[0].target
     s = reduce(s, { type: 'SUBMIT_GUESS', player: 'B', value: 150 }, 3000) // out of range
     expect(s.phase).toBe('WAVE_REVEAL')
-    expect(s.phaseEndsAt).toBe(3000 + 5000)
+    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.WAVE_REVEAL!)
     expect(s.wave?.rounds[0].guess).toBe(100) // clamped to the 0..100 scale
     expect(s.wave?.rounds[0].distance).toBe(Math.abs(target - 100))
   })
@@ -500,7 +501,7 @@ describe('draw your answer', () => {
   it('opens on the first pair, both of you drawing, with a 50s clock', () => {
     const s = atDrawSketch()
     expect(s.phase).toBe('DRAW_SKETCH')
-    expect(s.phaseEndsAt).toBe(1000 + 50000)
+    expect(s.phaseEndsAt).toBe(1000 + DURATIONS.DRAW_SKETCH!)
     expect(s.draw?.current).toBe(0)
     expect(s.draw?.rounds).toHaveLength(roundsFor({ game: 'draw' }, 'draw'))
   })
@@ -515,7 +516,7 @@ describe('draw your answer', () => {
     expect(reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'again', strokes: [] }, 2000)).toBe(s)
     s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: 'a boat', strokes: [STROKE, STROKE] }, 3000)
     expect(s.phase).toBe('DRAW_GUESS')
-    expect(s.phaseEndsAt).toBe(3000 + 20000)
+    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.DRAW_GUESS!)
     expect(s.draw?.current).toBe(0)
     expect(s.draw?.rounds[0].strokes).toEqual([STROKE])
     expect(s.draw?.rounds[1].strokes).toEqual([STROKE, STROKE])
@@ -530,7 +531,7 @@ describe('draw your answer', () => {
     let s = drawBoth(atDrawSketch())
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: ' A House ' }, 3000)
     expect(s.phase).toBe('DRAW_REVEAL')
-    expect(s.phaseEndsAt).toBe(3000 + 8000)
+    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.DRAW_REVEAL!)
     expect(s.draw?.rounds[0].guess).toBe('A House')
     expect(s.draw?.rounds[0].correct).toBe(true)
   })

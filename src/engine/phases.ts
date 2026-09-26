@@ -5,34 +5,37 @@ import type { Phase } from './state'
 // until both rulings are in — all of those wait for a tap, because hurrying them would
 // cut off the conversation they exist to start.
 export const DURATIONS: Partial<Record<Phase, number>> = {
-  LIST_INTRO: 4000,   // the theme card, read once before the items start
-  LIST_PLACE: 15000,  // one item live at a time — tap a slot, it's locked
-  LIKELY_ROUND: 12000, // read it, tap a name
-  LIKELY_REVEAL: 4000,
-  FINGER_ROUND: 20000,  // Called It: two taps — true for you, and your call on them
-  FINGER_REVEAL: 5000,
-  MM_ANSWER: 45000,   // two short answers to type — yours, and your guess at theirs
-  MM_JUDGE: 5000,     // only starts once both rulings are in: a beat to take it in
-  WAVE_CLUE: 25000,   // the clue-giver has to come up with a whole clue
-  WAVE_GUESS: 20000,  // dragging one slider is faster than that
-  WAVE_REVEAL: 5000,
-  DRAW_SKETCH: 50000, // decide your answer, then draw it with one finger
-  DRAW_GUESS: 20000,  // typing a guess is faster than drawing was
-  DRAW_REVEAL: 8000,  // long enough for the drawer to wave through a near miss
-  CLASH_WRITE: 60000, // six answers, one letter (the reveal waits for taps)
-  BLUFF_WRITE: 120000, // three things to make up (or own up to) — the reveal waits for taps
-  BLUFF_PICK: 30000,  // three to choose from
-  MELD_WRITE: 30000,  // one word
-  MELD_REVEAL: 5000,  // the two words side by side
-  DESCRIBE_READY: 5000, // who's describing — get the phone in hand
-  DESCRIBE_RUN: 45000,  // as many as you can
-  CHAIN_END: 7000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
-  CIRCLE_DRAW: 10000, // one circle — lifting your finger sends it
-  CIRCLE_REVEAL: 6000,
+  // Generous on purpose: these are the most a phase can take, not how long it does — a
+  // phase ends the moment you've both answered. A clock is there to keep things moving,
+  // never to hurry a good answer.
+  LIST_INTRO: 5000,   // the theme card, read once before the items start
+  LIST_PLACE: 25000,  // one item live at a time — tap a slot, it's locked
+  LIKELY_ROUND: 20000, // read it, tap a name
+  LIKELY_REVEAL: 5500,
+  FINGER_ROUND: 30000,  // Called It: two taps — true for you, and your call on them
+  FINGER_REVEAL: 6500,
+  MM_ANSWER: 75000,   // two short answers to type — yours, and your guess at theirs
+  MM_JUDGE: 6000,     // only starts once both rulings are in: a beat to take it in
+  WAVE_CLUE: 75000,   // the clue-giver has to come up with a whole clue
+  WAVE_GUESS: 60000,  // weighing up where on the scale they meant
+  WAVE_REVEAL: 7000,
+  DRAW_SKETCH: 80000, // decide your answer, then draw it with one finger
+  DRAW_GUESS: 35000,  // typing a guess is faster than drawing was
+  DRAW_REVEAL: 10000, // long enough for the drawer to wave through a near miss
+  CLASH_WRITE: 90000, // six answers, one letter (the reveal waits for taps)
+  BLUFF_WRITE: 180000, // three things to make up (or own up to) — the reveal waits for taps
+  BLUFF_PICK: 45000,  // three to choose from
+  MELD_WRITE: 45000,  // one word
+  MELD_REVEAL: 6000,  // the two words side by side (a miss waits longer: see MELD.missRevealMs)
+  DESCRIBE_READY: 6000, // who's describing — get the phone in hand
+  DESCRIBE_RUN: 60000,  // as many as you can
+  CHAIN_END: 8000,    // the whole chain, with the broken link (CHAIN_TURN's clock is in CHAIN)
+  CIRCLE_DRAW: 15000, // one circle — lifting your finger sends it
+  CIRCLE_REVEAL: 6500,
   CLOCK_READY: 3000,  // the target, then 3-2-1 (CLOCK_RUN's length depends on the target)
-  CLOCK_REVEAL: 4500,
+  CLOCK_REVEAL: 5000,
   DECIDER_READY: 3000,
-  DECIDER_REVEAL: 5000,
+  DECIDER_REVEAL: 5500,
 }
 
 // Round counts are NOT here — they depend on the session, and live in roster.ts.
@@ -59,6 +62,7 @@ export const BLUFF = {
 export const MELD = {
   tries: 3,   // to meet on the same word
   maxLen: 30,
+  missRevealMs: 9000, // a miss stays up longer: time to say "hang on, that's the same thing"
 }
 
 export const DRAW = {
@@ -82,7 +86,7 @@ export const CLOCK = {
   hideAfter: [3000, 1000], // round 1 shows the clock for 3 s, round 2 for 1 s, later ones never
   deciderHideAfter: 1000,
   deadHeatMs: 10,   // closer than this is a dead heat, and the round is played again
-  graceMs: 1500,    // on top of 2 × target before the host calls time
+  graceMs: 3000,    // on top of 2 × target before the host calls time — a tap from the other phone can take a moment to arrive
   deciderMaxRounds: 3,
 }
 
@@ -94,8 +98,8 @@ export const CLASH = {
 }
 
 export const CHAIN = {
-  // The turn clock tightens as the chain grows: 20 s, then 14 s after ten words, then 10 s.
-  turnMs: [20000, 14000, 10000],
+  // The turn clock tightens as the chain grows: 25 s, then 18 s after ten words, then 13 s.
+  turnMs: [25000, 18000, 13000],
   tightenEvery: 10,
   maxLen: 30,
   winPoints: 10,

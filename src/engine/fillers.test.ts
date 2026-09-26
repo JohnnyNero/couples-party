@@ -114,6 +114,19 @@ describe('Stop the Clock', () => {
     expect(s.phase).toBe('CLOCK_REVEAL')
     expect(s.clock!.rounds[0].stopped).toEqual({ A: t + 120, B: 2 * t })
   })
+  it('still counts a tap that only reaches the host after it called time', () => {
+    let s = running()
+    const t = s.clock!.rounds[0].targetMs
+    s = reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: t + 50 }, 6000)
+    s = reduce(s, { type: 'TIMEOUT' }, 9e9) // B's tap is still on its way
+    expect(s.clock!.rounds[0].stopped.B).toBe(2 * t)
+    s = reduce(s, { type: 'STOP_CLOCK', player: 'B', elapsedMs: t - 30 }, 9e9 + 100)
+    expect(s.phase).toBe('CLOCK_REVEAL')
+    expect(s.clock!.rounds[0].stopped).toEqual({ A: t + 50, B: t - 30 })
+    // …but only once, and never over a real tap.
+    expect(reduce(s, { type: 'STOP_CLOCK', player: 'B', elapsedMs: t }, 9e9 + 200)).toBe(s)
+    expect(reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: t }, 9e9 + 200)).toBe(s)
+  })
   it('clamps a silly elapsed time and ignores a tap outside the run', () => {
     let s = start('clock')
     expect(reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: 5000 }, 2000)).toBe(s) // still READY

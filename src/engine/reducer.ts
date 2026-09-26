@@ -636,7 +636,8 @@ function toMeldReveal(state: SessionState, now: number): SessionState {
   for (const p of PLAYERS) words[p] ??= ''
   if (words.A && words.B && isMatch(words.A, words.B)) round.matched = t
   s.phase = 'MELD_REVEAL'
-  s.phaseEndsAt = now + DURATIONS.MELD_REVEAL!
+  // A miss stays up longer: time to argue it was the same thing really (COUNT_MELD).
+  s.phaseEndsAt = now + (round.matched === null ? MELD.missRevealMs : DURATIONS.MELD_REVEAL!)
   return s
 }
 
@@ -687,6 +688,9 @@ function afterDescribeTurn(state: SessionState, now: number): SessionState {
   if (g.current >= g.turns.length - 1) return toScoreboard(state, 'DESCRIBE_RESULT')
   const s = clone(state)
   s.describe!.current += 1
+  // The word the last describer was stuck on goes: the next one starts on a fresh word,
+  // not one they've both just heard half-described.
+  s.describe!.next += 1
   s.phase = 'DESCRIBE_READY'
   s.phaseEndsAt = now + DURATIONS.DESCRIBE_READY!
   return s
@@ -1131,10 +1135,26 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       words[action.player] = word
       return words.A !== null && words.B !== null ? toMeldReveal(s, now) : s
     }
+    case 'COUNT_MELD': {
+      if (state.phase !== 'MELD_REVEAL' || !state.meld) return state
+      const round = currentMeld(state.meld)
+      const t = round.tries.length - 1
+      const words = round.tries[t]
+      if (round.matched !== null || action.try !== t || !words.A || !words.B) return state
+      const s = clone(state)
+      const mine = currentMeld(s.meld!)
+      mine.matched = t
+      mine.counted = true
+      // A moment to enjoy it before the next prompt.
+      s.phaseEndsAt = now + DURATIONS.MELD_REVEAL!
+      return s
+    }
     case 'DESCRIBE_GOT':
     case 'DESCRIBE_SKIP': {
       if (state.phase !== 'DESCRIBE_RUN' || !state.describe) return state
       if (currentDescribe(state.describe).describer !== action.player) return state
+      // For a word already dealt with (a slow tap, a second press): nothing more to do.
+      if (action.at !== undefined && action.at !== state.describe.next) return state
       const s = clone(state)
       const g = s.describe!
       const turn = currentDescribe(g)
@@ -1175,7 +1195,19 @@ function step(state: SessionState, action: Action, now: number): SessionState {
     }
     case 'STOP_CLOCK': {
       const field = clockFieldOf(state.phase)
-      if (!field || state.phase !== CLOCK_PHASES[field].run) return state
+      if (!field) return state
+      // A tap that only reached the host after it called time: the reveal is up, with this
+      // player down as not having tapped — but they did, so it counts.
+      if (state.phase === CLOCK_PHASES[field].reveal) {
+        const g = state[field]!
+        const round = g.rounds[g.current]
+        const ms = Math.round(Math.max(0, action.elapsedMs))
+        if (round.stopped[action.player] !== 2 * round.targetMs || ms >= 2 * round.targetMs) return state
+        const s = clone(state)
+        s[field]!.rounds[s[field]!.current].stopped[action.player] = ms
+        return s
+      }
+      if (state.phase !== CLOCK_PHASES[field].run) return state
       const g = state[field]!
       const round = g.rounds[g.current]
       if (round.stopped[action.player] !== null) return state // one tap

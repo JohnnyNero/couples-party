@@ -4,7 +4,7 @@ import { other } from '../../engine/state'
 import { MELD } from '../../engine/phases'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
-import { MeldTrail } from '../../screen/phases/ScreenMeld'
+import { MeldLink } from '../../screen/phases/ScreenMeld'
 import { btnAccent, eyebrow, field } from '../../ui/styles'
 import { PlayWaiting } from './PlayWaiting'
 
@@ -33,10 +33,19 @@ export function PlayMeldWrite({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div className="h-full flex flex-col px-5 pb-6">
       <div className="flex-1 flex flex-col justify-center gap-4">
-        <div className={eyebrow + ' text-accent-ink'}>{t === 0 ? 'Say the same thing' : `Try ${t + 1} of ${MELD.tries} · meet in the middle`}</div>
-        <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{round.prompt}</div>
-        <MeldTrail s={s} round={round} upTo={t} />
-        {t > 0 && <div className="text-sm text-fg/60">What links those two? Say the word you think {playerName(s, them)} will.</div>}
+        {t === 0 ? (
+          <>
+            <div className={eyebrow + ' text-accent-ink'}>Say the same thing</div>
+            <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{round.prompt}</div>
+          </>
+        ) : (
+          // After a miss the prompt's gone: just your two words, and what links them.
+          <>
+            <div className={eyebrow + ' text-accent-ink text-center'}>Try {t + 1} of {MELD.tries} · what links these?</div>
+            <MeldLink s={s} round={round} t={t} />
+            <div className="text-sm text-fg/60 text-center">Say the word you think {playerName(s, them)} will.</div>
+          </>
+        )}
       </div>
       <div className="flex flex-col gap-2.5">
         <input

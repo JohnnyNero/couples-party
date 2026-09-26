@@ -8,7 +8,7 @@ export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' |
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
-export type Game = 'full' | 'tonight' | Exclude<GameKey, 'lights'>
+export type Game = 'full' | 'tonight' | 'quick' | Exclude<GameKey, 'lights'>
 
 export type Phase =
   | 'BOOT' | 'JOIN'
@@ -196,6 +196,7 @@ export type MeldRound = {
   prompt: string
   tries: Record<PlayerId, string | null>[] // the live one last; null = not in yet
   matched: number | null // which try you met on (0-based), once you have
+  counted?: boolean // that meld was two different words you agreed meant the same thing
 }
 export type MeldGame = { rounds: MeldRound[]; current: number }
 
@@ -301,7 +302,7 @@ export type SessionState = {
   // once you're both back, and nobody can resume it before then.
   paused: { by: PlayerId; leftMs: number | null; away?: boolean } | null
   game: Game
-  night: number // the host's day number at the start — picks Tonight's line-up (roster.ts)
+  night: number // the host's day number at the start — picks Tonight's line-up; a quick game's is random (roster.ts)
 } & Content
 
 export type Action =
@@ -347,9 +348,14 @@ export type Action =
   | { type: 'PICK_BLUFF'; player: PlayerId; choice: number }
   // Mind Meld: your word for this try.
   | { type: 'SUBMIT_MELD'; player: PlayerId; word: string }
+  // "Same thing, different words": either of you can count a near miss as a meld.
+  // `try` is the go it's about, so a late tap can't count the next one.
+  | { type: 'COUNT_MELD'; player: PlayerId; try: number }
   // Describe It: the describer's taps — they guessed it, or pass on this one.
-  | { type: 'DESCRIBE_GOT'; player: PlayerId }
-  | { type: 'DESCRIBE_SKIP'; player: PlayerId }
+  // `at`: which word of the deck the describer was looking at — so a tap that arrives
+  // late, or twice, only ever counts for that word.
+  | { type: 'DESCRIBE_GOT'; player: PlayerId; at?: number }
+  | { type: 'DESCRIBE_SKIP'; player: PlayerId; at?: number }
   // Perfect Circle: your one circle, sent the moment your finger lifts.
   | { type: 'SUBMIT_CIRCLE'; player: PlayerId; strokes: DrawStroke[] }
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
@@ -409,7 +415,8 @@ export function initialState(
     intros: false,
     paused: null,
     game,
-    night,
+    // A quick game is dealt fresh each time: its line-up comes off the session's own seed.
+    night: game === 'quick' ? seed : night,
     ...EMPTY_CONTENT,
     ...content,
   }

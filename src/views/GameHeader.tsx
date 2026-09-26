@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { GameKey, SessionState } from '../engine/state'
-import { GAME_LABELS, gameOfPhase } from '../engine/roster'
+import { GAME_LABELS, gameOfPhase, SESSION_NAMES } from '../engine/roster'
 import { standing, teamScore } from '../engine/standing'
 import { GameIcon } from '../ui/GameIcon'
 import { Avatar, inkOf } from '../ui/Avatar'
@@ -14,7 +14,6 @@ import { canPause } from '../engine/reducer'
 import { dispatch, useMyPlayerId } from '../net'
 import { useBackLayer } from '../ui/back'
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session' }
 
 // What the header says: which game, and where in it you are.
 export function headerInfo(s: SessionState): { icon: GameKey | null; title: string; sub: string } {

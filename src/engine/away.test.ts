@@ -30,7 +30,7 @@ describe('one of you leaving', () => {
     expect(reduce(s, { type: 'RESUME', player: 'A' }, 12000)).toBe(s)
   })
   it('carries on by itself once they rejoin, with at least a few seconds on the clock', () => {
-    let s = reduce(start(), { type: 'AWAY', player: 'B' }, 45000) // 1s left
+    let s = reduce(start(), { type: 'AWAY', player: 'B' }, DURATIONS.MM_ANSWER!) // 1s left
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 90000)
     expect(s.paused).toBeNull()
     expect(s.players.B.connected).toBe(true)

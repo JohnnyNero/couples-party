@@ -6,7 +6,7 @@ import { api } from '../daily/api'
 import { useProfile } from '../profile/store'
 import { btnAccent, btnOutline } from '../ui/styles'
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'the full session' }
+const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'the full session', quick: 'a quick game' }
 export const gameName = (game: string) => SESSION_NAMES[game] ?? GAME_LABELS[game as GameKey] ?? 'a game'
 
 // In the lobby, waiting for your partner: send them the link (it opens the game on their
