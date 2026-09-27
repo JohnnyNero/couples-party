@@ -188,6 +188,19 @@ export default {
           '100%': { transform: 'translateX(0) skewX(0)', opacity: '1' },
         },
         // Someone taking their seat in the lobby: dropped in, a squash, settled.
+        // Our keyboard coming up, and the letter that pops up over your thumb.
+        'keys-up': {
+          '0%': { transform: 'translateY(40%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'key-pop': {
+          '0%': { transform: 'translate(-50%, 6px) scale(0.7)', opacity: '0.4' },
+          '100%': { transform: 'translate(-50%, 0) scale(1)', opacity: '1' },
+        },
+        caret: {
+          '0%, 45%': { opacity: '1' },
+          '55%, 100%': { opacity: '0' },
+        },
         'seat-in': {
           '0%': { transform: 'translateY(-36px) scale(1.25)', opacity: '0' },
           '55%': { transform: 'translateY(4px) scale(0.9, 1.08)', opacity: '1' },
@@ -225,6 +238,9 @@ export default {
         sweep: 'sweep 520ms cubic-bezier(0.2,0.8,0.3,1) both',
         'seat-in': 'seat-in 600ms cubic-bezier(0.2,0.8,0.3,1) both',
         throb: 'throb 1s ease-in-out infinite',
+        'keys-up': 'keys-up 220ms cubic-bezier(0.2,0.8,0.3,1) both',
+        'key-pop': 'key-pop 90ms ease-out both',
+        caret: 'caret 1s step-end infinite',
       },
     },
   },

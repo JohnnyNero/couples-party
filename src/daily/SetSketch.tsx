@@ -4,6 +4,8 @@ import { localDate } from './dates'
 import { compactStrokes } from './sketch'
 import { yours } from './SketchCard'
 import { SketchPad } from './SketchPad'
+import { KeyField, Keys } from '../ui/keys'
+import { field } from '../ui/styles'
 import type { DrawStroke } from '../engine/state'
 
 // Two steps, same as the live game: the answer first — typed, private — because that's
@@ -73,29 +75,23 @@ export function SetSketch({
     return (
       <div className="h-full flex flex-col select-none">
         {header}
-        <div className="flex-1 min-h-0 flex flex-col justify-center gap-4 px-6">
+        <Keys className="flex-1 min-h-0" bodyClassName="justify-center gap-4 px-6 pb-3">
           <div className="text-sm text-fg/70 leading-snug">
             Answer it for real, in a word or two — only you see this. Then draw it, and {partner} has
             three goes at guessing what you wrote.
           </div>
-          <input
-            className="w-full min-h-[56px] rounded-2xl border-2 border-fg bg-card px-4 text-xl font-bold outline-none focus:border-pa placeholder:text-fg/30 placeholder:font-semibold disabled:opacity-60"
+          <KeyField
+            className={field}
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') go() }}
+            onChange={setAnswer}
+            onEnter={go}
+            enter="Draw it"
+            canEnter={!!answer.trim()}
             maxLength={30}
             placeholder="your answer"
             autoFocus
-            autoComplete="off"
           />
-          <button
-            className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press disabled:opacity-40"
-            onClick={go}
-            disabled={!answer.trim()}
-          >
-            Now draw it
-          </button>
-        </div>
+        </Keys>
       </div>
     )
   }

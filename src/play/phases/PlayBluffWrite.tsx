@@ -6,6 +6,7 @@ import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
 import { bluffPrompt } from '../../views/bluff'
 import { btnAccent, field } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 import { PlayWaiting } from './PlayWaiting'
 
 // Your truth and two lies, all at once — sending them is you saying you're ready. Your
@@ -38,22 +39,24 @@ export function PlayBluffWrite({ s, me }: { s: SessionState; me: PlayerId }) {
 
   const send = () => { if (ready) dispatch({ type: 'SUBMIT_BLUFF', player: me, truth, lies: [lie1, lie2] }) }
   const box = (label: string, hint: string, value: string, set: (v: string) => void, tone: string, last = false) => (
-    <label className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5">
       <span className={'text-sm font-extrabold ' + tone}>{label}</span>
-      <input
-        className={field}
+      <KeyField
+        className={field + ' !text-lg py-2'}
         value={value}
-        onChange={(e) => set(e.target.value)}
-        onKeyDown={(e) => { if (last && e.key === 'Enter') send() }}
+        onChange={set}
+        onEnter={last ? send : undefined}
+        enter={last ? 'Ready' : undefined}
+        canEnter={ready}
         maxLength={BLUFF.maxLen}
         placeholder={hint}
-        autoComplete="off"
+        autoFocus={label === 'The truth'}
       />
-    </label>
+    </div>
   )
 
   return (
-    <div className="h-full flex flex-col px-5 pb-6 overflow-y-auto">
+    <Keys className="h-full" bodyClassName="px-5 pb-3">
       <div className="flex-1 flex flex-col justify-center gap-4 py-4">
         <div className="font-display text-[1.75rem] font-extrabold leading-[1.1] tracking-tight break-words">{bluffPrompt(s, round, me, me)}</div>
         <div className="text-sm text-fg/60 -mt-2">{playerName(s, them)} will see all three, shuffled, and try to find the true one.</div>
@@ -64,6 +67,6 @@ export function PlayBluffWrite({ s, me }: { s: SessionState; me: PlayerId }) {
       <button className={btnAccent} onClick={send} disabled={!ready}>
         Ready
       </button>
-    </div>
+    </Keys>
   )
 }

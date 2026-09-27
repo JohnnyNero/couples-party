@@ -8,7 +8,8 @@ import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
 import { useLiveSender } from '../../views/useLiveSender'
 import { inkOf } from '../../ui/Avatar'
-import { btnAccent, eyebrow, field } from '../../ui/styles'
+import { eyebrow, field } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 import { PlayWaiting } from './PlayWaiting'
 
 // The guesser types; whoever drew it watches the guess come together, letter by letter.
@@ -49,7 +50,7 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
   }
 
   return (
-    <div className="h-full flex flex-col px-5 pb-6">
+    <Keys className="h-full" bodyClassName="px-5 pb-3">
       <div className="flex-1 flex flex-col justify-center gap-4">
         <div>
           <div className={eyebrow + ' text-accent-ink'}>What did {playerName(s, round.drawer)} say?</div>
@@ -57,21 +58,19 @@ export function PlayDrawGuess({ s, me }: { s: SessionState; me: PlayerId }) {
         </div>
         <DrawingCanvas strokes={round.strokes} animate />
       </div>
-      <div className="flex flex-col gap-2.5 pt-3">
-        <input
+      <div className="pt-3">
+        <KeyField
           className={field}
           value={text}
-          onChange={(e) => { setText(e.target.value); send(e.target.value) }}
-          onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
+          onChange={(v) => { setText(v); send(v) }}
+          onEnter={submit}
+          enter="Lock in"
+          canEnter={text.trim().length > 0}
           maxLength={DRAW.guessMaxLen}
           placeholder="your guess"
           autoFocus
-          autoComplete="off"
         />
-        <button className={btnAccent} onClick={submit} disabled={text.trim().length === 0}>
-          Lock in my guess
-        </button>
       </div>
-    </div>
+    </Keys>
   )
 }

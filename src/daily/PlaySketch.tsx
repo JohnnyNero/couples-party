@@ -3,6 +3,8 @@ import { api, DailyError, type SketchView } from './api'
 import { SKETCH_GUESSES } from './sketch'
 import { theirs } from './SketchCard'
 import { DrawingCanvas } from '../views/DrawingCanvas'
+import { KeyField, Keys } from '../ui/keys'
+import { field } from '../ui/styles'
 
 // Guessing what they drew — three goes at the word they wrote. Close-but-not-quite is a
 // miss (there's no one here to wave it through); that's what "ask them why" is for.
@@ -53,7 +55,7 @@ export function PlaySketch({
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6 flex flex-col gap-4">
+      <Keys className="flex-1 min-h-0" bodyClassName="px-5 pb-3 gap-4">
         <DrawingCanvas strokes={puzzle.strokes} animate={initial.guesses.length === 0 && !done} />
 
         {puzzle.guesses.length > 0 && (
@@ -92,27 +94,22 @@ export function PlaySketch({
             <div className="text-sm text-fg/70">
               What did {partner} write? {left} {left === 1 ? 'guess' : 'guesses'} left.
             </div>
-            <input
-              className="w-full min-h-[56px] rounded-2xl border-2 border-fg bg-card px-4 text-xl font-bold outline-none focus:border-pa placeholder:text-fg/30 placeholder:font-semibold disabled:opacity-60"
+            <KeyField
+              className={field}
               value={guess}
-              onChange={(e) => setGuess(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') void submit() }}
+              onChange={setGuess}
+              onEnter={() => void submit()}
+              enter="Guess"
+              canEnter={!!guess.trim()}
               maxLength={30}
               placeholder="your guess"
-              autoComplete="off"
+              autoFocus
               disabled={busy}
             />
             <div className="h-5 text-sm font-bold text-accent-ink text-center">{note}</div>
-            <button
-              className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press disabled:opacity-40"
-              onClick={() => void submit()}
-              disabled={busy || !guess.trim()}
-            >
-              Guess
-            </button>
           </div>
         )}
-      </div>
+      </Keys>
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { api, DailyError } from './api'
 import { localDate } from './dates'
 import { parseSpectrumPrompt } from './dial'
 import { WaveDial } from '../ui/WaveDial'
+import { KeyField, Keys } from '../ui/keys'
+import { field } from '../ui/styles'
 
 // Setting today's mark: a point on the scale rolled at random — nobody chooses it, same
 // as the live game — and all you do is name one thing that sits right on it. The mark is
@@ -64,33 +66,26 @@ export function SetDialClue({
           </button>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col justify-center gap-6 px-6">
+        <Keys className="flex-1 min-h-0" bodyClassName="justify-center gap-5 px-6 pb-3">
           <div className="text-[0.7rem] uppercase tracking-[0.22em] font-extrabold text-fg/50">Only you can see the mark</div>
           <WaveDial low={low} high={high} target={target} marker="A" guesser="B" />
           <div className="text-sm text-fg/70 leading-snug">
             Name one thing that sits <span className="font-bold text-accent-ink">right on the mark</span>.
             All {partner} gets is the thing — then they swing the needle to where they reckon it lands.
           </div>
-          <input
-            className="w-full min-h-[56px] rounded-2xl border-2 border-fg bg-card px-4 text-xl font-bold outline-none focus:border-pa placeholder:text-fg/30 placeholder:font-semibold disabled:opacity-60"
+          <KeyField
+            className={field}
             value={clue}
-            onChange={(e) => setClue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void send() }}
+            onChange={setClue}
+            onEnter={() => void send()}
+            enter="Send"
             maxLength={40}
             placeholder="e.g. a hot bath"
             autoFocus
-            autoComplete="off"
             disabled={busy}
           />
           <div className="h-6 text-sm font-bold text-accent-ink text-center">{note}</div>
-          <button
-            className="w-full min-h-[56px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold press disabled:opacity-50"
-            onClick={() => void send()}
-            disabled={busy}
-          >
-            Send it
-          </button>
-        </div>
+        </Keys>
       )}
     </div>
   )

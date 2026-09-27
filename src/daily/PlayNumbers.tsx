@@ -2,6 +2,7 @@ import { useCallback, useState, type ReactNode } from 'react'
 import { questionFromThem } from './question'
 import { api, DailyError, type NumbersView } from './api'
 import { NumberForm } from './NumberForm'
+import { Keys } from '../ui/keys'
 import { summary } from './NumbersCard'
 
 // Guessing all five of theirs at once, then the answers side by side with how each
@@ -44,7 +45,7 @@ export function PlayNumbers({
           <div className="font-display text-xl font-extrabold leading-tight">{partner}'s numbers</div>
         </div>
       </header>
-      <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6">
+      <Keys className="flex-1 min-h-0" bodyClassName="px-5 pb-6">
         {result ? (
           <div className="flex flex-col gap-3 animate-fade-up">
             {result.questions.map((q, i) => {
@@ -82,7 +83,7 @@ export function PlayNumbers({
             <div className="h-6 mt-3 text-sm font-bold text-accent-ink text-center">{note}</div>
           </>
         )}
-      </div>
+      </Keys>
     </div>
   )
 }

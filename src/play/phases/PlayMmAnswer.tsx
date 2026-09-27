@@ -7,6 +7,7 @@ import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { btnAccent, field } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 import { PlayWaiting } from './PlayWaiting'
 
 // Two answers on one screen: yours, then your guess at theirs. Both go at once, so you
@@ -42,41 +43,42 @@ export function PlayMmAnswer({ s, me }: { s: SessionState; me: PlayerId }) {
   }
 
   return (
-    <div className="h-full flex flex-col px-5 pb-6">
+    <Keys className="h-full" bodyClassName="px-5 pb-3">
       <div className="flex-1 flex flex-col justify-center gap-5">
         <div className="font-display text-[1.9rem] font-extrabold leading-[1.1] tracking-tight break-words">{aboutReader(s, round.question, me)}</div>
-        <label className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="flex items-center gap-2 text-sm font-extrabold">
             <Avatar p={me} name={playerName(s, me)} size="sm" /> Your answer
           </span>
-          <input
+          <KeyField
             className={field}
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
+            onChange={setAnswer}
             maxLength={MRMRS.maxLen}
             placeholder="be honest"
             autoFocus
-            autoComplete="off"
           />
-        </label>
-        <label className="flex flex-col gap-1.5">
+        </div>
+        <div className="flex flex-col gap-1.5">
           <span className={'flex items-center gap-2 text-sm font-extrabold ' + inkOf(them)}>
             <Avatar p={them} name={theirName} size="sm" /> What will {theirName} say?
           </span>
-          <input
-            className={field + ' focus:!border-pb'}
+          <KeyField
+            className={field}
+            activeClassName="!border-pb"
             value={predict}
-            onChange={(e) => setPredict(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') send() }}
+            onChange={setPredict}
+            onEnter={send}
+            enter="Send both"
+            canEnter={ready}
             maxLength={MRMRS.maxLen}
             placeholder={`${theirName}’s answer`}
-            autoComplete="off"
           />
-        </label>
+        </div>
       </div>
-      <button className={btnAccent} onClick={send} disabled={!ready}>
+      <button className={btnAccent + ' mt-3'} onClick={send} disabled={!ready}>
         Send both
       </button>
-    </div>
+    </Keys>
   )
 }

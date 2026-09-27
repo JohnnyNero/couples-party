@@ -7,6 +7,7 @@ import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
 import { LetterTile, Waiting } from '../../ui/kit'
 import { btnAccent } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 
 // Six boxes, one letter. Enter jumps to the next box; nothing leaves the phone until
 // Done — or, if the clock gets there first, whatever's typed is sent just before it.
@@ -15,7 +16,6 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
   const round = g.rounds[g.current]
   const sent = round.answers[me] !== null
   const [answers, setAnswers] = useState<string[]>(() => round.categories.map(() => ''))
-  const boxes = useRef<Array<HTMLInputElement | null>>([])
 
   const latest = useRef(answers)
   latest.current = answers
@@ -33,7 +33,7 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
 
   const set = (i: number, v: string) => setAnswers((prev) => prev.map((a, j) => (j === i ? v : a)))
   return (
-    <div className="h-full flex flex-col px-5 pb-6 gap-3 overflow-y-auto">
+    <Keys className="h-full" bodyClassName="px-5 pb-3 gap-3">
       <div className="flex items-center gap-3">
         <LetterTile letter={round.letter} />
         <div className="font-display text-xl font-bold leading-tight">Everything starts with {round.letter}</div>
@@ -43,29 +43,21 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
           const v = answers[i]
           const bad = v.trim() !== '' && !startsRight(v, round.letter)
           return (
-            <label key={i} className="block">
+            <div key={i}>
               <span className="block text-sm font-extrabold text-fg/70 mb-1">{cat}</span>
-              <input
-                ref={(el) => { boxes.current[i] = el }}
+              <KeyField
                 className={
-                  'w-full min-h-[48px] rounded-xl border-2 bg-card px-3 text-lg font-bold outline-none placeholder:text-fg/25 ' +
-                  (bad ? 'border-fg/25 text-fg/50 line-through decoration-2' : v.trim() ? 'border-fg focus:border-pa' : 'border-fg/40 focus:border-pa')
+                  'w-full min-h-[48px] rounded-xl border-2 bg-card px-3 text-lg font-bold ' +
+                  (bad ? 'border-fg/25 text-fg/50 line-through decoration-2' : v.trim() ? 'border-fg' : 'border-fg/40')
                 }
                 value={v}
-                onChange={(e) => set(i, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return
-                  e.preventDefault()
-                  boxes.current[i + 1]?.focus()
-                }}
+                onChange={(t) => set(i, t)}
                 maxLength={CLASH.maxLen}
                 placeholder={`${round.letter}…`}
                 autoFocus={i === 0}
-                autoComplete="off"
-                autoCapitalize="words"
-                enterKeyHint={i < round.categories.length - 1 ? 'next' : 'done'}
+                caps="words"
               />
-            </label>
+            </div>
           )
         })}
       </div>
@@ -75,6 +67,6 @@ export function PlayClashWrite({ s, me }: { s: SessionState; me: PlayerId }) {
       >
         Done
       </button>
-    </div>
+    </Keys>
   )
 }

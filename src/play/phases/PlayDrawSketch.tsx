@@ -8,6 +8,7 @@ import { CANVAS_ASPECT, DrawingStrokes, PAPER } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
 import { btnAccent, btnOutline, eyebrow, field } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 import { PromptCard } from '../../ui/kit'
 import { PlayWaiting } from './PlayWaiting'
 
@@ -54,7 +55,7 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
   if (!drawingNow) {
     const go = () => { if (answer.trim()) setDrawingNow(true) }
     return (
-      <div className="h-full flex flex-col px-5 pb-6">
+      <Keys className="h-full" bodyClassName="px-5 pb-3">
         <div className="flex-1 flex flex-col justify-center gap-4">
           <PromptCard over="Your question" size="md">{question}</PromptCard>
           <div className="text-sm text-fg/70 leading-snug">
@@ -62,22 +63,18 @@ export function PlayDrawSketch({ s, me }: { s: SessionState; me: PlayerId }) {
             {' '}{playerName(s, them)} is doing theirs at the same time; then you each guess the other’s.
           </div>
         </div>
-        <div className="flex flex-col gap-2.5">
-          <input
-            className={field}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') go() }}
-            maxLength={DRAW.guessMaxLen}
-            placeholder="your answer"
-            autoFocus
-            autoComplete="off"
-          />
-          <button className={btnAccent} onClick={go} disabled={!answer.trim()}>
-            Now draw it
-          </button>
-        </div>
-      </div>
+        <KeyField
+          className={field}
+          value={answer}
+          onChange={setAnswer}
+          onEnter={go}
+          enter="Draw it"
+          canEnter={!!answer.trim()}
+          maxLength={DRAW.guessMaxLen}
+          placeholder="your answer"
+          autoFocus
+        />
+      </Keys>
     )
   }
 

@@ -3,6 +3,7 @@ import { renderQuestion } from './question'
 import { api, DailyError } from './api'
 import { localDate } from './dates'
 import { NumberForm } from './NumberForm'
+import { Keys } from '../ui/keys'
 
 // Answering today's five, about yourself, for real.
 export function SetNumbers({
@@ -53,13 +54,13 @@ export function SetNumbers({
           </button>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6">
+        <Keys className="flex-1 min-h-0" bodyClassName="px-5 pb-6">
           <div className="text-sm text-fg/70 leading-snug mb-4">
             The honest number for each — {partner} will be guessing them.
           </div>
           <NumberForm questions={questions} show={(q) => renderQuestion(q, partner)} onSubmit={(v) => void send(v)} label="Send them" busy={busy} />
           <div className="h-6 mt-3 text-sm font-bold text-accent-ink text-center">{note}</div>
-        </div>
+        </Keys>
       )}
     </div>
   )

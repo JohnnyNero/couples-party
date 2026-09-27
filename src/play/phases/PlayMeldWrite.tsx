@@ -5,7 +5,8 @@ import { MELD } from '../../engine/phases'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
 import { MeldLink } from '../../screen/phases/ScreenMeld'
-import { btnAccent, eyebrow, field } from '../../ui/styles'
+import { eyebrow, field } from '../../ui/styles'
+import { KeyField, Keys } from '../../ui/keys'
 import { PlayWaiting } from './PlayWaiting'
 
 // One word, at the same time as them. After a miss, both words so far sit above the box:
@@ -31,7 +32,7 @@ export function PlayMeldWrite({ s, me }: { s: SessionState; me: PlayerId }) {
   const send = () => { if (word.trim()) dispatch({ type: 'SUBMIT_MELD', player: me, word }) }
 
   return (
-    <div className="h-full flex flex-col px-5 pb-6">
+    <Keys className="h-full" bodyClassName="px-5 pb-3">
       <div className="flex-1 flex flex-col justify-center gap-4">
         {t === 0 ? (
           <>
@@ -47,20 +48,17 @@ export function PlayMeldWrite({ s, me }: { s: SessionState; me: PlayerId }) {
           </>
         )}
       </div>
-      <div className="flex flex-col gap-2.5">
-        <input
-          className={field + ' text-2xl'}
-          value={word}
-          onChange={(e) => setWord(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') send() }}
-          maxLength={MELD.maxLen}
-          placeholder="one word or two"
-          autoFocus
-          autoComplete="off"
-          enterKeyHint="send"
-        />
-        <button className={btnAccent} onClick={send} disabled={!word.trim()}>Send</button>
-      </div>
-    </div>
+      <KeyField
+        className={field + ' text-2xl'}
+        value={word}
+        onChange={setWord}
+        onEnter={send}
+        enter="Send"
+        canEnter={!!word.trim()}
+        maxLength={MELD.maxLen}
+        placeholder="one word or two"
+        autoFocus
+      />
+    </Keys>
   )
 }
