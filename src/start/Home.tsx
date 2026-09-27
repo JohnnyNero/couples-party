@@ -21,7 +21,9 @@ import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
 import { InstallCard } from './InstallCard'
-import { DailyChallenge } from './DailyChallenge'
+import { ShareButton } from '../share/ShareButton'
+import { loadTonight } from '../share/tonightResult'
+import { dailyNumber } from '../share/daily'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
@@ -163,7 +165,6 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
-      <DailyChallenge onPlay={() => onPick('daily')} />
       <InstallCard />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
@@ -230,16 +231,23 @@ function Streak({ n, last7 }: { n: number; last7: number | null }) {
   )
 }
 
-// Tonight's line-up as icons, fillers marked out, and one big button.
+// Tonight's line-up as icons, fillers marked out, and one big button. It's numbered —
+// the same set for every couple today — and once you've played it, how you did, to share.
 function TonightCard({ onPlay }: { onPlay: () => void }) {
-  const lineup = roster('tonight', dayIndex(localDate())).filter((e) => e.key !== 'lights')
+  const day = dayIndex(localDate())
+  const lineup = roster('tonight', day).filter((e) => e.key !== 'lights')
   const games = lineup.filter((e) => e.key !== 'circle' && e.key !== 'clock').length
+  const [done] = useState(() => loadTonight(day))
   return (
     <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex flex-col gap-3.5 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="font-display text-[1.75rem] font-extrabold leading-none">Tonight</div>
-          <div className="mt-1 text-sm text-paper/65">About 10 minutes · {games} games and a filler</div>
+          <div className="font-display text-[1.75rem] font-extrabold leading-none">
+            Tonight <span className="text-paper/45">#{dailyNumber(day)}</span>
+          </div>
+          <div className="mt-1 text-sm text-paper/65">
+            {done ? 'Played ✓ · the same for every couple today' : `About 10 minutes · ${games} games and a filler`}
+          </div>
         </div>
         <GameGlyph game="lights" className="w-7 h-7 text-accent" />
       </div>
@@ -262,11 +270,20 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
           )
         })}
       </div>
+      {done && (
+        <div className="flex items-center gap-3 rounded-2xl bg-paper/[0.08] px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <div className="font-display text-lg font-extrabold leading-tight truncate">{done.names.A} {done.scores.A} – {done.scores.B} {done.names.B}</div>
+            <div className="text-xs font-bold text-paper/60">{done.tier ? `Together ${done.together} · ${done.tier}` : `Together ${done.together}`}</div>
+          </div>
+        </div>
+      )}
+      {done && <ShareButton data={done} label="Share our Tonight" className="!bg-paper !text-ink !border-paper" />}
       <button
         onClick={onPlay}
-        className="w-full min-h-[52px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold tracking-wide press"
+        className={'w-full min-h-[52px] rounded-2xl font-display text-xl font-extrabold tracking-wide press ' + (done ? 'border-2 border-paper/30 text-paper' : 'bg-pa text-white')}
       >
-        Play tonight
+        {done ? 'Play again' : 'Play tonight'}
       </button>
     </section>
   )
@@ -277,7 +294,7 @@ const SHORT: Record<GameKey, string> = {
   draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
 }
 
-type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick' | 'daily'>; blurb: string; meta: string }
+type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
 
 const HEAD_TO_HEAD: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },

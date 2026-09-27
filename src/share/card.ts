@@ -32,20 +32,20 @@ export function tierFor(together: number, games: number): string | null {
 
 const TEAMLESS = new Set(['circle', 'clock', 'decider'])
 
-function labelFor(s: SessionState, date: Date): string {
+function labelFor(s: SessionState, date: Date, replay: boolean): string {
   const day = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-  if (s.game === 'daily') return `Coupled #${dailyNumber(s.night)}`
-  if (s.game === 'tonight') return `Tonight · ${day}`
+  // Tonight is numbered — the same set for every couple that day.
+  if (s.game === 'tonight') return `Tonight #${dailyNumber(s.night)}${replay ? ' · replay' : ''}`
   const name = SESSION_NAMES[s.game] ?? GAME_LABELS[s.game as keyof typeof GAME_LABELS] ?? 'Coupled'
   return `${name} · ${day}`
 }
 
-export function summarise(s: SessionState, date = new Date()): CardData {
+export function summarise(s: SessionState, { date = new Date(), replay = false }: { date?: Date; replay?: boolean } = {}): CardData {
   const played = gameScores(s).filter((g) => g.played)
   const teamGames = played.filter((g) => !TEAMLESS.has(g.key))
   const together = teamScore(s)
   return {
-    label: labelFor(s, date),
+    label: labelFor(s, date, replay),
     names: { A: s.players.A.name || 'A', B: s.players.B.name || 'B' },
     scores: standing(s),
     together,
@@ -69,7 +69,7 @@ export function cardText(d: CardData): string {
   const won = d.rows.map((r) => WON[r.winner ?? 'level']).join('')
   const team = d.rows.filter((r) => r.together !== null).map((r) => togetherSquare(r.together!)).join('')
   const lines = [
-    d.label.startsWith('Coupled') ? d.label : `Coupled · ${d.label}`,
+    `Coupled · ${d.label}`,
     `${d.names.A} ${d.scores.A} – ${d.scores.B} ${d.names.B}`,
     won && `${won} who took each game`,
     team && `${team} together ${d.together}${d.tier ? ` · ${d.tier}` : ''}`,

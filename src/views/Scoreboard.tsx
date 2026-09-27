@@ -13,6 +13,7 @@ import { Burst, Crown, FloatPoints, Shower, at, useFirstTime } from '../ui/fx'
 import { baseline } from '../memories/baseline'
 import { ShareButton } from '../share/ShareButton'
 import { summarise } from '../share/card'
+import { isReplay } from '../share/tonightResult'
 
 // The card that closes every game. Not just this game's score — the shape of the whole
 // night so far: the two of you head to head, every game's points, what's next.
@@ -155,7 +156,7 @@ export function Scoreboard({
       {s.phase === 'DONE' && me && <AllTime s={s} me={me} />}
 
       {/* The night's result, to send: once it's called, and again at the very end. */}
-      {me && (called || s.phase === 'DONE') && games.some((g) => g.played) && <ShareButton data={summarise(s)} />}
+      {me && (called || s.phase === 'DONE') && games.some((g) => g.played) && <ShareButton data={summarise(s, { replay: isReplay(s) })} />}
 
       {canContinue && (
         called ? (

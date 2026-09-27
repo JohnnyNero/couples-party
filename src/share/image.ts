@@ -122,8 +122,7 @@ export async function drawCard(d: CardData): Promise<Blob> {
   g.fillStyle = C.ink
   g.textAlign = 'left'
   g.fillText('Coupled', left + markW + 28, 204)
-  // What this was — the daily reads "The daily · #12" here, the wordmark being right above.
-  const label = d.label.replace(/^Coupled #/, 'The daily · #').toUpperCase()
+  const label = d.label.toUpperCase()
   g.textAlign = 'center'
   g.fillStyle = C.soft
   fit(g, label, 800, 40, BODY, W - 160)

@@ -28,7 +28,7 @@ function set(next: SessionState): void {
 
 export function initLocal(content: Content, game: Game): void {
   const day = dayIndex(localDate())
-  state = { ...initialState(game === 'daily' ? dailySeed(day) : Math.floor(Math.random() * 1e9), game, content, day), intros: true }
+  state = { ...initialState(game === 'tonight' ? dailySeed(day) : Math.floor(Math.random() * 1e9), game, content, day), intros: true }
   // The human takes the first seat the moment the app opens; the bot claims the other.
   state = reduce(state, { type: 'JOIN', player: SOLO_PLAYER, name: 'Player 1' }, Date.now())
   emit()

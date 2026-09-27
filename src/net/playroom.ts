@@ -52,9 +52,9 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
-  // The daily challenge is the same set for every couple: its seed is the day's, not ours.
+  // Tonight is the same for every couple that day: its seed is the day's, not ours.
   const day = dayIndex(localDate())
-  return { ...initialState(game === 'daily' ? dailySeed(day) : ensureSessionSeed(), game, content, day), intros: true }
+  return { ...initialState(game === 'tonight' ? dailySeed(day) : ensureSessionSeed(), game, content, day), intros: true }
 }
 
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
@@ -70,9 +70,9 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
 
   // Only the host's copy matters — it builds the session — but every phone trims its
   // pools to what it hasn't seen yet; see store/seen.
-  // Not the daily challenge, though: every couple plays the same one, so it's dealt from
-  // the full packs, untrimmed, without your own questions mixed in.
-  content = game === 'daily' ? await loadPacks() : freshen(withIdeas(await loadPacks(), await ideasForGame()))
+  // Not Tonight, though: every couple plays the same one that day (so you can compare),
+  // so it's dealt from the full packs, untrimmed, without your own questions mixed in.
+  content = game === 'tonight' ? await loadPacks() : freshen(withIdeas(await loadPacks(), await ideasForGame()))
 
   // Regular multiplayer: both phones are equal players.
   //

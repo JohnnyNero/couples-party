@@ -13,22 +13,24 @@ const joined = (s: SessionState) => {
 }
 const STATEMENTS = Array.from({ length: 20 }, (_, i) => `statement ${i}`)
 
-describe('the daily challenge', () => {
+describe('Tonight, the same for everyone', () => {
   it('is numbered from its first day, one a day', () => {
     expect(dailyNumber(dayIndex('2026-09-27'))).toBe(1)
     expect(dailyNumber(dayIndex('2026-10-06'))).toBe(10)
   })
   it('is the same set, with the same content, for every couple that day', () => {
     const day = dayIndex('2026-10-01')
-    const one = joined(initialState(dailySeed(day), 'daily', { fingerStatements: STATEMENTS }, day))
-    const two = joined(initialState(dailySeed(day), 'daily', { fingerStatements: STATEMENTS }, day))
+    const one = joined(initialState(dailySeed(day), 'tonight', { fingerStatements: STATEMENTS }, day))
+    const two = joined(initialState(dailySeed(day), 'tonight', { fingerStatements: STATEMENTS }, day))
     expect(one).toEqual(two)
-    expect(roster('daily', day).map((e) => e.key).slice(1)).toEqual(['clock', 'circle'])
+    expect(roster('tonight', day)).toEqual(roster(one.game, one.night))
   })
-  it('changes game from one day to the next, and has no Lights Out', () => {
-    const games = new Set(Array.from({ length: 7 }, (_, i) => roster('daily', 20000 + i)[0].key))
-    expect(games.size).toBe(7)
-    for (let d = 0; d < 7; d++) expect(roster('daily', 20000 + d).some((e) => e.key === 'lights')).toBe(false)
+  it('reads as "Tonight #N" on the card, and a replay says so', () => {
+    const day = dayIndex('2026-09-29')
+    const s = { ...joined(initialState(dailySeed(day), 'tonight', { fingerStatements: STATEMENTS }, day)), phase: 'DONE' as const }
+    expect(summarise(s).label).toBe('Tonight #3')
+    expect(summarise(s, { replay: true }).label).toBe('Tonight #3 · replay')
+    expect(cardText(summarise(s)).split('\n')[0]).toBe('Coupled · Tonight #3')
   })
 })
 
@@ -42,7 +44,7 @@ describe('the share card', () => {
   it('gives nothing away: names, scores and coloured squares, never an answer', () => {
     let s = joined(initialState(3, 'finger', { fingerStatements: ['I once ate a whole cake'] }))
     s = { ...s, phase: 'DONE' }
-    const text = cardText(summarise(s, new Date('2026-09-27T20:00:00')))
+    const text = cardText(summarise(s, { date: new Date('2026-09-27T20:00:00') }))
     expect(text).toContain('Sam')
     expect(text).toContain('Alex')
     expect(text).not.toContain('cake')

@@ -30,7 +30,6 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   // Tonight rotates, and a quick game is dealt — see below; these entries are never read.
   tonight: [],
   quick: [],
-  daily: [],
   // A single game on its own runs at its full-session length.
   list: [{ key: 'list', rounds: 2 }],
   likely: [{ key: 'likely', rounds: 6 }],
@@ -93,32 +92,15 @@ function quick(seed: number): RosterEntry[] {
   return [...games.slice(0, 2), filler, ...games.slice(2)]
 }
 
-// The daily challenge: the same short set for every couple that day — one game, then
-// both fillers — so any two couples can compare. The game rotates through a pool that
-// plays well in a couple of rounds; `night` is the day it's for.
-const DAILY_POOL: RosterEntry[] = [
-  { key: 'finger', rounds: 3 },
-  { key: 'meld', rounds: 2 },
-  { key: 'wave', rounds: 2 },
-  { key: 'mrmrs', rounds: 2 },
-  { key: 'clash', rounds: 1 },
-  { key: 'describe', rounds: 2 },
-  { key: 'chain', rounds: 1 },
-]
-
-function daily(day: number): RosterEntry[] {
-  return [DAILY_POOL[mod(day, DAILY_POOL.length)], { key: 'clock', rounds: 1 }, { key: 'circle', rounds: 1 }]
-}
-
 // `night` only matters to Tonight — the day number the host started the session on
 // (dayIndex of its local date) — and to a quick game, whose line-up it deals (it's the
 // session's seed there). Carried in the session, so both phones agree.
 export function roster(game: Game, night = 0): RosterEntry[] {
-  return game === 'tonight' ? tonight(night) : game === 'quick' ? quick(night) : game === 'daily' ? daily(night) : ROSTERS[game]
+  return game === 'tonight' ? tonight(night) : game === 'quick' ? quick(night) : ROSTERS[game]
 }
 
 // What each kind of session is called, where a single game would just use its own name.
-export const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session', quick: 'A quick game', daily: 'The daily' }
+export const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session', quick: 'A quick game' }
 
 export type RosterOf = { game: Game; night?: number }
 
