@@ -185,8 +185,76 @@ const Bed = svg(
   </>,
 )
 
+const Flame = svg(
+  <>
+    <path d="M12 21.5c-3.9 0-6.5-2.7-6.5-6.3 0-3.2 2.2-5.3 3.6-7.3.4 1.6 1.2 2.6 2.2 3.1C11.2 7.6 12.4 4.8 15 2.5c-.3 3.2 3.5 6.3 3.5 11.4 0 4.7-2.6 7.6-6.5 7.6z" />
+    <path d="M12 21.5c-1.7 0-2.9-1.2-2.9-2.9 0-1.8 1.4-2.9 2.1-4.3.8 1.2 3.7 2.4 3.7 4.5 0 1.6-1.2 2.7-2.9 2.7z" />
+  </>,
+)
+
+const Grumpy = svg(
+  <>
+    <circle cx="12" cy="12" r="9.3" />
+    <path d="M7.5 9.2l2.4.9M16.5 9.2l-2.4.9" />
+    <path d="M9 11.8h.01M15 11.8h.01" strokeWidth={2.2} />
+    <path d="M8.6 17c1.9-1.7 4.9-1.7 6.8 0" />
+  </>,
+)
+
+const Coins = svg(
+  <>
+    <ellipse cx="9" cy="6.5" rx="5.5" ry="2.3" />
+    <path d="M3.5 6.5v4c0 1.3 2.5 2.3 5.5 2.3s5.5-1 5.5-2.3v-4" />
+    <path d="M3.5 10.5v4c0 1.3 2.5 2.3 5.5 2.3" />
+    <ellipse cx="15" cy="14.5" rx="5.5" ry="2.3" />
+    <path d="M9.5 14.5v4c0 1.3 2.5 2.3 5.5 2.3s5.5-1 5.5-2.3v-4" />
+  </>,
+)
+
+const Popcorn = svg(
+  <>
+    <path d="M5 10h14l-1.8 11H6.8z" />
+    <path d="M9.5 10l.5 11M14.5 10l-.5 11" />
+    <path d="M5.5 10a2.3 2.3 0 0 1 2.2-3.4 2.6 2.6 0 0 1 4.3-2 2.6 2.6 0 0 1 4.3 2A2.3 2.3 0 0 1 18.5 10" />
+  </>,
+)
+
+const Glasses = svg(
+  <>
+    <path d="M4.5 3.5h5l-.4 4.4a2.1 2.1 0 0 1-4.2 0z" />
+    <path d="M7 10v8.5M4.8 18.5h4.4" />
+    <path d="M14.5 3.5h5l-.4 4.4a2.1 2.1 0 0 1-4.2 0z" />
+    <path d="M17 10v8.5M14.8 18.5h4.4" />
+    <path d="M11 6.5l1-1.5 1 1.5" />
+  </>,
+)
+
+const Broom = svg(
+  <>
+    <path d="M17.5 2.5l-6 9" />
+    <path d="M10 10.5l4 2.7-2.3 6.8c-2.8.4-6.2-1.8-7.7-4.3z" />
+    <path d="M7.2 14.2l-1.9 3.2M9.6 16l-1.6 3.4" />
+  </>,
+)
+
+const House = svg(
+  <>
+    <path d="M3 11l9-7.5 9 7.5" />
+    <path d="M5.5 9v11.5h13V9" />
+    <path d="M10 20.5v-5.5h4v5.5" />
+    <path d="M16 5.5V3.5h2v3.7" />
+  </>,
+)
+
 // First match wins, so the specific patterns have to sit above the loose ones.
 const RULES: [RegExp, Glyph][] = [
+  [/\bfire\b/, Flame],
+  [/chores?/, Broom],
+  [/pet hates?/, Grumpy],
+  [/million|pounds/, Coins],
+  [/snacks?/, Popcorn],
+  [/\bdate\b/, Glasses],
+  [/dream house|\bhouse\b/, House],
   [/\bcats?\b/, Cat],
   [/unwind|relax/, Bath],
   [/never eat|won't eat/, NoFood],

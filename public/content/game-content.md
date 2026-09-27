@@ -2577,6 +2577,1275 @@ spelling it is obvious. Lower case; spaces are fine ("guinea pig").
 - yoga
 - zorbing
 
+## Bands and singers
+- a-ha
+- abba
+- ac dc
+- adele
+- aerosmith
+- aitch
+- aj tracey
+- akon
+- alanis morissette
+- alesha dixon
+- alicia keys
+- all saints
+- alt-j
+- amy winehouse
+- anastacia
+- anne-marie
+- annie lennox
+- aqua
+- arcade fire
+- arctic monkeys
+- aretha franklin
+- ariana grande
+- atomic kitten
+- ava max
+- avicii
+- avril lavigne
+- backstreet boys
+- bad bunny
+- bananarama
+- barry manilow
+- basement jaxx
+- bastille
+- beatles
+- becky hill
+- bee gees
+- beyonce
+- biffy clyro
+- billie eilish
+- billy idol
+- billy joel
+- bjork
+- black sabbath
+- bloc party
+- blondie
+- blur
+- bob dylan
+- bob marley
+- bombay bicycle club
+- bon jovi
+- bonnie tyler
+- boy george
+- boyzone
+- bring me the horizon
+- britney spears
+- bruce springsteen
+- bruno mars
+- bryan adams
+- bugzy malone
+- burna boy
+- busted
+- calum scott
+- calvin harris
+- camila cabello
+- cardi b
+- cat stevens
+- catfish and the bottlemen
+- celine dion
+- central cee
+- chaka khan
+- charli xcx
+- chase and status
+- chemical brothers
+- cher
+- cheryl
+- chris brown
+- christina aguilera
+- clash
+- cliff richard
+- coldplay
+- corrs
+- courteeners
+- craig david
+- cranberries
+- cream
+- crowded house
+- culture club
+- cure
+- cyndi lauper
+- daft punk
+- dave
+- david bowie
+- dean martin
+- deep purple
+- def leppard
+- demi lovato
+- depeche mode
+- dermot kennedy
+- destiny's child
+- dexys midnight runners
+- diana ross
+- dido
+- dire straits
+- disclosure
+- dizzee rascal
+- doja cat
+- dolly parton
+- doors
+- drake
+- dua lipa
+- duffy
+- duran duran
+- dusty springfield
+- eagles
+- ed sheeran
+- elbow
+- electric light orchestra
+- ella fitzgerald
+- ellie goulding
+- elton john
+- elvis
+- elvis costello
+- elvis presley
+- emeli sande
+- eminem
+- enrique iglesias
+- enya
+- erasure
+- eric clapton
+- estelle
+- etta james
+- eurythmics
+- everything but the girl
+- fall out boy
+- fatboy slim
+- feeder
+- fergie
+- fleetwood mac
+- florence and the machine
+- foals
+- fontaines dc
+- foo fighters
+- frank ocean
+- frank sinatra
+- frankie goes to hollywood
+- franz ferdinand
+- fratellis
+- freddie mercury
+- fugees
+- gabrielle
+- garbage
+- gary barlow
+- genesis
+- george ezra
+- george michael
+- gerry cinnamon
+- girls aloud
+- glass animals
+- gloria gaynor
+- gnarls barkley
+- gorillaz
+- green day
+- guns and roses
+- guns n' roses
+- gwen stefani
+- hall and oates
+- halsey
+- harry styles
+- headie one
+- hear'say
+- hot chip
+- hot chocolate
+- housemartins
+- hozier
+- huey lewis
+- human league
+- ian dury
+- idles
+- iggy pop
+- imagine dragons
+- inxs
+- iron maiden
+- j hus
+- jack white
+- jake bugg
+- jam
+- james
+- james arthur
+- james bay
+- james blunt
+- james brown
+- jamiroquai
+- janet jackson
+- jason derulo
+- jax jones
+- jay-z
+- jennifer lopez
+- jess glynne
+- jessie j
+- jimi hendrix
+- jls
+- joel corry
+- john lennon
+- johnny cash
+- jonas brothers
+- jorja smith
+- journey
+- joy division
+- justin bieber
+- justin timberlake
+- kaiser chiefs
+- kano
+- kanye west
+- kasabian
+- kate bush
+- katy perry
+- keane
+- kelly clarkson
+- kendrick lamar
+- kesha
+- killers
+- kim wilde
+- kings of leon
+- kinks
+- kiss
+- kooks
+- kool and the gang
+- krept and konan
+- kylie
+- kylie minogue
+- labrinth
+- lady gaga
+- lana del rey
+- lauryn hill
+- led zeppelin
+- lemar
+- lenny kravitz
+- leona lewis
+- lewis capaldi
+- liam gallagher
+- liam payne
+- libertines
+- liberty x
+- lighthouse family
+- lil nas x
+- lil wayne
+- lily allen
+- limp bizkit
+- linkin park
+- lionel richie
+- little mix
+- lizzo
+- lorde
+- louis armstrong
+- louis tomlinson
+- lulu
+- luther vandross
+- m people
+- mabel
+- madness
+- madonna
+- manic street preachers
+- mariah carey
+- mark ronson
+- maroon five
+- marvin gaye
+- mary j blige
+- massive attack
+- mcfly
+- meat loaf
+- meghan trainor
+- metallica
+- michael buble
+- michael jackson
+- mika
+- miley cyrus
+- morrissey
+- motorhead
+- mumford and sons
+- muse
+- n-dubz
+- nat king cole
+- ne-yo
+- neil diamond
+- nelly
+- nelly furtado
+- new order
+- niall horan
+- nick cave
+- nicki minaj
+- nile rodgers
+- nina simone
+- nirvana
+- noel gallagher
+- norah jones
+- nothing but thieves
+- oasis
+- ocean colour scene
+- offspring
+- olivia newton-john
+- olivia rodrigo
+- olly alexander
+- olly murs
+- one direction
+- otis redding
+- outkast
+- ozzy osbourne
+- paloma faith
+- paolo nutini
+- paramore
+- passenger
+- paul mccartney
+- pearl jam
+- pet shop boys
+- peter gabriel
+- pharrell
+- pharrell williams
+- pink
+- pink floyd
+- pixie lott
+- pixies
+- placebo
+- pogues
+- police
+- portishead
+- post malone
+- primal scream
+- prince
+- prodigy
+- professor green
+- puff daddy
+- pulp
+- pussycat dolls
+- queen
+- queens of the stone age
+- radiohead
+- rag'n'bone man
+- rage against the machine
+- ramones
+- ray charles
+- raye
+- red hot chili peppers
+- richard ashcroft
+- rick astley
+- rihanna
+- rita ora
+- rizzle kicks
+- robbie williams
+- robyn
+- rod stewart
+- rolling stones
+- ronan keating
+- roxy music
+- roy orbison
+- royal blood
+- rudimental
+- s club
+- sabrina carpenter
+- sade
+- sam fender
+- sam smith
+- saturdays
+- scissor sisters
+- scouting for girls
+- script
+- seal
+- selena gomez
+- sex pistols
+- shaggy
+- shakira
+- shania twain
+- shawn mendes
+- sia
+- simple minds
+- simply red
+- sinead o'connor
+- sister sledge
+- skepta
+- slade
+- slipknot
+- smiths
+- snoop dogg
+- snow patrol
+- soft cell
+- sophie ellis-bextor
+- spandau ballet
+- specials
+- spice girls
+- status quo
+- steps
+- stereophonics
+- stevie nicks
+- stevie wonder
+- sting
+- stone roses
+- stormzy
+- streets
+- strokes
+- suede
+- sugababes
+- supergrass
+- t rex
+- take that
+- tame impala
+- taylor swift
+- tears for fears
+- texas
+- the beatles
+- the bee gees
+- the chemical brothers
+- the clash
+- the corrs
+- the courteeners
+- the cranberries
+- the cure
+- the doors
+- the eagles
+- the fratellis
+- the fugees
+- the housemartins
+- the human league
+- the jam
+- the killers
+- the kinks
+- the kooks
+- the libertines
+- the offspring
+- the pogues
+- the police
+- the prodigy
+- the ramones
+- the rolling stones
+- the saturdays
+- the script
+- the sex pistols
+- the smiths
+- the specials
+- the stone roses
+- the streets
+- the strokes
+- the verve
+- the weeknd
+- the white stripes
+- the who
+- the xx
+- tina turner
+- tinie tempah
+- tom grennan
+- tom jones
+- tom odell
+- toto
+- tracy chapman
+- travis
+- travis scott
+- tupac
+- two door cinema club
+- ultravox
+- usher
+- vampire weekend
+- van morrison
+- velvet underground
+- vengaboys
+- verve
+- village people
+- weeknd
+- westlife
+- wet wet wet
+- wham
+- white stripes
+- whitney houston
+- who
+- wiley
+- will young
+- wolf alice
+- xx
+- yazoo
+- years and years
+- yungblud
+- zara larsson
+- zayn
+- zz top
+
+## TV shows
+- a place in the sun
+- a question of sport
+- a touch of frost
+- a-team
+- ab fab
+- abbott elementary
+- absolutely fabulous
+- adolescence
+- after life
+- all creatures great and small
+- allo allo
+- american horror story
+- antiques roadshow
+- apprentice
+- archer
+- arrested development
+- ashes to ashes
+- baby reindeer
+- bad education
+- bake off
+- bargain hunt
+- baywatch
+- bear
+- benidorm
+- better call saul
+- big bang theory
+- big brother
+- bill
+- birds of a feather
+- black mirror
+- blackadder
+- blind date
+- blue peter
+- blue planet
+- bluey
+- bodyguard
+- bottom
+- breaking bad
+- bridgerton
+- broadchurch
+- brooklyn nine-nine
+- buffy
+- buffy the vampire slayer
+- call the midwife
+- casualty
+- catastrophe
+- catchphrase
+- celebrity juice
+- charmed
+- chase
+- cheers
+- chernobyl
+- cobra kai
+- cold feet
+- come dine with me
+- coronation street
+- corrie
+- countdown
+- countryfile
+- criminal minds
+- crown
+- crystal maze
+- csi
+- curb your enthusiasm
+- dad's army
+- dallas
+- dawson's creek
+- deal or no deal
+- derry girls
+- desperate housewives
+- detectorists
+- dexter
+- dinnerladies
+- doctor foster
+- doctor who
+- doctors
+- downton abbey
+- drag race
+- dragons' den
+- dynasty
+- eastenders
+- eggheads
+- eight out of ten cats
+- embarrassing bodies
+- emily in paris
+- emmerdale
+- er
+- escape to the country
+- euphoria
+- everybody loves raymond
+- extras
+- family fortunes
+- family guy
+- fargo
+- father ted
+- fawlty towers
+- first dates
+- fleabag
+- footballers' wives
+- frasier
+- fresh prince
+- fresh prince of bel-air
+- friday night dinner
+- friends
+- full house
+- futurama
+- game of thrones
+- gardeners' world
+- gavin and stacey
+- ghosts
+- gilmore girls
+- gladiators
+- glee
+- gogglebox
+- golden girls
+- good morning britain
+- good place
+- gossip girl
+- graham norton
+- grand designs
+- grand tour
+- great british bake off
+- grey's anatomy
+- handmaid's tale
+- happy valley
+- have i got news for you
+- heartstopper
+- hi-de-hi
+- holby city
+- hollyoaks
+- home and away
+- homeland
+- homes under the hammer
+- house
+- house of cards
+- house of the dragon
+- how i met your mother
+- hustle
+- i'm a celeb
+- i'm a celebrity
+- i'm alan partridge
+- in the night garden
+- inbetweeners
+- industry
+- inside no nine
+- it crowd
+- jackass
+- jeremy kyle
+- jonathan creek
+- kardashians
+- keeping up appearances
+- keeping up with the kardashians
+- killing eve
+- kitchen nightmares
+- knight rider
+- last kingdom
+- last leg
+- last of us
+- league of gentlemen
+- line of duty
+- little britain
+- location location location
+- loose women
+- lost
+- love is blind
+- love island
+- lovejoy
+- luther
+- mad men
+- made in chelsea
+- making a murderer
+- mandalorian
+- married at first sight
+- mash
+- masterchef
+- mastermind
+- match of the day
+- men behaving badly
+- midsomer murders
+- mighty boosh
+- miranda
+- mock the week
+- modern family
+- money heist
+- mr bean
+- mrs brown's boys
+- narcos
+- neighbours
+- never mind the buzzcocks
+- new girl
+- newsnight
+- night manager
+- noel's house party
+- normal people
+- oc
+- office
+- one foot in the grave
+- one show
+- one tree hill
+- only connect
+- only fools and horses
+- only way is essex
+- open all hours
+- orange is the new black
+- outlander
+- outnumbered
+- ozark
+- parks and recreation
+- paw patrol
+- peaky blinders
+- peep show
+- peppa pig
+- phoenix nights
+- planet earth
+- plebs
+- pointless
+- poldark
+- pop idol
+- power rangers
+- prison break
+- qi
+- queer eye
+- question time
+- ready steady cook
+- red dwarf
+- repair shop
+- rick and morty
+- rising damp
+- robot wars
+- roseanne
+- royle family
+- rugrats
+- rupaul's drag race
+- saturday kitchen
+- saturday night takeaway
+- saved by the bell
+- schitt's creek
+- scrubs
+- seinfeld
+- selling sunset
+- severance
+- sex and the city
+- sex education
+- shameless
+- sherlock
+- silent witness
+- simpsons
+- skins
+- slow horses
+- soccer am
+- songs of praise
+- sopranos
+- south park
+- spaced
+- spongebob
+- spongebob squarepants
+- spooks
+- springwatch
+- squid game
+- star trek
+- stath lets flats
+- steptoe and son
+- stranger things
+- strictly
+- strictly come dancing
+- succession
+- suits
+- supernatural
+- survivor
+- taskmaster
+- ted lasso
+- teletubbies
+- the a-team
+- the apprentice
+- the bear
+- the big bang theory
+- the bill
+- the boys
+- the chase
+- the crown
+- the crystal maze
+- the fresh prince of bel-air
+- the golden girls
+- the good place
+- the graham norton show
+- the grand tour
+- the great british bake off
+- the handmaid's tale
+- the inbetweeners
+- the it crowd
+- the jeremy kyle show
+- the kardashians
+- the last kingdom
+- the last leg
+- the last of us
+- the league of gentlemen
+- the mandalorian
+- the mighty boosh
+- the night manager
+- the oc
+- the office
+- the one show
+- the only way is essex
+- the repair shop
+- the royle family
+- the simpsons
+- the sopranos
+- the thick of it
+- the traitors
+- the vampire diaries
+- the vicar of dibley
+- the voice
+- the walking dead
+- the weakest link
+- the west wing
+- the white lotus
+- the wire
+- the witcher
+- the x factor
+- the x-files
+- the young ones
+- thick of it
+- this is england
+- this morning
+- thunderbirds
+- tiger king
+- tipping point
+- top boy
+- top gear
+- towie
+- tracy beaker
+- traitors
+- true detective
+- twin peaks
+- two and a half men
+- ugly betty
+- university challenge
+- upstart crow
+- vampire diaries
+- veep
+- vera
+- vicar of dibley
+- vikings
+- voice
+- walking dead
+- waterloo road
+- weakest link
+- wednesday
+- west wing
+- westworld
+- wheel of fortune
+- white lotus
+- who wants to be a millionaire
+- whose line is it anyway
+- wire
+- witcher
+- wolf hall
+- would i lie to you
+- x factor
+- x-files
+- yellowstone
+- yes minister
+- you
+- you've been framed
+- young ones
+- young sheldon
+- z cars
+
+## Brands
+- accessorize
+- acer
+- adidas
+- aero
+- airbnb
+- aldi
+- alpen
+- amazon
+- ambrosia
+- andrex
+- ann summers
+- apple
+- aquafresh
+- argos
+- ariel
+- asda
+- asos
+- aston martin
+- audi
+- aviva
+- b and m
+- b and q
+- bacardi
+- baileys
+- barclays
+- ben and jerry's
+- bentley
+- bic
+- birds eye
+- bisto
+- blackberry
+- bmw
+- boohoo
+- boots
+- bosch
+- bose
+- bounty
+- bovril
+- brewdog
+- britvic
+- budweiser
+- bulmers
+- burberry
+- burger king
+- cadbury
+- caffe nero
+- calvin klein
+- canon
+- carling
+- carlsberg
+- cath kidston
+- chanel
+- cheerios
+- cif
+- cineworld
+- citroen
+- clarks
+- co-op
+- coca-cola
+- coke
+- colgate
+- converse
+- coors
+- corona
+- costa
+- cravendale
+- crocs
+- currys
+- dacia
+- dairy milk
+- danone
+- debenhams
+- deliveroo
+- dell
+- dettol
+- dior
+- disney
+- dolmio
+- domestos
+- domino's
+- doritos
+- dove
+- dr martens
+- dr pepper
+- dulux
+- dunelm
+- dunkin
+- durex
+- dyson
+- easyjet
+- ebay
+- eddie stobart
+- ee
+- ellesse
+- emirates
+- esso
+- estee lauder
+- etsy
+- eurostar
+- evian
+- evri
+- expedia
+- facebook
+- fairy
+- fanta
+- farrow and ball
+- febreze
+- felix
+- ferrari
+- ferrero rocher
+- fiat
+- fila
+- first direct
+- fisher-price
+- fitbit
+- flora
+- foot locker
+- ford
+- fred perry
+- frosties
+- galaxy
+- gap
+- garnier
+- gaviscon
+- gillette
+- go compare
+- google
+- gordon's
+- gousto
+- greggs
+- grey goose
+- gucci
+- guinness
+- gymshark
+- h and m
+- haagen-dazs
+- habitat
+- halfords
+- halifax
+- haribo
+- harrods
+- heineken
+- heinz
+- hellmann's
+- hermes
+- hobnobs
+- holland and barrett
+- hollister
+- honda
+- hoover
+- hotel chocolat
+- hotpoint
+- hovis
+- hp sauce
+- hsbc
+- hugo boss
+- hula hoops
+- hyundai
+- ibis
+- iceland
+- ikea
+- innocent
+- instagram
+- intel
+- irn bru
+- itsu
+- jack daniel's
+- jacob's creek
+- jaffa cakes
+- jaguar
+- jd sports
+- jeep
+- jimmy choo
+- jo malone
+- john lewis
+- johnson and johnson
+- just eat
+- karcher
+- kellogg's
+- kenco
+- kenwood
+- kettle chips
+- kfc
+- kia
+- kinder
+- kingsmill
+- kitkat
+- kleenex
+- knorr
+- kodak
+- krispy kreme
+- kurt geiger
+- kwik fit
+- l'oreal
+- lacoste
+- lamborghini
+- land rover
+- lego
+- lenovo
+- levi's
+- lexus
+- lg
+- lidl
+- lilt
+- lindt
+- linkedin
+- lipton
+- lloyds
+- louis vuitton
+- lucozade
+- lurpak
+- lush
+- lynx
+- m and s
+- magnum
+- maltesers
+- marks and spencer
+- marmite
+- mars
+- mastercard
+- matalan
+- maybelline
+- mazda
+- mcdonald's
+- mcvitie's
+- mercedes
+- michael kors
+- microsoft
+- mini
+- mitsubishi
+- moet
+- monsoon
+- monster
+- monzo
+- moonpig
+- morrisons
+- mothercare
+- mulberry
+- muller
+- nando's
+- nationwide
+- natwest
+- nectar
+- nescafe
+- nestle
+- netflix
+- new balance
+- new look
+- next
+- nike
+- nintendo
+- nissan
+- nivea
+- nokia
+- north face
+- nurofen
+- nutella
+- oakley
+- oasis
+- ocado
+- octopus energy
+- odeon
+- old spice
+- omega
+- oral-b
+- oreo
+- ovaltine
+- oxo
+- pampers
+- pandora
+- pantene
+- paypal
+- penguin
+- pepsi
+- peroni
+- persil
+- peugeot
+- philips
+- pimm's
+- pizza express
+- pizza hut
+- playstation
+- porsche
+- pot noodle
+- poundland
+- prada
+- premier inn
+- pret
+- pret a manger
+- primark
+- pringles
+- puma
+- quality street
+- quavers
+- quorn
+- radox
+- ralph lauren
+- range rover
+- ray-ban
+- red bull
+- reebok
+- renault
+- revolut
+- ribena
+- rightmove
+- rimmel
+- ritz
+- river island
+- rolex
+- rolls-royce
+- ronseal
+- rowntree's
+- ryanair
+- ryvita
+- sainsbury's
+- samsung
+- santander
+- schweppes
+- seat
+- selfridges
+- sensodyne
+- sharpie
+- shell
+- skittles
+- skoda
+- sky
+- slimfast
+- smeg
+- smirnoff
+- snapchat
+- snickers
+- sony
+- specsavers
+- sports direct
+- spotify
+- starbucks
+- stella artois
+- strongbow
+- subaru
+- subway
+- sudocrem
+- superdrug
+- superdry
+- sure
+- suzuki
+- swarovski
+- tango
+- ted baker
+- tefal
+- tesco
+- tesla
+- tetley
+- the north face
+- tiffany
+- tiktok
+- timberland
+- tk maxx
+- toblerone
+- tommy hilfiger
+- topshop
+- toyota
+- trainline
+- travelodge
+- tropicana
+- tui
+- tunnock's
+- twinings
+- twix
+- typhoo
+- uber
+- uber eats
+- ugg
+- umbro
+- under armour
+- unilever
+- uniqlo
+- vanish
+- vans
+- vauxhall
+- versace
+- vicks
+- victoria's secret
+- vimto
+- vinted
+- virgin
+- vodafone
+- volkswagen
+- volvo
+- vw
+- wagamama
+- waitrose
+- walkers
+- walls
+- warburtons
+- weetabix
+- wetherspoons
+- wh smith
+- whirlpool
+- whiskas
+- wickes
+- wilko
+- wispa
+- wrigley's
+- xbox
+- yakult
+- yamaha
+- yankee candle
+- yeo valley
+- yorkie
+- yorkshire tea
+- youtube
+- yves saint laurent
+- zara
+- zippo
+- zoflora
+- zoom
+- zoopla
 
 # Their Word
 
