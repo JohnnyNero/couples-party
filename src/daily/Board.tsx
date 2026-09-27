@@ -6,8 +6,9 @@ import { card } from '../ui/styles'
 import { Avatar, inkOf } from '../ui/Avatar'
 import { localDate } from './dates'
 import { dialOfTheDay, spectrumPrompt } from './dial'
-import { numbersOfTheDay } from './numbers'
-import { eitherOfTheDay } from './either'
+import { NUMBERS_COUNT, numbersOfTheDay } from './numbers'
+import { noteShown, recentFor } from './shown'
+import { EITHER_COUNT, eitherOfTheDay } from './either'
 import { PairStart, PairWaiting } from './Pairing'
 import { PlayDial } from './PlayDial'
 import { PlayEither } from './PlayEither'
@@ -69,6 +70,18 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   }, [])
 
   const { status, refresh } = board
+  // Everything the board shows is remembered as asked on its day, so tomorrow's picks
+  // pass over it (see shown.ts) — even on a phone that only ever solves.
+  useEffect(() => {
+    if (status.kind !== 'ready' || status.data.state !== 'paired') return
+    for (const k of kindsOf(status.data)) {
+      for (const v of Object.values(status.data.kinds[k]!)) {
+        if (!v) continue
+        const view = v as { forDate: string; prompt?: string; questions?: string[] }
+        noteShown(view.forDate, k, [view.prompt ?? '', ...(view.questions ?? [])])
+      }
+    }
+  }, [status])
   // Back from a puzzle, or from setting one, is the board.
   const closeScreen = () => {
     slide('back', () => setScreen(null))
@@ -279,10 +292,12 @@ function Tile({
   const { solve, mine, next } = slot
   const started = !!solve && 'guesses' in solve && Array.isArray(solve.guesses) && solve.guesses.length > 0
   const solved = !!solve && solve.status !== 'open'
-  // Set theirs for today (day one, or a day they missed): that was your one for the day.
-  // Tomorrow's is set tomorrow — never a second straight after the first.
+  // Set theirs for today (day one, or a day they missed): with nothing of yours to solve,
+  // that was your one for the day — never a second straight after the first. But once
+  // you've solved theirs, tomorrow's is next as usual; otherwise a catch-up day would
+  // only ever lead to another one, and you'd never get a day ahead.
   const caughtUp = caught && !!mine && !next
-  const complete = ((solved || !solve) && !!next) || (caughtUp && (!solve || solved))
+  const complete = ((solved || !solve) && !!next) || (caughtUp && !solve)
 
   // What the tile asks of you, as a chip: something to play (filled), something to set
   // for them (outlined), or nothing left (quiet).
@@ -293,12 +308,8 @@ function Tile({
   if (solve && !solved) {
     chip = <span className="px-2.5 py-1 rounded-full bg-pa text-white text-xs font-extrabold">{started ? 'Carry on' : 'Play'}</span>
     mode = 'play'
-  } else if (caughtUp) {
-    if (solved) {
-      // Your result, where the button is their go.
-      chip = <span className="text-xs font-extrabold text-fg/50">Done · <span className="text-accent-ink">+{solve!.points ?? 0}</span></span>
-      mode = 'play'
-    } else if (mine.status !== 'open') {
+  } else if (caughtUp && !solved) {
+    if (mine.status !== 'open') {
       chip = <span className="inline-block align-top px-2.5 py-1 rounded-full border-2 border-fg/25 text-xs font-extrabold truncate max-w-full">See {partner}’s go</span>
       mode = 'theirs'
     } else {
@@ -429,7 +440,7 @@ function PuzzleScreen({
     // Under your own result: first, the button to set theirs for tomorrow; only once
     // that's done, the way to see how they did on the one you set them today.
     const k = kinds[screen.kind]!
-    const doneToday = !!k.next || (!!k.mine && caughtUpOn(localDate(), screen.kind))
+    const doneToday = !!k.next
     const extra = doneToday
       ? <TheirGoButton puzzle={k.mine} partner={partner} onOpen={() => onSwitch({ kind: screen.kind, mode: 'theirs' })} />
       : (
@@ -475,18 +486,18 @@ function SetScreen({ kind, forDate, partner, me, pools, ourWords, onClose }: {
     if (!forDate) markCaughtUp(day, kind)
     const fresh = (): Pin => {
       switch (kind) {
-        case 'word': return { prompt: questionOfTheDay(day, pools.words, ourWords) ?? '' }
+        case 'word': return { prompt: questionOfTheDay(day, pools.words, ourWords, recentFor('word', day, pools.words.length)) ?? '' }
         case 'dial': {
-          const picked = dialOfTheDay(day, pools.content.spectrums)
+          const picked = dialOfTheDay(day, pools.content.spectrums, recentFor('dial', day, pools.content.spectrums.length))
           return { prompt: picked ? spectrumPrompt(picked) : '', target: Math.floor(Math.random() * 101) }
         }
         case 'top5': {
-          const theme = themeOfTheDay(day, pools.content.themes)
+          const theme = themeOfTheDay(day, pools.content.themes, recentFor('top5', day, pools.content.themes.length))
           return theme ? { prompt: fiveify(theme.text), items: itemsOfTheDay(day, theme) } : {}
         }
-        case 'sketch': return { prompt: sketchOfTheDay(day, pools.content.drawPrompts) ?? '' }
-        case 'numbers': return { questions: numbersOfTheDay(day, pools.numbers) ?? [] }
-        case 'either': return { questions: eitherOfTheDay(day, pools.either) ?? [] }
+        case 'sketch': return { prompt: sketchOfTheDay(day, pools.content.drawPrompts, recentFor('sketch', day, pools.content.drawPrompts.length)) ?? '' }
+        case 'numbers': return { questions: numbersOfTheDay(day, pools.numbers, recentFor('numbers', day, pools.numbers.length, NUMBERS_COUNT)) ?? [] }
+        case 'either': return { questions: eitherOfTheDay(day, pools.either, recentFor('either', day, pools.either.length, EITHER_COUNT)) ?? [] }
       }
     }
     // A server without migration 0018, or no signal: carry on without it after a moment.

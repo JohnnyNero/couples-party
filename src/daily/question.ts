@@ -1,4 +1,4 @@
-import { makeRng, shuffled } from '../engine/rng'
+import { walkPick } from './deal'
 import { dayIndex } from './dates'
 import { say } from '../say'
 
@@ -12,15 +12,13 @@ import { say } from '../say'
 //
 // With questions of your own (Our questions), every other day is one of yours instead,
 // taking them in the order you added them.
-export function questionOfTheDay(date: string, pool: string[], ours: string[] = []): string | null {
+export function questionOfTheDay(date: string, pool: string[], ours: string[] = [], recent?: Set<string>): string | null {
   const day = dayIndex(date)
   if (ours.length > 0 && (day % 2 === 0 || pool.length === 0)) {
     const i = Math.floor(day / 2)
     return ours[((i % ours.length) + ours.length) % ours.length]
   }
-  if (pool.length === 0) return null
-  const order = shuffled(makeRng(0xc0ffee), pool)
-  return order[((day % order.length) + order.length) % order.length]
+  return walkPick(date, pool, 0xc0ffee, (t) => t, recent)
 }
 
 // A question as the person answering it reads it: "you", with {partner} (or the old

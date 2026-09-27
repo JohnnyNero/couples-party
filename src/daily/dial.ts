@@ -1,15 +1,11 @@
-import { makeRng, shuffled } from '../engine/rng'
 import type { WaveSpectrum } from '../engine/state'
-import { dayIndex } from './dates'
+import { walkPick } from './deal'
 
 // The day's spectrum for The Dial — same idea as questionOfTheDay, walking Wavelength's
 // own spectrum pool in one fixed shuffled order so nothing repeats until they all have.
 // A different seed from Their Word's, so the two don't happen to pick in lockstep.
-export function dialOfTheDay(date: string, pool: WaveSpectrum[]): WaveSpectrum | null {
-  if (pool.length === 0) return null
-  const day = dayIndex(date)
-  const order = shuffled(makeRng(0xd1a1), pool)
-  return order[((day % order.length) + order.length) % order.length]
+export function dialOfTheDay(date: string, pool: WaveSpectrum[], recent?: Set<string>): WaveSpectrum | null {
+  return walkPick(date, pool, 0xd1a1, spectrumPrompt, recent)
 }
 
 // A spectrum stores as "Low | High" in the puzzle's prompt column, the same text a

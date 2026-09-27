@@ -1,4 +1,5 @@
 import { localDate } from './dates'
+import { noteShown } from './shown'
 
 // A set screen's question, fixed the first time you see it. Worked out from the date it
 // would come out the same anyway — until Our questions changes, or the content file
@@ -58,7 +59,10 @@ export function settle(date: string, kind: string, server: Pin | undefined, fres
   const target = before?.target ?? make().target
   const out: Pin = target === undefined ? base : { ...base, target }
   // Nothing to pin if the content hadn't loaded yet — it gets another go next time.
-  if (filled(out)) pin(date, kind, out)
+  if (filled(out)) {
+    pin(date, kind, out)
+    noteShown(date, kind, [out.prompt ?? '', ...(out.questions ?? [])])
+  }
   return out
 }
 

@@ -1,5 +1,6 @@
 import { makeRng, shuffled } from '../engine/rng'
 import type { Theme } from '../engine/state'
+import { walkPick } from './deal'
 import { dayIndex } from './dates'
 
 export const TOP5_SIZE = 5
@@ -8,12 +9,9 @@ export const TOP5_SIZE = 5
 // in one fixed shuffled order so nothing repeats until every theme has had its day.
 // Every shipped theme has well over five items (content.test.ts holds it to 7+), but
 // this stays honest if that ever changes.
-export function themeOfTheDay(date: string, themes: Theme[]): Theme | null {
+export function themeOfTheDay(date: string, themes: Theme[], recent?: Set<string>): Theme | null {
   const eligible = themes.filter((t) => t.pool.length >= TOP5_SIZE)
-  if (eligible.length === 0) return null
-  const day = dayIndex(date)
-  const order = shuffled(makeRng(0x70075), eligible)
-  return order[((day % order.length) + order.length) % order.length]
+  return walkPick(date, eligible, 0x70075, (t) => fiveify(t.text), recent)
 }
 
 // Five of that theme's pool, in the fixed order they're offered up to rank — a second,

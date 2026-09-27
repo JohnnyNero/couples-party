@@ -1,13 +1,11 @@
-import { makeRng, shuffled } from '../engine/rng'
-import { dayIndex } from './dates'
+import { dealPick } from './deal'
 
 export const EITHER_COUNT = 5
 
-// The day's five pairs — the same five on both phones, a fresh shuffle each day (see
-// numbersOfTheDay for why not a fixed walk).
-export function eitherOfTheDay(date: string, pool: string[]): string[] | null {
-  if (pool.length < EITHER_COUNT) return null
-  return shuffled(makeRng(0x3e1 ^ dayIndex(date)), pool).slice(0, EITHER_COUNT)
+// The day's five pairs — the same five on both phones, dealt like Their Numbers' (see
+// deal.ts), passing over any in `recent`.
+export function eitherOfTheDay(date: string, pool: string[], recent?: Set<string>): string[] | null {
+  return dealPick(date, pool, EITHER_COUNT, 0x3e1, (t) => t, recent)
 }
 
 // "Tea | Coffee" → ['Tea', 'Coffee'].
