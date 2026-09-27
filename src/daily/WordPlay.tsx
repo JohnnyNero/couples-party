@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { api, DailyError, type PuzzleView } from './api'
-import { Keyboard, TileRow } from './Tiles'
+import { TileRow } from './Tiles'
+import { LetterPad } from '../ui/keys'
 import { cleanWord, keyStates, lengthWord, loadWords, MAX_GUESSES } from './wordle'
 
 // Solving the word your partner set. Each guess goes to the server and comes back
@@ -119,7 +120,7 @@ export function WordPlay({
         </div>
       ) : (
         <div className="shrink-0 px-2 pb-5">
-          <Keyboard onKey={onKey} states={keyStates(puzzle.guesses, puzzle.patterns)} disabled={busy} />
+          <LetterPad onKey={onKey} marks={keyStates(puzzle.guesses, puzzle.patterns)} disabled={busy} />
         </div>
       )}
     </div>

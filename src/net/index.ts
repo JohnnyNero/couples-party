@@ -3,7 +3,6 @@ import type { PlayMode } from '../start/mode'
 import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
-import * as playroom from './playroom'
 import { SOLO_PLAYER, initLocal, localDispatch, setLocalActivity, setLocalLive, useLocalActivity, useLocalLive, useLocalSession } from './local'
 import type { Activity, ActivityKind, Live } from './live'
 import type { Saved } from '../store/progress'
@@ -16,10 +15,21 @@ export type { Activity, ActivityKind, Live }
 // anything renders, and never changes for the life of the page — so the hooks below
 // always take the same branch on every render.
 let solo = false
+// Playroom is most of the app's size, and only games need it: it's fetched when one
+// starts (or ahead of time — see preloadNet), never just for Home.
+let playroom: typeof import('./playroom')
+const loadPlayroom = () => import('./playroom')
+
+export function preloadNet(): void {
+  void loadPlayroom().catch(() => {})
+}
 
 export async function initNet(mode: PlayMode, game: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   solo = mode === 'solo'
-  if (!solo) return playroom.initNet(game, roomCode, resume)
+  if (!solo) {
+    playroom = await loadPlayroom()
+    return playroom.initNet(game, roomCode, resume)
+  }
   initLocal(game === 'tonight' ? await loadPacks() : freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
 }
 

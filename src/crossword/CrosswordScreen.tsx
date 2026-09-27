@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { key, type Entry, type Puzzle } from './build'
 import { along, entryAt, firstCursor, isFull, isSolved, nextClue, squaresOf, tap, type Cursor } from './grid'
-import type { Ready } from './useCrossword'
-import { Keyboard } from '../daily/Tiles'
+import { mondayOf, type Ready } from './useCrossword'
+import { localDate } from '../daily/dates'
+import { LetterPad } from '../ui/keys'
 import { Avatar } from '../ui/Avatar'
 import { Shower, useFirstTime } from '../ui/fx'
 import { buzz } from '../ui/haptics'
@@ -14,8 +15,8 @@ import { eyebrow } from '../ui/styles'
 // theirs in theirs (blue), and theirs turn up as they type. No hints and no checking —
 // just the moment it's all right.
 
-export function CrosswordScreen({ data, me, partner, week, onFill, onClose, onRebuild }: {
-  data: Ready; me: string; partner: string; week: string; onFill: (changes: Record<string, string>) => void; onClose: () => void; onRebuild?: () => void
+export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
+  data: Ready; me: string; partner: string; week: string; onFill: (changes: Record<string, string>) => void; onClose: () => void
 }) {
   const p = data.puzzle
   const [cur, setCur] = useState<Cursor>(() => firstCursor(p))
@@ -66,7 +67,7 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose, onRe
         {solved && (
           <section className="rounded-2xl bg-tan-soft text-tan-ink px-4 py-3 text-center animate-slam">
             <div className="font-display text-2xl font-extrabold">Solved together ✓</div>
-            <div className="text-sm font-bold opacity-75">A new one on Monday</div>
+            <div className="text-sm font-bold opacity-75">{week === mondayOf(localDate()) ? 'A new one on Monday' : 'Kept in Memories'}</div>
             <button onClick={() => void shareFiles({ text: shareText(p, data, me, partner, week), file: null, filename: '', title: 'Coupled' })} className="press mt-2 min-h-[44px] px-4 rounded-full bg-tan-ink text-tan-soft text-sm font-extrabold">
               Share our crossword
             </button>
@@ -78,31 +79,14 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose, onRe
           </div>
         )}
         <Clues p={p} me={me} partner={partner} cur={cur} onPick={(e) => setCur({ row: e.row, col: e.col, dir: e.dir })} />
-        {onRebuild && <Rebuild onRebuild={onRebuild} />}
       </div>
 
       {!solved && (
         <div className="shrink-0 border-t border-fg/10 bg-bg px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] flex flex-col gap-2">
           {entry && <ClueBar e={entry} me={me} partner={partner} onPrev={() => setCur(nextClue(p, cur, (x) => !!letterAt(x), -1))} onNext={() => setCur(nextClue(p, cur, (x) => !!letterAt(x)))} />}
-          <Keyboard onKey={onKey} />
+          <LetterPad onKey={onKey} />
         </div>
       )}
-    </div>
-  )
-}
-
-// For testing: build this week's again from your answers as they are now. Asks first —
-// it clears both of your letters.
-function Rebuild({ onRebuild }: { onRebuild: () => void }) {
-  const [sure, setSure] = useState(false)
-  return (
-    <div className="mt-8 mb-2 flex flex-col items-center gap-2">
-      <button
-        onClick={() => (sure ? onRebuild() : setSure(true))}
-        className={'press min-h-[40px] px-4 rounded-full border-2 text-xs font-extrabold ' + (sure ? 'border-pa text-pa-ink' : 'border-fg/15 text-fg/50')}
-      >
-        {sure ? 'Tap again: clears both of your letters' : 'Testing: rebuild this week’s crossword'}
-      </button>
     </div>
   )
 }

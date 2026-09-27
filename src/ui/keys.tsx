@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { buzz } from './haptics'
+import type { Mark } from '../daily/wordle'
 
 // Our own keyboard, for every game and puzzle. The phone's keyboard covers half the
 // screen, pushes the page about, and looks different on every phone; this one is always
@@ -236,9 +237,29 @@ export function KeyField({
 const LETTERS = ['qwertyuiop', 'asdfghjkl', ['Shift', ...'zxcvbnm', 'Backspace'], ['Symbols', ' ', "'", 'Enter']] as const
 const SYMBOLS = ['1234567890', '-/:;()£&@"', ['?', '!', ',', "'", '#', '+', '=', 'Backspace'], ['Symbols', ' ', '.', 'Enter']] as const
 const NUMBERS = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['Backspace', '0', 'Enter']] as const
+// Letters only, for grids of letters: Their Word and the crossword.
+const PAD = ['qwertyuiop', 'asdfghjkl', ['Enter', ...'zxcvbnm', 'Backspace']] as const
 
-function Keyboard({ look, enter, shift, symbols, onKey }: { look: Look; enter: string; shift: boolean; symbols: boolean; onKey: (k: string) => void }) {
-  const rows = look.mode === 'number' ? NUMBERS : symbols ? SYMBOLS : LETTERS
+// The same keys with letters only — for Their Word (coloured by your guesses so far) and
+// the crossword, which each place it themselves and handle the keys their own way.
+export function LetterPad({ onKey, marks, disabled = false }: { onKey: (k: string) => void; marks?: Map<string, Mark>; disabled?: boolean }) {
+  return (
+    <Keyboard
+      look={{ mode: 'text', enter: 'Enter', action: false, canEnter: true, upper: true, disabled }}
+      enter="Enter"
+      shift={false}
+      symbols={false}
+      onKey={onKey}
+      pad
+      marks={marks}
+    />
+  )
+}
+
+function Keyboard({ look, enter, shift, symbols, onKey, pad = false, marks }: {
+  look: Look; enter: string; shift: boolean; symbols: boolean; onKey: (k: string) => void; pad?: boolean; marks?: Map<string, Mark>
+}) {
+  const rows = pad ? PAD : look.mode === 'number' ? NUMBERS : symbols ? SYMBOLS : LETTERS
   const upper = shift || look.upper
   const [down, setDown] = useState<string | null>(null)
   const repeat = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -263,11 +284,16 @@ function Keyboard({ look, enter, shift, symbols, onKey }: { look: Look; enter: s
     const grow =
       look.mode === 'number' ? 'flex-1'
         : k === ' ' ? 'flex-[5]'
+        : pad && (enterKey || k === 'Backspace') ? 'flex-[1.5]'
         : enterKey ? 'flex-[2.2]'
         : k === 'Shift' || k === 'Backspace' || k === 'Symbols' ? 'flex-[1.5]'
         : 'flex-1'
+    const mark = marks?.get(k)
     const tone =
-      enterKey ? (look.action ? 'bg-pa text-white' : 'bg-fg/25 text-fg')
+      mark === 'g' ? 'bg-correct text-white'
+        : mark === 'y' ? 'bg-present text-white'
+        : mark === '.' ? 'bg-absent text-white'
+        : enterKey ? (look.action ? 'bg-pa text-white' : 'bg-fg/25 text-fg')
         : k === 'Shift' && shift ? 'bg-fg text-bg'
         : letter || look.mode === 'number' ? 'bg-fg/10 text-fg'
         : 'bg-fg/20 text-fg'
@@ -311,18 +337,23 @@ function Keyboard({ look, enter, shift, symbols, onKey }: { look: Look; enter: s
     )
   }
 
+  const keys = (
+    <div className={'flex flex-col gap-1.5 w-full mx-auto ' + (look.mode === 'number' ? 'max-w-xs' : 'max-w-md')}>
+      {rows.map((row, r) => (
+        <div key={r} className={'flex gap-1 ' + (look.mode === 'text' && r === 1 && !symbols ? 'px-[4.5%]' : '')}>
+          {[...row].map((k, i) => key(k, i))}
+        </div>
+      ))}
+    </div>
+  )
+  // The letter pad sits in a bar its screen makes; the full keyboard brings its own.
+  if (pad) return <div data-activity="typing" className="select-none">{keys}</div>
   return (
     <div
       data-activity="typing"
       className="shrink-0 border-t border-fg/10 bg-bg px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] animate-keys-up"
     >
-      <div className={'flex flex-col gap-1.5 w-full mx-auto ' + (look.mode === 'number' ? 'max-w-xs' : 'max-w-md')}>
-        {rows.map((row, r) => (
-          <div key={r} className={'flex gap-1 ' + (look.mode === 'text' && r === 1 && !symbols ? 'px-[4.5%]' : '')}>
-            {[...row].map((k, i) => key(k, i))}
-          </div>
-        ))}
-      </div>
+      {keys}
     </div>
   )
 }

@@ -22,6 +22,7 @@ import m0019 from './migrations/0019_nudge.sql?raw'
 import m0020 from './migrations/0020_records.sql?raw'
 import m0021 from './migrations/0021_crossword.sql?raw'
 import m0022 from './migrations/0022_rebuild_crossword.sql?raw'
+import m0023 from './migrations/0023_crossword_archive.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -91,6 +92,7 @@ beforeAll(async () => {
   await db.exec(m0020)
   await db.exec(m0021)
   await db.exec(m0022)
+  await db.exec(m0023)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -902,11 +904,8 @@ describe('our crossword', () => {
     expect(seen.cells['0,2']).toBeUndefined()
     expect(seen.solvedAt).not.toBeNull()
     await expect(call(EVE, 'fill_crossword', [week, { '0,0': 'Q' }])).rejects.toThrow(/not paired/)
-    // Rebuilding (for testing): cleared, and the next one saved stands.
-    await expect(call(EVE, 'reset_crossword', [week])).rejects.toThrow(/not paired/)
-    await call(ALEX, 'reset_crossword', [week])
-    expect(await call(SAM, 'crossword', [week])).toEqual({ state: 'none', used: [] })
-    expect((await call(SAM, 'start_crossword', [week, puzzle(['DOG'], { '0,0': 'D' })])).puzzle.answers).toEqual(['DOG'])
+    // The testing rebuild is gone (0023): a week's crossword stays as built.
+    await expect(call(ALEX, 'reset_crossword', [week])).rejects.toThrow(/does not exist/)
     await call(SAM, 'leave_couple')
   })
 
@@ -923,6 +922,33 @@ describe('our crossword', () => {
     await expect(call(SAM, 'start_crossword', [week, { v: 1 }])).rejects.toThrow(/not a crossword/)
     await call(SAM, 'start_crossword', [lastWeek, puzzle(['MALTA', 'CURRY'], { '0,0': 'M' })])
     expect((await call(ALEX, 'crossword', [week])).used.sort()).toEqual(['CURRY', 'MALTA'])
+    await call(SAM, 'leave_couple')
+  })
+
+  it('keeps every week to look back on, and an old one can still be finished', async () => {
+    expect(await call(EVE, 'crossword_weeks')).toEqual([])
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    const week = monday()
+    const last = new Date(`${week}T12:00:00Z`)
+    last.setUTCDate(last.getUTCDate() - 7)
+    const lastWeek = last.toISOString().slice(0, 10)
+    await call(SAM, 'start_crossword', [lastWeek, { ...puzzle(['CAT'], { '0,0': 'C', '0,1': 'A', '0,2': 'T' }), w: 3, h: 1, entries: [{ n: 1 }] }])
+    await call(ALEX, 'start_crossword', [week, { ...puzzle(['OX'], { '0,0': 'O', '1,0': 'X' }), w: 1, h: 2 }])
+    await call(SAM, 'fill_crossword', [lastWeek, { '0,0': 'C' }])
+    await call(ALEX, 'fill_crossword', [lastWeek, { '0,1': 'A' }])
+
+    const weeks = await call(SAM, 'crossword_weeks')
+    expect(weeks.map((w: { week: string }) => w.week)).toEqual([week, lastWeek]) // newest first
+    expect(weeks[1]).toEqual({
+      week: lastWeek, w: 3, h: 1, clues: 1, squares: ['0,0', '0,1', '0,2'],
+      cells: { '0,0': true, '0,1': false }, // whose, never the letters
+      solvedAt: null,
+    })
+    // Last week's, finished now.
+    const done = await call(ALEX, 'fill_crossword', [lastWeek, { '0,2': 'T' }])
+    expect(done.solvedAt).not.toBeNull()
+    expect((await call(SAM, 'crossword_weeks'))[1].solvedAt).not.toBeNull()
     await call(SAM, 'leave_couple')
   })
 })

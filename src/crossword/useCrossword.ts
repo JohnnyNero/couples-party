@@ -5,8 +5,9 @@ import { makeRng } from '../engine/rng'
 import { buildCrossword } from './build'
 import { balanced, generalCandidates, harvest } from './harvest'
 
-// This week's crossword: fetched, built (by whichever phone opens it first that week),
-// and kept in step with your partner's letters. Letters you type show straight away and
+// A week's crossword — this one unless `pick` names another: fetched, built (this week's,
+// by whichever phone opens it first), and kept in step with your partner's letters. An
+// older week is only ever opened, never built. Letters you type show straight away and
 // are sent a moment later, in a batch; while the crossword's open, your partner's come
 // in every few seconds.
 
@@ -46,9 +47,10 @@ async function buildAndStart(week: string, used: string[], today: string): Promi
   return api.startCrossword(week, puzzle)
 }
 
-export function useCrossword(live: boolean) {
+export function useCrossword(live: boolean, pick?: string) {
   const today = localDate()
-  const week = mondayOf(today)
+  const week = pick ?? mondayOf(today)
+  const current = week === mondayOf(today)
   const [status, setStatus] = useState<CrosswordStatus>({ kind: 'loading' })
   const names = useRef<{ me: string; partner: string }>({ me: '', partner: '' })
   const pending = useRef<Record<string, string>>({})
@@ -72,14 +74,17 @@ export function useCrossword(live: boolean) {
       if (profile.state !== 'paired') { setStatus({ kind: 'off' }); return }
       names.current = { me: profile.me.name, partner: profile.partner.name }
       let st = await api.crossword(week)
-      if (st.state === 'none') st = await buildAndStart(week, st.used, today)
+      if (st.state === 'none') {
+        if (!current) { setStatus({ kind: 'off' }); return }
+        st = await buildAndStart(week, st.used, today)
+      }
       accept(st)
     } catch (e) {
       const kind = (e as { kind?: string }).kind
       if (kind === 'setup') setStatus({ kind: 'off' })
       else setStatus({ kind: 'error', message: (e as Error).message })
     }
-  }, [week, today, accept])
+  }, [week, today, current, accept])
 
   useEffect(() => { void load() }, [load])
 
@@ -122,18 +127,5 @@ export function useCrossword(live: boolean) {
   // Anything still waiting goes before the screen does.
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); flush() } }, [flush])
 
-  // Testing: throw this week's away and build it again from your answers as they are now.
-  const rebuild = useCallback(async () => {
-    pending.current = {}
-    setStatus({ kind: 'loading' })
-    try {
-      await api.resetCrossword(week)
-      const st = await api.crossword(week)
-      accept(st.state === 'none' ? await buildAndStart(week, st.used, today) : st)
-    } catch (e) {
-      setStatus({ kind: 'error', message: (e as Error).message })
-    }
-  }, [week, today, accept])
-
-  return { status, week, fill, rebuild, reload: load }
+  return { status, week, fill, reload: load }
 }

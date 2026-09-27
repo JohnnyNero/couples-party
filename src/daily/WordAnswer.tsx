@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, DailyError } from './api'
 import { localDate } from './dates'
-import { Keyboard, TileRow } from './Tiles'
+import { TileRow } from './Tiles'
+import { LetterPad } from '../ui/keys'
 import { cleanWord, loadWords, MAX_LENGTH, MIN_LENGTH } from './wordle'
 
 // Answering today's question: five or six letters on the same keyboard they'll solve it on,
@@ -96,7 +97,7 @@ export function WordAnswer({
             <div className="h-6 text-sm font-bold text-accent-ink text-center">{note}</div>
           </div>
           <div className="shrink-0 px-2 pb-5">
-            <Keyboard onKey={onKey} disabled={busy} />
+            <LetterPad onKey={onKey} disabled={busy} />
           </div>
         </>
       )}

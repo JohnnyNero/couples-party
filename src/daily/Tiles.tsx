@@ -1,5 +1,4 @@
 import type { Mark } from './wordle'
-import { buzz } from '../ui/haptics'
 
 // One row of letter tiles — five or six, as long as the answer. Coloured to match NYT
 // Wordle rather than the app's usual accent: green is right place, yellow is in the
@@ -66,48 +65,3 @@ export function TileRow({
   )
 }
 
-export function Keyboard({
-  onKey,
-  states,
-  disabled = false,
-}: {
-  onKey: (key: string) => void
-  states?: Map<string, Mark>
-  disabled?: boolean
-}) {
-  const rows = ['qwertyuiop', 'asdfghjkl', '+zxcvbnm-']
-  return (
-    <div className="flex flex-col gap-1.5 w-full max-w-md mx-auto select-none">
-      {rows.map((row) => (
-        <div key={row} className="flex justify-center gap-1">
-          {[...row].map((k) => {
-            const wide = k === '+' || k === '-'
-            const mark = states?.get(k)
-            return (
-              <button
-                key={k}
-                type="button"
-                disabled={disabled}
-                onClick={() => { buzz('tap'); onKey(k === '+' ? 'Enter' : k === '-' ? 'Backspace' : k) }}
-                className={
-                  'h-12 rounded-md font-bold uppercase press disabled:opacity-50 ' +
-                  (wide ? 'px-2 text-[0.65rem] tracking-wider flex-[1.5]' : 'flex-1 text-base') +
-                  ' ' +
-                  (mark === 'g'
-                    ? 'bg-correct text-white'
-                    : mark === 'y'
-                      ? 'bg-present text-white'
-                      : mark === '.'
-                        ? 'bg-absent text-white'
-                        : 'bg-fg/10 text-fg')
-                }
-              >
-                {k === '+' ? 'Enter' : k === '-' ? '⌫' : k}
-              </button>
-            )
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}

@@ -12,6 +12,8 @@ import { Avatar, inkOf } from '../ui/Avatar'
 import { card, eyebrow } from '../ui/styles'
 import { Loading } from '../ui/Loading'
 import { SESSION_NAMES } from '../engine/roster'
+import { CrosswordShelf } from '../crossword/Archive'
+import { ErrorBoundary } from '../ui/ErrorBoundary'
 
 // Everything you've played together, newest first: each night's session, and the daily
 // puzzles under the day they were for. Nothing here is new data — the sessions are what
@@ -72,6 +74,7 @@ export function MemoriesTab() {
 
   return (
     <div className="flex flex-col gap-6 pt-1">
+      <ErrorBoundary quiet><CrosswordShelf /></ErrorBoundary>
       {days.length === 0 && (
         <Empty>
           Nothing yet. Play Today’s games together and it's kept here as you go; the daily puzzles

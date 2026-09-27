@@ -88,7 +88,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
     // The server doesn't have board() yet (migration 0010) — the one-a-day slot still works.
     if (status.error.kind === 'setup') return <TodayPuzzle />
     return (
-      <Card title="Today">
+      <Card title="Puzzles">
         <div className="text-sm text-fg/60">{status.error.message}</div>
         <button onClick={() => void refresh()} className="mt-3 text-sm uppercase tracking-widest text-accent-ink font-bold">
           Try again
@@ -185,7 +185,7 @@ function Scoreboard({ d }: { d: Extract<BoardData, { state: 'paired' }> }) {
   return (
     <section className={card + ' px-4 py-4 flex flex-col gap-3'}>
       <div className="flex items-center justify-between gap-3">
-        <div className="font-display text-[1.05rem] font-bold whitespace-nowrap">Today</div>
+        <div className="font-display text-[1.05rem] font-bold whitespace-nowrap">Puzzles</div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
             {played.map((p, i) => (

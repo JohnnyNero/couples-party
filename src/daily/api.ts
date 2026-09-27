@@ -201,6 +201,18 @@ export type CrosswordState =
   | { state: 'none'; used: string[] }
   | { state: 'ready'; puzzle: import('../crossword/build').Puzzle; cells: Record<string, { l: string; mine: boolean }>; solvedAt: string | null; used: string[] }
 
+// Every week's crossword, small (migration 0023): its shape, whose each filled square
+// is (true: yours) — never the letters — and whether it's done.
+export type CrosswordWeek = {
+  week: string
+  w: number
+  h: number
+  clues: number
+  squares: string[]
+  cells: Record<string, boolean>
+  solvedAt: string | null
+}
+
 // One saved night, for the records page: names and scores by seat (A/B), since which
 // seat was whose can change from night to night.
 export type RecordRow = {
@@ -384,7 +396,7 @@ export const api = {
   crossword: (week: string) => rpc<CrosswordState>('crossword', { p_week: week }),
   startCrossword: (week: string, puzzle: unknown) => rpc<CrosswordState>('start_crossword', { p_week: week, p_puzzle: puzzle }),
   fillCrossword: (week: string, cells: Record<string, string>) => rpc<CrosswordState>('fill_crossword', { p_week: week, p_cells: cells }),
-  resetCrossword: (week: string) => rpc<void>('reset_crossword', { p_week: week }),
+  crosswordWeeks: () => rpc<CrosswordWeek[]>('crossword_weeks'),
   setEither: (forDate: string, questions: string[], picks: number[]) =>
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>

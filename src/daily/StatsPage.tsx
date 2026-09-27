@@ -5,7 +5,7 @@ import { eyebrow } from '../ui/styles'
 
 type Paired = Extract<Board, { state: 'paired' }>
 
-// Opened from "More" on the Today scoreboard: the daily puzzles' numbers, then your
+// Opened from "More" on the Puzzles scoreboard: the daily puzzles' numbers, then your
 // game-night records.
 export function StatsPage({ d, onClose }: { d: Paired; onClose: () => void }) {
   const stats = d.stats ?? null

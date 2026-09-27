@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { initNet, useSession, useMyPlayerId, dispatch } from './net'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { initNet, preloadNet, useSession, useMyPlayerId, dispatch } from './net'
 import { useThemeSync } from './views/ThemeToggle'
 import { refreshProfile, useProfile } from './profile/store'
 import { recordSeen } from './store/seen'
@@ -11,11 +11,14 @@ import { Invite } from './start/Invite'
 import { Logo } from './ui/Logo'
 import { readDeviceLink, readInvite } from './start/invite'
 import { DeviceLink } from './start/DeviceLink'
-import { Duo } from './duo/Duo'
 import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
 import { useRecordTonight } from './share/tonightResult'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
+
+// The game side (every game's screens) loads when a game starts, not with Home.
+const loadDuo = () => import('./duo/Duo')
+const Duo = lazy(() => loadDuo().then((m) => ({ default: m.Duo })))
 
 export default function App() {
   // Game and mode both come from the URL (a shared link carries both) or Home. A game
@@ -34,6 +37,12 @@ export default function App() {
   // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
   const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
+  // Once Home is up and settled, fetch the game side in the background, so starting a
+  // game doesn't wait on it (and it's there offline, once the app's installed).
+  useEffect(() => {
+    const id = setTimeout(() => { preloadNet(); void loadDuo().catch(() => {}) }, 2500)
+    return () => clearTimeout(id)
+  }, [])
   // From Home, a game is one step in: back from a game that's over leaves it for Home.
   // Mid-game, back pauses instead (see GameHeader) — this only answers once that's gone.
   useBackLayer(!!game, () => leaveTo(window.location.pathname))
@@ -86,7 +95,7 @@ export default function App() {
     }
     if (!ready) return <Connecting />
     // Duo and solo share a layout: the board on top, your own controller underneath.
-    return <Duo />
+    return <Suspense fallback={<Connecting />}><Duo /></Suspense>
   }
 }
 
