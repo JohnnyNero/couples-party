@@ -25,12 +25,13 @@ describe('checking words', () => {
     expect(findListed('kangaro', ANIMALS.words)).toBe('kangaroo')
     expect(findListed('dig', ANIMALS.words)).toBe(null)
   })
-  it('says what was wrong: the letter, already used, or not on the list', () => {
+  it('says what was wrong: the letter, already used, or rejected — and lets an unlisted answer through, marked', () => {
     const r = roundOf()
-    expect(checkWord(r, 'Rabbit')).toEqual({ ok: true, word: 'rabbit' })
+    expect(checkWord(r, 'Rabbit')).toEqual({ ok: true, word: 'rabbit', listed: true })
     expect(checkWord(r, 'dog')).toEqual({ ok: false, reason: 'letter' })
     expect(checkWord(roundOf({ chain: [{ word: 'rat', by: null }, { word: 'tiger', by: 'A' }] }), 'rat')).toEqual({ ok: false, reason: 'used' })
-    expect(checkWord(r, 'reindeer')).toEqual({ ok: false, reason: 'unknown' })
+    expect(checkWord(r, ' Reindeer ')).toEqual({ ok: true, word: 'Reindeer', listed: false })
+    expect(checkWord(roundOf({ banned: [chainKey('reindeer')] }), 'reindeer')).toEqual({ ok: false, reason: 'rejected' })
   })
   it('falls back a letter when nothing left starts with the last one', () => {
     // Nothing starts with x, so "fox" hands over an o.
@@ -111,6 +112,25 @@ describe('Word Chain', () => {
     expect(s.phase).toBe('CHAIN_RESULT')
     const t = standing(s)
     expect(t.A + t.B).toBe(4 * shown(s, 'chain', CHAIN.winPoints))
+  })
+  it('lets the other reject an answer that isn’t on the list — back to them, same letter, not to be tried again', () => {
+    let s = start()
+    const first = live(s).turn
+    const second = first === 'A' ? 'B' : 'A'
+    const need = live(s).need
+    s = reduce(s, { type: 'CHAIN_WORD', player: first, word: `${need}zzy` }, 2000) // not on the list
+    expect(live(s).chain[live(s).chain.length - 1]).toMatchObject({ word: `${need}zzy`, listed: false, by: first })
+    expect(live(s).turn).toBe(second)
+    expect(reduce(s, { type: 'CHAIN_REJECT', player: first }, 2500)).toBe(s) // not your own
+    s = reduce(s, { type: 'CHAIN_REJECT', player: second }, 3000)
+    expect(live(s).chain).toHaveLength(1)
+    expect(live(s)).toMatchObject({ turn: first, need, reject: { player: first, reason: 'rejected' } })
+    expect(s.phaseEndsAt).toBe(3000 + CHAIN.turnMs[0])
+    s = reduce(s, { type: 'CHAIN_WORD', player: first, word: `${need}zzy` }, 3500)
+    expect(live(s).chain).toHaveLength(1) // rejected once, rejected for the round
+    // A listed answer stands: nothing to reject.
+    s = reduce(s, { type: 'CHAIN_WORD', player: first, word: legal(s) }, 4000)
+    expect(reduce(s, { type: 'CHAIN_REJECT', player: second }, 4500)).toBe(s)
   })
   it('skips itself when the content file has no categories', () => {
     expect(start('chain', []).phase).toBe('DONE')

@@ -159,8 +159,11 @@ export type ClashGame = { rounds: ClashRound[]; current: number }
 // file, so every word is checked instantly — a word that doesn't pass is turned back and
 // you try again, but the clock keeps running. Run out of time and you lose the round.
 export type ChainCategory = { name: string; words: string[] }
-export type ChainLink = { word: string; by: PlayerId | null } // null = the app's opener
-export type ChainReject = { player: PlayerId; word: string; reason: 'letter' | 'used' | 'unknown' }
+// `listed`: on the category's list, so it stands. An answer that isn't (the list can
+// never have every name) still goes in — and the other can reject it on their turn.
+// `need`: the letter it answered, to hand the turn back on if it's rejected.
+export type ChainLink = { word: string; by: PlayerId | null; listed?: boolean; need?: string } // by null = the app's opener
+export type ChainReject = { player: PlayerId; word: string; reason: 'letter' | 'used' | 'unknown' | 'rejected' }
 export type ChainRound = {
   index: number // 1-based
   category: string
@@ -171,6 +174,7 @@ export type ChainRound = {
   loser: PlayerId | null // whoever ran out of time; null while live, or a round nobody could go on
   over: boolean
   reject: ChainReject | null
+  banned?: string[]  // answers rejected this round, by chainKey — not to be tried again
 }
 export type ChainGame = { rounds: ChainRound[]; current: number }
 
@@ -329,6 +333,9 @@ export type Action =
   | { type: 'PICK_DRAW_ANSWER'; player: PlayerId; answer: string }
   | { type: 'DRAW_STROKES'; player: PlayerId; strokes: DrawStroke[] }
   | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }
+  // Word Chain: on your turn, turn back their last answer — one that isn't on the list —
+  // as not a real one. It comes off the chain and the turn goes back to them.
+  | { type: 'CHAIN_REJECT'; player: PlayerId }
   // Draw Your Answer: the drawer counts a guess the auto-match missed ("ramen" for
   // "noodles") — the last one, or the one they tap. Only ever turns a miss into a hit.
   | { type: 'COUNT_IT'; player: PlayerId; index?: number }

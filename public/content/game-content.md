@@ -1017,10 +1017,11 @@ start them the way an answer would finish them: "A …" or "Something …".
 # Word Chain
 
 Take turns naming things in a category, each starting with the last letter of the
-one before. Each "## " is a category and its list is every answer the game accepts:
-a word that isn't on the list is turned back. So a list has to be long enough that
-people rarely say a real answer that's missing — aim for 80+ — and plain enough that
-spelling it is obvious. Lower case; spaces are fine ("guinea pig").
+one before. Each "## " is a category and its list is the answers the game accepts by
+itself. Anything else still goes in, but the other player can reject it on their
+turn — so the longer the list, the fewer arguments. Aim for 80+ (hundreds where the
+category is big, like names), plain enough that spelling it is obvious. Lower case;
+spaces are fine ("guinea pig").
 
 ## Animals
 - aardvark

@@ -3,6 +3,7 @@ import type { ChainReject } from '../engine/state'
 export function rejectText(r: ChainReject, need: string, category: string): string {
   if (r.reason === 'letter') return `"${r.word}" doesn't start with ${need.toUpperCase()}`
   if (r.reason === 'used') return `"${r.word}" is already in the chain`
+  if (r.reason === 'rejected') return `"${r.word}" was rejected — try another`
   return `"${r.word}" isn't on the ${category} list`
 }
 

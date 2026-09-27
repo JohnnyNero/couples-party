@@ -7,7 +7,7 @@ import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
 import { BLUFF, MELD, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
-import { checkWord, nextLetter, turnMs } from './chain'
+import { chainKey, checkWord, nextLetter, rejectable, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
 import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
@@ -1208,12 +1208,27 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         round.reject = { player: action.player, word: typed, reason: check.reason }
         return s
       }
-      round.chain.push({ word: check.word, by: action.player })
+      round.chain.push({ word: check.word, by: action.player, listed: check.listed, need: round.need })
       round.reject = null
       const need = nextLetter(round, check.word)
       if (need === null) return toChainEnd(s, now) // nothing left that could follow: nobody's fault
       round.need = need
       round.turn = other(action.player)
+      return toChainTurn(s, now)
+    }
+    case 'CHAIN_REJECT': {
+      if (state.phase !== 'CHAIN_TURN' || !state.chain) return state
+      const live = state.chain.rounds[state.chain.current]
+      if (live.turn !== action.player) return state
+      const last = rejectable(live)
+      if (!last) return state
+      const s = clone(state)
+      const round = s.chain!.rounds[s.chain!.current]
+      round.chain.pop()
+      round.banned = [...(round.banned ?? []), chainKey(last.word)]
+      round.turn = last.by!
+      round.need = last.need ?? round.need
+      round.reject = { player: last.by!, word: last.word, reason: 'rejected' }
       return toChainTurn(s, now)
     }
     case 'SUBMIT_CIRCLE': {

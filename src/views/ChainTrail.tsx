@@ -20,7 +20,10 @@ export function ChainTrail({ round, max = 8, broken = false }: { round: ChainRou
         return (
           <span key={hidden + i} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-fg/25 text-sm sm:text-xl">→</span>}
-            <span className={'rounded-xl px-2.5 py-0.5 ' + chip + (last ? ' ring-2 ring-fg animate-pop' : ' opacity-70')}>
+            <span
+              className={'rounded-xl px-2.5 py-0.5 ' + chip + (last ? ' ring-2 ring-fg animate-pop' : ' opacity-70') + (l.listed === false ? ' outline-dashed outline-2 outline-offset-2 outline-fg/30' : '')}
+              title={l.listed === false ? 'Not on the list' : undefined}
+            >
               {l.word.slice(0, cut)}
               <span className="underline decoration-[3px] underline-offset-4">{l.word.slice(cut, cut + 1)}</span>
               {l.word.slice(cut + 1)}

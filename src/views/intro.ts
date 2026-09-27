@@ -47,7 +47,7 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
   ],
   chain: [
     'A category, and a word to start from.',
-    'Take turns naming one that starts with the last word’s last letter.',
+    'Take turns naming one that starts with the last word’s last letter. Anything goes — if it’s dodgy, reject it.',
     'Run out of time and your partner takes the round.',
   ],
   bluff: [

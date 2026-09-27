@@ -5,6 +5,7 @@ import { dispatch } from '../../net'
 import { Clock } from '../../screen/Clock'
 import { ChainTrail } from '../../views/ChainTrail'
 import { aLetter, rejectText } from '../../views/chain'
+import { rejectable } from '../../engine/chain'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { eyebrow, field } from '../../ui/styles'
@@ -24,6 +25,8 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
     if (word.trim()) dispatch({ type: 'CHAIN_WORD', player: me, word })
   }
   const reject = round.reject && round.reject.player === round.turn ? round.reject : null
+  // Their last answer, if it isn't on the list: yours to accept (just play on) or reject.
+  const doubtful = rejectable(round)
 
   return (
     <Keys className="h-full" bodyClassName={'px-5 gap-4 ' + (mine ? 'pb-2' : 'pb-6')}>
@@ -39,6 +42,20 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"><ChainTrail round={round} max={5} /></div>
       {mine ? (
         <div className="flex flex-col gap-2">
+          {doubtful && (
+            <div className="flex items-center gap-2 rounded-2xl bg-fg/[0.06] px-3 py-2">
+              <div className="flex-1 min-w-0 text-sm font-bold leading-snug">
+                <span className={'capitalize ' + inkOf(doubtful.by!)}>“{doubtful.word}”</span>
+                <span className="text-fg/60"> isn’t on our list. Real {round.category.toLowerCase()}?</span>
+              </div>
+              <button
+                onClick={() => dispatch({ type: 'CHAIN_REJECT', player: me })}
+                className="press shrink-0 min-h-[40px] px-3.5 rounded-full border-2 border-pa text-pa-ink text-sm font-extrabold"
+              >
+                Reject
+              </button>
+            </div>
+          )}
           <div className="text-center font-display text-2xl font-extrabold">
             Your go · you need <span className={inkOf(me)}>{aLetter(round.need)}</span>
           </div>
@@ -68,6 +85,9 @@ export function PlayChainTurn({ s, me }: { s: SessionState; me: PlayerId }) {
             {theirDoing ?? ''}<TypingDots />
           </div>
           {reject && <div className="mt-2 text-sm font-bold text-fg/50">{rejectText(reject, round.need, round.category)}</div>}
+          {doubtful && doubtful.by === me && (
+            <div className="mt-2 text-sm font-bold text-fg/50">“{doubtful.word}” isn’t on our list — {playerName(s, round.turn)} can reject it</div>
+          )}
         </div>
       )}
     </Keys>
