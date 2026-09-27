@@ -10,6 +10,8 @@ import { Said } from '../../ui/kit'
 import { inkOf } from '../../ui/Avatar'
 import { btnOutline, eyebrow } from '../../ui/styles'
 import { Burst, at, verdictFx } from '../../ui/fx'
+import { ReplayButton } from '../../share/ReplayButton'
+import { drawingReplay } from '../../share/replay'
 
 // The answer, the drawing, the guess. Matching is deliberately strict ("ramen" is not
 // "noodles"), so on a miss the drawer — and only the drawer, whose answer it was — gets
@@ -44,6 +46,20 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
         )}
       </div>
       {canCount && <CountIt me={me} />}
+      {/* The drawing, redrawn as a GIF to send — with what it was, and the guess. */}
+      {me !== null && round.strokes.length > 0 && (
+        <ReplayButton
+          label="Make a replay"
+          make={() => drawingReplay({
+            strokes: round.strokes,
+            drawer: round.drawer,
+            title: `${playerName(s, round.drawer)}’s drawing`,
+            answer: round.answer ?? '',
+            guess: round.guess,
+            guesser: playerName(s, guesser),
+          })}
+        />
+      )}
     </div>
   )
 }

@@ -14,6 +14,7 @@ import { DeviceLink } from './start/DeviceLink'
 import { Duo } from './duo/Duo'
 import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
+import { useRecordDaily } from './share/dailyResult'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
 
 export default function App() {
@@ -97,6 +98,7 @@ function SeenRecorder({ keep, mode }: { keep: boolean; mode: PlayMode }) {
   useKeepProgress(session, useMyPlayerId(), mode, keep)
   useEffect(() => recordSeen(session), [session])
   useKeepMemory(session, keep)
+  useRecordDaily(session, keep)
   useProfileName(keep)
   return null
 }

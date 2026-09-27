@@ -1,0 +1,51 @@
+import { describe, it, expect } from 'vitest'
+import { initialState, type SessionState } from '../engine/state'
+import { reduce } from '../engine/reducer'
+import { roster } from '../engine/roster'
+import { dayIndex } from '../daily/dates'
+import { dailyNumber, dailySeed } from './daily'
+import { cardText, summarise, tierFor } from './card'
+import { PER_GAME } from '../engine/standing'
+
+const joined = (s: SessionState) => {
+  s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 1000)
+  return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 1000)
+}
+const STATEMENTS = Array.from({ length: 20 }, (_, i) => `statement ${i}`)
+
+describe('the daily challenge', () => {
+  it('is numbered from its first day, one a day', () => {
+    expect(dailyNumber(dayIndex('2026-09-27'))).toBe(1)
+    expect(dailyNumber(dayIndex('2026-10-06'))).toBe(10)
+  })
+  it('is the same set, with the same content, for every couple that day', () => {
+    const day = dayIndex('2026-10-01')
+    const one = joined(initialState(dailySeed(day), 'daily', { fingerStatements: STATEMENTS }, day))
+    const two = joined(initialState(dailySeed(day), 'daily', { fingerStatements: STATEMENTS }, day))
+    expect(one).toEqual(two)
+    expect(roster('daily', day).map((e) => e.key).slice(1)).toEqual(['clock', 'circle'])
+  })
+  it('changes game from one day to the next, and has no Lights Out', () => {
+    const games = new Set(Array.from({ length: 7 }, (_, i) => roster('daily', 20000 + i)[0].key))
+    expect(games.size).toBe(7)
+    for (let d = 0; d < 7; d++) expect(roster('daily', 20000 + d).some((e) => e.key === 'lights')).toBe(false)
+  })
+})
+
+describe('the share card', () => {
+  it('names every together score kindly', () => {
+    expect(tierFor(PER_GAME.us * 2 * 1.6, 2)).toBe('Frighteningly us')
+    expect(tierFor(PER_GAME.us * 2, 2)).toBe('In sync')
+    expect(tierFor(0, 2)).toBe('Beautifully different')
+    expect(tierFor(10, 0)).toBe(null)
+  })
+  it('gives nothing away: names, scores and coloured squares, never an answer', () => {
+    let s = joined(initialState(3, 'finger', { fingerStatements: ['I once ate a whole cake'] }))
+    s = { ...s, phase: 'DONE' }
+    const text = cardText(summarise(s, new Date('2026-09-27T20:00:00')))
+    expect(text).toContain('Sam')
+    expect(text).toContain('Alex')
+    expect(text).not.toContain('cake')
+    expect(text.split('\n').length).toBeLessThanOrEqual(6)
+  })
+})

@@ -20,7 +20,7 @@ let solo = false
 export async function initNet(mode: PlayMode, game: Game, roomCode?: string, resume?: Saved | null): Promise<void> {
   solo = mode === 'solo'
   if (!solo) return playroom.initNet(game, roomCode, resume)
-  initLocal(freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
+  initLocal(game === 'daily' ? await loadPacks() : freshen(withIdeas(await loadPacks(), await ideasForGame())), game)
 }
 
 export function useSession(): SessionState {

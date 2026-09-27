@@ -8,7 +8,7 @@ export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' |
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
-export type Game = 'full' | 'tonight' | 'quick' | Exclude<GameKey, 'lights'>
+export type Game = 'full' | 'tonight' | 'quick' | 'daily' | Exclude<GameKey, 'lights'>
 
 export type Phase =
   | 'BOOT' | 'JOIN'

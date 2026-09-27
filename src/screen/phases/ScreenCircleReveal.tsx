@@ -6,6 +6,8 @@ import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
 import { Pips } from '../../ui/kit'
 import { Burst, at, verdictFx } from '../../ui/fx'
+import { ReplayButton } from '../../share/ReplayButton'
+import { circleReplay } from '../../share/replay'
 
 // Both circles side by side, each over a faint copy of the perfect circle that fits it,
 // with the score counting up underneath.
@@ -30,6 +32,18 @@ export function ScreenCircleReveal({ s }: { s: SessionState }) {
       {c.bestOf > 1 && (
         <div className="mt-3"><Pips s={s} wins={wins} need={Math.ceil(c.bestOf / 2)} /></div>
       )}
+      {(round.drawn.A?.length || round.drawn.B?.length) ? (
+        <div className="mt-4">
+          <ReplayButton
+            label="Make a replay"
+            make={() => circleReplay({
+              drawn: { A: round.drawn.A ?? [], B: round.drawn.B ?? [] },
+              names: { A: playerName(s, 'A'), B: playerName(s, 'B') },
+              scores: { A: round.score.A ?? 0, B: round.score.B ?? 0 },
+            })}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -21,6 +21,7 @@ import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
 import { InstallCard } from './InstallCard'
+import { DailyChallenge } from './DailyChallenge'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
@@ -162,6 +163,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
+      <DailyChallenge onPlay={() => onPick('daily')} />
       <InstallCard />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
@@ -275,7 +277,7 @@ const SHORT: Record<GameKey, string> = {
   draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
 }
 
-type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
+type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick' | 'daily'>; blurb: string; meta: string }
 
 const HEAD_TO_HEAD: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },

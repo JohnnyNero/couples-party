@@ -3,6 +3,7 @@ import type { Action, Content, Game, PlayerId, SessionState } from '../engine/st
 import { initialState } from '../engine/state'
 import { reduce } from '../engine/reducer'
 import { dayIndex, localDate } from '../daily/dates'
+import { dailySeed } from '../share/daily'
 import type { Activity, Live } from './live'
 
 // Solo transport: one process, no room, no lobby, no network. The reducer, the timer
@@ -26,7 +27,8 @@ function set(next: SessionState): void {
 }
 
 export function initLocal(content: Content, game: Game): void {
-  state = { ...initialState(Math.floor(Math.random() * 1e9), game, content, dayIndex(localDate())), intros: true }
+  const day = dayIndex(localDate())
+  state = { ...initialState(game === 'daily' ? dailySeed(day) : Math.floor(Math.random() * 1e9), game, content, day), intros: true }
   // The human takes the first seat the moment the app opens; the bot claims the other.
   state = reduce(state, { type: 'JOIN', player: SOLO_PLAYER, name: 'Player 1' }, Date.now())
   emit()
