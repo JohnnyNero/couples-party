@@ -20,6 +20,7 @@ import m0017 from './migrations/0017_this_or_that.sql?raw'
 import m0018 from './migrations/0018_day_prompts.sql?raw'
 import m0019 from './migrations/0019_nudge.sql?raw'
 import m0020 from './migrations/0020_records.sql?raw'
+import m0021 from './migrations/0021_crossword.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -87,6 +88,7 @@ beforeAll(async () => {
   await db.exec(m0018)
   await db.exec(m0019)
   await db.exec(m0020)
+  await db.exec(m0021)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -861,6 +863,59 @@ describe('records', () => {
     expect(rows[0].draw).toBeUndefined() // no drawings — just the numbers
     expect(await call(SAM, 'add_idea', ['describe', 'our first flat'])).toMatchObject({ kind: 'describe' })
     expect(await call(SAM, 'add_idea', ['meld', 'Our go-to snack'])).toMatchObject({ kind: 'meld' })
+    await call(SAM, 'leave_couple')
+  })
+})
+
+describe('our crossword', () => {
+  // The Monday of this week, as the app works it out.
+  const monday = () => {
+    const d = new Date()
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
+    return d.toISOString().slice(0, 10)
+  }
+  const puzzle = (answers: string[], solution: Record<string, string>) => ({ v: 1, answers, solution, entries: [] })
+
+  it('is one grid for the couple: the first saved stands, and both fill it in', async () => {
+    const week = monday()
+    expect(await call(EVE, 'crossword', [week])).toEqual({ state: 'unpaired' })
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    expect(await call(SAM, 'crossword', [week])).toEqual({ state: 'none', used: [] })
+
+    const first = await call(SAM, 'start_crossword', [week, puzzle(['CAT'], { '0,0': 'C', '0,1': 'A', '0,2': 'T' })])
+    expect(first).toMatchObject({ state: 'ready', solvedAt: null })
+    // Alex's phone built its own a moment later: Sam's stands.
+    const second = await call(ALEX, 'start_crossword', [week, puzzle(['DOG'], { '0,0': 'D', '0,1': 'O', '0,2': 'G' })])
+    expect(second.puzzle.answers).toEqual(['CAT'])
+
+    await call(SAM, 'fill_crossword', [week, { '0,0': 'C', '0,1': 'X' }])
+    let seen = await call(ALEX, 'fill_crossword', [week, { '0,1': 'A', '9,9': 'Z', '0,2': 'tt' }])
+    expect(seen.cells).toEqual({ '0,0': { l: 'C', mine: false }, '0,1': { l: 'A', mine: true } }) // not in the grid, not a letter: ignored
+    expect(seen.solvedAt).toBeNull()
+    seen = await call(SAM, 'fill_crossword', [week, { '0,2': 'T' }])
+    expect(seen.solvedAt).not.toBeNull()
+    // Rubbing out doesn't un-solve it.
+    seen = await call(SAM, 'fill_crossword', [week, { '0,2': '' }])
+    expect(seen.cells['0,2']).toBeUndefined()
+    expect(seen.solvedAt).not.toBeNull()
+    await expect(call(EVE, 'fill_crossword', [week, { '0,0': 'Q' }])).rejects.toThrow(/not paired/)
+    await call(SAM, 'leave_couple')
+  })
+
+  it('only takes this week, a real puzzle, and remembers the answers used in other weeks', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    const week = monday()
+    const last = new Date(`${week}T12:00:00Z`)
+    last.setUTCDate(last.getUTCDate() - 7)
+    const lastWeek = last.toISOString().slice(0, 10)
+    const tuesday = new Date(`${week}T12:00:00Z`)
+    tuesday.setUTCDate(tuesday.getUTCDate() + 1)
+    await expect(call(SAM, 'start_crossword', [tuesday.toISOString().slice(0, 10), puzzle([], {})])).rejects.toThrow(/not this week/)
+    await expect(call(SAM, 'start_crossword', [week, { v: 1 }])).rejects.toThrow(/not a crossword/)
+    await call(SAM, 'start_crossword', [lastWeek, puzzle(['MALTA', 'CURRY'], { '0,0': 'M' })])
+    expect((await call(ALEX, 'crossword', [week])).used.sort()).toEqual(['CURRY', 'MALTA'])
     await call(SAM, 'leave_couple')
   })
 })

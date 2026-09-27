@@ -21,6 +21,7 @@ import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
 import { InstallCard } from './InstallCard'
+import { CrosswordCard } from '../crossword/CrosswordCard'
 import { ShareButton } from '../share/ShareButton'
 import { loadTonight } from '../share/tonightResult'
 import { dailyNumber } from '../share/daily'
@@ -165,6 +166,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
+      {paired && <ErrorBoundary quiet><CrosswordCard /></ErrorBoundary>}
       <InstallCard />
       <TonightCard onPlay={() => onPick('tonight')} />
     </div>
