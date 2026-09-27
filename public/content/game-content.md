@@ -488,6 +488,159 @@ the same theme plays differently every time.
 - having breakfast
 - setting alarms
 
+## seven things [you'd|@ would] save in a fire
+- their glasses
+- photo albums
+- their passport
+- their laptop
+- their wallet
+- a childhood teddy
+- jewellery
+- love letters
+- old diaries
+- car keys
+- a hard drive
+- their trainers
+- vinyl records
+- a favourite jumper
+- their partner
+- the toy drawer
+- their birth certificate
+- a houseplant
+- their charger
+- family heirlooms
+
+## seven of [your|@'s] pet hates
+- slow walkers
+- loud eaters
+- reply-all emails
+- queue jumpers
+- bad parking
+- long voice notes
+- speakerphone calls
+- self-checkouts
+- sticky tables
+- wet sleeves
+- tailgaters
+- tiny portions
+- office jargon
+- hand dryers
+- bad grammar
+- slow wifi
+- loud neighbours
+- humble brags
+- unsolicited dick pics
+- sloppy kissers
+
+## seven things [you'd|@ would] do with a million pounds
+- buying a house
+- quitting work
+- travelling the world
+- paying off debts
+- buying a car
+- giving to charity
+- helping family
+- investing it
+- buying a boat
+- starting a business
+- throwing a party
+- going back to uni
+- hiring a chef
+- buying a villa
+- flying first class
+- saving it all
+- keeping it secret
+- buying a pub
+- hiring a cleaner
+- building a sex dungeon
+
+## seven snacks [you|@] can't resist
+- salt and vinegar crisps
+- chocolate buttons
+- cheese on toast
+- sweet popcorn
+- hummus
+- nuts
+- peanut butter
+- ice cream
+- sausage rolls
+- pork scratchings
+- nachos
+- jaffa cakes
+- custard creams
+- doughnuts
+- crumpets
+- cold pizza
+- flapjacks
+- pick and mix
+- kebabs
+- whipped cream
+
+## seven things [you'd|@ would] never do on a date
+- splitting the bill
+- bowling
+- doing karaoke
+- meeting the parents
+- ordering for them
+- eating spaghetti
+- talking about exes
+- getting drunk
+- ice skating
+- rock climbing
+- slow dancing
+- crying
+- turning up late
+- kissing in public
+- playing board games
+- doing an escape room
+- going to the football
+- checking their phone
+- going commando
+- sleeping together
+
+## seven chores [you hate|@ hates] most
+- ironing
+- hoovering
+- washing up
+- taking the bins out
+- cleaning the toilet
+- changing the bed
+- folding laundry
+- dusting
+- cleaning the oven
+- food shopping
+- mopping
+- cleaning windows
+- defrosting the freezer
+- descaling the kettle
+- unblocking the plughole
+- matching socks
+- scrubbing the shower
+- sorting the recycling
+- putting clothes away
+- washing the sex toys
+
+## seven things [you'd|@ would] want in a dream house
+- big bath
+- huge kitchen
+- garden
+- walk-in wardrobe
+- home cinema
+- swimming pool
+- hot tub
+- open fire
+- library
+- games room
+- wine cellar
+- home gym
+- sea view
+- roof terrace
+- walk-in pantry
+- heated floors
+- sauna
+- separate bedrooms
+- soundproof bedroom
+- mirrored ceiling
 
 # Called It
 
