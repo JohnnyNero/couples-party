@@ -36,6 +36,18 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
   const theyFinished = useFirstTime(data.partner.solvedAt ? `crossword-partner-done:${week}` : null)
   const size = Math.min(40, Math.floor((Math.min(window.innerWidth, 480) - 32) / p.w))
   const theirs = solved && view === 'theirs' && data.partner.cells
+  // Check (only offered once every square's filled): the answers that aren't right, as
+  // whole words — never which letter, never what it should be. Worked out as you go, so a
+  // word you fix stops being marked.
+  const [checked, setChecked] = useState(false)
+  const wrong = useMemo(() => {
+    if (!checked || solved) return [] as Entry[]
+    return p.entries.filter((e) => {
+      const sq = squaresOf(e).map(([r, c]) => key(r, c))
+      return sq.every((k) => letterAt(k)) && sq.some((k) => letterAt(k) !== p.solution[k])
+    })
+  }, [checked, solved, p, data.cells]) // eslint-disable-line react-hooks/exhaustive-deps
+  const wrongSquares = useMemo(() => new Set(wrong.flatMap((e) => squaresOf(e).map(([r, c]) => key(r, c)))), [wrong])
 
   const onKey = (k: string) => {
     if (solved) return
@@ -88,6 +100,7 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
             size={size}
             cur={theirs ? null : cur}
             live={theirs ? new Set() : live}
+            wrong={theirs ? new Set() : wrongSquares}
             onTap={(r, c) => { if (!theirs) setCur(tap(p, cur, r, c)) }}
           />
           {cheer && <Shower hearts delay={200} />}
@@ -103,10 +116,21 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
         )}
         {full && (
           <div className="rounded-2xl bg-fg/[0.06] px-4 py-3 text-center text-sm font-bold text-fg/70">
-            All filled in — but something’s not quite right.
+            {!checked ? (
+              <>
+                All filled in — but something’s not quite right.
+                <button onClick={() => setChecked(true)} className="press mt-2 mx-auto block min-h-[40px] px-4 rounded-full border-2 border-fg/25 text-fg text-sm font-extrabold">
+                  Check my answers
+                </button>
+              </>
+            ) : wrong.length > 0 ? (
+              <span className="text-pa-ink">{wrong.length === 1 ? 'One answer isn’t right' : `${wrong.length} answers aren’t right`} — marked in red.</span>
+            ) : (
+              'All filled in — but something’s not quite right.'
+            )}
           </div>
         )}
-        <Clues p={p} me={me} partner={partner} cur={cur} onPick={(e) => { setView('mine'); setCur({ row: e.row, col: e.col, dir: e.dir }) }} />
+        <Clues p={p} me={me} partner={partner} cur={cur} wrong={wrong} onPick={(e) => { setView('mine'); setCur({ row: e.row, col: e.col, dir: e.dir }) }} />
       </div>
 
       {!solved && (
@@ -156,8 +180,8 @@ const dayOf = (iso: string) => {
   return 'on ' + d.toLocaleDateString('en-GB', { weekday: 'long' })
 }
 
-function Grid({ p, letters, ink, size, cur, live, onTap }: {
-  p: Puzzle; letters: Record<string, string>; ink: string; size: number; cur: Cursor | null; live: Set<string>; onTap: (r: number, c: number) => void
+function Grid({ p, letters, ink, size, cur, live, wrong, onTap }: {
+  p: Puzzle; letters: Record<string, string>; ink: string; size: number; cur: Cursor | null; live: Set<string>; wrong: Set<string>; onTap: (r: number, c: number) => void
 }) {
   const numbers = new Map(p.entries.map((e) => [key(e.row, e.col), e.n]))
   const out = []
@@ -172,7 +196,7 @@ function Grid({ p, letters, ink, size, cur, live, onTap }: {
           key={k}
           onClick={() => onTap(r, c)}
           className={'absolute border-2 border-fg flex items-center justify-center font-display font-extrabold ' +
-            (here ? 'bg-accent/40' : live.has(k) ? 'bg-accent/15' : 'bg-card')}
+            (here ? 'bg-accent/40' : wrong.has(k) ? 'bg-pa/25' : live.has(k) ? 'bg-accent/15' : 'bg-card')}
           style={{ left: c * size, top: r * size, width: size + 2, height: size + 2, fontSize: size * 0.58, marginLeft: -1, marginTop: -1 }}
           aria-label={`Square ${r + 1}, ${c + 1}${l ? `: ${l}` : ''}`}
         >
@@ -210,7 +234,7 @@ function ClueBar({ e, me, partner, onPrev, onNext }: { e: Entry; me: string; par
   )
 }
 
-function Clues({ p, me, partner, cur, onPick }: { p: Puzzle; me: string; partner: string; cur: Cursor; onPick: (e: Entry) => void }) {
+function Clues({ p, me, partner, cur, wrong, onPick }: { p: Puzzle; me: string; partner: string; cur: Cursor; wrong: Entry[]; onPick: (e: Entry) => void }) {
   const on = entryAt(p, cur.row, cur.col, cur.dir)
   return (
     <div className="mt-4 grid grid-cols-1 gap-4">
@@ -222,7 +246,10 @@ function Clues({ p, me, partner, cur, onPick }: { p: Puzzle; me: string; partner
               <button key={`${dir}${e.n}`} onClick={() => onPick(e)} className={'text-left flex items-start gap-2 rounded-xl px-2 py-1.5 ' + (e === on ? 'bg-accent/15' : '')}>
                 <span className="w-5 shrink-0 text-right text-sm font-extrabold text-fg/55">{e.n}</span>
                 <Who who={e.who} me={me} partner={partner} />
-                <span className="text-sm leading-snug">{e.clue} <span className="text-fg/45">({e.answer.length})</span></span>
+                <span className="text-sm leading-snug">
+                  {e.clue} <span className="text-fg/45">({e.answer.length})</span>
+                  {wrong.includes(e) && <span className="ml-1.5 text-xs font-extrabold text-pa-ink">✗ not right</span>}
+                </span>
               </button>
             ))}
           </div>
