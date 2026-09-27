@@ -37,7 +37,7 @@ export const SCORING = {
   waveNear: 2, // within 15
   waveConsolation: 2, // a miss wide enough that the guesser deserves something
   calledRight: 1, // Called It: each right call on your partner (scaled like everything)
-  drawCorrect: 6,
+  drawByGuess: [6, 5, 4, 3, 2], // to the guesser, by which of their five goes got it
   likelyAgree: 7, // to each of you, when you named the same person
   mrmrsRight: 8, // to whoever predicted right, as ruled by the person it was about
   bluffSpotted: 7, // to the guesser, for picking the truth
@@ -185,11 +185,13 @@ export function waveAward(round: WaveRound): Award {
 
 // ---------------------------------------------------------------- Draw Your Answer
 
-// The guesser reads the drawing or they don't — no partial credit. A near miss the
-// drawer waves through counts in full.
+// The sooner the guesser reads it, the more it's worth: the first go pays most, the
+// fifth least. A near miss the drawer waves through counts as the go it was.
 export function drawAward(round: DrawRound): Award {
-  if (round.correct === null) return null
-  return round.correct ? { player: other(round.drawer), points: SCORING.drawCorrect } : null
+  if (!round.correct) return null
+  const at = round.hitAt ?? 1
+  const points = SCORING.drawByGuess[Math.min(SCORING.drawByGuess.length, Math.max(1, at)) - 1]
+  return { player: other(round.drawer), points }
 }
 
 // ---------------------------------------------------------------- The board
@@ -244,8 +246,9 @@ export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   mrmrs: { you: 7.2, us: 0.9 },
   // Per clue: 6/4/2 to the clue-giver by how close, 2 to the guesser for a wide miss.
   wave: { you: 2, us: 0.7 },
-  // Per drawing: 6 to the guesser, half the time.
-  draw: { you: 3, us: 0.5 },
+  // Per drawing: 6 down to 2 to the guesser by which go got it — got about 70% of the
+  // time, somewhere in the first four goes.
+  draw: { you: 3.15, us: 0.7 },
   // Per round: six categories each, 2 for a unique answer (about 60% of them); matching
   // answers are the team's.
   clash: { you: 14.4, us: 0.8 },

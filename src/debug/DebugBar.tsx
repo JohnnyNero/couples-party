@@ -79,12 +79,10 @@ export function DebugBar({ s }: { s: SessionState }) {
         <button
           className={btn}
           onClick={() => {
-            for (const p of ['A', 'B'] as const) {
-              dispatch({ type: 'SUBMIT_DRAWING', player: p, answer: 'debug', strokes: [[[0.2, 0.2], [0.8, 0.8]]] })
-            }
+            dispatch({ type: 'PICK_DRAW_ANSWER', player: s.draw!.rounds[s.draw!.current].drawer, answer: 'debug' })
           }}
         >
-          fill-drawing
+          fill-answer
         </button>
       )}
       {s.phase === 'DRAW_GUESS' && s.draw && (

@@ -1,5 +1,6 @@
 import type { Action, PlayerId, SessionState } from '../engine/state'
 import { other } from '../engine/state'
+import { DRAW } from '../engine/phases'
 import { currentAct, currentItem, lowestFreeSlot } from '../engine/list'
 import { freeFor } from '../engine/chain'
 import { pairOf } from '../engine/reducer'
@@ -96,22 +97,27 @@ export function nextBotAction(
     case 'DRAW_SKETCH': {
       const d = s.draw
       if (!d) return null
-      if (!pairOf(d).some((r) => r.drawer === me && r.answer === null)) return null
-      // A single scribbled stroke — good enough for a testing seat, never a real guess.
-      return {
-        type: 'SUBMIT_DRAWING',
-        player: me,
-        answer: pickFrom(rng, brain.nouns),
-        strokes: [[[0.2, 0.2], [0.8, 0.8]]],
-      }
+      const round = d.rounds[d.current]
+      if (round.drawer !== me || round.answer !== null) return null
+      return { type: 'PICK_DRAW_ANSWER', player: me, answer: pickFrom(rng, brain.nouns) }
     }
 
     case 'DRAW_GUESS': {
       const d = s.draw
       if (!d) return null
       const round = d.rounds[d.current]
-      if (other(round.drawer) !== me || round.guess !== null) return null
-      return { type: 'SUBMIT_DRAW_GUESS', player: me, text: pickFrom(rng, brain.nouns) }
+      // Drawing: a few scribbled strokes, one at a time — good enough for a testing seat.
+      if (round.drawer === me) {
+        if (round.strokes.length >= 3) return null
+        const x = 0.2 + rng() * 0.3
+        const y = 0.2 + rng() * 0.3
+        return { type: 'DRAW_STROKES', player: me, strokes: [...round.strokes, [[x, y], [x + 0.3, y + 0.25], [x + 0.1, y + 0.45]]] }
+      }
+      const guesses = round.guesses ?? []
+      if (round.hitAt || guesses.length >= DRAW.maxGuesses) return null
+      // A testing seat, so it can peek: now and then it gets it, to try the scoring.
+      const text = round.answer && rng() < 0.3 ? round.answer : pickFrom(rng, brain.nouns)
+      return { type: 'SUBMIT_DRAW_GUESS', player: me, text }
     }
 
     case 'CLASH_WRITE': {

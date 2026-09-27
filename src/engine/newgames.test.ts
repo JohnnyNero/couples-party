@@ -142,8 +142,7 @@ describe('tonight', () => {
       if (!seen.includes(s.phase)) seen.push(s.phase)
       if (s.phase.endsWith('_RESULT') || s.phase === 'LIGHTS_OUT') s = cont(s)
       else if (s.phase === 'DRAW_SKETCH') {
-        s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'noodles', strokes: [] }, 1000 * i)
-        s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: 'noodles', strokes: [] }, 1000 * i)
+        s = reduce(s, { type: 'PICK_DRAW_ANSWER', player: s.draw!.rounds[s.draw!.current].drawer, answer: 'noodles' }, 1000 * i)
       } else s = reduce(s, { type: 'TIMEOUT' }, 1000 * i)
     }
     return { s, seen }

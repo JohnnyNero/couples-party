@@ -19,9 +19,9 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   WAVE_CLUE: 75000,   // the clue-giver has to come up with a whole clue
   WAVE_GUESS: 60000,  // weighing up where on the scale they meant
   WAVE_REVEAL: 7000,
-  DRAW_SKETCH: 80000, // decide your answer, then draw it with one finger
-  DRAW_GUESS: 35000,  // typing a guess is faster than drawing was
-  DRAW_REVEAL: 10000, // long enough for the drawer to wave through a near miss
+  DRAW_SKETCH: 40000, // the drawer decides what they'll draw — their answer, typed
+  DRAW_GUESS: 75000,  // drawing it while the other watches and guesses
+  DRAW_REVEAL: 12000, // long enough to look over the guesses, and wave one through
   CLASH_WRITE: 90000, // six answers, one letter (the reveal waits for taps)
   BLUFF_WRITE: 180000, // three things to make up (or own up to) — the reveal waits for taps
   BLUFF_PICK: 45000,  // three to choose from
@@ -67,6 +67,8 @@ export const MELD = {
 
 export const DRAW = {
   guessMaxLen: 30,  // a guess, not a sentence
+  maxGuesses: 5,    // goes at it while it's being drawn
+  maxPoints: 4000,  // of a whole drawing — a busy one still stays small on the wire
 }
 
 export const FILLER = {

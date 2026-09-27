@@ -34,10 +34,15 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
   const [pending, setPending] = useState<string | null>(null)
 
   const act = currentAct(s)
+  const round = s.draw?.rounds[s.draw.current]
   const key = [
     s.phase,
     s.listActs.length,
     act?.placeIndex ?? 0,
+    // Draw Your Answer moves on inside one phase: each stroke, each guess.
+    s.draw?.current ?? 0,
+    round?.strokes.length ?? 0,
+    round?.guesses?.length ?? 0,
   ].join('|')
 
   // Keyed on the decision point, so an ordinary re-render never restarts the clock the
@@ -69,7 +74,7 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
 
 function botActivity(phase: SessionState['phase']): ActivityKind | null {
   if (/WRITE|ANSWER|CLUE|GUESS|CHAIN_TURN|MM_/.test(phase)) return phase === 'WAVE_GUESS' ? 'deciding' : 'typing'
-  if (phase === 'DRAW_SKETCH' || phase === 'CIRCLE_DRAW') return 'drawing'
+  if (phase === 'CIRCLE_DRAW') return 'drawing'
   if (/ROUND|PICK|PLACE/.test(phase)) return 'thinking'
   return null
 }

@@ -36,9 +36,9 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
     `They rule on your guess. Right scores you ${pts('mrmrs', SCORING.mrmrsRight)}, and the team ${team('mrmrs', 1)}.`,
   ],
   draw: [
-    'You each get a question about yourself — say, your dream pet.',
-    'At the same time, answer it in secret and draw your answer. No words.',
-    `Then one at a time, the other gets one guess. Getting it scores ${pts('draw', SCORING.drawCorrect)}.`,
+    'Take turns: a question about yourself — say, your dream pet. Answer it in secret.',
+    'Then draw your answer against the clock, while the other watches it appear. No words.',
+    `They get five guesses as you go: first go scores ${pts('draw', SCORING.drawByGuess[0])}, the fifth ${pts('draw', SCORING.drawByGuess[4])}.`,
   ],
   clash: [
     'A letter and six categories.',

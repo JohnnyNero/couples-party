@@ -6,23 +6,24 @@ import { dispatch, useMyPlayerId } from '../../net'
 import { DrawingCanvas } from '../../views/DrawingCanvas'
 import { drawQuestion } from '../../views/draw'
 import { playerName } from '../../views/list'
-import { Said } from '../../ui/kit'
 import { inkOf } from '../../ui/Avatar'
 import { btnOutline, eyebrow } from '../../ui/styles'
 import { Burst, at, verdictFx } from '../../ui/fx'
 import { ReplayButton } from '../../share/ReplayButton'
 import { drawingReplay } from '../../share/replay'
 
-// The answer, the drawing, the guess. Matching is deliberately strict ("ramen" is not
-// "noodles"), so on a miss the drawer — and only the drawer, whose answer it was — gets
-// a button to count it anyway. That's the argument this reveal is here to start.
+// The answer, the drawing, and every guess at it — the one that got it, and on which
+// go. Matching is deliberately strict ("ramen" is not "noodles"), so on a miss the
+// drawer — and only the drawer, whose answer it was — can tap a guess to count it
+// anyway. That's the argument this reveal is here to start.
 export function ScreenDrawReveal({ s }: { s: SessionState }) {
   const me = useMyPlayerId()
   const d = s.draw!
   const round = d.rounds[d.current]
   const award = drawAward(round)
   const guesser = other(round.drawer)
-  const canCount = me === round.drawer && !round.correct && !!round.guess && !!round.answer
+  const guesses = round.guesses ?? (round.guess ? [round.guess] : [])
+  const canCount = me === round.drawer && !round.correct && guesses.length > 0 && !!round.answer
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-4 text-center">
       <div>
@@ -32,7 +33,23 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
         </div>
       </div>
       <DrawingCanvas strokes={round.strokes} />
-      {round.guess ? <Said s={s} p={guesser}>{round.guess}</Said> : <div className="font-bold text-fg/50">{playerName(s, guesser)} didn’t guess</div>}
+      {guesses.length === 0 ? (
+        <div className="font-bold text-fg/50">{playerName(s, guesser)} didn’t guess</div>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {guesses.map((g, i) => {
+            const hit = round.correct && round.hitAt === i + 1
+            const chip = 'px-3 py-1 rounded-full text-sm font-extrabold ' + (hit ? 'bg-sage-soft text-sage-ink animate-pop' : 'bg-fg/[0.07] line-through decoration-2 ' + inkOf(guesser))
+            return canCount ? (
+              <button key={i} onClick={() => dispatch({ type: 'COUNT_IT', player: me!, index: i })} className={chip + ' press'} title="Count this one">
+                {g}
+              </button>
+            ) : (
+              <span key={i} style={at(300 + i * 120)} className={chip}>{hit ? `${g} ✓ · go ${i + 1}` : g}</span>
+            )
+          })}
+        </div>
+      )}
       <div className="relative">
         {award && <Burst delay={1000} />}
         {award ? (
@@ -45,7 +62,7 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
           </span>
         )}
       </div>
-      {canCount && <CountIt me={me} />}
+      {canCount && <div className="text-sm font-bold text-fg/60">Near enough? Tap the guess to count it.</div>}
       {/* The drawing, redrawn as a GIF to send — with what it was, and the guess. */}
       {me !== null && round.strokes.length > 0 && (
         <ReplayButton
@@ -64,9 +81,9 @@ export function ScreenDrawReveal({ s }: { s: SessionState }) {
   )
 }
 
-export function CountIt({ me }: { me: 'A' | 'B' }) {
+export function CountIt({ me, index }: { me: 'A' | 'B'; index?: number }) {
   return (
-    <button onClick={() => dispatch({ type: 'COUNT_IT', player: me })} className={btnOutline}>
+    <button onClick={() => dispatch({ type: 'COUNT_IT', player: me, index })} className={btnOutline}>
       Close enough — count it
     </button>
   )

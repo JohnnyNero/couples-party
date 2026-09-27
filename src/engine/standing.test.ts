@@ -172,8 +172,10 @@ describe('gameScores', () => {
 })
 
 describe('drawAward', () => {
-  it('pays the guesser for reading the drawing, and nothing for missing it', () => {
-    expect(drawAward(dRound('A', true))).toEqual({ player: 'B', points: SCORING.drawCorrect })
+  it('pays the guesser for reading the drawing — more the sooner — and nothing for missing it', () => {
+    expect(drawAward({ ...dRound('A', true), hitAt: 1 })).toEqual({ player: 'B', points: SCORING.drawByGuess[0] })
+    expect(drawAward({ ...dRound('A', true), hitAt: 5 })).toEqual({ player: 'B', points: SCORING.drawByGuess[4] })
+    expect(SCORING.drawByGuess[0]).toBeGreaterThan(SCORING.drawByGuess[4])
     expect(drawAward(dRound('A', false))).toBe(null)
     expect(drawAward(dRound('A', null))).toBe(null)
   })

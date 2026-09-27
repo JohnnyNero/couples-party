@@ -46,7 +46,7 @@ export function useSession(): SessionState {
 // things on. The bot acts through `dispatch` too, and passes `quiet` — its moves aren't
 // yours to feel.
 const LOCK = new Set<Action['type']>([
-  'SUBMIT_GUESS', 'SUBMIT_CLUE', 'SUBMIT_DRAWING', 'SUBMIT_DRAW_GUESS', 'SUBMIT_CALLED', 'SUBMIT_MRMRS',
+  'SUBMIT_GUESS', 'SUBMIT_CLUE', 'PICK_DRAW_ANSWER', 'SUBMIT_DRAW_GUESS', 'SUBMIT_CALLED', 'SUBMIT_MRMRS',
   'SUBMIT_CLASH', 'SUBMIT_BLUFF', 'SUBMIT_MELD', 'SUBMIT_CIRCLE', 'PICK_LIKELY', 'PICK_BLUFF', 'PLACE_ITEM',
   'CHAIN_WORD', 'STOP_CLOCK', 'JUDGE', 'CHALLENGE', 'COUNT_IT', 'COUNT_MELD', 'DESCRIBE_GOT',
 ])

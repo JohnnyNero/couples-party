@@ -96,8 +96,9 @@ export type WaveGame = {
 }
 
 // Draw Your Answer: the drawer gets a question about themselves ("your comfort food"),
-// privately types their one-word answer, then draws it; the other guesses. Getting it
-// right takes a readable drawing AND knowing them. Role alternates every round.
+// privately types their answer, then draws it against the clock while the other watches
+// it come together and guesses — up to five goes, the sooner the better. Getting it
+// takes a readable drawing AND knowing them. Role alternates every round.
 export type DrawPrompt = { id: string; text: string }
 export type DrawStroke = [number, number][] // points normalized 0..1 within the canvas
 
@@ -106,8 +107,10 @@ export type DrawRound = {
   drawer: PlayerId
   promptId: string        // the question, not the answer
   answer: string | null   // the drawer's own secret answer — what the drawing is OF
-  strokes: DrawStroke[]   // [] until the drawer submits (or times out with nothing)
-  guess: string | null
+  strokes: DrawStroke[]   // every finished stroke so far, kept as the drawer goes
+  guesses?: string[]      // the guesser's, in order — up to DRAW.maxGuesses
+  hitAt?: number | null   // which guess got it (1 = the first), or null
+  guess: string | null    // the one that got it, else the last one
   correct: boolean | null // set at reveal; the drawer can still count a near miss
 }
 export type DrawGame = {
@@ -321,13 +324,14 @@ export type Action =
   // Wavelength: the psychic's one clue, then the guesser's position on the spectrum.
   | { type: 'SUBMIT_CLUE'; player: PlayerId; text: string }
   | { type: 'SUBMIT_GUESS'; player: PlayerId; value: number }
-  // Quick Draw: the drawer's finished sketch (empty strokes on a timeout), then the
-  // guesser's one text guess at the prompt.
-  | { type: 'SUBMIT_DRAWING'; player: PlayerId; answer: string; strokes: DrawStroke[] }
-  // Draw Your Answer: the drawer counts a guess the auto-match missed ("ramen" for
-  // "noodles"). Only ever turns a miss into a hit, never the other way.
-  | { type: 'COUNT_IT'; player: PlayerId }
+  // Draw Your Answer: the drawer's secret answer; then their strokes so far, sent as
+  // each one's finished; the guesser's guesses, as many as they get, while it's drawn.
+  | { type: 'PICK_DRAW_ANSWER'; player: PlayerId; answer: string }
+  | { type: 'DRAW_STROKES'; player: PlayerId; strokes: DrawStroke[] }
   | { type: 'SUBMIT_DRAW_GUESS'; player: PlayerId; text: string }
+  // Draw Your Answer: the drawer counts a guess the auto-match missed ("ramen" for
+  // "noodles") — the last one, or the one they tap. Only ever turns a miss into a hit.
+  | { type: 'COUNT_IT'; player: PlayerId; index?: number }
   // Shortlist's reveal walks the items one at a time, on a tap from either player —
   // there's no clock on it, so an argument about item four can run as long as it likes.
   | { type: 'ADVANCE_REVEAL'; player: PlayerId }

@@ -493,96 +493,92 @@ const atDrawSketch = () => {
 const STROKE = [[0.1, 0.1], [0.9, 0.9]] as [number, number][]
 
 describe('draw your answer', () => {
-  // A draws first in the pair, B second; both at once.
-  const drawBoth = (s: SessionState, a = 'a house', b = 'a boat', t = 2000) => {
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: a, strokes: [STROKE] }, t)
-    return reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: b, strokes: [STROKE, STROKE] }, t)
-  }
-  it('opens on the first pair, both of you drawing, with a 50s clock', () => {
+  // The drawer picks their answer, then draws it; the other guesses while it's drawn.
+  const pick = (s: SessionState, answer = 'a house', t = 2000) =>
+    reduce(s, { type: 'PICK_DRAW_ANSWER', player: s.draw!.rounds[s.draw!.current].drawer, answer }, t)
+  const guess = (s: SessionState, text: string, t = 3000) =>
+    reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: s.draw!.rounds[s.draw!.current].drawer === 'A' ? 'B' : 'A', text }, t)
+
+  it('opens on the first drawer picking their answer', () => {
     const s = atDrawSketch()
     expect(s.phase).toBe('DRAW_SKETCH')
     expect(s.phaseEndsAt).toBe(1000 + DURATIONS.DRAW_SKETCH!)
     expect(s.draw?.current).toBe(0)
     expect(s.draw?.rounds).toHaveLength(roundsFor({ game: 'draw' }, 'draw'))
   })
-  it('gives you one drawing each in every pair, swapping who goes first', () => {
+  it('takes turns, one drawing at a time, swapping who goes first each pair', () => {
     const s = atDrawSketch()
     expect(s.draw!.rounds.map((r) => r.drawer)).toEqual(['A', 'B', 'B', 'A', 'A', 'B'])
   })
-  it('waits for both drawings, then opens the first guess with the strokes locked', () => {
+  it('starts the drawing clock once the answer is in — only the drawer picks it, and only once', () => {
     let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'a house', strokes: [STROKE] }, 2000)
-    expect(s.phase).toBe('DRAW_SKETCH')
-    expect(reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: 'again', strokes: [] }, 2000)).toBe(s)
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'B', answer: 'a boat', strokes: [STROKE, STROKE] }, 3000)
+    expect(reduce(s, { type: 'PICK_DRAW_ANSWER', player: 'B', answer: 'a boat' }, 2000)).toBe(s)
+    expect(reduce(s, { type: 'PICK_DRAW_ANSWER', player: 'A', answer: '   ' }, 2000)).toBe(s) // it has to be OF something
+    s = pick(s, 'a house', 2000)
     expect(s.phase).toBe('DRAW_GUESS')
-    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.DRAW_GUESS!)
-    expect(s.draw?.current).toBe(0)
-    expect(s.draw?.rounds[0].strokes).toEqual([STROKE])
-    expect(s.draw?.rounds[1].strokes).toEqual([STROKE, STROKE])
+    expect(s.phaseEndsAt).toBe(2000 + DURATIONS.DRAW_GUESS!)
+    expect(s.draw?.rounds[0].answer).toBe('a house')
+  })
+  it('keeps the drawing as the drawer goes, from the drawer only', () => {
+    let s = pick(atDrawSketch())
+    s = reduce(s, { type: 'DRAW_STROKES', player: 'A', strokes: [STROKE] }, 2500)
+    s = reduce(s, { type: 'DRAW_STROKES', player: 'A', strokes: [STROKE, STROKE] }, 2600)
+    expect(s.draw?.rounds[0].strokes).toEqual([STROKE, STROKE])
+    expect(reduce(s, { type: 'DRAW_STROKES', player: 'B', strokes: [] }, 2700)).toBe(s)
+  })
+  it('takes guesses while it is drawn, and a right one ends it — on the go it came', () => {
+    let s = pick(atDrawSketch(), 'noodles')
+    s = guess(s, 'spaghetti')
+    s = guess(s, 'spaghetti') // the same again isn't another go
+    expect(s.draw?.rounds[0].guesses).toEqual(['spaghetti'])
+    expect(s.phase).toBe('DRAW_GUESS')
+    s = guess(s, ' Noodles ', 4000)
+    expect(s.phase).toBe('DRAW_REVEAL')
+    expect(s.phaseEndsAt).toBe(4000 + DURATIONS.DRAW_REVEAL!)
+    expect(s.draw?.rounds[0]).toMatchObject({ correct: true, hitAt: 2, guess: 'Noodles' })
   })
   it('ignores a guess from the drawer', () => {
-    let s = drawBoth(atDrawSketch())
+    let s = pick(atDrawSketch())
     s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'A', text: 'a house' }, 2500)
+    expect(s.draw?.rounds[0].guesses).toEqual([])
+  })
+  it('stops after five goes', () => {
+    let s = pick(atDrawSketch(), 'noodles')
+    for (const g of ['a', 'b', 'c', 'd']) s = guess(s, g)
     expect(s.phase).toBe('DRAW_GUESS')
-    expect(s.draw?.rounds[0].guess).toBe(null)
-  })
-  it('a correct guess reveals with correct: true', () => {
-    let s = drawBoth(atDrawSketch())
-    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: ' A House ' }, 3000)
+    s = guess(s, 'e')
     expect(s.phase).toBe('DRAW_REVEAL')
-    expect(s.phaseEndsAt).toBe(3000 + DURATIONS.DRAW_REVEAL!)
-    expect(s.draw?.rounds[0].guess).toBe('A House')
-    expect(s.draw?.rounds[0].correct).toBe(true)
+    expect(s.draw?.rounds[0]).toMatchObject({ correct: false, hitAt: null, guess: 'e' })
   })
-  it('a wrong guess reveals with correct: false', () => {
-    let s = drawBoth(atDrawSketch())
-    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'a boat' }, 3000)
+  it('lets the drawer count a near miss — the one they tap, as the go it was — and only the drawer', () => {
+    let s = pick(atDrawSketch(), 'noodles')
+    s = guess(s, 'spaghetti')
+    s = guess(s, 'ramen')
+    s = reduce(s, { type: 'TIMEOUT' }, 9000)
     expect(s.draw?.rounds[0].correct).toBe(false)
-  })
-  it("checks the guess against the drawer's own answer, not the question", () => {
-    let s = drawBoth(atDrawSketch(), 'noodles')
-    expect(s.draw?.rounds[0].answer).toBe('noodles')
-    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'Noodles' }, 3000)
-    expect(s.draw?.rounds[0].correct).toBe(true)
-  })
-  it('refuses a drawing with no answer — it has to be OF something', () => {
-    let s = atDrawSketch()
-    s = reduce(s, { type: 'SUBMIT_DRAWING', player: 'A', answer: '   ', strokes: [STROKE] }, 2000)
-    expect(s.draw?.rounds[0].answer).toBe(null)
-  })
-  it('lets the drawer count a near miss, and only the drawer', () => {
-    let s = drawBoth(atDrawSketch(), 'noodles')
-    s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: 'B', text: 'ramen' }, 3000)
-    expect(s.draw?.rounds[0].correct).toBe(false)
-    expect(reduce(s, { type: 'COUNT_IT', player: 'B' }, 3500)).toBe(s) // the guesser can't
-    s = reduce(s, { type: 'COUNT_IT', player: 'A' }, 3500)
-    expect(s.draw?.rounds[0].correct).toBe(true)
+    expect(reduce(s, { type: 'COUNT_IT', player: 'B', index: 1 }, 9500)).toBe(s)
+    s = reduce(s, { type: 'COUNT_IT', player: 'A', index: 1 }, 9500)
+    expect(s.draw?.rounds[0]).toMatchObject({ correct: true, hitAt: 2, guess: 'ramen' })
   })
   it('will not count a guess nobody made', () => {
-    let s = drawBoth(atDrawSketch(), 'noodles')
+    let s = pick(atDrawSketch(), 'noodles')
     s = reduce(s, { type: 'TIMEOUT' }, 3000) // no guess
     expect(reduce(s, { type: 'COUNT_IT', player: 'A' }, 3500)).toBe(s)
   })
-  it('a drawing nobody finishes still lets the round play out, on timeout', () => {
+  it('a drawer who never picks an answer skips straight to the reveal, then the next turn', () => {
     let s = atDrawSketch()
-    s = reduce(s, { type: 'TIMEOUT' }, 5000) // sketch -> guess, nothing drawn
-    expect(s.phase).toBe('DRAW_GUESS')
-    expect(s.draw?.rounds[0].strokes).toEqual([])
-    s = reduce(s, { type: 'TIMEOUT' }, 6000) // guess -> reveal, no guess never matches
+    s = reduce(s, { type: 'TIMEOUT' }, 5000)
     expect(s.phase).toBe('DRAW_REVEAL')
-    expect(s.draw?.rounds[0].correct).toBe(false)
-    s = reduce(s, { type: 'TIMEOUT' }, 7000) // the second drawing of the pair is guessed next
-    expect(s.phase).toBe('DRAW_GUESS')
+    expect(s.draw?.rounds[0]).toMatchObject({ answer: '', correct: false })
+    s = reduce(s, { type: 'TIMEOUT' }, 6000)
+    expect(s.phase).toBe('DRAW_SKETCH')
     expect(s.draw?.current).toBe(1)
   })
   it('advances through every round to DRAW_RESULT, then DONE (standalone)', () => {
     let s = atDrawSketch()
     for (let r = 0; r < roundsFor({ game: 'draw' }, 'draw'); r++) {
-      if (s.phase === 'DRAW_SKETCH') s = drawBoth(s, 'a house', 'a boat', 1000)
-      const round = s.draw!.rounds[s.draw!.current]
-      const guesser = round.drawer === 'A' ? 'B' : 'A'
-      s = reduce(s, { type: 'SUBMIT_DRAW_GUESS', player: guesser, text: 'whatever' }, 1000)
+      s = pick(s, 'a house', 1000)
+      s = guess(s, 'a house', 1000)
       expect(s.phase).toBe('DRAW_REVEAL')
       s = reduce(s, { type: 'TIMEOUT' }, 1000)
     }

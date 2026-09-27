@@ -436,8 +436,8 @@ function currentDrawRound(d: DrawGame) {
   return d.rounds[d.current]
 }
 
-// Generated in full up front — question and drawer for every round, in pairs (one each,
-// drawn at once), so a two-round Tonight is one drawing each.
+// Generated in full up front — question and drawer for every round, taking turns — so a
+// two-round Tonight is one drawing each.
 function beginDraw(state: SessionState, now: number): SessionState {
   const s = clone(state)
   if (s.drawPrompts.length === 0) return skipTo(s, now, 'draw')
@@ -449,6 +449,8 @@ function beginDraw(state: SessionState, now: number): SessionState {
     promptId: prompts[i % prompts.length].id,
     answer: null,
     strokes: [] as DrawStroke[],
+    guesses: [] as string[],
+    hitAt: null,
     guess: null,
     correct: null,
   }))
@@ -458,23 +460,24 @@ function beginDraw(state: SessionState, now: number): SessionState {
   return s
 }
 
-// Both drawings are in (or the clock ran out — a drawing that never came is of nothing,
-// so no guess can match it).
+// The answer's in: now it's drawn, with the other watching and guessing.
 function toDrawGuess(state: SessionState, now: number): SessionState {
   const s = clone(state)
-  for (const round of pairOf(s.draw!)) round.answer ??= ''
   s.phase = 'DRAW_GUESS'
   s.phaseEndsAt = now + DURATIONS.DRAW_GUESS!
   return s
 }
 
-// Checked against what the drawer SAID they were drawing — their own answer, not a
-// fixed word. A near miss can still be counted by the drawer from the reveal.
-function toDrawReveal(state: SessionState, now: number, guess: string): SessionState {
+// Got it, out of guesses, or out of time (or no answer was ever picked — then there's
+// nothing to have got). The guess shown is the one that got it, else the last one.
+function toDrawReveal(state: SessionState, now: number): SessionState {
   const s = clone(state)
   const round = currentDrawRound(s.draw!)
-  round.guess = guess
-  round.correct = isMatch(guess, round.answer)
+  const guesses = round.guesses ?? []
+  round.answer ??= ''
+  round.hitAt ??= null
+  round.correct = round.hitAt !== null
+  round.guess = round.hitAt !== null ? guesses[round.hitAt - 1] : guesses[guesses.length - 1] ?? null
   s.phase = 'DRAW_REVEAL'
   s.phaseEndsAt = now + DURATIONS.DRAW_REVEAL!
   return s
@@ -484,11 +487,23 @@ function advanceDraw(state: SessionState, now: number): SessionState {
   const d = state.draw!
   if (d.current >= d.rounds.length - 1) return toScoreboard(state, 'DRAW_RESULT')
   const s = clone(state)
-  const second = secondOfPair(d)
   s.draw!.current += 1
-  s.phase = second ? 'DRAW_GUESS' : 'DRAW_SKETCH'
-  s.phaseEndsAt = now + DURATIONS[s.phase]!
+  s.phase = 'DRAW_SKETCH'
+  s.phaseEndsAt = now + DURATIONS.DRAW_SKETCH!
   return s
+}
+
+// Kept to a sane size however long the drawer keeps going: the newest strokes win.
+function keepStrokes(strokes: DrawStroke[]): DrawStroke[] {
+  const out: DrawStroke[] = []
+  let n = 0
+  for (let i = strokes.length - 1; i >= 0; i--) {
+    const stroke = strokes[i].filter((pt) => Array.isArray(pt) && Number.isFinite(pt[0]) && Number.isFinite(pt[1]))
+    if (n + stroke.length > DRAW.maxPoints) break
+    n += stroke.length
+    out.unshift(stroke.map(([x, y]) => [Math.min(1, Math.max(0, x)), Math.min(1, Math.max(0, y))] as [number, number]))
+  }
+  return out
 }
 
 // ---------------------------------------------------------------- Category Clash
@@ -1048,37 +1063,54 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       const value = Math.max(0, Math.min(100, Math.round(action.value)))
       return toWaveReveal(state, now, value)
     }
-    case 'SUBMIT_DRAWING': {
-      if (state.phase !== 'DRAW_SKETCH') return state
-      const d = state.draw
-      if (!d) return state
-      const i = pairOf(d).findIndex((r) => r.drawer === action.player && r.answer === null)
-      if (i < 0) return state
+    case 'PICK_DRAW_ANSWER': {
+      if (state.phase !== 'DRAW_SKETCH' || !state.draw) return state
+      const round = currentDrawRound(state.draw)
+      if (action.player !== round.drawer || round.answer !== null) return state
       const answer = action.answer.trim().slice(0, DRAW.guessMaxLen)
       if (answer.length === 0) return state // the drawing has to be OF something
       const s = clone(state)
-      const pair = pairOf(s.draw!)
-      pair[i].answer = answer
-      pair[i].strokes = action.strokes
-      return pair.every((r) => r.answer !== null) ? toDrawGuess(s, now) : s
+      currentDrawRound(s.draw!).answer = answer
+      return toDrawGuess(s, now)
+    }
+    case 'DRAW_STROKES': {
+      if (state.phase !== 'DRAW_GUESS' || !state.draw) return state
+      if (action.player !== currentDrawRound(state.draw).drawer) return state
+      const s = clone(state)
+      currentDrawRound(s.draw!).strokes = keepStrokes(action.strokes ?? [])
+      return s
     }
     case 'SUBMIT_DRAW_GUESS': {
-      if (state.phase !== 'DRAW_GUESS') return state
-      const d = state.draw
-      if (!d) return state
-      const round = currentDrawRound(d)
-      if (action.player !== other(round.drawer) || round.guess !== null) return state
+      if (state.phase !== 'DRAW_GUESS' || !state.draw) return state
+      const round = currentDrawRound(state.draw)
+      const guesses = round.guesses ?? []
+      if (action.player !== other(round.drawer) || round.hitAt || guesses.length >= DRAW.maxGuesses) return state
       const text = action.text.trim().slice(0, DRAW.guessMaxLen)
-      return toDrawReveal(state, now, text)
+      if (text.length === 0) return state
+      // The same guess twice (a resend, a double tap) isn't a second go.
+      if (guesses.some((g) => g.toLowerCase() === text.toLowerCase())) return state
+      const s = clone(state)
+      const r = currentDrawRound(s.draw!)
+      r.guesses = [...guesses, text]
+      if (isMatch(text, r.answer)) {
+        r.hitAt = r.guesses.length
+        return toDrawReveal(s, now)
+      }
+      return r.guesses.length >= DRAW.maxGuesses ? toDrawReveal(s, now) : s
     }
     case 'COUNT_IT': {
       if (state.phase !== 'DRAW_REVEAL' || !state.draw) return state
       const round = currentDrawRound(state.draw)
+      const guesses = round.guesses ?? (round.guess ? [round.guess] : [])
+      const i = action.index ?? guesses.length - 1
       // Only the drawer can wave a guess through, only once, and only a real guess at a
       // real answer.
-      if (action.player !== round.drawer || round.correct || !round.guess || !round.answer) return state
+      if (action.player !== round.drawer || round.correct || !round.answer || !guesses[i]) return state
       const s = clone(state)
-      currentDrawRound(s.draw!).correct = true
+      const r = currentDrawRound(s.draw!)
+      r.hitAt = i + 1
+      r.guess = guesses[i]
+      r.correct = true
       return s
     }
     case 'SUBMIT_CLASH': {
@@ -1260,9 +1292,9 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         case 'WAVE_REVEAL': return advanceWave(state, now)
         // A drawing nobody finished still lets the round play out — sketching nothing,
         // of nothing, so no guess can match it.
-        case 'DRAW_SKETCH': return toDrawGuess(state, now)
+        case 'DRAW_SKETCH': return toDrawReveal(state, now) // no answer, nothing to draw
         // A guess nobody made just misses — an empty guess never accidentally matches.
-        case 'DRAW_GUESS': return toDrawReveal(state, now, currentDrawRound(state.draw!).guess ?? '')
+        case 'DRAW_GUESS': return toDrawReveal(state, now)
         case 'DRAW_REVEAL': return advanceDraw(state, now)
         case 'INTRO': return state.intro ? endIntro(state, now) : state
         case 'CHAIN_TURN': {

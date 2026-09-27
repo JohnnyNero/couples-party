@@ -41,7 +41,7 @@ const SIMS: Partial<Record<GameKey, Sim>> = {
   }),
   draw: (rng, rounds) => ({
     draw: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): DrawRound => ({
-      index: i + 1, drawer: PS[i % 2], promptId: 'd', answer: 'x', strokes: [], guess: 'x', correct: chance(rng, 0.5),
+      index: i + 1, drawer: PS[i % 2], promptId: 'd', answer: 'x', strokes: [], guess: 'x', correct: chance(rng, 0.7), hitAt: 1 + Math.floor(rng() * 4),
     })) },
   }),
   clash: (rng, rounds) => ({
