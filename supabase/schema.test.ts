@@ -21,6 +21,7 @@ import m0018 from './migrations/0018_day_prompts.sql?raw'
 import m0019 from './migrations/0019_nudge.sql?raw'
 import m0020 from './migrations/0020_records.sql?raw'
 import m0021 from './migrations/0021_crossword.sql?raw'
+import m0022 from './migrations/0022_rebuild_crossword.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -89,6 +90,7 @@ beforeAll(async () => {
   await db.exec(m0019)
   await db.exec(m0020)
   await db.exec(m0021)
+  await db.exec(m0022)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -900,6 +902,11 @@ describe('our crossword', () => {
     expect(seen.cells['0,2']).toBeUndefined()
     expect(seen.solvedAt).not.toBeNull()
     await expect(call(EVE, 'fill_crossword', [week, { '0,0': 'Q' }])).rejects.toThrow(/not paired/)
+    // Rebuilding (for testing): cleared, and the next one saved stands.
+    await expect(call(EVE, 'reset_crossword', [week])).rejects.toThrow(/not paired/)
+    await call(ALEX, 'reset_crossword', [week])
+    expect(await call(SAM, 'crossword', [week])).toEqual({ state: 'none', used: [] })
+    expect((await call(SAM, 'start_crossword', [week, puzzle(['DOG'], { '0,0': 'D' })])).puzzle.answers).toEqual(['DOG'])
     await call(SAM, 'leave_couple')
   })
 

@@ -48,7 +48,7 @@ function GameNights() {
   if (records.nights === 0) {
     return (
       <Section title="Game nights">
-        <div className="py-2 text-sm text-fg/60">Play Tonight together and your game-night records start here.</div>
+        <div className="py-2 text-sm text-fg/60">Play Today’s games together and your game-night records start here.</div>
       </Section>
     )
   }

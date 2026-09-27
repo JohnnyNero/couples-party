@@ -17,6 +17,6 @@
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
   ],
   "shortcuts": [
-    { "name": "Play Tonight", "short_name": "Tonight", "url": "./?mode=duo&game=tonight", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+    { "name": "Play Today", "short_name": "Today", "url": "./?mode=duo&game=tonight", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }

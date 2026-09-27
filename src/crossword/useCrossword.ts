@@ -122,5 +122,18 @@ export function useCrossword(live: boolean) {
   // Anything still waiting goes before the screen does.
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); flush() } }, [flush])
 
-  return { status, week, fill, reload: load }
+  // Testing: throw this week's away and build it again from your answers as they are now.
+  const rebuild = useCallback(async () => {
+    pending.current = {}
+    setStatus({ kind: 'loading' })
+    try {
+      await api.resetCrossword(week)
+      const st = await api.crossword(week)
+      accept(st.state === 'none' ? await buildAndStart(week, st.used, today) : st)
+    } catch (e) {
+      setStatus({ kind: 'error', message: (e as Error).message })
+    }
+  }, [week, today, accept])
+
+  return { status, week, fill, rebuild, reload: load }
 }

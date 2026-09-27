@@ -13,7 +13,7 @@ const joined = (s: SessionState) => {
 }
 const STATEMENTS = Array.from({ length: 20 }, (_, i) => `statement ${i}`)
 
-describe('Tonight, the same for everyone', () => {
+describe('Today, the same for everyone', () => {
   it('is numbered from its first day, one a day', () => {
     expect(dailyNumber(dayIndex('2026-09-27'))).toBe(1)
     expect(dailyNumber(dayIndex('2026-10-06'))).toBe(10)
@@ -25,12 +25,12 @@ describe('Tonight, the same for everyone', () => {
     expect(one).toEqual(two)
     expect(roster('tonight', day)).toEqual(roster(one.game, one.night))
   })
-  it('reads as "Tonight #N" on the card, and a replay says so', () => {
+  it('reads as "Today #N" on the card, and a replay says so', () => {
     const day = dayIndex('2026-09-29')
     const s = { ...joined(initialState(dailySeed(day), 'tonight', { fingerStatements: STATEMENTS }, day)), phase: 'DONE' as const }
-    expect(summarise(s).label).toBe('Tonight #3')
-    expect(summarise(s, { replay: true }).label).toBe('Tonight #3 · replay')
-    expect(cardText(summarise(s)).split('\n')[0]).toBe('Coupled · Tonight #3')
+    expect(summarise(s).label).toBe('Today #3')
+    expect(summarise(s, { replay: true }).label).toBe('Today #3 · replay')
+    expect(cardText(summarise(s)).split('\n')[0]).toBe('Coupled · Today #3')
   })
 })
 

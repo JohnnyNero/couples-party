@@ -29,7 +29,7 @@ export function RecordsSections({ r, me, partner }: { r: Records; me: string; pa
   return (
     <>
       <Section title="Game nights together 🤝">
-        <Row label="Best Tonight" best={r.together.tonight} />
+        <Row label="Best Today score" best={r.together.tonight} />
         <Row label="Best full session" best={r.together.full} />
         <Row label="This week so far" best={{ value: r.together.thisWeek, on: '' }} />
       </Section>
@@ -45,8 +45,8 @@ export function RecordsSections({ r, me, partner }: { r: Records; me: string; pa
           ))}
         </div>
         <div className="text-center text-xs font-bold text-fg/45">Nights won{r.wins.level ? ` · ${r.wins.level} level` : ''}</div>
-        <Row label="Your best Tonight" best={r.bestNight.tonight.you} />
-        <Row label={`${partner}’s best Tonight`} best={r.bestNight.tonight.them} />
+        <Row label="Your best Today score" best={r.bestNight.tonight.you} />
+        <Row label={`${partner}’s best Today score`} best={r.bestNight.tonight.them} />
         {(r.bestNight.full.you || r.bestNight.full.them) && (
           <>
             <Row label="Your best full session" best={r.bestNight.full.you} />

@@ -384,6 +384,7 @@ export const api = {
   crossword: (week: string) => rpc<CrosswordState>('crossword', { p_week: week }),
   startCrossword: (week: string, puzzle: unknown) => rpc<CrosswordState>('start_crossword', { p_week: week, p_puzzle: puzzle }),
   fillCrossword: (week: string, cells: Record<string, string>) => rpc<CrosswordState>('fill_crossword', { p_week: week, p_cells: cells }),
+  resetCrossword: (week: string) => rpc<void>('reset_crossword', { p_week: week }),
   setEither: (forDate: string, questions: string[], picks: number[]) =>
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>

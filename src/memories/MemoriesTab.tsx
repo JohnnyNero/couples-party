@@ -74,7 +74,7 @@ export function MemoriesTab() {
     <div className="flex flex-col gap-6 pt-1">
       {days.length === 0 && (
         <Empty>
-          Nothing yet. Play Tonight together and it's kept here as you go; the daily puzzles
+          Nothing yet. Play Today’s games together and it's kept here as you go; the daily puzzles
           join the day after.
         </Empty>
       )}

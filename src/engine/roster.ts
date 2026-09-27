@@ -100,7 +100,7 @@ export function roster(game: Game, night = 0): RosterEntry[] {
 }
 
 // What each kind of session is called, where a single game would just use its own name.
-export const SESSION_NAMES: Record<string, string> = { tonight: 'Tonight', full: 'The full session', quick: 'A quick game' }
+export const SESSION_NAMES: Record<string, string> = { tonight: 'Today', full: 'The full session', quick: 'A quick game' }
 
 export type RosterOf = { game: Game; night?: number }
 

@@ -14,7 +14,14 @@ export function CrosswordCard() {
   const [open, setOpenNow] = useState(false)
   const setOpen = (v: boolean) => slide(v ? 'forward' : 'back', () => setOpenNow(v))
   useBackLayer(open, () => setOpen(false))
-  const { status, week, fill } = useCrossword(open)
+  const { status, week, fill, rebuild } = useCrossword(open)
+  // Rebuilding (testing) while it's open: say so, rather than closing under you.
+  if (status.kind === 'loading' && open) {
+    return createPortal(
+      <div className="fixed inset-0 z-50 bg-bg grid place-items-center font-display text-xl font-extrabold text-fg/50">Building this week’s crossword…</div>,
+      document.body,
+    )
+  }
   if (status.kind === 'off' || status.kind === 'error') return null
   if (status.kind === 'loading') return null
 
@@ -51,7 +58,7 @@ export function CrosswordCard() {
       </button>
       {open && createPortal(
         <div className="fixed inset-0 z-50 bg-bg">
-          <CrosswordScreen data={data} me={me} partner={partner} week={week} onFill={fill} onClose={() => setOpen(false)} />
+          <CrosswordScreen key={data.puzzle.answers.join()} data={data} me={me} partner={partner} week={week} onFill={fill} onClose={() => setOpen(false)} onRebuild={() => void rebuild()} />
         </div>,
         document.body,
       )}

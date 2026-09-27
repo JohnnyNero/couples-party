@@ -14,8 +14,8 @@ import { eyebrow } from '../ui/styles'
 // theirs in theirs (blue), and theirs turn up as they type. No hints and no checking —
 // just the moment it's all right.
 
-export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
-  data: Ready; me: string; partner: string; week: string; onFill: (changes: Record<string, string>) => void; onClose: () => void
+export function CrosswordScreen({ data, me, partner, week, onFill, onClose, onRebuild }: {
+  data: Ready; me: string; partner: string; week: string; onFill: (changes: Record<string, string>) => void; onClose: () => void; onRebuild?: () => void
 }) {
   const p = data.puzzle
   const [cur, setCur] = useState<Cursor>(() => firstCursor(p))
@@ -78,6 +78,7 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
           </div>
         )}
         <Clues p={p} me={me} partner={partner} cur={cur} onPick={(e) => setCur({ row: e.row, col: e.col, dir: e.dir })} />
+        {onRebuild && <Rebuild onRebuild={onRebuild} />}
       </div>
 
       {!solved && (
@@ -86,6 +87,22 @@ export function CrosswordScreen({ data, me, partner, week, onFill, onClose }: {
           <Keyboard onKey={onKey} />
         </div>
       )}
+    </div>
+  )
+}
+
+// For testing: build this week's again from your answers as they are now. Asks first —
+// it clears both of your letters.
+function Rebuild({ onRebuild }: { onRebuild: () => void }) {
+  const [sure, setSure] = useState(false)
+  return (
+    <div className="mt-8 mb-2 flex flex-col items-center gap-2">
+      <button
+        onClick={() => (sure ? onRebuild() : setSure(true))}
+        className={'press min-h-[40px] px-4 rounded-full border-2 text-xs font-extrabold ' + (sure ? 'border-pa text-pa-ink' : 'border-fg/15 text-fg/50')}
+      >
+        {sure ? 'Tap again: clears both of your letters' : 'Testing: rebuild this week’s crossword'}
+      </button>
     </div>
   )
 }

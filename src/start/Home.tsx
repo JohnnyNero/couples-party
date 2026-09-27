@@ -245,7 +245,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="font-display text-[1.75rem] font-extrabold leading-none">
-            Tonight <span className="text-paper/45">#{dailyNumber(day)}</span>
+            Today <span className="text-paper/45">#{dailyNumber(day)}</span>
           </div>
           <div className="mt-1 text-sm text-paper/65">
             {done ? 'Played ✓ · the same for every couple today' : `About 10 minutes · ${games} games and a filler`}
@@ -280,12 +280,12 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
           </div>
         </div>
       )}
-      {done && <ShareButton data={done} label="Share our Tonight" className="!bg-paper !text-ink !border-paper" />}
+      {done && <ShareButton data={done} label="Share how we did" className="!bg-paper !text-ink !border-paper" />}
       <button
         onClick={onPlay}
         className={'w-full min-h-[52px] rounded-2xl font-display text-xl font-extrabold tracking-wide press ' + (done ? 'border-2 border-paper/30 text-paper' : 'bg-pa text-white')}
       >
-        {done ? 'Play again' : 'Play tonight'}
+        {done ? 'Play again' : 'Play today'}
       </button>
     </section>
   )

@@ -35,7 +35,7 @@ const TEAMLESS = new Set(['circle', 'clock', 'decider'])
 function labelFor(s: SessionState, date: Date, replay: boolean): string {
   const day = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
   // Tonight is numbered — the same set for every couple that day.
-  if (s.game === 'tonight') return `Tonight #${dailyNumber(s.night)}${replay ? ' · replay' : ''}`
+  if (s.game === 'tonight') return `Today #${dailyNumber(s.night)}${replay ? ' · replay' : ''}`
   const name = SESSION_NAMES[s.game] ?? GAME_LABELS[s.game as keyof typeof GAME_LABELS] ?? 'Coupled'
   return `${name} · ${day}`
 }

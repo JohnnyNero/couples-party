@@ -96,7 +96,7 @@ export function Scoreboard({
           <span className="text-2xl" aria-hidden="true">🏆</span>
           <div className="flex-1 min-w-0">
             <div className="font-display text-lg font-extrabold leading-tight">
-              {record === 'first' ? `Your first ${night === 'tonight' ? 'Tonight' : 'full session'} together` : `Your best ${night === 'tonight' ? 'Tonight' : 'full session'} yet!`}
+              {record === 'first' ? `Your first ${night === 'tonight' ? 'Today' : 'full session'} together` : `Your best ${night === 'tonight' ? 'Today' : 'full session'} yet!`}
             </div>
             <div className="text-xs font-bold text-paper/65">
               {record === 'first' ? `${together} together — the one to beat` : `${together} together, beating ${prior!.value}`}
