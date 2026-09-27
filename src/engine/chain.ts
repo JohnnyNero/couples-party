@@ -1,7 +1,22 @@
-import type { ChainLink, ChainRound, PlayerId } from './state'
+import type { ChainCategory, ChainLink, ChainRound, PlayerId } from './state'
 import { CHAIN } from './phases'
 
 // Word Chain's checking, pure so the host, the bot and the tests agree.
+
+// The answer lists are long — thousands of names — and the session is sent between the
+// phones on every move, so they don't ride along in it: every phone has the same content
+// file, and keeps its lists here, by category (see keepChainLists). A round in the
+// session carries just its category's name; one that does carry its own list (the
+// tests, an older session) uses that.
+const lists = new Map<string, string[]>()
+
+export function keepChainLists(cats: ChainCategory[]): ChainCategory[] {
+  for (const c of cats) if (c.words.length > 0) lists.set(c.name, c.words)
+  return cats.map((c) => ({ name: c.name, words: [] }))
+}
+
+export const listFor = (c: { name?: string; category?: string; words: string[] }): string[] =>
+  c.words.length > 0 ? c.words : lists.get(c.name ?? c.category ?? '') ?? []
 
 // Compared letters only: case, accents, spaces and punctuation don't matter, and
 // neither does a plural "s" ("Guinea pigs" is "guinea pig").
@@ -46,7 +61,7 @@ const used = (round: ChainRound) => new Set(round.chain.map((l) => chainKey(l.wo
 // Listed answers still free to play that start with this letter.
 export function freeFor(round: ChainRound, letter: string): string[] {
   const gone = used(round)
-  return round.words.filter((w) => letters(w)[0] === letter && !gone.has(chainKey(w)))
+  return listFor(round).filter((w) => letters(w)[0] === letter && !gone.has(chainKey(w)))
 }
 
 // The letter the next word must start with: the last letter of the last word — or, if
@@ -65,7 +80,7 @@ export type ChainCheck = { ok: true; word: string; listed: boolean } | { ok: fal
 // it still goes in, as typed, for the other to accept or reject. Either way it has to
 // start with the right letter, and not have been said (or rejected) already.
 export function checkWord(round: ChainRound, typed: string): ChainCheck {
-  const listed = findListed(typed, round.words)
+  const listed = findListed(typed, listFor(round))
   const word = listed ?? typed.trim().replace(/\s+/g, ' ')
   if (letters(word)[0] !== round.need) return { ok: false, reason: 'letter' }
   const k = chainKey(word)

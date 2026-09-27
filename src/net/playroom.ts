@@ -19,6 +19,7 @@ import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
+import { keepChainLists } from '../engine/chain'
 import { dayIndex, localDate } from '../daily/dates'
 import { dailySeed } from '../share/daily'
 import type { Activity, Live } from './live'
@@ -63,6 +64,9 @@ const seatsNow = () => (getState(SEATS_KEY) as Seats | undefined) ?? {}
 const presentKeys = () => new Set(present.values())
 
 let content: Content = EMPTY_CONTENT
+// What goes in the session: the content, less Word Chain's lists (kept on each phone —
+// see keepChainLists).
+const sessionContent = (): Content => ({ ...content, chainCategories: keepChainLists(content.chainCategories) })
 let game: Game = 'full'
 let started = false
 
@@ -80,6 +84,7 @@ function ensureSessionSeed(): number {
 // the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
 // is itself the host.
 function hostFreshState(): SessionState {
+  const content = sessionContent()
   // Tonight is the same for every couple that day: its seed is the day's, not ours.
   const day = dayIndex(localDate())
   return { ...initialState(game === 'tonight' ? dailySeed(day) : ensureSessionSeed(), game, content, day), intros: true }
@@ -88,7 +93,7 @@ function hostFreshState(): SessionState {
 // Non-authoritative placeholder used only as the useMultiplayerState default before the
 // host's real (seeded) session state has synced. Deliberately does not touch Math.random.
 function placeholderState(): SessionState {
-  return initialState(0, game, content)
+  return initialState(0, game, sessionContent())
 }
 
 export async function initNet(chosenGame: Game, roomCode?: string, resume?: Saved | null): Promise<void> {

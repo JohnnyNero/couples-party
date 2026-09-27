@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Action, Content, Game, PlayerId, SessionState } from '../engine/state'
 import { initialState } from '../engine/state'
+import { keepChainLists } from '../engine/chain'
 import { reduce } from '../engine/reducer'
 import { dayIndex, localDate } from '../daily/dates'
 import { dailySeed } from '../share/daily'
@@ -28,7 +29,9 @@ function set(next: SessionState): void {
 
 export function initLocal(content: Content, game: Game): void {
   const day = dayIndex(localDate())
-  state = { ...initialState(game === 'tonight' ? dailySeed(day) : Math.floor(Math.random() * 1e9), game, content, day), intros: true }
+  // Word Chain's lists stay on the phone, as over the network (see keepChainLists).
+  const kept = { ...content, chainCategories: keepChainLists(content.chainCategories) }
+  state = { ...initialState(game === 'tonight' ? dailySeed(day) : Math.floor(Math.random() * 1e9), game, kept, day), intros: true }
   // The human takes the first seat the moment the app opens; the bot claims the other.
   state = reduce(state, { type: 'JOIN', player: SOLO_PLAYER, name: 'Player 1' }, Date.now())
   emit()

@@ -7,7 +7,7 @@ import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
 import { BLUFF, MELD, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
 import { clashVerdict } from './clash'
-import { chainKey, checkWord, nextLetter, rejectable, turnMs } from './chain'
+import { chainKey, checkWord, listFor, nextLetter, rejectable, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
 import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
@@ -716,7 +716,7 @@ function afterDescribeTurn(state: SessionState, now: number): SessionState {
 // Every round is dealt up front — its category, its answer list and the app's opening
 // word — but who goes first is only settled when it starts: the loser of the round before.
 function newChainRound(cat: ChainCategory, index: number, rng: () => number): ChainRound {
-  const opener = pick(rng, cat.words)
+  const opener = pick(rng, listFor(cat))
   const round: ChainRound = {
     index,
     category: cat.name,
