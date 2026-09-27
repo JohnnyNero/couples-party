@@ -30,6 +30,14 @@ describe('claimSeat', () => {
     expect(first.seat).toBe('A')
     expect(claimSeat(first.seats, 'tonight-2', new Set(['tonight-1', 'tonight-2'])).seat).toBe('B')
   })
+  it('gives a phone its own seat back by its lasting id, however it came back', () => {
+    // Seated by each phone's own lasting id: coming back on a new connection — even
+    // before the old one has timed out, or before its partner's — is still the same key.
+    const seats = { 'her-phone': 'A' as const, 'his-phone': 'B' as const }
+    expect(claimSeat(seats, 'his-phone', new Set(['her-phone', 'his-phone'])).seat).toBe('B')
+    expect(claimSeat(seats, 'his-phone', new Set(['his-phone'])).seat).toBe('B') // first back in
+    expect(claimSeat(seats, 'her-phone', new Set(['his-phone', 'her-phone'])).seat).toBe('A')
+  })
   it('leaves a third device without a seat', () => {
     const seats = { a: 'A' as const, b: 'B' as const }
     expect(claimSeat(seats, 'c', new Set(['a', 'b', 'c'])).seat).toBe(null)

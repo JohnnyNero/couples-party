@@ -30,9 +30,37 @@ const SESSION_KEY = 'session'
 const LIVE_KEY = 'live'
 // Which device sits in which seat — decided by the host, read by everyone (see ids.ts).
 const SEATS_KEY = 'seats'
-// Who's in the room right now, by Playroom id. Every phone keeps this, not just the host,
-// so whichever phone becomes host already knows.
-const present = new Set<string>()
+// Each phone's own lasting id, as a player state its partner can read (see deviceKey).
+const DEVICE_KEY = 'device'
+// Who's in the room right now: Playroom id → that phone's lasting id. Every phone keeps
+// this, not just the host, so whichever phone becomes host already knows.
+const present = new Map<string, string>()
+
+// Seats are kept against an id this phone keeps for good — not Playroom's, which can be
+// a new one every time a phone drops out and comes back. With Playroom's, a phone that
+// came back could be seated by whoever asked first, and find itself in its partner's
+// chair: their score, their questions.
+const STORED_DEVICE = 'coupled:device'
+let myKey: string | null = null
+function deviceKey(): string {
+  if (myKey) return myKey
+  try {
+    myKey = localStorage.getItem(STORED_DEVICE)
+    if (!myKey) {
+      myKey = `d${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`
+      localStorage.setItem(STORED_DEVICE, myKey)
+    }
+  } catch {
+    myKey ??= `d${Math.random().toString(36).slice(2, 12)}`
+  }
+  return myKey
+}
+
+// A player's lasting id, once their phone has shared it — falling back to Playroom's own
+// for a phone that never does (an older version of the app).
+const keyOf = (player: PlayerState): string | null => (player.getState(DEVICE_KEY) as string | undefined) ?? null
+const seatsNow = () => (getState(SEATS_KEY) as Seats | undefined) ?? {}
+const presentKeys = () => new Set(present.values())
 
 let content: Content = EMPTY_CONTENT
 let game: Game = 'full'
@@ -84,21 +112,33 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
     maxPlayersPerRoom: 2,
     ...(roomCode ? { roomCode, skipLobby: true } : {}),
   })
+  myPlayer().setState(DEVICE_KEY, deviceKey(), true)
 
   // Before anyone's seated, so the first JOIN lands in the session that stays. Host at
-  // this point means the room was empty — your partner isn't in it waiting.
+  // this point normally means the room was empty — your partner isn't in it waiting.
   if (isHost()) {
-    // Carrying on a saved game: the room's own copy if it still has it, else this
-    // phone's. Either way it waits, paused, until you've both joined (see adopt) — and
-    // you sit back down in the seat you had, so the scores stay with the right person.
-    // Anything else starts a new session.
     const existing = getState(SESSION_KEY) as SessionState | undefined
+    const seats = seatsNow()
     if (resume) {
+      // Carrying on a saved game: the room's own copy if it still has it, else this
+      // phone's. Either way it waits, paused, until you've both joined (see adopt). You
+      // sit back down in the seat you had — unless the room already knows this phone,
+      // and never by clearing your partner out of theirs.
       const room = existing && existing.seed === resume.state.seed && existing.phase !== 'DONE' ? existing : null
-      setState(SEATS_KEY, { [myPlayer().id]: resume.seat }, true)
+      if (!seats[deviceKey()]) {
+        const taken = Object.entries(seats).some(([k, s]) => s === resume.seat && presentKeys().has(k))
+        if (!taken) {
+          const next: Seats = {}
+          for (const [k, s] of Object.entries(seats)) if (s !== resume.seat) next[k] = s
+          setState(SEATS_KEY, { ...next, [deviceKey()]: resume.seat }, true)
+        }
+      }
       setState(SESSION_KEY, adopt(room ?? resume.state, Date.now()), true)
     } else {
-      setState(SESSION_KEY, hostFreshState(), true)
+      // A new game — unless this phone's only reconnecting to one still going, which
+      // it must never wipe.
+      const ongoing = existing && existing.game === game && existing.phase !== 'DONE' && !!seats[deviceKey()]
+      if (!ongoing) setState(SESSION_KEY, hostFreshState(), true)
     }
   }
 
@@ -106,7 +146,7 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
   // automatically here (host-guarded) instead of via a name-entry UI. The host also
   // gives the newcomer a seat and tells everyone which it is.
   onPlayerJoin((player: PlayerState) => {
-    present.add(player.id)
+    present.set(player.id, keyOf(player) ?? player.id)
     if (isHost()) seat(player)
     // Gone — backed out, closed the app, lost signal: the game pauses and waits for them
     // (see AWAY). If it was the host who went, another phone takes over as host, so this
@@ -119,8 +159,11 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
           if (++tries < 6) setTimeout(away, 500)
           return
         }
-        const seatOf = ((getState(SEATS_KEY) as Seats | undefined) ?? {})[player.id]
-        if (seatOf) hostReduce({ type: 'AWAY', player: seatOf })
+        const k = keyOf(player) ?? player.id
+        // Only if that phone isn't already back on another connection.
+        const back = [...present.values()].includes(k)
+        const seatOf = seatsNow()[k]
+        if (seatOf && !back) hostReduce({ type: 'AWAY', player: seatOf })
       }
       setTimeout(away, 300)
     })
@@ -165,7 +208,7 @@ export function useLive(): Live | null {
 const activityKey = (p: PlayerId) => `activity:${p}`
 
 export function setActivity(value: Activity | null, seatOverride?: PlayerId): void {
-  const seatOf = seatOverride ?? ((getState(SEATS_KEY) as Seats | undefined) ?? {})[myPlayer()?.id ?? '']
+  const seatOf = seatOverride ?? seatsNow()[deviceKey()]
   if (seatOf) setState(activityKey(seatOf), value, false)
 }
 
@@ -193,13 +236,20 @@ export function getIsHost(): boolean {
 // Your seat, as the host decided it — the same answer on every phone.
 export function useMyPlayerId(): PlayerId | null {
   const [seats] = useMultiplayerState<Seats>(SEATS_KEY, {})
-  const me = myPlayer()
-  return me ? seats?.[me.id] ?? null : null
+  return myPlayer() ? seats?.[deviceKey()] ?? null : null
 }
 
-// Host only: seat a player who's just arrived, and JOIN them into the session.
-function seat(player: PlayerState): void {
-  const { seats, seat: mine } = claimSeat((getState(SEATS_KEY) as Seats | undefined) ?? {}, player.id, present)
+// Host only: seat a player who's just arrived, and JOIN them into the session. Their
+// phone shares its lasting id just after it joins, so this waits a moment for it.
+function seat(player: PlayerState, tries = 0): void {
+  const k = keyOf(player)
+  if (!k && tries < 20) {
+    setTimeout(() => { if (isHost() && present.has(player.id)) seat(player, tries + 1) }, 150)
+    return
+  }
+  const key = k ?? player.id
+  present.set(player.id, key)
+  const { seats, seat: mine } = claimSeat(seatsNow(), key, presentKeys())
   setState(SEATS_KEY, seats, true)
   if (!mine) return // a third device: it can watch, not play
   const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
