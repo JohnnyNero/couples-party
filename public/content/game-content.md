@@ -541,7 +541,15 @@ and keep a mix: some most people have done, some hardly anyone has.
 - you've pulled a sickie
 - you've kept something you should have returned
 - you've eaten food off the floor
-
+- you've eaten straight from the pan
+- you've pretended to be on the phone
+- you've blamed a smell on someone else
+- you've waved back at someone waving at somebody else
+- you've said "you too" to "enjoy your meal"
+- you've skipped a shower and hoped nobody noticed
+- you've lied about reading a book
+- you've returned something you'd already worn
+- you've sent a nude
 
 # Wavelength
 
@@ -577,7 +585,7 @@ between has to be nameable.
 - Bad idea | Good idea
 - Terrible superpower | Great superpower
 - Rude | Polite
-
+- Worst gift | Best gift
 
 # Draw Your Answer
 
@@ -623,7 +631,7 @@ Pick things that have a drawable answer.
 - desert island item
 - favourite flower
 - favourite hobby
-
+- worst nightmare
 
 # Who's More Likely
 
@@ -712,7 +720,17 @@ person the answer belongs to decides if the guess counts. Short answers only.
 - Your favourite crisp flavour?
 - Your childhood nickname?
 - Your biggest pet peeve?
-
+- Your go-to crisps?
+- The last thing you googled?
+- Your favourite biscuit?
+- Your dream car?
+- The best gig you've been to?
+- Your least favourite vegetable?
+- The TV character you're most like?
+- The first thing you'd do on a free day?
+- Your favourite holiday we've been on?
+- The best meal you've ever had?
+- Your weirdest fear?
 
 # Lights Out
 
@@ -756,6 +774,13 @@ question to talk about with the phone face down. Keep them gentle and short.
 - What's one thing you love about yourself?
 - What's a dream you haven't told anyone?
 - What's something you want to learn this year?
+- What's something you've changed your mind about lately?
+- What's a compliment you still think about?
+- What would you do with a completely free week?
+- What's something I've taught you?
+- What's the best advice you've ever had?
+- What do you want to remember about this year?
+- What made you smile today that you haven't told me?
 
 # Category Clash
 
@@ -823,6 +848,18 @@ start them the way an answer would finish them: "A …" or "Something …".
 - Something you do in the shower
 - Something you'd never tell your mum
 - A turn-on
+- Something in an office
+- Something at a wedding
+- Something in a car
+- A reason to cry
+- Something round
+- A famous landmark
+- Something from a petrol station
+- Something on a farm
+- Something hot
+- Something at the zoo
+- Something you'd pack for a holiday
+- An excuse to leave a party
 
 # Word Chain
 
@@ -2442,7 +2479,11 @@ because they're not in the word list. Keep them short. No "right now", no
 - A smell [you hate|@ hates]
 - [Your|@'s] favourite fruit
 - [Your|@'s] perfect breakfast
-
+- [Your|@'s] ideal pet
+- {partner}'s morning face in one word
+- {partner} as a zoo animal
+- What [you|@] always lose
+- {partner}'s hidden talent
 
 # Their Numbers
 
@@ -2497,6 +2538,29 @@ money and anything with a right answer to be embarrassed about.
 - Out of 10, how ticklish [you are|@ is]
 - Out of 10, how much [you like|@ likes] kissing in public
 - Out of 10, how good a kisser [you are|@ is]
+- Hours of TV [you|@] watch on a normal evening
+- Minutes [you'd|@ would] queue for good food
+- The age [you were|@ was] at [your|their] first kiss
+- Out of 10, how organised [you are|@ is]
+- Out of 10, how much [you like|@ likes] cheese
+- Out of 10, how much [you like|@ likes] chocolate
+- Out of 10, how much [you like|@ likes] pizza
+- Out of 10, how much [you like|@ likes] ice cream
+- Out of 10, how much [you like|@ likes] sushi
+- Out of 10, how much [you like|@ likes] olives
+- Out of 10, how much [you like|@ likes] mushrooms
+- Out of 10, how much [you like|@ likes] Marmite
+- Out of 10, how much [you like|@ likes] a roast dinner
+- Out of 10, how much [you like|@ likes] a fry-up
+- Out of 10, how good [you are|@ is] at DIY
+- Out of 10, how much [you'd|@ would] enjoy a cruise
+- Out of 10, how good [you are|@ is] at losing
+- Out of 10, how chatty [you are|@ is] first thing
+- Out of 10, how much [you like|@ likes] the beach
+- Out of 10, how good [you are|@ is] at remembering birthdays
+- Out of 10, how good [you are|@ is] at flirting
+- Out of 10, how jealous [you are|@ is]
+- Out of 10, how much [you like|@ likes] rainy days
 
 # This or That
 
@@ -2569,6 +2633,22 @@ predict. No names and no "you": it's always about whoever's picking.
 - Online shopping | High street
 - Warm bedroom | Cool bedroom
 - Cuddle to sleep | Own side
+- Crunchy peanut butter | Smooth
+- Chinese | Indian
+- Paper book | Kindle
+- Morning shower | Night shower
+- One foot out | Fully tucked in
+- Hot chocolate | Mulled wine
+- Ice cream | Cake
+- Christmas | Birthday
+- Old films | New films
+- Live music | Clubbing
+- Front row | Back row
+- Cold pizza | Reheated pizza
+- Ski trip | Beach holiday
+- Tidy while cooking | Tidy after
+- Netflix | YouTube
+- Road trip snacks | Service station stop
 
 # Two Lies & a Truth
 
@@ -2621,6 +2701,16 @@ already know.
 - A job [you'd|@ would] be secretly brilliant at
 - The best compliment [you've|@ has] ever had
 - The last time [you|@] laughed so hard it hurt
+- [Your|@'s] worst ever job
+- The most famous place [you've|@ has] been
+- A food [you've|@ has] tried once and never again
+- The most daring thing [you've|@ has] done
+- [Your|@'s] first ever pet
+- Something [you|@] won as a kid
+- A celebrity [you've|@ has] been told [you|they] look like
+- The worst thing [you've|@ has] said to a boss
+- A time [you|@] got into trouble abroad
+- A skill [you|@] learned and then forgot
 
 # Mind Meld
 
@@ -2677,6 +2767,18 @@ other is how you meet.
 - Our perfect Sunday
 - A pet we'd get
 - Our go-to drink on a night out
+- A biscuit for dunking
+- A James Bond actor
+- A Friends character
+- A planet
+- A Christmas song
+- A type of cheese
+- A kitchen appliance
+- A London landmark
+- A reason we'd be late
+- A word one of us says too much
+- Our favourite holiday so far
+- Where we'd go on a first date again
 
 # Describe It
 
