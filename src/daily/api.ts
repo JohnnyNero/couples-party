@@ -199,18 +199,29 @@ export type BoardStats = {
 export type CrosswordState =
   | { state: 'unpaired' }
   | { state: 'none'; used: string[] }
-  | { state: 'ready'; puzzle: import('../crossword/build').Puzzle; cells: Record<string, { l: string; mine: boolean }>; solvedAt: string | null; used: string[] }
+  | {
+      state: 'ready'
+      puzzle: import('../crossword/build').Puzzle
+      cells: Record<string, string> // your letters, by square
+      solvedAt: string | null // when you finished
+      // Your partner's copy (migration 0024): which squares they've filled and when they
+      // finished — and their letters, once you've finished yours.
+      partner: { filled: string[]; solvedAt: string | null; cells: Record<string, string> | null }
+      used: string[]
+    }
 
-// Every week's crossword, small (migration 0023): its shape, whose each filled square
-// is (true: yours) — never the letters — and whether it's done.
+// Every week's crossword, small (migrations 0023, 0024): its shape, the squares each of
+// you has filled — never the letters — and when each of you finished.
 export type CrosswordWeek = {
   week: string
   w: number
   h: number
   clues: number
   squares: string[]
-  cells: Record<string, boolean>
+  mine: string[]
+  theirs: string[]
   solvedAt: string | null
+  theirSolvedAt: string | null
 }
 
 // One saved night, for the records page: names and scores by seat (A/B), since which

@@ -6,10 +6,10 @@ import { buildCrossword } from './build'
 import { balanced, generalCandidates, harvest } from './harvest'
 
 // A week's crossword — this one unless `pick` names another: fetched, built (this week's,
-// by whichever phone opens it first), and kept in step with your partner's letters. An
-// older week is only ever opened, never built. Letters you type show straight away and
-// are sent a moment later, in a batch; while the crossword's open, your partner's come
-// in every few seconds.
+// by whichever phone opens it first), with your own letters in it and word of how far
+// your partner's got with theirs. An older week is only ever opened, never built. Letters you type show straight away and
+// are sent a moment later, in a batch; while the crossword's open, how your partner's
+// doing comes in every few seconds.
 
 export type Ready = Extract<CrosswordState, { state: 'ready' }>
 export type CrosswordStatus =
@@ -62,7 +62,7 @@ export function useCrossword(live: boolean, pick?: string) {
     if (st.state !== 'ready') return
     const cells = { ...st.cells }
     for (const [k, l] of Object.entries(pending.current)) {
-      if (l) cells[k] = { l, mine: true }
+      if (l) cells[k] = l
       else delete cells[k]
     }
     setStatus({ kind: 'ready', data: { ...st, cells }, ...names.current })
@@ -88,7 +88,7 @@ export function useCrossword(live: boolean, pick?: string) {
 
   useEffect(() => { void load() }, [load])
 
-  // Your partner's letters, while it's open.
+  // How your partner's getting on, while it's open.
   useEffect(() => {
     if (!live) return
     const id = setInterval(() => {
@@ -115,7 +115,7 @@ export function useCrossword(live: boolean, pick?: string) {
       if (s.kind !== 'ready') return s
       const cells = { ...s.data.cells }
       for (const [k, l] of Object.entries(changes)) {
-        if (l) cells[k] = { l, mine: true }
+        if (l) cells[k] = l
         else delete cells[k]
       }
       return { ...s, data: { ...s.data, cells } }

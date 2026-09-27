@@ -74,7 +74,7 @@ export function MemoriesTab() {
 
   return (
     <div className="flex flex-col gap-6 pt-1">
-      <ErrorBoundary quiet><CrosswordShelf /></ErrorBoundary>
+      <ErrorBoundary quiet><CrosswordShelf partner={d.partner} /></ErrorBoundary>
       {days.length === 0 && (
         <Empty>
           Nothing yet. Play Today’s games together and it's kept here as you go; the daily puzzles

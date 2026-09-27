@@ -23,6 +23,7 @@ import m0020 from './migrations/0020_records.sql?raw'
 import m0021 from './migrations/0021_crossword.sql?raw'
 import m0022 from './migrations/0022_rebuild_crossword.sql?raw'
 import m0023 from './migrations/0023_crossword_archive.sql?raw'
+import m0024 from './migrations/0024_crossword_each.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -49,6 +50,7 @@ const EVE = '00000000-0000-0000-0000-00000000000e' // not in this couple
 const SAM2 = '00000000-0000-0000-0000-0000000000a2' // Sam's second device, once it's linked
 
 let db: PGlite
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -70,29 +72,7 @@ const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10
 beforeAll(async () => {
   db = new PGlite()
   await db.exec(STUB)
-  await db.exec(m0001)
-  await db.exec(m0002)
-  await db.exec(m0003)
-  await db.exec(m0004)
-  await db.exec(m0005)
-  await db.exec(m0006)
-  await db.exec(m0007)
-  await db.exec(m0008)
-  await db.exec(m0009)
-  await db.exec(m0010)
-  await db.exec(m0011)
-  await db.exec(m0012)
-  await db.exec(m0013)
-  await db.exec(m0014)
-  await db.exec(m0015)
-  await db.exec(m0016)
-  await db.exec(m0017)
-  await db.exec(m0018)
-  await db.exec(m0019)
-  await db.exec(m0020)
-  await db.exec(m0021)
-  await db.exec(m0022)
-  await db.exec(m0023)
+  for (const m of MIGRATIONS) await db.exec(m)
   await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
 }, 30000)
 
@@ -878,33 +858,49 @@ describe('our crossword', () => {
     d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
     return d.toISOString().slice(0, 10)
   }
+  const weekBefore = (week: string) => {
+    const d = new Date(`${week}T12:00:00Z`)
+    d.setUTCDate(d.getUTCDate() - 7)
+    return d.toISOString().slice(0, 10)
+  }
   const puzzle = (answers: string[], solution: Record<string, string>) => ({ v: 1, answers, solution, entries: [] })
+  const CAT = { '0,0': 'C', '0,1': 'A', '0,2': 'T' }
 
-  it('is one grid for the couple: the first saved stands, and both fill it in', async () => {
+  it('is one crossword for the couple, the first saved stands, and you each fill in your own', async () => {
     const week = monday()
     expect(await call(EVE, 'crossword', [week])).toEqual({ state: 'unpaired' })
     const code = await call(SAM, 'create_couple', ['Sam'])
     await call(ALEX, 'join_couple', [code, 'Alex'])
     expect(await call(SAM, 'crossword', [week])).toEqual({ state: 'none', used: [] })
 
-    const first = await call(SAM, 'start_crossword', [week, puzzle(['CAT'], { '0,0': 'C', '0,1': 'A', '0,2': 'T' })])
-    expect(first).toMatchObject({ state: 'ready', solvedAt: null })
+    const first = await call(SAM, 'start_crossword', [week, puzzle(['CAT'], CAT)])
+    expect(first).toMatchObject({ state: 'ready', cells: {}, solvedAt: null, partner: { filled: [], solvedAt: null, cells: null } })
     // Alex's phone built its own a moment later: Sam's stands.
     const second = await call(ALEX, 'start_crossword', [week, puzzle(['DOG'], { '0,0': 'D', '0,1': 'O', '0,2': 'G' })])
     expect(second.puzzle.answers).toEqual(['CAT'])
 
-    await call(SAM, 'fill_crossword', [week, { '0,0': 'C', '0,1': 'X' }])
-    let seen = await call(ALEX, 'fill_crossword', [week, { '0,1': 'A', '9,9': 'Z', '0,2': 'tt' }])
-    expect(seen.cells).toEqual({ '0,0': { l: 'C', mine: false }, '0,1': { l: 'A', mine: true } }) // not in the grid, not a letter: ignored
-    expect(seen.solvedAt).toBeNull()
-    seen = await call(SAM, 'fill_crossword', [week, { '0,2': 'T' }])
-    expect(seen.solvedAt).not.toBeNull()
-    // Rubbing out doesn't un-solve it.
-    seen = await call(SAM, 'fill_crossword', [week, { '0,2': '' }])
-    expect(seen.cells['0,2']).toBeUndefined()
-    expect(seen.solvedAt).not.toBeNull()
+    // Your letters are yours: Alex sees which squares Sam has filled, never what's in them.
+    let sam = await call(SAM, 'fill_crossword', [week, { '0,0': 'C', '0,1': 'X', '9,9': 'Z', '0,2': 'tt' }])
+    expect(sam.cells).toEqual({ '0,0': 'C', '0,1': 'X' }) // not in the grid, not a letter: ignored
+    let alex = await call(ALEX, 'crossword', [week])
+    expect(alex.cells).toEqual({})
+    expect(alex.partner).toEqual({ filled: ['0,0', '0,1'], solvedAt: null, cells: null })
+
+    // Alex finishes first: Sam hears it's done, still without the letters.
+    alex = await call(ALEX, 'fill_crossword', [week, CAT])
+    expect(alex.solvedAt).not.toBeNull()
+    expect(alex.partner.cells).toEqual({ '0,0': 'C', '0,1': 'X' }) // finished: now you see theirs
+    sam = await call(SAM, 'crossword', [week])
+    expect(sam.partner).toMatchObject({ filled: ['0,0', '0,1', '0,2'], cells: null })
+    expect(sam.partner.solvedAt).not.toBeNull()
+
+    // Sam finishes: both grids open to each other. A finished grid stays as it is.
+    sam = await call(SAM, 'fill_crossword', [week, { '0,1': 'A', '0,2': 'T' }])
+    expect(sam.solvedAt).not.toBeNull()
+    expect(sam.partner.cells).toEqual(CAT)
+    sam = await call(SAM, 'fill_crossword', [week, { '0,2': '' }])
+    expect(sam.cells).toEqual(CAT)
     await expect(call(EVE, 'fill_crossword', [week, { '0,0': 'Q' }])).rejects.toThrow(/not paired/)
-    // The testing rebuild is gone (0023): a week's crossword stays as built.
     await expect(call(ALEX, 'reset_crossword', [week])).rejects.toThrow(/does not exist/)
     await call(SAM, 'leave_couple')
   })
@@ -913,42 +909,58 @@ describe('our crossword', () => {
     const code = await call(SAM, 'create_couple', ['Sam'])
     await call(ALEX, 'join_couple', [code, 'Alex'])
     const week = monday()
-    const last = new Date(`${week}T12:00:00Z`)
-    last.setUTCDate(last.getUTCDate() - 7)
-    const lastWeek = last.toISOString().slice(0, 10)
     const tuesday = new Date(`${week}T12:00:00Z`)
     tuesday.setUTCDate(tuesday.getUTCDate() + 1)
     await expect(call(SAM, 'start_crossword', [tuesday.toISOString().slice(0, 10), puzzle([], {})])).rejects.toThrow(/not this week/)
     await expect(call(SAM, 'start_crossword', [week, { v: 1 }])).rejects.toThrow(/not a crossword/)
-    await call(SAM, 'start_crossword', [lastWeek, puzzle(['MALTA', 'CURRY'], { '0,0': 'M' })])
+    await call(SAM, 'start_crossword', [weekBefore(week), puzzle(['MALTA', 'CURRY'], { '0,0': 'M' })])
     expect((await call(ALEX, 'crossword', [week])).used.sort()).toEqual(['CURRY', 'MALTA'])
     await call(SAM, 'leave_couple')
   })
 
-  it('keeps every week to look back on, and an old one can still be finished', async () => {
+  it('keeps every week to look back on, with how far each of you got, and an old one can still be finished', async () => {
     expect(await call(EVE, 'crossword_weeks')).toEqual([])
     const code = await call(SAM, 'create_couple', ['Sam'])
     await call(ALEX, 'join_couple', [code, 'Alex'])
     const week = monday()
-    const last = new Date(`${week}T12:00:00Z`)
-    last.setUTCDate(last.getUTCDate() - 7)
-    const lastWeek = last.toISOString().slice(0, 10)
-    await call(SAM, 'start_crossword', [lastWeek, { ...puzzle(['CAT'], { '0,0': 'C', '0,1': 'A', '0,2': 'T' }), w: 3, h: 1, entries: [{ n: 1 }] }])
+    const lastWeek = weekBefore(week)
+    await call(SAM, 'start_crossword', [lastWeek, { ...puzzle(['CAT'], CAT), w: 3, h: 1, entries: [{ n: 1 }] }])
     await call(ALEX, 'start_crossword', [week, { ...puzzle(['OX'], { '0,0': 'O', '1,0': 'X' }), w: 1, h: 2 }])
     await call(SAM, 'fill_crossword', [lastWeek, { '0,0': 'C' }])
-    await call(ALEX, 'fill_crossword', [lastWeek, { '0,1': 'A' }])
+    await call(ALEX, 'fill_crossword', [lastWeek, CAT])
 
     const weeks = await call(SAM, 'crossword_weeks')
     expect(weeks.map((w: { week: string }) => w.week)).toEqual([week, lastWeek]) // newest first
-    expect(weeks[1]).toEqual({
-      week: lastWeek, w: 3, h: 1, clues: 1, squares: ['0,0', '0,1', '0,2'],
-      cells: { '0,0': true, '0,1': false }, // whose, never the letters
-      solvedAt: null,
-    })
+    expect(weeks[0]).toMatchObject({ mine: [], theirs: [], solvedAt: null, theirSolvedAt: null })
+    expect(weeks[1]).toMatchObject({ week: lastWeek, w: 3, h: 1, clues: 1, squares: ['0,0', '0,1', '0,2'], mine: ['0,0'], theirs: ['0,0', '0,1', '0,2'], solvedAt: null })
+    expect(weeks[1].theirSolvedAt).not.toBeNull()
     // Last week's, finished now.
-    const done = await call(ALEX, 'fill_crossword', [lastWeek, { '0,2': 'T' }])
-    expect(done.solvedAt).not.toBeNull()
+    expect((await call(SAM, 'fill_crossword', [lastWeek, { '0,1': 'A', '0,2': 'T' }])).solvedAt).not.toBeNull()
     expect((await call(SAM, 'crossword_weeks'))[1].solvedAt).not.toBeNull()
     await call(SAM, 'leave_couple')
+  })
+
+  it('splits a grid you started together: each keeps the letters they typed', async () => {
+    // A database as it was before 0024, with a shared grid in progress.
+    const old = new PGlite()
+    await old.exec(STUB)
+    for (const m of MIGRATIONS.slice(0, MIGRATIONS.indexOf(m0024))) await old.exec(m)
+    const couple = '00000000-0000-0000-0000-0000000000c1'
+    await old.exec(`
+      insert into auth.users (id) values ('${SAM}'), ('${ALEX}');
+      insert into public.couples (id, code, room_code) values ('${couple}', 'TESTCODE', 'ROOMTEST');
+      insert into public.members (user_id, couple_id, name) values ('${SAM}', '${couple}', 'Sam'), ('${ALEX}', '${couple}', 'Alex');
+      insert into public.crosswords (couple_id, week, puzzle, cells) values
+        ('${couple}', '2026-09-21', '{"solution": {"0,0": "C", "0,1": "A", "0,2": "T"}}',
+         '{"0,0": {"l": "C", "by": "${SAM}"}, "0,1": {"l": "A", "by": "${ALEX}"}, "0,2": {"l": "T", "by": "${ALEX}"}}');
+    `)
+    await old.exec(m0024)
+    const rows = (await old.query<{ user_id: string; cells: unknown; solved: boolean }>(
+      'select user_id, cells, solved_at is not null as solved from public.crossword_fills order by user_id')).rows
+    expect(rows).toEqual([
+      { user_id: SAM, cells: { '0,0': 'C' }, solved: false },
+      { user_id: ALEX, cells: { '0,1': 'A', '0,2': 'T' }, solved: false },
+    ])
+    await old.close()
   })
 })

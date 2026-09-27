@@ -4,39 +4,20 @@ import { api, type CrosswordWeek } from '../daily/api'
 import { localDate } from '../daily/dates'
 import { CrosswordScreen, weekLabel } from './CrosswordScreen'
 import { mondayOf, useCrossword } from './useCrossword'
+import { MiniGrid } from './MiniGrid'
+import { pct, standing } from './standing'
 import { useBackLayer } from '../ui/back'
 import { slide } from '../ui/transition'
-import { at } from '../ui/fx'
 import { eyebrow } from '../ui/styles'
 
 // Every week's crossword, kept: in Memories as a shelf of little grids, and any of them
 // open to finish — last week's never goes away just because Monday came.
 
-// A grid in miniature: only colours, never letters. `deal` has the squares land one by
-// one, for a new week's first sight of it.
-export function MiniGrid({ w, h, squares, whose, size = 132, deal = false }: {
-  w: number; h: number; squares: string[]; whose: (k: string) => boolean | undefined; size?: number; deal?: boolean
-}) {
-  const cell = Math.min(12, Math.floor(size / Math.max(w, h, 1)))
-  return (
-    <div className="shrink-0 relative" style={{ width: cell * w, height: cell * h }} aria-hidden="true">
-      {squares.map((k) => {
-        const [r, c] = k.split(',').map(Number)
-        const mine = whose(k)
-        return (
-          <span
-            key={k}
-            className={'absolute rounded-[2px] ' + (mine === undefined ? 'bg-fg/15' : mine ? 'bg-pa' : 'bg-pb') + (deal ? ' animate-pop' : '')}
-            style={{ left: c * cell, top: r * cell, width: cell - 1.5, height: cell - 1.5, ...(deal ? at((r + c) * 35) : {}) }}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
-export const progress = (w: CrosswordWeek) =>
-  w.squares.length === 0 ? 0 : Math.round((w.squares.filter((k) => k in w.cells).length / w.squares.length) * 100)
+// Where each of you is on a week's.
+export const sides = (w: CrosswordWeek) => ({
+  me: { pct: pct(w.mine.length, w.squares.length), solvedAt: w.solvedAt },
+  them: { pct: pct(w.theirs.length, w.squares.length), solvedAt: w.theirSolvedAt },
+})
 
 // All your crosswords, newest first — reloaded after one's been open, so how far you got
 // shows straight away.
@@ -66,8 +47,8 @@ export function CrosswordSheet({ week, onClose }: { week: string; onClose: () =>
   )
 }
 
-// The shelf in Memories: every week, small, with how far you got.
-export function CrosswordShelf() {
+// The shelf in Memories: every week, small — your copy — with how far each of you got.
+export function CrosswordShelf({ partner }: { partner: string }) {
   const { weeks, reload } = useCrosswordWeeks()
   const [open, setOpenNow] = useState<string | null>(null)
   const setOpen = (w: string | null) => slide(w ? 'forward' : 'back', () => setOpenNow(w))
@@ -83,8 +64,8 @@ export function CrosswordShelf() {
       </div>
       <div className="-mx-5 px-5 flex gap-3 overflow-x-auto pb-1 snap-x">
         {weeks.map((w) => {
-          const done = !!w.solvedAt
-          const pct = progress(w)
+          const { me, them } = sides(w)
+          const line = standing(me, them, partner) || 'Not started'
           return (
             <button
               key={w.week}
@@ -92,13 +73,11 @@ export function CrosswordShelf() {
               className="press snap-start shrink-0 w-[9.5rem] rounded-3xl border-2 border-fg/15 bg-card p-3 flex flex-col items-center gap-2 text-center"
             >
               <div className="h-[92px] grid place-items-center">
-                <MiniGrid w={w.w} h={w.h} squares={w.squares} whose={(k) => w.cells[k]} size={92} />
+                <MiniGrid w={w.w} h={w.h} squares={w.squares} whose={(k) => (w.mine.includes(k) ? true : undefined)} size={92} />
               </div>
               <div>
                 <div className="text-sm font-extrabold leading-tight">{w.week === thisWeek ? 'This week' : `Week of ${weekLabel(w.week)}`}</div>
-                <div className={'text-xs font-bold ' + (done ? 'text-sage-ink' : 'text-fg/55')}>
-                  {done ? 'Solved together ✓' : pct === 0 ? 'Not started' : `${pct}% · finish it`}
-                </div>
+                <div className={'text-xs font-bold leading-snug ' + (me.solvedAt ? 'text-sage-ink' : 'text-fg/55')}>{line}</div>
               </div>
             </button>
           )

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildCrossword, key, MAX_SIDE, type Candidate, type Puzzle } from './build'
 import { asAnswer, balanced, generalCandidates, harvest } from './harvest'
 import { makeRng } from '../engine/rng'
+import { first, standing } from './standing'
 import type { Memories } from '../daily/api'
 
 // Every run of two or more squares, across and down, is exactly one of the answers — no
@@ -102,5 +103,24 @@ describe('your answers, as crossword answers', () => {
     expect(alex).toEqual(['FIVE']) // SIX went to Sam, who said it more recently
     expect(sam).not.toContain('FOUR') // used last week
     expect(sam.length - alex.length).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('how the two of you stand', () => {
+  const side = (pct: number, solvedAt: string | null = null) => ({ pct, solvedAt })
+  it('says where each of you is, and who finished', () => {
+    expect(standing(side(0), side(0), 'Alex')).toBe('')
+    expect(standing(side(40), side(0), 'Alex')).toBe('You 40% · Alex 0%')
+    expect(standing(side(0), side(40), 'Alex')).toBe('Alex’s 40% through theirs')
+    expect(standing(side(100, '2026-09-22T20:00:00Z'), side(0), 'Alex')).toBe('Solved ✓ · Alex hasn’t started')
+    expect(standing(side(100, '2026-09-22T20:00:00Z'), side(55), 'Alex')).toBe('Solved ✓ · Alex 55%')
+    expect(standing(side(0), side(100, '2026-09-22T20:00:00Z'), 'Alex')).toBe('Alex has solved it — your turn')
+    expect(standing(side(30), side(100, '2026-09-22T20:00:00Z'), 'Alex')).toBe('Alex has solved it · you 30%')
+    expect(standing(side(100, '2026-09-23T08:00:00Z'), side(100, '2026-09-22T20:00:00Z'), 'Alex')).toBe('You’ve both solved it ✓')
+  })
+  it('knows who got there first', () => {
+    expect(first(side(100, '2026-09-23T08:00:00Z'), side(100, '2026-09-22T20:00:00Z'))).toBe('them')
+    expect(first(side(100, '2026-09-21T08:00:00Z'), side(100, '2026-09-22T20:00:00Z'))).toBe('me')
+    expect(first(side(100, '2026-09-21T08:00:00Z'), side(80))).toBe(null)
   })
 })
