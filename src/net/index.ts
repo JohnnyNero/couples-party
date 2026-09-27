@@ -20,6 +20,10 @@ let solo = false
 let playroom: typeof import('./playroom')
 const loadPlayroom = () => import('./playroom')
 
+// Before Playroom's loaded — nothing's started yet (or a test is drawing a screen on its
+// own) — everything answers as the in-process game would.
+const local = () => solo || !playroom
+
 export function preloadNet(): void {
   void loadPlayroom().catch(() => {})
 }
@@ -35,7 +39,7 @@ export async function initNet(mode: PlayMode, game: Game, roomCode?: string, res
 
 export function useSession(): SessionState {
   // eslint-disable-next-line react-hooks/rules-of-hooks -- `solo` is fixed before first render
-  return solo ? useLocalSession() : playroom.useSession()
+  return local() ? useLocalSession() : playroom.useSession()
 }
 
 // What you feel when you act: a firm buzz for locking an answer in, a light one for moving
@@ -53,42 +57,42 @@ export function dispatch(action: Action, { quiet = false }: { quiet?: boolean } 
     if (LOCK.has(action.type)) buzz('lock')
     else if (TAP.has(action.type)) buzz('tap')
   }
-  if (solo) localDispatch(action)
+  if (local()) localDispatch(action)
   else playroom.dispatch(action)
 }
 
 // The live preview (see live.ts): set by whoever's solving, watched by the other.
 export function setLive(value: Live | null): void {
-  if (solo) setLocalLive(value)
+  if (local()) setLocalLive(value)
   else playroom.setLive(value)
 }
 
 export function useLive(key: string): Live['value'] | null {
   // eslint-disable-next-line react-hooks/rules-of-hooks -- as above
-  const live = solo ? useLocalLive() : playroom.useLive()
+  const live = local() ? useLocalLive() : playroom.useLive()
   return live && live.key === key ? live.value : null
 }
 
 export function useMyPlayerId(): PlayerId | null {
   // eslint-disable-next-line react-hooks/rules-of-hooks -- as above
-  return solo ? SOLO_PLAYER : playroom.useMyPlayerId()
+  return local() ? SOLO_PLAYER : playroom.useMyPlayerId()
 }
 
 // The authority: the client that owns the timers and runs the bot. Solo is its own.
 export function getIsHost(): boolean {
-  return solo || playroom.getIsHost()
+  return local() || playroom.getIsHost()
 }
 
 // What each of you is up to right now (see live.ts). `seat` is for the bot, which acts
 // for the other chair; everyone else only ever sets their own.
 export function setActivity(value: Activity | null, seat?: PlayerId): void {
-  if (solo) setLocalActivity(seat ?? SOLO_PLAYER, value)
+  if (local()) setLocalActivity(seat ?? SOLO_PLAYER, value)
   else playroom.setActivity(value, seat)
 }
 
 // Theirs (or yours), but only while it's about the screen you're both on.
 export function useActivity(p: PlayerId, screen: string): ActivityKind | null {
   // eslint-disable-next-line react-hooks/rules-of-hooks -- `solo` is fixed before first render
-  const a = solo ? useLocalActivity(p) : playroom.useActivity(p)
+  const a = local() ? useLocalActivity(p) : playroom.useActivity(p)
   return a && a.key === screen ? a.kind : null
 }
