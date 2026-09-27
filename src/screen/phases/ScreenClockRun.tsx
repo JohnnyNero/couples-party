@@ -9,7 +9,7 @@ export function ScreenClockRun({ s }: { s: SessionState }) {
     <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
       {live.decider && <div className="text-sm sm:text-lg font-extrabold text-pa-ink">Tiebreaker</div>}
       <div className="font-display text-4xl sm:text-6xl font-extrabold">Stop at {seconds(round.targetMs, 1)}</div>
-      <div className="font-display text-8xl sm:text-9xl font-extrabold text-fg/15 tabular-nums leading-none">?.??</div>
+      <div className="font-display text-8xl sm:text-9xl font-extrabold text-fg/15 tabular-nums leading-none">???</div>
       <div className="text-base sm:text-xl text-fg/60">The clock is running · tap Stop on your phone</div>
       <WhoIsIn s={s} done={{ A: round.stopped.A !== null, B: round.stopped.B !== null }} big waiting={() => 'Counting…'} />
     </div>

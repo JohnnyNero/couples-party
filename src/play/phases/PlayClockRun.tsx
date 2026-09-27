@@ -54,7 +54,7 @@ export function PlayClockRun({ s, me }: { s: SessionState; me: PlayerId }) {
       </div>
       <div className="text-center font-display text-7xl font-extrabold tabular-nums leading-none">
         {done ? <span className="text-fg/40 text-4xl">Locked in</span>
-          : visible ? (elapsed / 1000).toFixed(2) : <span className="text-fg/20">?.??</span>}
+          : visible ? (elapsed / 1000).toFixed(2) : <span className="text-fg/20">???</span>}
       </div>
       <button
         onPointerDown={stop}

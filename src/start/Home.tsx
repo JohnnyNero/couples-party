@@ -163,7 +163,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <Board board={board} />
       <InstallCard />
-      <TonightCard onPlay={() => onPick('tonight')} onQuick={() => onPick('quick')} />
+      <TonightCard onPlay={() => onPick('tonight')} />
     </div>
   )
 }
@@ -229,7 +229,7 @@ function Streak({ n, last7 }: { n: number; last7: number | null }) {
 }
 
 // Tonight's line-up as icons, fillers marked out, and one big button.
-function TonightCard({ onPlay, onQuick }: { onPlay: () => void; onQuick: () => void }) {
+function TonightCard({ onPlay }: { onPlay: () => void }) {
   const lineup = roster('tonight', dayIndex(localDate())).filter((e) => e.key !== 'lights')
   const games = lineup.filter((e) => e.key !== 'circle' && e.key !== 'clock').length
   return (
@@ -265,9 +265,6 @@ function TonightCard({ onPlay, onQuick }: { onPlay: () => void; onQuick: () => v
         className="w-full min-h-[52px] rounded-2xl bg-pa text-white font-display text-xl font-extrabold tracking-wide press"
       >
         Play tonight
-      </button>
-      <button onClick={onQuick} className="press -mt-1 self-center min-h-[40px] px-3 text-sm font-extrabold text-paper/70">
-        Or a quick game — three at random, now ›
       </button>
     </section>
   )
