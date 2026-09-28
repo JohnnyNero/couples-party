@@ -1197,7 +1197,8 @@ export function adopt(saved: SessionState, now: number): SessionState {
 
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   if (action.type === 'AWAY') {
-    if (!state.players[action.player].connected) return state
+    // After the end there's nothing to wait for: leaving is just going home.
+    if (!state.players[action.player].connected || state.phase === 'DONE') return state
     return holdFor(state, action.player, now)
   }
   if (action.type === 'PAUSE') {

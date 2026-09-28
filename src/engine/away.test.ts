@@ -64,3 +64,10 @@ describe('picking a saved game back up', () => {
     expect(standing(back)).toEqual(before)
   })
 })
+
+describe('leaving once it is over', () => {
+  it('is just going home: the end stays as it is, nobody waits', () => {
+    const done: SessionState = { ...start(), phase: 'DONE', phaseEndsAt: null }
+    expect(reduce(done, { type: 'AWAY', player: 'B' }, 5000)).toBe(done)
+  })
+})

@@ -8,6 +8,7 @@ import {
   useMultiplayerState,
   getState,
   setState,
+  transferHost,
   RPC,
   type PlayerState,
 } from 'playroomkit'
@@ -19,6 +20,7 @@ import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
+import { freshMemo, isLeftover, shown } from './closing'
 import { keepChainLists } from '../engine/chain'
 import { dayIndex, localDate } from '../daily/dates'
 import { dailySeed } from '../share/daily'
@@ -80,9 +82,10 @@ function ensureSessionSeed(): number {
   return sessionSeed
 }
 
-// Authoritative state factory. Only ever called on the host: for the initial broadcast,
-// the RPC dispatch handler's fallback, and the local dispatch() fallback when this client
-// is itself the host.
+// Authoritative state factory. Called on the host — for the initial broadcast, the RPC
+// dispatch handler's fallback, and the local dispatch() fallback when this client is
+// itself the host — and by a phone about to take over a room whose last game is over
+// (see takeOver), which hands the host the new game it wants.
 function hostFreshState(): SessionState {
   const content = sessionContent()
   // Tonight is the same for every couple that day: its seed is the day's, not ours.
@@ -145,6 +148,8 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
       const ongoing = existing && existing.game === game && existing.phase !== 'DONE' && !!seats[deviceKey()]
       if (!ongoing) setState(SESSION_KEY, hostFreshState(), true)
     }
+  } else {
+    takeOver(resume)
   }
 
   // Ruling P1: Playroom collects each player's name at join, so JOIN is dispatched
@@ -181,6 +186,18 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
     return null
   })
 
+  // A phone that's just arrived to start something new, finding the last game over:
+  // its new game replaces the old one, it's seated in it, and it takes over as host —
+  // so a phone left on the old end screen (maybe in a pocket, its timers throttled)
+  // isn't the one keeping time. That phone still shows its end screen (see closing.ts).
+  RPC.register('takeOver', async (fresh: SessionState, from: PlayerState) => {
+    if (!isHost() || !isLeftover(getState(SESSION_KEY) as SessionState | undefined)) return null
+    setState(SESSION_KEY, fresh, true)
+    seat(from)
+    if (from.id !== myPlayer().id) void transferHost(from.id).catch(() => {})
+    return null
+  })
+
   // Host timer loop: fire TIMEOUT once the current phase's deadline has passed.
   setInterval(() => {
     if (!isHost()) return
@@ -195,9 +212,27 @@ function hostReduce(action: Action): void {
   setState(SESSION_KEY, reduce(current, action, Date.now()), true)
 }
 
+// Once this phone has played a game to its end, it keeps showing that end — the room may
+// already be hosting the next one (see closing.ts).
+const endMemo = freshMemo()
+
 export function useSession(): SessionState {
   const [session] = useMultiplayerState<SessionState>(SESSION_KEY, placeholderState())
-  return session
+  return shown(endMemo, session)
+}
+
+// Not the host, and the room is holding a finished game: ask for it to be replaced with
+// ours. The room's state can take a moment to arrive, so this looks a few times; asking
+// twice is harmless (the host only replaces a finished game).
+function takeOver(resume?: Saved | null, tries = 0): void {
+  const room = getState(SESSION_KEY) as SessionState | undefined
+  if (isHost()) return
+  if (isLeftover(room)) {
+    const fresh = resume ? adopt(resume.state, Date.now()) : hostFreshState()
+    void RPC.call('takeOver', fresh, RPC.Mode.HOST)
+    return
+  }
+  if (!room && tries < 10) setTimeout(() => takeOver(resume, tries + 1), 300)
 }
 
 export function setLive(value: Live | null): void {
