@@ -20,6 +20,7 @@ import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayFollow, PlayFrenzy, PlaySpot } from '../play/phases/PlayMinis'
+import { PlayGuess, PlayHigher, PlayTwist } from '../play/phases/PlayQuiz'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
 import { HomeButton } from './HomeButton'
 import { PlayMeldWrite } from '../play/phases/PlayMeldWrite'
@@ -73,6 +74,9 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'SPOT_RESULT':
     case 'FRENZY_RESULT':
     case 'FOLLOW_RESULT':
+    case 'TWIST_RESULT':
+    case 'HL_RESULT':
+    case 'GUESS_RESULT':
     case 'CLASH_RESULT':
     case 'CHAIN_RESULT':
     case 'BLUFF_RESULT':
@@ -104,6 +108,12 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayCircleDraw s={s} me={me} />
     case 'SPOT_RUN':
       return <PlaySpot s={s} me={me} />
+    case 'TWIST_SAY':
+      return <PlayTwist s={s} me={me} />
+    case 'HL_PICK':
+      return <PlayHigher s={s} me={me} />
+    case 'GUESS_WRITE':
+      return <PlayGuess s={s} me={me} />
     case 'FRENZY_RUN':
       return <PlayFrenzy s={s} me={me} />
     case 'FOLLOW_SHOW':

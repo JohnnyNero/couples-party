@@ -40,6 +40,12 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   FRENZY_READY: 3000,
   FRENZY_REVEAL: 4500,
   FOLLOW_REVEAL: 3500, // (FOLLOW_SHOW and FOLLOW_PLAY run as long as the sequence needs)
+  TWIST_SAY: 15000,   // read it, then say it three times fast — the judge usually calls it sooner
+  TWIST_REVEAL: 5000,
+  HL_PICK: 15000,
+  HL_REVEAL: 6000,
+  GUESS_WRITE: 30000,
+  GUESS_REVEAL: 7000,
   DECIDER_READY: 3000,
   DECIDER_REVEAL: 5500,
 }
@@ -99,6 +105,10 @@ export const FOLLOW = {
   playMsPerStep: 1500, // time allowed to play it back, per step…
   playLeadMs: 3000,    // …plus this
 }
+
+export const TWIST = { times: 3 } // say it this many times
+
+export const GUESS = { maxDigits: 9, closeShare: 0.25 } // both within a quarter of it: a team point
 
 export const FILLER = {
   winPoints: 5,     // to whoever wins a filler: matters in a close night, never swings a big one

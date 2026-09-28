@@ -1,5 +1,5 @@
 import type {
-  BluffGame, BluffRound, ClashRound, MeldRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
+  BluffGame, BluffRound, GuessRound, HigherLower, HlRound, TwistRound, ClashRound, MeldRound, DrawRound, FingerGame, FingerRound, GameKey, LikelyGame, LikelyRound, ListAct, ListItem, MrMrsGame,
   MrMrsRound, PlayerId, SessionState, WaveRound,
 } from './state'
 import { other } from './state'
@@ -8,7 +8,7 @@ import { FILLER } from './phases'
 import { clockRoundWinner, fillerOver, fillerWinner, type Filler } from './fillers'
 import { clashCellPoints, clashVerdict } from './clash'
 import { chainRoundWinner } from './chain'
-import { CHAIN } from './phases'
+import { CHAIN, GUESS } from './phases'
 
 // The in-session tally is NEVER stored: it is derived from the act records here. If a
 // number on the board is not one of these, something has gone wrong.
@@ -42,6 +42,10 @@ export const SCORING = {
   mrmrsRight: 8, // to whoever predicted right, as ruled by the person it was about
   bluffSpotted: 7, // to the guesser, for picking the truth
   bluffFooled: 7, // to the bluffer, when a lie (or the clock) got them
+  twistWin: 6,    // Tongue Twisters: nail it where they tripped
+  hlRight: 2,     // Higher or Lower: a right pick…
+  hlQuickest: 1,  // …and one more for the quicker right one
+  guessCloser: 5, // Guesstimate: the closer of you
 } as const
 
 export type Standing = Record<PlayerId, number>
@@ -194,6 +198,50 @@ export function drawAward(round: DrawRound): Award {
   return { player: other(round.drawer), points }
 }
 
+// ---------------------------------------------------------------- Tongue Twisters
+
+// Nailed it where they tripped: the round's yours. Both nailed it is a team point.
+export function twistWinner(round: TwistRound): PlayerId | null {
+  const { A, B } = round.said
+  if (A === null || B === null || A === B) return null
+  return A ? 'A' : 'B'
+}
+
+// ---------------------------------------------------------------- Higher or Lower
+
+// "Which came first?" and "Which is older?" go to the smaller number (the earlier
+// year); everything else to the bigger.
+export const hlAnswer = (item: HigherLower): 'a' | 'b' => {
+  const lower = /^which (came first|is older|was first|is earlier)/i.test(item.question)
+  return (item.av > item.bv) !== lower ? 'a' : 'b'
+}
+
+export function hlAwards(round: HlRound): Award[] {
+  const right = (['A', 'B'] as PlayerId[]).filter((p) => round.pick[p] === hlAnswer(round.item))
+  const out: Award[] = right.map((p) => ({ player: p, points: SCORING.hlRight }))
+  const quickest = right.length === 1 ? right[0]
+    : right.length === 2 && round.ms.A !== round.ms.B ? ((round.ms.A ?? Infinity) < (round.ms.B ?? Infinity) ? 'A' : 'B')
+    : null
+  if (quickest) out.push({ player: quickest, points: SCORING.hlQuickest })
+  return out
+}
+
+// ---------------------------------------------------------------- Guesstimate
+
+export const guessOff = (round: GuessRound, p: PlayerId) =>
+  round.guess[p] === null ? Infinity : Math.abs(round.guess[p]! - round.answer)
+
+export function guessWinner(round: GuessRound): PlayerId | null {
+  const a = guessOff(round, 'A')
+  const b = guessOff(round, 'B')
+  if (a === b) return null
+  return a < b ? 'A' : 'B'
+}
+
+// Both within a quarter of the real number: you know your world together.
+export const guessBothClose = (round: GuessRound) =>
+  (['A', 'B'] as PlayerId[]).every((p) => guessOff(round, p) <= Math.max(1, round.answer * GUESS.closeShare))
+
 // ---------------------------------------------------------------- The board
 
 // ---------------------------------------------------------------- the fillers
@@ -262,6 +310,13 @@ export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   meld: { you: 0, us: 1.45 },
   // Describe It, per turn: every word got — to the describer, and to the team.
   describe: { you: 6, us: 6 },
+  // Tongue Twisters, per round: 6 to whoever nailed it when the other tripped (about
+  // half of rounds); both nailing it is the team's.
+  twist: { you: 3, us: 0.35 },
+  // Higher or Lower, per question: 2 for each right pick (about 60%), 1 for the quicker.
+  higher: { you: 3.2, us: 0.36 },
+  // Guesstimate, per question: 5 to the closer; both close is the team's (about a third).
+  guess: { you: 4.9, us: 0.33 },
 }
 
 export type Scale = { you: number; us: number }
@@ -373,6 +428,28 @@ function rawFor(s: SessionState, key: Scaled): Raw {
       break
     case 'meld':
       for (const round of s.meld?.rounds ?? []) us.push(meldTeamRaw(round))
+      break
+    case 'twist':
+      for (const round of s.twist?.rounds ?? []) {
+        const w = twistWinner(round)
+        if (w) you.push({ player: w, points: SCORING.twistWin })
+        us.push(round.said.A && round.said.B ? 1 : 0)
+      }
+      break
+    case 'higher':
+      s.higher?.rounds.forEach((round, i) => {
+        if (i > s.higher!.current || (i === s.higher!.current && s.phase === 'HL_PICK')) return
+        you.push(...hlAwards(round))
+        us.push(round.pick.A === hlAnswer(round.item) && round.pick.B === hlAnswer(round.item) ? 1 : 0)
+      })
+      break
+    case 'guess':
+      s.guess?.rounds.forEach((round, i) => {
+        if (i > s.guess!.current || (i === s.guess!.current && s.phase === 'GUESS_WRITE')) return
+        const w = guessWinner(round)
+        if (w) you.push({ player: w, points: SCORING.guessCloser })
+        us.push(guessBothClose(round) ? 1 : 0)
+      })
       break
     case 'chain':
       for (const round of s.chain?.rounds ?? []) {

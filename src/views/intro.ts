@@ -90,6 +90,21 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
     'Then play it back, both at once.',
     'It grows every round. The first to slip loses.',
   ],
+  twist: [
+    'A tongue twister. Take it in turns to say it three times, fast, out loud.',
+    'Whoever’s listening judges: nailed it, or tripped up?',
+    `Nail one they tripped on and it’s ${pts('twist', SCORING.twistWin)}. Both nail it: a team point. They get harder.`,
+  ],
+  higher: [
+    'Two things and a question — which is taller, older, bigger?',
+    'You both pick at once.',
+    `Right scores ${pts('higher', SCORING.hlRight)}, and the quicker right answer gets ${pts('higher', SCORING.hlQuickest)} more.`,
+  ],
+  guess: [
+    'A question with a number nobody really knows.',
+    'You both put in your best guess.',
+    `Closest scores ${pts('guess', SCORING.guessCloser)}. Both close, and it’s a team point.`,
+  ],
   }
   return STEPS[key]
 }

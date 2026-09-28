@@ -198,6 +198,24 @@ export function nextBotAction(
       return { type: 'STOP_CLOCK', player: me, elapsedMs: round.targetMs * (0.85 + rng() * 0.3) }
     }
 
+    case 'TWIST_SAY': {
+      const round = s.twist?.rounds[s.twist.current]
+      if (!round || round.turn === me) return null // its own go: the other judges
+      return { type: 'TWIST_JUDGE', player: me, nailed: rng() < 0.6 }
+    }
+
+    case 'HL_PICK': {
+      const round = s.higher?.rounds[s.higher.current]
+      if (!round || round.pick[me] !== null) return null
+      return { type: 'HL_PICK', player: me, pick: rng() < 0.5 ? 'a' : 'b', ms: 2000 + rng() * 6000 }
+    }
+
+    case 'GUESS_WRITE': {
+      const round = s.guess?.rounds[s.guess.current]
+      if (!round || round.guess[me] !== null) return null
+      return { type: 'GUESS_SUBMIT', player: me, value: Math.round(round.answer * (0.5 + rng())) }
+    }
+
     case 'SPOT_RUN': {
       const round = s.spot?.rounds[s.spot.current]
       if (!round || round.found[me] !== null) return null
@@ -256,6 +274,9 @@ export function botDelay(s: SessionState, rng: () => number): number {
       return target * (0.85 + rng() * 0.3)
     }
     case 'SPOT_RUN': return spread(1500, 5000)
+    case 'TWIST_SAY': return spread(4000, 9000)
+    case 'HL_PICK': return spread(2000, 7000)
+    case 'GUESS_WRITE': return spread(5000, 15000)
     case 'FRENZY_RUN': return 5200
     case 'FOLLOW_PLAY': return spread(1500, 4000)
     default: return 1000

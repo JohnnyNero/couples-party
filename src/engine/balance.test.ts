@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { BluffRound, ChainRound, ClashRound, DrawRound, Game, GameKey, ListAct, MrMrsRound, PlayerId, SessionState, WaveRound } from './state'
+import type { BluffRound, ChainRound, ClashRound, DrawRound, Game, GameKey, GuessRound, HlRound, ListAct, MrMrsRound, PlayerId, SessionState, TwistRound, WaveRound } from './state'
 import { initialState } from './state'
 import { makeRng } from './rng'
 import { roster, roundsFor } from './roster'
@@ -15,6 +15,29 @@ const PS: PlayerId[] = ['A', 'B']
 const chance = (rng: () => number, p: number) => rng() < p
 
 const SIMS: Partial<Record<GameKey, Sim>> = {
+  // Tongue Twisters: each go nailed about 60% of the time.
+  twist: (rng, rounds) => ({
+    twist: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): TwistRound => ({
+      index: i + 1, text: 't', first: PS[i % 2], turn: PS[(i + 1) % 2], said: { A: chance(rng, 0.6), B: chance(rng, 0.6) },
+    })) },
+  }),
+  // Higher or Lower: each pick right about 60% of the time, at a random speed.
+  higher: (rng, rounds) => ({
+    phase: 'HL_RESULT',
+    higher: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): HlRound => ({
+      index: i + 1, item: { question: 'Which is taller?', a: 'x', av: 2, b: 'y', bv: 1, unit: '' },
+      pick: { A: chance(rng, 0.6) ? 'a' : 'b', B: chance(rng, 0.6) ? 'a' : 'b' },
+      ms: { A: rng() * 5000, B: rng() * 5000 },
+    })) },
+  }),
+  // Guesstimate: each guess somewhere within half either side; both close about a third of the time.
+  guess: (rng, rounds) => ({
+    phase: 'GUESS_RESULT',
+    guess: { current: rounds - 1, rounds: Array.from({ length: rounds }, (_, i): GuessRound => ({
+      index: i + 1, question: 'q', answer: 1000,
+      guess: { A: Math.round(1000 * (0.55 + rng() * 0.9)), B: Math.round(1000 * (0.55 + rng() * 0.9)) },
+    })) },
+  }),
   list: (rng, rounds) => ({
     listActs: Array.from({ length: rounds }, (_, a): ListAct => ({
       author: PS[a % 2], themeId: 't', placeIndex: 7, revealIndex: 6, displacement: 0,
@@ -116,7 +139,7 @@ describe('every game counts the same', () => {
   // Every night of Tonight's rotation, so every game turns up at its Tonight length.
   const lengths: Array<{ game: Game; night: number }> = [
     { game: 'full', night: 0 },
-    ...Array.from({ length: 18 }, (_, night) => ({ game: 'tonight' as Game, night })),
+    ...Array.from({ length: 24 }, (_, night) => ({ game: 'tonight' as Game, night })),
   ]
   for (const { game, night } of lengths) {
     for (const { key } of roster(game, night)) {

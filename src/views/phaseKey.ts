@@ -32,6 +32,9 @@ export function phaseKey(s: SessionState): string {
     s.spot?.current ?? 0,
     s.frenzy?.current ?? 0,
     s.follow?.current ?? 0,
+    s.twist ? `${s.twist.current}.${s.twist.rounds[s.twist.current].turn}` : '',
+    s.higher?.current ?? 0,
+    s.guess?.current ?? 0,
   ].join('|')
 }
 
@@ -61,5 +64,8 @@ export function screenKey(s: SessionState): string {
     s.spot?.current ?? 0,
     s.frenzy?.current ?? 0,
     s.follow?.current ?? 0,
+    s.twist ? `${s.twist.current}.${s.twist.rounds[s.twist.current].turn}` : '',
+    s.higher?.current ?? 0,
+    s.guess?.current ?? 0,
   ].join('|')
 }

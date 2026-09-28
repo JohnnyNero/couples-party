@@ -109,6 +109,22 @@ const GLYPHS: Record<GameKey, ReactElement> = {
       <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
     </>
   ),
+  twist: (
+    <>
+      {P('M4 8h11.5a3.5 3.5 0 1 1-3.5 3.5M20 16H8.5a3.5 3.5 0 1 0 3.5-3.5')}
+    </>
+  ),
+  higher: (
+    <>
+      {P('M7 20V5M3.5 8.5 7 5l3.5 3.5M17 4v15M13.5 15.5 17 19l3.5-3.5')}
+    </>
+  ),
+  guess: (
+    <>
+      {P('M5 21V11M10 21V5M15 21v-7M20 21V8')}
+      {P('M3 21h19')}
+    </>
+  ),
   lights: P('M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z'),
 }
 
@@ -130,6 +146,9 @@ const TONES: Record<GameKey, string> = {
   spot: 'bg-sage-soft text-sage-ink',
   frenzy: 'bg-pa-soft text-pa-ink',
   follow: 'bg-pb-soft text-pb-ink',
+  twist: 'bg-pa-soft text-pa-ink',
+  higher: 'bg-sage-soft text-sage-ink',
+  guess: 'bg-tan-soft text-tan-ink',
   lights: 'bg-fg text-bg',
 }
 

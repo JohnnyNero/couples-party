@@ -43,6 +43,10 @@ function BotSeat({ s, id }: { s: SessionState; id: PlayerId }) {
     s.draw?.current ?? 0,
     round?.strokes.length ?? 0,
     round?.guesses?.length ?? 0,
+    // …and so do Tongue Twisters (whose go it is), and the quiz games (which question).
+    s.twist ? `${s.twist.current}.${s.twist.rounds[s.twist.current].turn}` : '',
+    s.higher?.current ?? 0,
+    s.guess?.current ?? 0,
   ].join('|')
 
   // Keyed on the decision point, so an ordinary re-render never restarts the clock the

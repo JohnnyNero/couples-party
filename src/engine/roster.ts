@@ -48,6 +48,9 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   spot: [{ key: 'spot', rounds: 5 }],
   frenzy: [{ key: 'frenzy', rounds: 3 }],
   follow: [{ key: 'follow', rounds: 1 }], // sudden death: it runs till one of you slips
+  twist: [{ key: 'twist', rounds: 6 }],
+  higher: [{ key: 'higher', rounds: 8 }],
+  guess: [{ key: 'guess', rounds: 6 }],
 }
 
 // Tonight: quick games before bed, then a question to turn the light off on. The
@@ -65,6 +68,9 @@ const TONIGHT_POOL: RosterEntry[] = [
   { key: 'bluff', rounds: 1 }, // one each
   { key: 'meld', rounds: 2 },
   { key: 'describe', rounds: 2 },
+  { key: 'twist', rounds: 3 },
+  { key: 'higher', rounds: 5 },
+  { key: 'guess', rounds: 4 },
 ]
 
 // One quick filler after the second game, each of these in turn.
@@ -151,6 +157,9 @@ export function gameOfPhase(phase: Phase): GameKey | null {
   if (phase.startsWith('SPOT_')) return 'spot'
   if (phase.startsWith('FRENZY_')) return 'frenzy'
   if (phase.startsWith('FOLLOW_')) return 'follow'
+  if (phase.startsWith('TWIST_')) return 'twist'
+  if (phase.startsWith('HL_')) return 'higher'
+  if (phase.startsWith('GUESS_')) return 'guess'
   if (phase === 'LIGHTS_OUT') return 'lights'
   return null
 }
@@ -176,5 +185,8 @@ export const GAME_LABELS: Record<GameKey, string> = {
   spot: 'Spot It',
   frenzy: 'Frenzy',
   follow: 'Follow Me',
+  twist: 'Tongue Twisters',
+  higher: 'Higher or Lower',
+  guess: 'Guesstimate',
   lights: 'Lights Out',
 }

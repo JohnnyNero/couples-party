@@ -70,6 +70,9 @@ function startGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'spot': return beginSpot(state, now)
     case 'frenzy': return beginFrenzy(state, now)
     case 'follow': return beginFollow(state, now)
+    case 'twist': return beginTwist(state, now)
+    case 'higher': return beginHigher(state, now)
+    case 'guess': return beginGuess(state, now)
     case 'lights': return beginLights(state, now)
     default: return finishSession(state)
   }
@@ -91,7 +94,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'DESCRIBE_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'SPOT_RESULT', 'FRENZY_RESULT', 'FOLLOW_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'DESCRIBE_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'SPOT_RESULT', 'FRENZY_RESULT', 'FOLLOW_RESULT', 'TWIST_RESULT', 'HL_RESULT', 'GUESS_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -941,6 +944,124 @@ function advanceFollow(state: SessionState, now: number): SessionState {
   return toFollowShow(s, now)
 }
 
+// ---------------------------------------------------------------- Tongue Twisters
+
+// Harder as it goes: the rounds climb from easy to hard across the game, each drawn from
+// its level (or the nearest level that has any left).
+function beginTwist(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const n = roundsFor(s, 'twist')
+  const rng = makeRng(s.seed ^ 0x7157)
+  const byLevel = [1, 2, 3].map((l) => shuffled(rng, (s.twisters ?? []).filter((t) => t.level === l)))
+  const texts: string[] = []
+  for (let i = 0; i < n; i++) {
+    const want = Math.min(3, 1 + Math.floor((i * 3) / n))
+    const order = [want, want + 1, want - 1, want + 2, want - 2].filter((l) => l >= 1 && l <= 3)
+    const level = order.find((l) => byLevel[l - 1].length > 0)
+    if (level === undefined) break
+    texts.push(byLevel[level - 1].shift()!.text)
+  }
+  if (texts.length === 0) return skipTo(s, now, 'twist')
+  const first: PlayerId = rng() < 0.5 ? 'A' : 'B'
+  s.twist = {
+    rounds: texts.map((text, i) => {
+      const f = i % 2 === 0 ? first : other(first)
+      return { index: i + 1, text, first: f, turn: f, said: { A: null, B: null } }
+    }),
+    current: 0,
+  }
+  s.twisters = [] // dealt: no need to carry the rest about
+  s.phase = 'TWIST_SAY'
+  s.phaseEndsAt = now + DURATIONS.TWIST_SAY!
+  return s
+}
+
+// The judge has called it (or not in time — then it stands): the other's go, or the reveal.
+function afterTwistTurn(state: SessionState, now: number, nailed: boolean): SessionState {
+  const s = clone(state)
+  const round = s.twist!.rounds[s.twist!.current]
+  round.said[round.turn] = nailed
+  const next = other(round.turn)
+  if (round.said[next] === null) {
+    round.turn = next
+    s.phase = 'TWIST_SAY'
+    s.phaseEndsAt = now + DURATIONS.TWIST_SAY!
+  } else {
+    s.phase = 'TWIST_REVEAL'
+    s.phaseEndsAt = now + DURATIONS.TWIST_REVEAL!
+  }
+  return s
+}
+
+function advanceTwist(state: SessionState, now: number): SessionState {
+  const g = state.twist!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'TWIST_RESULT')
+  const s = clone(state)
+  s.twist!.current += 1
+  s.phase = 'TWIST_SAY'
+  s.phaseEndsAt = now + DURATIONS.TWIST_SAY!
+  return s
+}
+
+// ---------------------------------------------------------------- Higher or Lower
+
+function beginHigher(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const items = shuffled(makeRng(s.seed ^ 0x41b1), s.higherLower ?? []).slice(0, roundsFor(s, 'higher'))
+  if (items.length === 0) return skipTo(s, now, 'higher')
+  s.higher = {
+    rounds: items.map((item, i) => ({ index: i + 1, item, pick: { A: null, B: null }, ms: { A: null, B: null } })),
+    current: 0,
+  }
+  s.higherLower = []
+  s.phase = 'HL_PICK'
+  s.phaseEndsAt = now + DURATIONS.HL_PICK!
+  return s
+}
+
+function advanceHigher(state: SessionState, now: number): SessionState {
+  const g = state.higher!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'HL_RESULT')
+  const s = clone(state)
+  s.higher!.current += 1
+  s.phase = 'HL_PICK'
+  s.phaseEndsAt = now + DURATIONS.HL_PICK!
+  return s
+}
+
+// ---------------------------------------------------------------- Guesstimate
+
+function beginGuess(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const items = shuffled(makeRng(s.seed ^ 0x6e55), s.guesstimates ?? []).slice(0, roundsFor(s, 'guess'))
+  if (items.length === 0) return skipTo(s, now, 'guess')
+  s.guess = {
+    rounds: items.map((q, i) => ({ index: i + 1, question: q.question, answer: q.answer, guess: { A: null, B: null } })),
+    current: 0,
+  }
+  s.guesstimates = []
+  s.phase = 'GUESS_WRITE'
+  s.phaseEndsAt = now + DURATIONS.GUESS_WRITE!
+  return s
+}
+
+function advanceGuess(state: SessionState, now: number): SessionState {
+  const g = state.guess!
+  if (g.current >= g.rounds.length - 1) return toScoreboard(state, 'GUESS_RESULT')
+  const s = clone(state)
+  s.guess!.current += 1
+  s.phase = 'GUESS_WRITE'
+  s.phaseEndsAt = now + DURATIONS.GUESS_WRITE!
+  return s
+}
+
+const toStep = (state: SessionState, now: number, phase: Phase): SessionState => {
+  const s = clone(state)
+  s.phase = phase
+  s.phaseEndsAt = now + DURATIONS[phase]!
+  return s
+}
+
 // ---------------------------------------------------------------- Stop the Clock
 
 // The same clock runs two things: the filler (s.clock) and a level night's tiebreaker
@@ -1364,6 +1485,31 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       round.reject = { player: last.by!, word: last.word, reason: 'rejected' }
       return toChainTurn(s, now)
     }
+    case 'TWIST_JUDGE': {
+      if (state.phase !== 'TWIST_SAY' || !state.twist) return state
+      const round = state.twist.rounds[state.twist.current]
+      if (action.player === round.turn) return state // not your own go
+      return afterTwistTurn(state, now, !!action.nailed)
+    }
+    case 'HL_PICK': {
+      if (state.phase !== 'HL_PICK' || !state.higher) return state
+      const round = state.higher.rounds[state.higher.current]
+      if (round.pick[action.player] !== null || (action.pick !== 'a' && action.pick !== 'b')) return state
+      const s = clone(state)
+      const r = s.higher!.rounds[s.higher!.current]
+      r.pick[action.player] = action.pick
+      r.ms[action.player] = Math.max(0, Math.round(action.ms) || 0)
+      return r.pick.A !== null && r.pick.B !== null ? toStep(s, now, 'HL_REVEAL') : s
+    }
+    case 'GUESS_SUBMIT': {
+      if (state.phase !== 'GUESS_WRITE' || !state.guess) return state
+      const round = state.guess.rounds[state.guess.current]
+      if (round.guess[action.player] !== null || !Number.isFinite(action.value) || action.value < 0) return state
+      const s = clone(state)
+      const r = s.guess!.rounds[s.guess!.current]
+      r.guess[action.player] = Math.round(action.value)
+      return r.guess.A !== null && r.guess.B !== null ? toStep(s, now, 'GUESS_REVEAL') : s
+    }
     case 'SPOT_FOUND': {
       if (state.phase !== 'SPOT_RUN' || !state.spot) return state
       const round = state.spot.rounds[state.spot.current]
@@ -1497,6 +1643,12 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         case 'CLASH_REVEAL': return advanceClash(state, now)
         case 'CIRCLE_DRAW': return toCircleReveal(state, now)
         case 'CIRCLE_REVEAL': return advanceCircle(state, now)
+        case 'TWIST_SAY': return afterTwistTurn(state, now, true) // not called in time: it stands
+        case 'TWIST_REVEAL': return advanceTwist(state, now)
+        case 'HL_PICK': return toStep(state, now, 'HL_REVEAL')
+        case 'HL_REVEAL': return advanceHigher(state, now)
+        case 'GUESS_WRITE': return toStep(state, now, 'GUESS_REVEAL')
+        case 'GUESS_REVEAL': return advanceGuess(state, now)
         case 'SPOT_READY': return toSpotStep(state, now, 'SPOT_RUN')
         case 'SPOT_RUN': return toSpotStep(state, now, 'SPOT_REVEAL')
         case 'SPOT_REVEAL': return advanceSpot(state, now)

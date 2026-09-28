@@ -10,7 +10,7 @@ import { CLASH } from '../engine/phases'
 // Items are logged by their text, not their id: ids come from their position in the
 // content file, and they shift whenever a line is added or removed.
 
-type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe'
+type PoolKey = 'likely' | 'finger' | 'mrmrs' | 'lights' | 'wave' | 'draw' | 'list' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'twist' | 'higher' | 'guess'
 export type SeenLog = Partial<Record<PoolKey, string[]>> // oldest first
 
 const STORAGE_KEY = 'couples-party:seen'
@@ -31,6 +31,9 @@ const NEED: Record<PoolKey, number> = {
   bluff: roundsFor({ game: 'bluff' }, 'bluff'),
   meld: roundsFor({ game: 'meld' }, 'meld'),
   describe: 60, // words a game can get through
+  twist: roundsFor({ game: 'twist' }, 'twist'),
+  higher: roundsFor({ game: 'higher' }, 'higher'),
+  guess: roundsFor({ game: 'guess' }, 'guess'),
 }
 
 const waveKey = (s: { low: string; high: string }) => `${s.low} | ${s.high}`
@@ -66,6 +69,10 @@ export function freshen(content: Content, log: SeenLog = loadSeen()): Content {
     bluffPrompts: unseen(content.bluffPrompts ?? [], id, log.bluff, NEED.bluff),
     meldPrompts: unseen(content.meldPrompts ?? [], id, log.meld, NEED.meld),
     describeWords: unseen(content.describeWords ?? [], id, log.describe, NEED.describe),
+    // Tongue Twisters are dealt by level, so keep enough of each.
+    twisters: [1, 2, 3].flatMap((l) => unseen((content.twisters ?? []).filter((t) => t.level === l), (t) => t.text, log.twist, NEED.twist)),
+    higherLower: unseen(content.higherLower ?? [], (h) => h.question + h.a + h.b, log.higher, NEED.higher),
+    guesstimates: unseen(content.guesstimates ?? [], (g) => g.question, log.guess, NEED.guess),
     // Capped, not just trimmed: each Word Chain category carries a long answer list, and
     // the whole session is sent to both phones on every move, so only what a session can
     // use goes along.
@@ -96,6 +103,9 @@ export function shownIn(s: SessionState): Record<PoolKey, string[]> {
     bluff: upTo(s.bluff).map((r) => r.prompt),
     meld: upTo(s.meld).map((r) => r.prompt),
     describe: s.describe ? s.describe.deck.slice(0, s.describe.next + (s.phase === 'DESCRIBE_RUN' ? 1 : 0)) : [],
+    twist: upTo(s.twist ?? null).map((r) => r.text),
+    higher: upTo(s.higher ?? null).map((r) => r.item.question + r.item.a + r.item.b),
+    guess: upTo(s.guess ?? null).map((r) => r.question),
   }
 }
 

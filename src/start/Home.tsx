@@ -293,7 +293,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
 
 const SHORT: Record<GameKey, string> = {
   list: 'Shortlist', likely: 'Likely', finger: 'Called It', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
-  draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', spot: 'Spot It', frenzy: 'Frenzy', follow: 'Follow Me', lights: 'Lights out',
+  draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', spot: 'Spot It', frenzy: 'Frenzy', follow: 'Follow Me', twist: 'Twisters', higher: 'Higher/Lower', guess: 'Guesstimate', lights: 'Lights out',
 }
 
 type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
@@ -309,6 +309,9 @@ const HEAD_TO_HEAD: Pick[] = [
   { key: 'bluff', blurb: 'Two lies and a truth about you. Can they spot it?', meta: '3 rounds · 8 min' },
   { key: 'describe', blurb: 'Describe the word, they shout guesses. Every one counts for you both.', meta: '4 turns · 4 min' },
   { key: 'meld', blurb: 'Say the same thing. A team game — no winner, just you two.', meta: '5 prompts · 4 min' },
+  { key: 'twist', blurb: 'Say it three times fast. They judge if you tripped.', meta: '6 twisters · 4 min' },
+  { key: 'higher', blurb: 'Two things — which is bigger, older, taller? Quickest right wins.', meta: '8 questions · 3 min' },
+  { key: 'guess', blurb: 'Nobody knows the number. Closest guess takes it.', meta: '6 questions · 4 min' },
 ]
 const FILLERS: Pick[] = [
   { key: 'circle', blurb: 'The rounder one wins', meta: 'Best of 5' },

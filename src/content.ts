@@ -1,4 +1,4 @@
-import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './engine/state'
+import type { ChainCategory, Content, DrawPrompt, Guesstimate, HigherLower, Theme, Twister, WaveSpectrum } from './engine/state'
 
 // Parses the one plain-text file all the game content lives in (content/game-content.md
 // at the repo root, served as a static asset) — so editing what the games say never
@@ -8,7 +8,7 @@ import type { ChainCategory, Content, DrawPrompt, Theme, WaveSpectrum } from './
 // The daily puzzle's prompts ride in the same file but aren't part of a game session.
 export type ParsedContent = Content & { wordPrompts: string[]; numberQuestions: string[]; eitherPairs: string[] }
 
-type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | null
+type Section = 'shortlist' | 'finger' | 'wavelength' | 'draw' | 'likely' | 'mrmrs' | 'lights' | 'word' | 'numbers' | 'either' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'twist' | 'higher' | 'guess' | null
 
 function sectionFor(heading: string): Section {
   switch (heading.trim().toLowerCase()) {
@@ -29,6 +29,9 @@ function sectionFor(heading: string): Section {
     case 'two lies & a truth': case 'two lies and a truth': return 'bluff'
     case 'mind meld': return 'meld'
     case 'describe it': return 'describe'
+    case 'tongue twisters': return 'twist'
+    case 'higher or lower': return 'higher'
+    case 'guesstimate': return 'guess'
     default: return null
   }
 }
@@ -50,6 +53,10 @@ export function parseContent(text: string): ParsedContent {
   const describeWords: string[] = []
   const chainCategories: ChainCategory[] = []
   let currentChain: ChainCategory | null = null
+  const twisters: Twister[] = []
+  let twistLevel = 1
+  const higherLower: HigherLower[] = []
+  const guesstimates: Guesstimate[] = []
 
   let section: Section = null
   let currentTheme: Theme | null = null
@@ -64,6 +71,11 @@ export function parseContent(text: string): ParsedContent {
       if (section === 'shortlist' && themeText.length > 0) {
         currentTheme = { id: `t${String(themes.length + 1).padStart(3, '0')}`, text: themeText, pool: [] }
         themes.push(currentTheme)
+      }
+      // Inside Tongue Twisters, "## Easy" / "## Medium" / "## Hard" says how hard.
+      if (section === 'twist') {
+        const t = themeText.toLowerCase()
+        twistLevel = t.startsWith('hard') ? 3 : t.startsWith('medium') ? 2 : 1
       }
       // Inside Word Chain, "## Name" starts a category and its answer list.
       if (section === 'chain' && themeText.length > 0) {
@@ -134,11 +146,30 @@ export function parseContent(text: string): ParsedContent {
       case 'chain':
         currentChain?.words.push(item)
         break
+      case 'twist':
+        twisters.push({ level: twistLevel, text: item })
+        break
+      // "Which is taller? | The Eiffel Tower | 330 | The Shard | 310 | metres"
+      case 'higher': {
+        const [question, a, av, b, bv, unit = ''] = item.split('|').map((x) => x.trim())
+        const na = Number(av)
+        const nb = Number(bv)
+        if (question && a && b && Number.isFinite(na) && Number.isFinite(nb) && na !== nb) higherLower.push({ question, a, av: na, b, bv: nb, unit })
+        break
+      }
+      // "How tall is Big Ben's tower, in metres? | 96"
+      case 'guess': {
+        const [question, answer] = item.split('|').map((x) => x.trim())
+        const n = Number(answer)
+        if (question && Number.isFinite(n)) guesstimates.push({ question, answer: n })
+        break
+      }
     }
   }
 
   return {
     themes, fingerStatements, spectrums, drawPrompts,
     likelyStatements, mrmrsQuestions, lightsQuestions, wordPrompts, numberQuestions, eitherPairs, clashCategories, chainCategories, bluffPrompts, meldPrompts, describeWords,
+    twisters, higherLower, guesstimates,
   }
 }

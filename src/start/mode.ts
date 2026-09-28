@@ -15,7 +15,7 @@ export function resolveMode(search: string): PlayMode | null {
   return m === 'solo' ? 'solo' : m === 'duo' || m === 'screen' ? 'duo' : null
 }
 
-const GAMES: readonly Game[] = ['full', 'tonight', 'quick', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw', 'clash', 'chain', 'bluff', 'meld', 'describe', 'circle', 'clock', 'spot', 'frenzy', 'follow']
+const GAMES: readonly Game[] = ['full', 'tonight', 'quick', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw', 'clash', 'chain', 'bluff', 'meld', 'describe', 'circle', 'clock', 'spot', 'frenzy', 'follow', 'twist', 'higher', 'guess']
 
 // Which session to run — rides alongside ?mode= for the same reason (a shared link must
 // agree with the host before either side calls initNet).

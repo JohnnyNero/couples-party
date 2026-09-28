@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'circle' | 'clock' | 'spot' | 'frenzy' | 'follow' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'circle' | 'clock' | 'spot' | 'frenzy' | 'follow' | 'twist' | 'higher' | 'guess' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -30,6 +30,9 @@ export type Phase =
   | 'SPOT_READY' | 'SPOT_RUN' | 'SPOT_REVEAL' | 'SPOT_RESULT'
   | 'FRENZY_READY' | 'FRENZY_RUN' | 'FRENZY_REVEAL' | 'FRENZY_RESULT'
   | 'FOLLOW_SHOW' | 'FOLLOW_PLAY' | 'FOLLOW_REVEAL' | 'FOLLOW_RESULT'
+  | 'TWIST_SAY' | 'TWIST_REVEAL' | 'TWIST_RESULT'
+  | 'HL_PICK' | 'HL_REVEAL' | 'HL_RESULT'
+  | 'GUESS_WRITE' | 'GUESS_REVEAL' | 'GUESS_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
   | 'LIGHTS_OUT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
@@ -275,6 +278,35 @@ export type FollowResult = { got: number; ms: number } // steps right before a s
 export type FollowRound = { index: number; length: number; result: Record<PlayerId, FollowResult | null> }
 export type FollowGame = { sequence: number[]; rounds: FollowRound[]; current: number; bestOf: number }
 
+// Tongue Twisters: one twister a round, and you each have a go at saying it three times
+// fast — one of you at a time, the other judging. Nail it where they trip, and the round
+// is yours. They get harder as the game goes on (level 1 to 3).
+export type Twister = { level: number; text: string }
+export type TwistRound = {
+  index: number // 1-based
+  text: string
+  first: PlayerId // who goes first this round
+  turn: PlayerId  // who's saying it now
+  said: Record<PlayerId, boolean | null> // nailed it? as judged by the other; null = not yet
+}
+export type TwistGame = { rounds: TwistRound[]; current: number }
+
+// Higher or Lower: two things and a question ("Which is taller?"). You both pick at
+// once; each phone times its own pick, so the quicker right answer can be told apart.
+export type HigherLower = { question: string; a: string; av: number; b: string; bv: number; unit: string }
+export type HlRound = {
+  index: number
+  item: HigherLower
+  pick: Record<PlayerId, 'a' | 'b' | null>
+  ms: Record<PlayerId, number | null>
+}
+export type HlGame = { rounds: HlRound[]; current: number }
+
+// Guesstimate: a number nobody knows exactly. You both guess; closest takes it.
+export type Guesstimate = { question: string; answer: number }
+export type GuessRound = { index: number; question: string; answer: number; guess: Record<PlayerId, number | null> }
+export type GuessGame = { rounds: GuessRound[]; current: number }
+
 // A game's title card: what it is and how it plays, before its first round. The game has
 // already been set up underneath it; `resume` is where it picks up — the phase, and how
 // long that phase's clock had — once you're both ready, or the card's own clock runs out.
@@ -304,6 +336,9 @@ export type Content = {
   bluffPrompts: string[]
   meldPrompts: string[]
   describeWords: string[]
+  twisters?: Twister[]
+  higherLower?: HigherLower[]
+  guesstimates?: Guesstimate[]
   // The couple's own cards (Our questions), by their text — a Wavelength scale as
   // "Low | High". Already in the pools above; this only says which to deal first.
   ours?: string[]
@@ -333,6 +368,9 @@ export type SessionState = {
   spot?: SpotGame | null
   frenzy?: FrenzyGame | null
   follow?: FollowGame | null
+  twist?: TwistGame | null
+  higher?: HlGame | null
+  guess?: GuessGame | null
   intro: IntroCard | null
   intros: boolean // title cards on — set by the host for real sessions; tests leave them off
   // Paused by either of you, from the menu: the clock stops (what was left of it is kept
@@ -410,6 +448,12 @@ export type Action =
   | { type: 'FRENZY_TAPS'; player: PlayerId; taps: number }
   // Follow Me: how far you got through the sequence, and how long it took.
   | { type: 'FOLLOW_DONE'; player: PlayerId; got: number; ms: number }
+  // Tongue Twisters: the judge's verdict on the other's go.
+  | { type: 'TWIST_JUDGE'; player: PlayerId; nailed: boolean }
+  // Higher or Lower: your pick, and how long your phone took you to make it.
+  | { type: 'HL_PICK'; player: PlayerId; pick: 'a' | 'b'; ms: number }
+  // Guesstimate: your number.
+  | { type: 'GUESS_SUBMIT'; player: PlayerId; value: number }
   | { type: 'TIMEOUT' }
   | { type: 'PAUSE'; player: PlayerId }
   // One of you has left the room (backed out, closed the app, lost signal): the game
@@ -431,6 +475,9 @@ export const EMPTY_CONTENT: Content = {
   bluffPrompts: [],
   meldPrompts: [],
   describeWords: [],
+  twisters: [],
+  higherLower: [],
+  guesstimates: [],
 }
 
 export function initialState(
@@ -463,6 +510,9 @@ export function initialState(
     spot: null,
     frenzy: null,
     follow: null,
+    twist: null,
+    higher: null,
+    guess: null,
     intro: null,
     intros: false,
     paused: null,

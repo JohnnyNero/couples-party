@@ -36,6 +36,7 @@ import { ScreenClashReveal } from '../screen/phases/ScreenClashReveal'
 import { ScreenChainTurn } from '../screen/phases/ScreenChainTurn'
 import { ScreenChainEnd } from '../screen/phases/ScreenChainEnd'
 import { ScreenCircleReveal } from '../screen/phases/ScreenCircleReveal'
+import { ScreenGuessReveal, ScreenHlReveal, ScreenTwistReveal } from '../screen/phases/ScreenQuiz'
 import { ScreenFollowReveal, ScreenFrenzyReady, ScreenFrenzyReveal, ScreenSpotReady, ScreenSpotReveal } from '../screen/phases/ScreenMinis'
 import { ScreenFillerResult } from '../screen/phases/ScreenFillerResult'
 import { ScreenClockReady } from '../screen/phases/ScreenClockReady'
@@ -80,7 +81,7 @@ export function railText(s: SessionState): string {
     return `${label} · Round ${Math.floor(g.current / 2) + 1} of ${Math.ceil(g.rounds.length / 2)}`
   }
   const game = key === 'lights' ? null
-    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff, meld: s.meld}[key as string]
+    : { likely: s.likely, finger: s.finger, mrmrs: s.mrmrs, wave: s.wave, draw: s.draw, clash: s.clash, chain: s.chain, bluff: s.bluff, meld: s.meld, twist: s.twist ?? null, higher: s.higher ?? null, guess: s.guess ?? null }[key as string]
   if (!game) return label
   return `${label} · Round ${game.current + 1} of ${game.rounds.length}`
 }
@@ -208,6 +209,18 @@ function BoardStageContent({ s }: { s: SessionState }) {
       return <ScreenFollowReveal s={s} />
     case 'FOLLOW_RESULT':
       return <ScreenFillerResult s={s} kind="follow" />
+    case 'TWIST_REVEAL':
+      return <ScreenTwistReveal s={s} />
+    case 'TWIST_RESULT':
+      return <Scoreboard s={s} title="Tongue Twisters · done" />
+    case 'HL_REVEAL':
+      return <ScreenHlReveal s={s} />
+    case 'HL_RESULT':
+      return <Scoreboard s={s} title="Higher or Lower · done" />
+    case 'GUESS_REVEAL':
+      return <ScreenGuessReveal s={s} />
+    case 'GUESS_RESULT':
+      return <Scoreboard s={s} title="Guesstimate · done" />
     case 'DONE':
       // Terminal for now: the same board every game ends on, held up until the souvenir
       // (M5) gives it somewhere to go.
