@@ -108,7 +108,7 @@ export const FOLLOW = {
 
 export const TWIST = { times: 3 } // say it this many times
 
-export const GUESS = { maxDigits: 9, closeShare: 0.25 } // both within a quarter of it: a team point
+export const GUESS = { maxDigits: 9, closeShare: 0.25, yearSlack: 10 } // both within a quarter of it: a team point
 
 export const FILLER = {
   winPoints: 5,     // to whoever wins a filler: matters in a close night, never swings a big one

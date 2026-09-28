@@ -238,9 +238,12 @@ export function guessWinner(round: GuessRound): PlayerId | null {
   return a < b ? 'A' : 'B'
 }
 
-// Both within a quarter of the real number: you know your world together.
-export const guessBothClose = (round: GuessRound) =>
-  (['A', 'B'] as PlayerId[]).every((p) => guessOff(round, p) <= Math.max(1, round.answer * GUESS.closeShare))
+// Both within a quarter of the real number (within ten, for a year): you know your world together.
+const isYear = (round: GuessRound) => /\byear\b/i.test(round.question) && round.answer >= 1000 && round.answer <= 2100
+export const guessBothClose = (round: GuessRound) => {
+  const slack = isYear(round) ? GUESS.yearSlack : Math.max(1, round.answer * GUESS.closeShare)
+  return (['A', 'B'] as PlayerId[]).every((p) => guessOff(round, p) <= slack)
+}
 
 // ---------------------------------------------------------------- The board
 
