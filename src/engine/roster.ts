@@ -45,6 +45,9 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   // A filler on its own is a best of 5.
   circle: [{ key: 'circle', rounds: 5 }],
   clock: [{ key: 'clock', rounds: 5 }],
+  spot: [{ key: 'spot', rounds: 5 }],
+  frenzy: [{ key: 'frenzy', rounds: 3 }],
+  follow: [{ key: 'follow', rounds: 1 }], // sudden death: it runs till one of you slips
 }
 
 // Tonight: quick games before bed, then a question to turn the light off on. The
@@ -64,10 +67,13 @@ const TONIGHT_POOL: RosterEntry[] = [
   { key: 'describe', rounds: 2 },
 ]
 
-// One quick filler after the second game, Stop the Clock and Perfect Circle in turn.
+// One quick filler after the second game, each of these in turn.
 const TONIGHT_FILLERS: RosterEntry[] = [
   { key: 'clock', rounds: 3 },
+  { key: 'spot', rounds: 3 },
   { key: 'circle', rounds: 1 },
+  { key: 'follow', rounds: 1 },
+  { key: 'frenzy', rounds: 1 },
 ]
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
@@ -96,7 +102,19 @@ function quick(seed: number): RosterEntry[] {
 // (dayIndex of its local date) — and to a quick game, whose line-up it deals (it's the
 // session's seed there). Carried in the session, so both phones agree.
 export function roster(game: Game, night = 0): RosterEntry[] {
+  if (game === 'full') return full(night)
   return game === 'tonight' ? tonight(night) : game === 'quick' ? quick(night) : ROSTERS[game]
+}
+
+// The long night's two filler slots take their turn from the same list, so they vary
+// from night to night too — never the same one twice in a night.
+const FULL_FILLERS: GameKey[] = ['circle', 'clock', 'spot', 'follow', 'frenzy']
+function full(night: number): RosterEntry[] {
+  const n = FULL_FILLERS.length
+  const pick = (k: GameKey) => TONIGHT_FILLERS.find((e) => e.key === k)!
+  const slots = [pick(FULL_FILLERS[mod(night, n)]), pick(FULL_FILLERS[mod(night + 1, n)])]
+  let k = 0
+  return ROSTERS.full.map((e) => (e.key === 'circle' || e.key === 'clock' ? slots[k++] : e))
 }
 
 // What each kind of session is called, where a single game would just use its own name.
@@ -130,9 +148,16 @@ export function gameOfPhase(phase: Phase): GameKey | null {
   if (phase.startsWith('DESCRIBE_')) return 'describe'
   if (phase.startsWith('CIRCLE_')) return 'circle'
   if (phase.startsWith('CLOCK_')) return 'clock'
+  if (phase.startsWith('SPOT_')) return 'spot'
+  if (phase.startsWith('FRENZY_')) return 'frenzy'
+  if (phase.startsWith('FOLLOW_')) return 'follow'
   if (phase === 'LIGHTS_OUT') return 'lights'
   return null
 }
+
+// The quick in-between games: a flat prize to the winner, no team points.
+export const FILLER_KEYS: ReadonlySet<string> = new Set<GameKey>(['circle', 'clock', 'spot', 'frenzy', 'follow'])
+export const isFiller = (key: string) => FILLER_KEYS.has(key)
 
 export const GAME_LABELS: Record<GameKey, string> = {
   list: 'Shortlist',
@@ -148,5 +173,8 @@ export const GAME_LABELS: Record<GameKey, string> = {
   describe: 'Describe It',
   circle: 'Perfect Circle',
   clock: 'Stop the Clock',
+  spot: 'Spot It',
+  frenzy: 'Frenzy',
+  follow: 'Follow Me',
   lights: 'Lights Out',
 }

@@ -1,5 +1,5 @@
 import type { PlayerId, SessionState } from '../../engine/state'
-import { GAME_LABELS, roster, SESSION_NAMES } from '../../engine/roster'
+import { GAME_LABELS, isFiller, roster, SESSION_NAMES } from '../../engine/roster'
 import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
@@ -32,7 +32,7 @@ export function ScreenJoin({ s }: { s: SessionState }) {
         <section className={quietCard + ' px-5 py-4 flex flex-col gap-2.5'}>
           <div className={eyebrow}>The line-up</div>
           {lineup.map((e) => {
-            const filler = e.key === 'circle' || e.key === 'clock'
+            const filler = isFiller(e.key)
             const lights = e.key === 'lights'
             if (!filler && !lights) n += 1
             return (

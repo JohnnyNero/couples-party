@@ -127,13 +127,13 @@ describe('tonight', () => {
     for (let night = 0; night < pool.length; night++) {
       const keys = roster('tonight', night).map((e) => e.key)
       expect(keys).toHaveLength(6)
-      expect(keys[2]).toBe(night % 2 === 0 ? 'clock' : 'circle')
+      expect(keys[2]).toBe(['clock', 'spot', 'circle', 'follow', 'frenzy'][night % 5]) // the fillers take turns
       expect(keys[5]).toBe('lights')
       out.push(...pool.filter((k) => !keys.includes(k as never)))
     }
     // Over as many nights as there are games, each sits out the same number of times.
     for (const k of pool) expect(out.filter((o) => o === k)).toHaveLength(pool.length - 4)
-    expect(roster('tonight', -3)).toEqual(roster('tonight', -3 + 9 * 2)) // negative day numbers too
+    expect(roster('tonight', -3)).toEqual(roster('tonight', -3 + 9 * 5)) // negative day numbers too
   })
   const playThrough = (state: SessionState) => {
     let s = state
@@ -148,9 +148,9 @@ describe('tonight', () => {
     return { s, seen }
   }
   it('runs its line-up in order, breaks a level night, and ends on Lights Out', () => {
-    const { s, seen } = playThrough(start('tonight', CONTENT, 4))
+    const { s, seen } = playThrough(start('tonight', CONTENT, 40))
     expect(s.phase).toBe('DONE')
-    // Night 4 sits Category Clash, Word Chain and Two Lies out: Finger Down and
+    // Night 40 (the games of night 4, and a clock night) sits Category Clash, Word Chain and Two Lies out: Finger Down and
     // Wavelength (both skipped — no statements or spectrums in this content), the clock,
     // then Mr & Mrs and Draw. Nobody taps and nobody scores, so the night is level and
     // goes to a tiebreaker.

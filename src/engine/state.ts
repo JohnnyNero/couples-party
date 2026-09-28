@@ -4,7 +4,7 @@ export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
 
 // One game in the roster. Lights Out is in here too even though it doesn't score — it's
 // a stop on the night like any other, it just has no points and no scoreboard.
-export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'circle' | 'clock' | 'lights'
+export type GameKey = 'list' | 'likely' | 'finger' | 'mrmrs' | 'wave' | 'draw' | 'clash' | 'chain' | 'bluff' | 'meld' | 'describe' | 'circle' | 'clock' | 'spot' | 'frenzy' | 'follow' | 'lights'
 
 // Which session this is. 'full' is the long night, 'tonight' the short one; a bare
 // game key runs that game on its own. The actual line-up for each lives in roster.ts.
@@ -27,6 +27,9 @@ export type Phase =
   | 'DESCRIBE_READY' | 'DESCRIBE_RUN' | 'DESCRIBE_RESULT'
   | 'CIRCLE_DRAW' | 'CIRCLE_REVEAL' | 'CIRCLE_RESULT'
   | 'CLOCK_READY' | 'CLOCK_RUN' | 'CLOCK_REVEAL' | 'CLOCK_RESULT'
+  | 'SPOT_READY' | 'SPOT_RUN' | 'SPOT_REVEAL' | 'SPOT_RESULT'
+  | 'FRENZY_READY' | 'FRENZY_RUN' | 'FRENZY_REVEAL' | 'FRENZY_RESULT'
+  | 'FOLLOW_SHOW' | 'FOLLOW_PLAY' | 'FOLLOW_REVEAL' | 'FOLLOW_RESULT'
   | 'DECIDER_READY' | 'DECIDER_RUN' | 'DECIDER_REVEAL'
   | 'LIGHTS_OUT'
   | 'SUDDEN_DEATH' | 'SOUVENIR'
@@ -246,6 +249,32 @@ export type ClockRound = {
 }
 export type ClockGame = { rounds: ClockRound[]; current: number; bestOf: number }
 
+// Spot It, a filler: the same grid of one emoji on both phones, with one cell that's
+// ever so slightly different. First to tap it takes the round. Each phone times itself
+// from when the grid appeared on it, so lag never decides it. Grids grow each round.
+export type SpotRound = {
+  index: number // 1-based
+  size: number  // cells per side
+  base: string  // the emoji everywhere…
+  odd: string   // …but here
+  at: number    // which cell, 0-based, row by row
+  found: Record<PlayerId, number | null> // ms to find it; null = not in (or never found)
+}
+export type SpotGame = { rounds: SpotRound[]; current: number; bestOf: number }
+
+// Frenzy, a filler: tap as many times as you can in a few seconds. Each phone counts its
+// own taps over its own few seconds and sends the total.
+export type FrenzyRound = { index: number; taps: Record<PlayerId, number | null> }
+export type FrenzyGame = { rounds: FrenzyRound[]; current: number; bestOf: number }
+
+// Follow Me, a filler: four pads flash a sequence and you both play it back. It grows by
+// one every round you both get right; the first round one of you slips decides it.
+// `sequence` is dealt up front, long enough for any game; round n plays its first
+// `length` steps.
+export type FollowResult = { got: number; ms: number } // steps right before a slip (all of them: made it)
+export type FollowRound = { index: number; length: number; result: Record<PlayerId, FollowResult | null> }
+export type FollowGame = { sequence: number[]; rounds: FollowRound[]; current: number; bestOf: number }
+
 // A game's title card: what it is and how it plays, before its first round. The game has
 // already been set up underneath it; `resume` is where it picks up — the phase, and how
 // long that phase's clock had — once you're both ready, or the card's own clock runs out.
@@ -301,6 +330,9 @@ export type SessionState = {
   circle: CircleGame | null
   clock: ClockGame | null
   decider: ClockGame | null // a level night's tiebreaker — one Stop the Clock, sudden death
+  spot?: SpotGame | null
+  frenzy?: FrenzyGame | null
+  follow?: FollowGame | null
   intro: IntroCard | null
   intros: boolean // title cards on — set by the host for real sessions; tests leave them off
   // Paused by either of you, from the menu: the clock stops (what was left of it is kept
@@ -372,6 +404,12 @@ export type Action =
   // Stop the Clock (and the tiebreaker): how long your own phone's clock ran before you
   // tapped, in ms.
   | { type: 'STOP_CLOCK'; player: PlayerId; elapsedMs: number }
+  // Spot It: how long your own phone took you to tap the odd one out, in ms.
+  | { type: 'SPOT_FOUND'; player: PlayerId; ms: number }
+  // Frenzy: how many times you tapped in your few seconds.
+  | { type: 'FRENZY_TAPS'; player: PlayerId; taps: number }
+  // Follow Me: how far you got through the sequence, and how long it took.
+  | { type: 'FOLLOW_DONE'; player: PlayerId; got: number; ms: number }
   | { type: 'TIMEOUT' }
   | { type: 'PAUSE'; player: PlayerId }
   // One of you has left the room (backed out, closed the app, lost signal): the game
@@ -422,6 +460,9 @@ export function initialState(
     circle: null,
     clock: null,
     decider: null,
+    spot: null,
+    frenzy: null,
+    follow: null,
     intro: null,
     intros: false,
     paused: null,

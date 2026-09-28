@@ -75,8 +75,9 @@ describe('Perfect Circle', () => {
     expect(standing(s)).toEqual({ A: FILLER.winPoints, B: 0 })
   })
   it('counts a circle that never arrived as a blank, and a level round goes to nobody', () => {
-    // Tonight on an odd night, with nothing for Finger Down or Wavelength: straight to the circle.
-    let s = start('tonight', {}, 1)
+    // Tonight on a circle night (the fillers take turns), with nothing for the games
+    // before it: straight to the circle.
+    let s = start('tonight', {}, 2)
     expect(s.phase).toBe('CIRCLE_DRAW')
     s = reduce(s, { type: 'TIMEOUT' }, 2000)
     expect(s.circle!.rounds[0].score).toEqual({ A: 0, B: 0 })

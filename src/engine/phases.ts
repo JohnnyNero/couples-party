@@ -34,6 +34,12 @@ export const DURATIONS: Partial<Record<Phase, number>> = {
   CIRCLE_REVEAL: 6500,
   CLOCK_READY: 3000,  // the target, then 3-2-1 (CLOCK_RUN's length depends on the target)
   CLOCK_REVEAL: 5000,
+  SPOT_READY: 3000,   // 3-2-1, then the grid
+  SPOT_RUN: 20000,    // time to find it — the round ends sooner once you both have
+  SPOT_REVEAL: 4500,
+  FRENZY_READY: 3000,
+  FRENZY_REVEAL: 4500,
+  FOLLOW_REVEAL: 3500, // (FOLLOW_SHOW and FOLLOW_PLAY run as long as the sequence needs)
   DECIDER_READY: 3000,
   DECIDER_REVEAL: 5500,
 }
@@ -69,6 +75,29 @@ export const DRAW = {
   guessMaxLen: 30,  // a guess, not a sentence
   maxGuesses: 5,    // goes at it while it's being drawn
   maxPoints: 4000,  // of a whole drawing — a busy one still stays small on the wire
+}
+
+export const SPOT = {
+  firstSize: 4,  // a 4×4 grid to start, one more a side each round…
+  maxSize: 8,    // …up to 8×8
+  deadHeatMs: 40,
+  lockoutMs: 1500, // a wrong tap: hands off for a moment
+}
+
+export const FRENZY = {
+  runMs: 5000,   // tapping time, on each phone's own clock
+  graceMs: 3000, // for the count to arrive
+  maxTaps: 120,  // no finger does more than ~20 a second
+}
+
+export const FOLLOW = {
+  pads: 4,
+  firstLength: 3,
+  maxLength: 20,
+  stepMs: 650,    // each flash in the sequence
+  showLeadMs: 900, // a beat before it starts
+  playMsPerStep: 1500, // time allowed to play it back, per step…
+  playLeadMs: 3000,    // …plus this
 }
 
 export const FILLER = {

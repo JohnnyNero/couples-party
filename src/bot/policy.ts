@@ -198,6 +198,27 @@ export function nextBotAction(
       return { type: 'STOP_CLOCK', player: me, elapsedMs: round.targetMs * (0.85 + rng() * 0.3) }
     }
 
+    case 'SPOT_RUN': {
+      const round = s.spot?.rounds[s.spot.current]
+      if (!round || round.found[me] !== null) return null
+      return { type: 'SPOT_FOUND', player: me, ms: 1500 + rng() * 4000 * (round.size / 4) }
+    }
+
+    case 'FRENZY_RUN': {
+      const round = s.frenzy?.rounds[s.frenzy.current]
+      if (!round || round.taps[me] !== null) return null
+      return { type: 'FRENZY_TAPS', player: me, taps: 25 + Math.floor(rng() * 25) }
+    }
+
+    case 'FOLLOW_PLAY': {
+      const round = s.follow?.rounds[s.follow.current]
+      if (!round || round.result[me] !== null) return null
+      // Gets shakier the longer it goes.
+      const slips = rng() < (round.length - 2) * 0.12
+      const got = slips ? Math.floor(rng() * round.length) : round.length
+      return { type: 'FOLLOW_DONE', player: me, got, ms: 800 * round.length + rng() * 2000 }
+    }
+
     default:
       return null
   }
@@ -234,6 +255,9 @@ export function botDelay(s: SessionState, rng: () => number): number {
       const target = g ? g.rounds[g.current].targetMs : 7000
       return target * (0.85 + rng() * 0.3)
     }
+    case 'SPOT_RUN': return spread(1500, 5000)
+    case 'FRENZY_RUN': return 5200
+    case 'FOLLOW_PLAY': return spread(1500, 4000)
     default: return 1000
   }
 }

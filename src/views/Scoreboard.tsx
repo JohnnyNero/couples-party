@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import type { GameKey, PlayerId, SessionState } from '../engine/state'
 import { gameScores, needsDecider, standing, teamScore } from '../engine/standing'
-import { GAME_LABELS, gameOfPhase, nextGame } from '../engine/roster'
+import { GAME_LABELS, gameOfPhase, isFiller, nextGame } from '../engine/roster'
 import { dispatch, useMyPlayerId } from '../net'
 import { AnimatedNumber } from './AnimatedNumber'
 import { playerName } from './list'
@@ -143,7 +143,7 @@ export function Scoreboard({
                       {g.points[p]}
                     </span>
                   ))}
-                  <span className="w-9 text-right font-display text-base font-extrabold tabular-nums text-tan-ink">{g.key === 'decider' || g.key === 'circle' || g.key === 'clock' ? '' : g.team}</span>
+                  <span className="w-9 text-right font-display text-base font-extrabold tabular-nums text-tan-ink">{g.key === 'decider' || isFiller(g.key) ? '' : g.team}</span>
                 </>
               ) : (
                 <span className="text-xs font-extrabold">{isNext ? 'next' : ''}</span>

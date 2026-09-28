@@ -1,6 +1,6 @@
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
-import { GAME_LABELS } from '../../engine/roster'
+import { GAME_LABELS, isFiller } from '../../engine/roster'
 import { dispatch, useMyPlayerId } from '../../net'
 import { GameGlyph } from '../../ui/GameIcon'
 import { card, btnPrimary } from '../../ui/styles'
@@ -15,7 +15,7 @@ export function ScreenIntro({ s }: { s: SessionState }) {
   const intro = s.intro!
   const key = intro.key as Exclude<typeof intro.key, 'lights'>
   const num = gameNumber(s, key)
-  const filler = key === 'circle' || key === 'clock'
+  const filler = isFiller(key)
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-5">
       <div className="flex flex-col items-center text-center gap-3">

@@ -1,11 +1,11 @@
 import type {
-  Action, BluffGame, DescribeGame, MeldGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
+  Action, BluffGame, FrenzyRound, SpotRound, DescribeGame, MeldGame, ChainCategory, ChainRound, ClashRound, ClockRound, DrawGame, DrawStroke, FingerGame, GameKey, LikelyGame, ListAct, ListItem, MrMrsGame,
   Phase, PlayerId, SessionState, WaveGame,
 } from './state'
 import { other } from './state'
 import { isMatch } from './match'
 import { makeRng, oursFirst, pick, shuffled } from './rng'
-import { BLUFF, MELD, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, LIST, MRMRS, WAVE } from './phases'
+import { BLUFF, MELD, CHAIN, CLASH, CLOCK, DRAW, DURATIONS, FOLLOW, FRENZY, LIST, MRMRS, SPOT, WAVE } from './phases'
 import { clashVerdict } from './clash'
 import { chainKey, checkWord, listFor, nextLetter, rejectable, turnMs } from './chain'
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
@@ -67,6 +67,9 @@ function startGame(state: SessionState, now: number, key: GameKey | null): Sessi
     case 'describe': return beginDescribe(state, now)
     case 'circle': return beginCircle(state, now)
     case 'clock': return beginClock(state, now)
+    case 'spot': return beginSpot(state, now)
+    case 'frenzy': return beginFrenzy(state, now)
+    case 'follow': return beginFollow(state, now)
     case 'lights': return beginLights(state, now)
     default: return finishSession(state)
   }
@@ -88,7 +91,7 @@ function toScoreboard(state: SessionState, phase: SessionState['phase']): Sessio
 // The phases that wait for a tap (CONTINUE) instead of a clock.
 const TAP_THROUGH = new Set([
   'LIST_RESULT', 'LIKELY_RESULT', 'FINGER_RESULT', 'MM_RESULT', 'WAVE_RESULT', 'DRAW_RESULT',
-  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'DESCRIBE_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'LIGHTS_OUT',
+  'CLASH_RESULT', 'CHAIN_RESULT', 'BLUFF_RESULT', 'MELD_RESULT', 'DESCRIBE_RESULT', 'CIRCLE_RESULT', 'CLOCK_RESULT', 'SPOT_RESULT', 'FRENZY_RESULT', 'FOLLOW_RESULT', 'LIGHTS_OUT',
 ])
 
 // What a tap on a scoreboard does: into the next game in this session's roster, or the
@@ -811,6 +814,133 @@ function advanceCircle(state: SessionState, now: number): SessionState {
   return s
 }
 
+// ---------------------------------------------------------------- Spot It
+
+// Pairs that are the same at a glance and different on a look — easier ones first.
+const SPOT_PAIRS: [string, string][][] = [
+  [['🍎', '🍏'], ['🐶', '🐱'], ['🌞', '🌝'], ['🚗', '🚕'], ['🍋', '🍊'], ['⭐', '🌟']],
+  [['😀', '😃'], ['🕐', '🕑'], ['🌑', '🌒'], ['💛', '🧡'], ['🌷', '🌹'], ['🐻', '🐨'], ['🍩', '🥯']],
+  [['😐', '😑'], ['🙂', '😊'], ['🔵', '🟣'], ['🕒', '🕓'], ['⏳', '⌛'], ['😄', '😁'], ['🚙', '🚗'], ['🌖', '🌗']],
+]
+
+function newSpotRound(s: SessionState, index: number): SpotRound {
+  const rng = makeRng((s.seed ^ 0x5b07) + index * 104729)
+  const tier = SPOT_PAIRS[Math.min(SPOT_PAIRS.length - 1, index - 1)]
+  const [a, b] = tier[Math.floor(rng() * tier.length)]
+  const [base, odd] = rng() < 0.5 ? [a, b] : [b, a]
+  const size = Math.min(SPOT.maxSize, SPOT.firstSize + index - 1)
+  return { index, size, base, odd, at: Math.floor(rng() * size * size), found: { A: null, B: null } }
+}
+
+function beginSpot(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.spot = { rounds: [newSpotRound(s, 1)], current: 0, bestOf: roundsFor(s, 'spot') }
+  s.phase = 'SPOT_READY'
+  s.phaseEndsAt = now + DURATIONS.SPOT_READY!
+  return s
+}
+
+function toSpotStep(state: SessionState, now: number, phase: 'SPOT_READY' | 'SPOT_RUN' | 'SPOT_REVEAL'): SessionState {
+  const s = clone(state)
+  s.phase = phase
+  s.phaseEndsAt = now + DURATIONS[phase]!
+  return s
+}
+
+function advanceSpot(state: SessionState, now: number): SessionState {
+  if (fillerOver({ kind: 'spot', game: state.spot! })) return toScoreboard(state, 'SPOT_RESULT')
+  const s = clone(state)
+  const g = s.spot!
+  g.rounds.push(newSpotRound(s, g.rounds.length + 1))
+  g.current = g.rounds.length - 1
+  s.phase = 'SPOT_READY'
+  s.phaseEndsAt = now + DURATIONS.SPOT_READY!
+  return s
+}
+
+// ---------------------------------------------------------------- Frenzy
+
+const newFrenzyRound = (index: number): FrenzyRound => ({ index, taps: { A: null, B: null } })
+
+function beginFrenzy(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  s.frenzy = { rounds: [newFrenzyRound(1)], current: 0, bestOf: roundsFor(s, 'frenzy') }
+  s.phase = 'FRENZY_READY'
+  s.phaseEndsAt = now + DURATIONS.FRENZY_READY!
+  return s
+}
+
+function toFrenzyStep(state: SessionState, now: number, phase: 'FRENZY_RUN' | 'FRENZY_REVEAL'): SessionState {
+  const s = clone(state)
+  s.phase = phase
+  s.phaseEndsAt = now + (phase === 'FRENZY_RUN' ? FRENZY.runMs + FRENZY.graceMs : DURATIONS.FRENZY_REVEAL!)
+  return s
+}
+
+function advanceFrenzy(state: SessionState, now: number): SessionState {
+  if (fillerOver({ kind: 'frenzy', game: state.frenzy! })) return toScoreboard(state, 'FRENZY_RESULT')
+  const s = clone(state)
+  const g = s.frenzy!
+  g.rounds.push(newFrenzyRound(g.rounds.length + 1))
+  g.current = g.rounds.length - 1
+  s.phase = 'FRENZY_READY'
+  s.phaseEndsAt = now + DURATIONS.FRENZY_READY!
+  return s
+}
+
+// ---------------------------------------------------------------- Follow Me
+
+export const followShowMs = (length: number) => FOLLOW.showLeadMs + length * FOLLOW.stepMs
+export const followPlayMs = (length: number) => FOLLOW.playLeadMs + length * FOLLOW.playMsPerStep
+
+function toFollowShow(s: SessionState, now: number): SessionState {
+  const g = s.follow!
+  s.phase = 'FOLLOW_SHOW'
+  s.phaseEndsAt = now + followShowMs(g.rounds[g.current].length)
+  return s
+}
+
+function beginFollow(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const rng = makeRng(s.seed ^ 0xf011)
+  // No pad twice in a row: a repeat flash is too easy to miss.
+  const sequence: number[] = []
+  while (sequence.length < FOLLOW.maxLength) {
+    const pad = Math.floor(rng() * FOLLOW.pads)
+    if (pad !== sequence[sequence.length - 1]) sequence.push(pad)
+  }
+  s.follow = { sequence, rounds: [{ index: 1, length: FOLLOW.firstLength, result: { A: null, B: null } }], current: 0, bestOf: 1 }
+  return toFollowShow(s, now)
+}
+
+function toFollowPlay(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const g = s.follow!
+  s.phase = 'FOLLOW_PLAY'
+  s.phaseEndsAt = now + followPlayMs(g.rounds[g.current].length)
+  return s
+}
+
+// Whoever never finished playing it back got none of it right in time.
+function toFollowReveal(state: SessionState, now: number): SessionState {
+  const s = clone(state)
+  const round = s.follow!.rounds[s.follow!.current]
+  for (const p of ['A', 'B'] as PlayerId[]) round.result[p] ??= { got: 0, ms: followPlayMs(round.length) }
+  s.phase = 'FOLLOW_REVEAL'
+  s.phaseEndsAt = now + DURATIONS.FOLLOW_REVEAL!
+  return s
+}
+
+function advanceFollow(state: SessionState, now: number): SessionState {
+  if (fillerOver({ kind: 'follow', game: state.follow! })) return toScoreboard(state, 'FOLLOW_RESULT')
+  const s = clone(state)
+  const g = s.follow!
+  const last = g.rounds[g.current]
+  g.rounds.push({ index: last.index + 1, length: last.length + 1, result: { A: null, B: null } })
+  g.current = g.rounds.length - 1
+  return toFollowShow(s, now)
+}
+
 // ---------------------------------------------------------------- Stop the Clock
 
 // The same clock runs two things: the filler (s.clock) and a level night's tiebreaker
@@ -912,7 +1042,10 @@ function beginLights(state: SessionState, now: number): SessionState {
 // Where a pause makes sense: mid-game. Not before it starts or after it ends, and not
 // during Stop the Clock's run — each phone times that on its own clock, which can't be
 // stopped from here, so a pause there would cost someone the round.
-const UNPAUSABLE = new Set<Phase>(['BOOT', 'JOIN', 'DONE', 'LIGHTS_OUT', 'CLOCK_READY', 'CLOCK_RUN', 'DECIDER_READY', 'DECIDER_RUN'])
+const UNPAUSABLE = new Set<Phase>([
+  'BOOT', 'JOIN', 'DONE', 'LIGHTS_OUT', 'CLOCK_READY', 'CLOCK_RUN', 'DECIDER_READY', 'DECIDER_RUN',
+  'SPOT_READY', 'SPOT_RUN', 'FRENZY_READY', 'FRENZY_RUN', 'FOLLOW_SHOW', 'FOLLOW_PLAY',
+])
 export const canPause = (s: SessionState): boolean => !s.paused && !UNPAUSABLE.has(s.phase)
 
 const bothHere = (s: SessionState) => s.players.A.connected && s.players.B.connected
@@ -1231,6 +1364,33 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       round.reject = { player: last.by!, word: last.word, reason: 'rejected' }
       return toChainTurn(s, now)
     }
+    case 'SPOT_FOUND': {
+      if (state.phase !== 'SPOT_RUN' || !state.spot) return state
+      const round = state.spot.rounds[state.spot.current]
+      if (round.found[action.player] !== null || !(action.ms >= 0)) return state
+      const s = clone(state)
+      const r = s.spot!.rounds[s.spot!.current]
+      r.found[action.player] = Math.round(action.ms)
+      return r.found.A !== null && r.found.B !== null ? toSpotStep(s, now, 'SPOT_REVEAL') : s
+    }
+    case 'FRENZY_TAPS': {
+      if (state.phase !== 'FRENZY_RUN' || !state.frenzy) return state
+      const round = state.frenzy.rounds[state.frenzy.current]
+      if (round.taps[action.player] !== null) return state
+      const s = clone(state)
+      const r = s.frenzy!.rounds[s.frenzy!.current]
+      r.taps[action.player] = Math.max(0, Math.min(FRENZY.maxTaps, Math.round(action.taps) || 0))
+      return r.taps.A !== null && r.taps.B !== null ? toFrenzyStep(s, now, 'FRENZY_REVEAL') : s
+    }
+    case 'FOLLOW_DONE': {
+      if (state.phase !== 'FOLLOW_PLAY' || !state.follow) return state
+      const round = state.follow.rounds[state.follow.current]
+      if (round.result[action.player] !== null) return state
+      const s = clone(state)
+      const r = s.follow!.rounds[s.follow!.current]
+      r.result[action.player] = { got: Math.max(0, Math.min(r.length, Math.round(action.got) || 0)), ms: Math.max(0, Math.round(action.ms) || 0) }
+      return r.result.A !== null && r.result.B !== null ? toFollowReveal(s, now) : s
+    }
     case 'SUBMIT_CIRCLE': {
       if (state.phase !== 'CIRCLE_DRAW' || !state.circle) return state
       const round = state.circle.rounds[state.circle.current]
@@ -1337,6 +1497,15 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         case 'CLASH_REVEAL': return advanceClash(state, now)
         case 'CIRCLE_DRAW': return toCircleReveal(state, now)
         case 'CIRCLE_REVEAL': return advanceCircle(state, now)
+        case 'SPOT_READY': return toSpotStep(state, now, 'SPOT_RUN')
+        case 'SPOT_RUN': return toSpotStep(state, now, 'SPOT_REVEAL')
+        case 'SPOT_REVEAL': return advanceSpot(state, now)
+        case 'FRENZY_READY': return toFrenzyStep(state, now, 'FRENZY_RUN')
+        case 'FRENZY_RUN': return toFrenzyStep(state, now, 'FRENZY_REVEAL')
+        case 'FRENZY_REVEAL': return advanceFrenzy(state, now)
+        case 'FOLLOW_SHOW': return toFollowPlay(state, now)
+        case 'FOLLOW_PLAY': return toFollowReveal(state, now)
+        case 'FOLLOW_REVEAL': return advanceFollow(state, now)
         case 'CLOCK_READY': return toClockRun(state, now, 'clock')
         case 'CLOCK_RUN': return toClockReveal(state, now, 'clock')
         case 'CLOCK_REVEAL': return advanceClock(state, now, 'clock')

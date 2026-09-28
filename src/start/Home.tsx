@@ -293,7 +293,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
 
 const SHORT: Record<GameKey, string> = {
   list: 'Shortlist', likely: 'Likely', finger: 'Called It', mrmrs: 'Mr & Mrs', wave: 'Wavelength',
-  draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', lights: 'Lights out',
+  draw: 'Draw', clash: 'Clash', chain: 'Chain', bluff: '2 Lies', meld: 'Mind Meld', describe: 'Describe It', circle: 'Circle', clock: 'Clock', spot: 'Spot It', frenzy: 'Frenzy', follow: 'Follow Me', lights: 'Lights out',
 }
 
 type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
@@ -313,6 +313,9 @@ const HEAD_TO_HEAD: Pick[] = [
 const FILLERS: Pick[] = [
   { key: 'circle', blurb: 'The rounder one wins', meta: 'Best of 5' },
   { key: 'clock', blurb: 'Closest tap wins', meta: 'Best of 5' },
+  { key: 'spot', blurb: 'Find the odd one out first', meta: 'Best of 5' },
+  { key: 'frenzy', blurb: 'Most taps in five seconds', meta: 'Best of 3' },
+  { key: 'follow', blurb: 'Repeat the pattern till someone slips', meta: 'Sudden death' },
 ]
 
 function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {

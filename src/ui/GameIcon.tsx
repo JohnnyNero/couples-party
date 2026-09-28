@@ -89,6 +89,26 @@ const GLYPHS: Record<GameKey, ReactElement> = {
       {P('M12 13.5V9.5M10 2.5h4M12 2.5v3.5')}
     </>
   ),
+  spot: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      {P('m15.5 15.5 5 5')}
+      <circle cx="10.5" cy="10.5" r="1.6" fill="currentColor" />
+    </>
+  ),
+  frenzy: (
+    <>
+      {P('M9 11.5V5.5a1.5 1.5 0 0 1 3 0v5M12 10V4.5a1.5 1.5 0 0 1 3 0V11M15 7.5a1.5 1.5 0 0 1 3 0V15a6.5 6.5 0 0 1-6.5 6.5h-.5A6 6 0 0 1 6 18.6l-2.3-4.1a1.5 1.5 0 0 1 2.5-1.6L9 16.5V11')}
+    </>
+  ),
+  follow: (
+    <>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="currentColor" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
+    </>
+  ),
   lights: P('M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z'),
 }
 
@@ -107,6 +127,9 @@ const TONES: Record<GameKey, string> = {
   describe: 'bg-pb-soft text-pb-ink',
   circle: 'bg-pa-soft text-pa-ink',
   clock: 'bg-pa-soft text-pa-ink',
+  spot: 'bg-sage-soft text-sage-ink',
+  frenzy: 'bg-pa-soft text-pa-ink',
+  follow: 'bg-pb-soft text-pb-ink',
   lights: 'bg-fg text-bg',
 }
 

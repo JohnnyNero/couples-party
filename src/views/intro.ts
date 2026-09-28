@@ -1,5 +1,5 @@
 import type { GameKey, SessionState } from '../engine/state'
-import { roster, roundsFor } from '../engine/roster'
+import { roster, roundsFor, isFiller } from '../engine/roster'
 import { SCORING, shown } from '../engine/standing'
 import { CLASH_POINTS } from '../engine/clash'
 
@@ -75,6 +75,21 @@ export function introSteps(s: SessionState, key: Exclude<GameKey, 'lights'>): [s
     'It disappears. Tap Stop when you think it’s there.',
     'Closest wins the round.',
   ],
+  spot: [
+    'The same grid on both phones — one of them is ever so slightly different.',
+    'Tap the odd one out. A wrong tap freezes you for a moment.',
+    'Quickest to find it wins the round. The grids grow.',
+  ],
+  frenzy: [
+    '3, 2, 1…',
+    'Tap as fast as you can for five seconds.',
+    'Most taps wins the round.',
+  ],
+  follow: [
+    'Four pads flash a pattern. Watch.',
+    'Then play it back, both at once.',
+    'It grows every round. The first to slip loses.',
+  ],
   }
   return STEPS[key]
 }
@@ -90,13 +105,16 @@ export function introSub(s: SessionState, key: GameKey): string {
     case 'draw': return r === 2 ? 'One drawing each.' : `${n(Math.ceil(r / 2))} rounds — a drawing each in every one.`
     case 'circle': return r === 1 ? 'A quick one — thirty seconds.' : `Best of ${r}.`
     case 'clock': return `A quick one — first to ${Math.ceil(r / 2)} rounds.`
+    case 'spot': return r === 1 ? 'A quick one.' : `A quick one — first to ${Math.ceil(r / 2)} rounds.`
+    case 'frenzy': return r === 1 ? 'A quick one — five seconds.' : `Best of ${r}.`
+    case 'follow': return 'A quick one — until someone slips.'
     default: return `${n(r)} round${r === 1 ? '' : 's'}.`
   }
 }
 
 // "Game 2 of 4" — counting the proper games only; a filler is just a quick one.
 export function gameNumber(s: SessionState, key: GameKey): { n: number; of: number } | null {
-  const games: GameKey[] = roster(s.game, s.night).map((e) => e.key).filter((k) => k !== 'lights' && k !== 'circle' && k !== 'clock')
+  const games: GameKey[] = roster(s.game, s.night).map((e) => e.key).filter((k) => k !== 'lights' && !isFiller(k))
   const i = games.indexOf(key)
   return i < 0 || games.length < 2 ? null : { n: i + 1, of: games.length }
 }

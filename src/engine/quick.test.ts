@@ -10,10 +10,10 @@ describe('a quick game', () => {
     for (let seed = 1; seed < 40; seed++) {
       const r = roster('quick', seed).map((e) => e.key)
       expect(r).toHaveLength(4)
-      expect(['circle', 'clock']).toContain(r[2])
+      expect(['circle', 'clock', 'spot', 'frenzy', 'follow']).toContain(r[2])
       const games = [r[0], r[1], r[3]]
       expect(new Set(games).size).toBe(3)
-      for (const g of games) expect(['circle', 'clock', 'lights', 'list', 'likely']).not.toContain(g)
+      for (const g of games) expect(['circle', 'clock', 'spot', 'frenzy', 'follow', 'lights', 'list', 'likely']).not.toContain(g)
     }
   })
   it('is a different mix from one game to the next', () => {

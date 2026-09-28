@@ -1,5 +1,6 @@
 import type { SessionState } from '../../engine/state'
-import { fillerWinner } from '../../engine/fillers'
+import { fillerWinner, type Filler } from '../../engine/fillers'
+import { GAME_LABELS } from '../../engine/roster'
 import { FILLER } from '../../engine/phases'
 import { Scoreboard } from '../../views/Scoreboard'
 import { playerName } from '../../views/list'
@@ -7,15 +8,14 @@ import { ReplayButton } from '../../share/ReplayButton'
 import { circleReplay } from '../../share/replay'
 
 // A filler ends on the same scoreboard as every game, with its prize said out loud.
-export function ScreenFillerResult({ s, kind }: { s: SessionState; kind: 'circle' | 'clock' }) {
+export function ScreenFillerResult({ s, kind }: { s: SessionState; kind: Filler['kind'] }) {
   const lastCircle = kind === 'circle' && s.circle ? s.circle.rounds[s.circle.current] : null
-  const winner = kind === 'circle'
-    ? s.circle && fillerWinner({ kind, game: s.circle })
-    : s.clock && fillerWinner({ kind, game: s.clock })
+  const f = fillerOf(s, kind)
+  const winner = f && fillerWinner(f)
   return (
     <Scoreboard
       s={s}
-      title={kind === 'circle' ? 'Perfect Circle · done' : 'Stop the Clock · done'}
+      title={`${GAME_LABELS[kind]} · done`}
       flourish={
         <div className="flex flex-col items-center gap-3">
           <div className="mt-2 inline-block rounded-full bg-sage-soft text-sage-ink px-4 py-1 font-display text-lg sm:text-2xl font-extrabold animate-pop">
@@ -36,4 +36,14 @@ export function ScreenFillerResult({ s, kind }: { s: SessionState; kind: 'circle
       }
     />
   )
+}
+
+function fillerOf(s: SessionState, kind: Filler['kind']): Filler | null {
+  switch (kind) {
+    case 'circle': return s.circle ? { kind, game: s.circle } : null
+    case 'clock': return s.clock ? { kind, game: s.clock } : null
+    case 'spot': return s.spot ? { kind, game: s.spot } : null
+    case 'frenzy': return s.frenzy ? { kind, game: s.frenzy } : null
+    case 'follow': return s.follow ? { kind, game: s.follow } : null
+  }
 }

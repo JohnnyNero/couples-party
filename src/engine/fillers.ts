@@ -1,5 +1,5 @@
-import type { CircleGame, CircleRound, ClockGame, ClockRound, DrawStroke, PlayerId } from './state'
-import { CIRCLE, CLOCK } from './phases'
+import type { CircleGame, CircleRound, ClockGame, ClockRound, DrawStroke, FollowGame, FollowRound, FrenzyGame, FrenzyRound, PlayerId, SpotGame, SpotRound } from './state'
+import { CIRCLE, CLOCK, FOLLOW, SPOT } from './phases'
 
 // Scoring for the two fillers, pure so both phones, the host and the tests all agree.
 
@@ -97,22 +97,82 @@ export function clockRoundWinner(round: ClockRound): PlayerId | null {
   return dA < dB ? 'A' : 'B'
 }
 
-// ---------------------------------------------------------------- either filler
+// ---------------------------------------------------------------- Spot It
 
-export type Filler = { kind: 'circle'; game: CircleGame } | { kind: 'clock'; game: ClockGame }
+// Found it first (on your own phone's clock) takes it; finding it at all beats not.
+export function spotRoundWinner(round: SpotRound): PlayerId | null {
+  const { A, B } = round.found
+  if (A === null && B === null) return null
+  if (A === null) return 'B'
+  if (B === null) return 'A'
+  if (Math.abs(A - B) < SPOT.deadHeatMs) return null
+  return A < B ? 'A' : 'B'
+}
+
+// ---------------------------------------------------------------- Frenzy
+
+export function frenzyRoundWinner(round: FrenzyRound): PlayerId | null {
+  const A = round.taps.A ?? 0
+  const B = round.taps.B ?? 0
+  if (A === B) return null
+  return A > B ? 'A' : 'B'
+}
+
+// ---------------------------------------------------------------- Follow Me
+
+// A round's settled once you've both played it back (or run out of time).
+const followIn = (r: FollowRound) => r.result.A !== null && r.result.B !== null
+const madeIt = (r: FollowRound, p: PlayerId) => (r.result[p]?.got ?? 0) >= r.length
+
+// It goes on while you both keep getting it; the first round one of you doesn't is the
+// last. Whoever got further along that one wins — level, and nobody does. Get all the way
+// to the longest sequence together, and the quicker of you takes it.
+export function followOver(g: FollowGame): boolean {
+  const r = g.rounds[g.rounds.length - 1]
+  if (!r || !followIn(r)) return false
+  return !(madeIt(r, 'A') && madeIt(r, 'B')) || r.length >= FOLLOW.maxLength
+}
+
+export function followWinner(g: FollowGame): PlayerId | null {
+  if (!followOver(g)) return null
+  const r = g.rounds[g.rounds.length - 1]
+  const a = r.result.A!
+  const b = r.result.B!
+  if (a.got !== b.got) return a.got > b.got ? 'A' : 'B'
+  if (a.got >= r.length && a.ms !== b.ms) return a.ms < b.ms ? 'A' : 'B'
+  return null
+}
+
+// ---------------------------------------------------------------- any filler
+
+export type Filler =
+  | { kind: 'circle'; game: CircleGame }
+  | { kind: 'clock'; game: ClockGame }
+  | { kind: 'spot'; game: SpotGame }
+  | { kind: 'frenzy'; game: FrenzyGame }
+  | { kind: 'follow'; game: FollowGame }
 
 export function roundWins(f: Filler): Record<PlayerId, number> {
   const wins = { A: 0, B: 0 }
-  const winners = f.kind === 'circle'
-    ? f.game.rounds.map(circleRoundWinner)
-    : f.game.rounds.map(clockRoundWinner)
+  // Follow Me isn't rounds won: it's the one that decided it.
+  if (f.kind === 'follow') {
+    const w = followWinner(f.game)
+    if (w) wins[w] = 1
+    return wins
+  }
+  const winners = f.kind === 'circle' ? f.game.rounds.map(circleRoundWinner)
+    : f.kind === 'clock' ? f.game.rounds.map(clockRoundWinner)
+    : f.kind === 'spot' ? f.game.rounds.map(spotRoundWinner)
+    : f.game.rounds.map(frenzyRoundWinner)
   for (const w of winners) if (w) wins[w] += 1
   return wins
 }
 
 // Over once someone has a majority of the best-of. Otherwise a circle stops after its
-// best-of rounds; a clock can replay dead heats, up to two extra rounds.
+// best-of rounds; the others can replay a tie, up to two extra rounds. Follow Me runs
+// until one of you slips.
 export function fillerOver(f: Filler): boolean {
+  if (f.kind === 'follow') return followOver(f.game)
   const need = Math.ceil(f.game.bestOf / 2)
   const wins = roundWins(f)
   if (wins.A >= need || wins.B >= need) return true

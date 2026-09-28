@@ -19,6 +19,7 @@ import { PlayCircleDraw } from '../play/phases/PlayCircleDraw'
 import { PlayClashWrite } from '../play/phases/PlayClashWrite'
 import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
+import { PlayFollow, PlayFrenzy, PlaySpot } from '../play/phases/PlayMinis'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
 import { HomeButton } from './HomeButton'
 import { PlayMeldWrite } from '../play/phases/PlayMeldWrite'
@@ -69,6 +70,9 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'DRAW_RESULT':
     case 'CIRCLE_RESULT':
     case 'CLOCK_RESULT':
+    case 'SPOT_RESULT':
+    case 'FRENZY_RESULT':
+    case 'FOLLOW_RESULT':
     case 'CLASH_RESULT':
     case 'CHAIN_RESULT':
     case 'BLUFF_RESULT':
@@ -98,6 +102,13 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
       return <PlayClashReveal s={s} me={me} />
     case 'CIRCLE_DRAW':
       return <PlayCircleDraw s={s} me={me} />
+    case 'SPOT_RUN':
+      return <PlaySpot s={s} me={me} />
+    case 'FRENZY_RUN':
+      return <PlayFrenzy s={s} me={me} />
+    case 'FOLLOW_SHOW':
+    case 'FOLLOW_PLAY':
+      return <PlayFollow s={s} me={me} />
     case 'CLOCK_READY':
     case 'DECIDER_READY':
       return <PlayWaiting label="Get ready…" sub="Your Stop button is coming." />

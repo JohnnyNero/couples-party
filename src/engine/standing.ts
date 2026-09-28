@@ -235,7 +235,7 @@ export function deciderPoints(s: SessionState): Standing {
 // for more (or less) than the others.
 export const PER_GAME = { you: 40, us: 20 } as const
 
-type Scaled = Exclude<GameKey, 'lights' | 'circle' | 'clock'>
+type Scaled = Exclude<GameKey, 'lights' | 'circle' | 'clock' | 'spot' | 'frenzy' | 'follow'>
 export const AVERAGE: Record<Scaled, { you: number; us: number }> = {
   // Per act: 7 items, 3 for an exact slot (about a quarter), 1 for one out (about a third).
   list: { you: 7.7, us: 1.75 },
@@ -303,7 +303,7 @@ const sumAwards = (awards: Award[]): Standing => {
 // "+n"s the reveal screens showed.
 type Raw = { you: Award[]; us: number[] }
 
-function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'clock'>): Raw {
+function rawFor(s: SessionState, key: Scaled): Raw {
   const you: Award[] = []
   const us: number[] = []
   switch (key) {
@@ -388,6 +388,9 @@ function rawFor(s: SessionState, key: Exclude<GameKey, 'lights' | 'circle' | 'cl
 function scoreFor(s: SessionState, key: Exclude<GameKey, 'lights'>): { points: Standing; team: number } {
   if (key === 'circle') return { points: fillerPoints(s.circle && { kind: 'circle', game: s.circle }), team: 0 }
   if (key === 'clock') return { points: fillerPoints(s.clock && { kind: 'clock', game: s.clock }), team: 0 }
+  if (key === 'spot') return { points: fillerPoints(s.spot ? { kind: 'spot', game: s.spot } : null), team: 0 }
+  if (key === 'frenzy') return { points: fillerPoints(s.frenzy ? { kind: 'frenzy', game: s.frenzy } : null), team: 0 }
+  if (key === 'follow') return { points: fillerPoints(s.follow ? { kind: 'follow', game: s.follow } : null), team: 0 }
   const raw = rawFor(s, key)
   const points = zero()
   for (const a of raw.you) if (a) points[a.player] += shown(s, key, a.points)

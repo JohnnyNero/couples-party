@@ -1,6 +1,6 @@
 import type { PlayerId, SessionState } from '../engine/state'
 import { gameScores, PER_GAME, standing, teamScore } from '../engine/standing'
-import { GAME_LABELS, SESSION_NAMES } from '../engine/roster'
+import { FILLER_KEYS, GAME_LABELS, SESSION_NAMES } from '../engine/roster'
 import { dailyNumber } from './daily'
 
 // The couple share card: one summary of a finished session, as a few lines of text for
@@ -30,7 +30,7 @@ export function tierFor(together: number, games: number): string | null {
   return 'Beautifully different'
 }
 
-const TEAMLESS = new Set(['circle', 'clock', 'decider'])
+const TEAMLESS = new Set([...FILLER_KEYS, 'decider'])
 
 function labelFor(s: SessionState, date: Date, replay: boolean): string {
   const day = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })

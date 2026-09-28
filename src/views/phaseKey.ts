@@ -29,6 +29,9 @@ export function phaseKey(s: SessionState): string {
     s.circle?.current ?? 0,
     s.clock?.current ?? 0,
     s.decider?.current ?? 0,
+    s.spot?.current ?? 0,
+    s.frenzy?.current ?? 0,
+    s.follow?.current ?? 0,
   ].join('|')
 }
 
@@ -55,5 +58,8 @@ export function screenKey(s: SessionState): string {
     s.circle?.current ?? 0,
     s.clock?.current ?? 0,
     s.decider?.current ?? 0,
+    s.spot?.current ?? 0,
+    s.frenzy?.current ?? 0,
+    s.follow?.current ?? 0,
   ].join('|')
 }
