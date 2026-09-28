@@ -91,7 +91,7 @@ describe('Perfect Circle', () => {
 const running = (game: Game = 'clock') => reduce(start(game), { type: 'TIMEOUT' }, 5000)
 
 describe('Stop the Clock', () => {
-  it('shows the target, then runs long enough for a tap at twice it', () => {
+  it('shows the target, then runs the same hidden length whatever it is', () => {
     let s = start('clock')
     expect(s.phase).toBe('CLOCK_READY')
     const target = s.clock!.rounds[0].targetMs
@@ -100,7 +100,8 @@ describe('Stop the Clock', () => {
     expect(target % 100).toBe(0)
     s = reduce(s, { type: 'TIMEOUT' }, 5000)
     expect(s.phase).toBe('CLOCK_RUN')
-    expect(s.phaseEndsAt).toBe(5000 + 2 * target + CLOCK.graceMs)
+    expect(s.phaseEndsAt).toBe(5000 + CLOCK.maxMs + CLOCK.graceMs)
+    expect(target).toBeLessThan(CLOCK.maxMs / 2)
   })
   it('hides the clock sooner each round', () => {
     const s = start('clock')
@@ -113,14 +114,14 @@ describe('Stop the Clock', () => {
     expect(reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: t }, 6100)).toBe(s) // one tap
     s = reduce(s, { type: 'TIMEOUT' }, 9e9)
     expect(s.phase).toBe('CLOCK_REVEAL')
-    expect(s.clock!.rounds[0].stopped).toEqual({ A: t + 120, B: 2 * t })
+    expect(s.clock!.rounds[0].stopped).toEqual({ A: t + 120, B: CLOCK.maxMs })
   })
   it('still counts a tap that only reaches the host after it called time', () => {
     let s = running()
     const t = s.clock!.rounds[0].targetMs
     s = reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: t + 50 }, 6000)
     s = reduce(s, { type: 'TIMEOUT' }, 9e9) // B's tap is still on its way
-    expect(s.clock!.rounds[0].stopped.B).toBe(2 * t)
+    expect(s.clock!.rounds[0].stopped.B).toBe(CLOCK.maxMs)
     s = reduce(s, { type: 'STOP_CLOCK', player: 'B', elapsedMs: t - 30 }, 9e9 + 100)
     expect(s.phase).toBe('CLOCK_REVEAL')
     expect(s.clock!.rounds[0].stopped).toEqual({ A: t + 50, B: t - 30 })
@@ -135,7 +136,7 @@ describe('Stop the Clock', () => {
     s = reduce(s, { type: 'STOP_CLOCK', player: 'A', elapsedMs: -50 }, 6000)
     s = reduce(s, { type: 'STOP_CLOCK', player: 'B', elapsedMs: 1e9 }, 6000)
     const r = s.clock!.rounds[0]
-    expect(r.stopped).toEqual({ A: 0, B: 2 * r.targetMs })
+    expect(r.stopped).toEqual({ A: 0, B: CLOCK.maxMs - 1 })
   })
   it('replays a dead heat, and a best of 5 ends as soon as someone has three', () => {
     let s = running()

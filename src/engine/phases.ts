@@ -127,7 +127,10 @@ export const CLOCK = {
   hideAfter: [3000, 1000], // round 1 shows the clock for 3 s, round 2 for 1 s, later ones never
   deciderHideAfter: 1000,
   deadHeatMs: 10,   // closer than this is a dead heat, and the round is played again
-  graceMs: 3000,    // on top of 2 × target before the host calls time — a tap from the other phone can take a moment to arrive
+  // The most a run lasts, and what a missing tap counts as. Never shown: a countdown to
+  // it would be a clock you could stop by.
+  maxMs: 20000,
+  graceMs: 3000,    // on top of maxMs before the host calls time — a tap from the other phone can take a moment to arrive
   deciderMaxRounds: 3,
 }
 

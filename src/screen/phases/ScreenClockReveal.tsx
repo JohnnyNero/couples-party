@@ -1,6 +1,6 @@
 import type { SessionState } from '../../engine/state'
 import { clockRoundWinner, roundWins } from '../../engine/fillers'
-import { FILLER } from '../../engine/phases'
+import { FILLER, CLOCK } from '../../engine/phases'
 import { liveClock, seconds } from '../../views/fillers'
 import { playerName } from '../../views/list'
 import { Avatar, inkOf } from '../../ui/Avatar'
@@ -24,8 +24,8 @@ export function ScreenClockReveal({ s }: { s: SessionState }) {
       </div>
       <div className="grid grid-cols-2 gap-4 sm:gap-8">
         {(['A', 'B'] as const).map((p, i) => {
-          const t = round.stopped[p] ?? 2 * round.targetMs
-          const missed = t >= 2 * round.targetMs
+          const t = round.stopped[p] ?? CLOCK.maxMs
+          const missed = t >= CLOCK.maxMs
           const off = t - round.targetMs
           const won = winner === p
           return (

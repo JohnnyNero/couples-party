@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerId, SessionState } from '../../engine/state'
 import { other } from '../../engine/state'
+import { CLOCK } from '../../engine/phases'
 import { dispatch } from '../../net'
 import { liveClock, seconds } from '../../views/fillers'
 import { playerName } from '../../views/list'
@@ -38,7 +39,7 @@ export function PlayClockRun({ s, me }: { s: SessionState; me: PlayerId }) {
   }
   // Until the game has your tap, keep sending it (the same time each go — only the first
   // to arrive counts). It lands even once the reveal is up; see STOP_CLOCK.
-  const confirmed = round.stopped[me] !== null && round.stopped[me] !== 2 * round.targetMs
+  const confirmed = round.stopped[me] !== null && round.stopped[me] !== CLOCK.maxMs
   useEffect(() => {
     if (!tapped || confirmed || sentMs.current === null) return
     const again = setInterval(() => dispatch({ type: 'STOP_CLOCK', player: me, elapsedMs: sentMs.current! }, { quiet: true }), 1200)

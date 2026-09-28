@@ -33,6 +33,9 @@ export function headerInfo(s: SessionState): { icon: GameKey | null; title: stri
 
 // The strip across the top of every game screen: the game, the round, both scores, and
 // the clock as a bar that runs down.
+// Phases whose length is part of the puzzle, so the bar stays off.
+const HIDDEN_CLOCK = new Set<string>(['CLOCK_RUN', 'DECIDER_RUN'])
+
 export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean }) {
   const { icon, title, sub } = headerInfo(s)
   const [menu, setMenu] = useState(false)
@@ -59,7 +62,8 @@ export function GameHeader({ s, big = false }: { s: SessionState; big?: boolean 
         {s.phase !== 'JOIN' && <ScorePill s={s} big={big} />}
         <PauseButton s={s} onOpenLocal={() => setMenu(true)} />
       </div>
-      <TimerBar phaseEndsAt={s.phaseEndsAt} paused={!!s.paused} tick={!/REVEAL|RESULT|_END|INTRO|READY|JUDGE/.test(s.phase)} />
+      {/* Stop the Clock's run has no bar: how long it lasts would give the time away. */}
+      <TimerBar phaseEndsAt={HIDDEN_CLOCK.has(s.phase) ? null : s.phaseEndsAt} paused={!!s.paused} tick={!/REVEAL|RESULT|_END|INTRO|READY|JUDGE/.test(s.phase)} />
       <PauseMenu s={s} localOpen={menu} onCloseLocal={() => setMenu(false)} />
     </div>
   )

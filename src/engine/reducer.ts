@@ -1105,13 +1105,12 @@ function beginDecider(state: SessionState, now: number): SessionState {
   return toClockReady(s, now, 'decider')
 }
 
-// Long enough for a tap at twice the target, plus a margin for the phone that got the
-// start a moment late.
+// The same length whatever the target — so how long it runs gives nothing away — plus
+// a margin for the phone that got the start a moment late.
 function toClockRun(state: SessionState, now: number, field: ClockField): SessionState {
   const s = clone(state)
-  const g = s[field]!
   s.phase = CLOCK_PHASES[field].run
-  s.phaseEndsAt = now + 2 * g.rounds[g.current].targetMs + CLOCK.graceMs
+  s.phaseEndsAt = now + CLOCK.maxMs + CLOCK.graceMs
   return s
 }
 
@@ -1120,7 +1119,7 @@ function toClockReveal(state: SessionState, now: number, field: ClockField): Ses
   const s = clone(state)
   const g = s[field]!
   const round = g.rounds[g.current]
-  for (const p of PLAYERS) round.stopped[p] ??= 2 * round.targetMs
+  for (const p of PLAYERS) round.stopped[p] ??= CLOCK.maxMs
   s.phase = CLOCK_PHASES[field].reveal
   s.phaseEndsAt = now + DURATIONS[CLOCK_PHASES[field].reveal]!
   return s
@@ -1555,7 +1554,7 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         const g = state[field]!
         const round = g.rounds[g.current]
         const ms = Math.round(Math.max(0, action.elapsedMs))
-        if (round.stopped[action.player] !== 2 * round.targetMs || ms >= 2 * round.targetMs) return state
+        if (round.stopped[action.player] !== CLOCK.maxMs || ms >= CLOCK.maxMs) return state
         const s = clone(state)
         s[field]!.rounds[s[field]!.current].stopped[action.player] = ms
         return s
@@ -1566,7 +1565,7 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       if (round.stopped[action.player] !== null) return state // one tap
       const s = clone(state)
       const mine = s[field]!.rounds[s[field]!.current]
-      mine.stopped[action.player] = Math.round(Math.min(2 * round.targetMs, Math.max(0, action.elapsedMs)))
+      mine.stopped[action.player] = Math.round(Math.min(CLOCK.maxMs - 1, Math.max(0, action.elapsedMs)))
       return mine.stopped.A !== null && mine.stopped.B !== null ? toClockReveal(s, now, field) : s
     }
     case 'READY': {
