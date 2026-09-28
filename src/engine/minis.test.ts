@@ -4,7 +4,7 @@ import { reduce } from './reducer'
 import { followWinner } from './fillers'
 import { gameScores } from './standing'
 import { DURATIONS, FILLER, FOLLOW, FRENZY, SPOT } from './phases'
-import { roster } from './roster'
+import { kindOf, roster } from './roster'
 
 // The three quick fillers on their own: Spot It, Frenzy and Follow Me.
 const start = (game: Game) => {
@@ -111,6 +111,23 @@ describe('Follow Me', () => {
     s = reduce(s, { type: 'TIMEOUT' }, 20000) // B never finished
     expect(round(s).result.B).toMatchObject({ got: 0 })
     expect(followWinner(s.follow!)).toBe('A')
+  })
+})
+
+describe('the full session', () => {
+  it('plays every game about you two each night, three of the play games in turn, and two fillers', () => {
+    const us = ['list', 'finger', 'wave', 'mrmrs', 'draw', 'bluff', 'meld']
+    const seen = new Set<string>()
+    for (let n = 0; n < 6; n++) {
+      const keys = roster('full', n).map((e) => e.key)
+      expect(keys.filter((k) => kindOf(k) === 'us')).toEqual(us)
+      const play = keys.filter((k) => kindOf(k) === 'play')
+      expect(new Set(play).size).toBe(3)
+      play.forEach((k) => seen.add(k))
+      expect(keys.filter((k) => kindOf(k) === 'filler')).toHaveLength(2)
+      expect(keys[keys.length - 1]).toBe('lights')
+    }
+    expect(seen.size).toBe(6) // every play game turns up within a few nights
   })
 })
 

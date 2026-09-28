@@ -11,7 +11,7 @@ const CONTENT = {
 
 // Tonight on night 4 (the clock, Mr & Mrs, Draw), played for real where it matters.
 function playNight(): SessionState {
-  let s = initialState(7, 'tonight', CONTENT, 4)
+  let s = initialState(7, 'tonight', CONTENT, 1) // Mr & Mrs and Draw
   s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
   s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
   for (let i = 1; i < 300 && s.phase !== 'DONE'; i++) {

@@ -3,7 +3,7 @@ import { makeRng, shuffled } from './rng'
 
 // What each kind of session actually plays, in order, and how long each game runs in it.
 // This is the only place a session's shape is decided — the reducer walks it and the
-// scoreboard reads it, so adding a game to Tonight is a one-line change here.
+// scoreboard reads it, so adding a game to a session is a one-line change to its kind's pool.
 
 export type RosterEntry = { key: GameKey; rounds: number }
 
@@ -15,16 +15,16 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
     // Who's More Likely is parked for now: it pays you both for agreeing, and every other
     // game is you against each other. It still runs on its own (?game=likely).
     { key: 'finger', rounds: 6 }, // Called It
-    { key: 'circle', rounds: 1 }, // a filler after every second game
+    { key: 'circle', rounds: 1 }, // filler slot
     { key: 'wave', rounds: 6 }, // three pairs: you each give a clue in every pair
-    { key: 'clash', rounds: 3 },
-    { key: 'clock', rounds: 3 }, // best of 3
+    { key: 'clash', rounds: 3 }, // play slot
+    { key: 'clock', rounds: 3 }, // filler slot
     { key: 'mrmrs', rounds: 5 },
-    { key: 'chain', rounds: 4 },
+    { key: 'chain', rounds: 4 }, // play slot
     { key: 'draw', rounds: 6 },
     { key: 'bluff', rounds: 3 },
+    { key: 'describe', rounds: 2 }, // play slot
     { key: 'meld', rounds: 4 },
-    { key: 'describe', rounds: 2 }, // one turn each
     { key: 'lights', rounds: 1 },
   ],
   // Tonight rotates, and a quick game is dealt — see below; these entries are never read.
@@ -53,28 +53,47 @@ const ROSTERS: Record<Game, RosterEntry[]> = {
   guess: [{ key: 'guess', rounds: 6 }],
 }
 
-// Tonight: quick games before bed, then a question to turn the light off on. The
-// candidates keep this order; when there are more than TONIGHT_GAMES of them, each
-// night leaves a different one out, so the mix changes from night to night. Shortlist
-// never plays here — it needs both acts to be fair, and that's most of the night.
-const TONIGHT_GAMES = 4
-const TONIGHT_POOL: RosterEntry[] = [
+// Every game is one of three kinds, and a session is built from slots of each kind:
+//  - us: about the two of you — knowing, reading or guessing each other;
+//  - play: nothing to do with each other — quizzes, wordplay, saying things out loud;
+//  - filler: thirty seconds of thumbs, between the bigger games.
+// Lights Out is none of them: it's what a night ends on.
+export type Kind = 'us' | 'play' | 'filler'
+export const KIND: Record<Exclude<GameKey, 'lights'>, Kind> = {
+  list: 'us', likely: 'us', finger: 'us', wave: 'us', mrmrs: 'us', draw: 'us', bluff: 'us', meld: 'us',
+  clash: 'play', chain: 'play', describe: 'play', twist: 'play', higher: 'play', guess: 'play',
+  circle: 'filler', clock: 'filler', spot: 'filler', frenzy: 'filler', follow: 'filler',
+}
+export const kindOf = (key: GameKey): Kind | null => (key === 'lights' ? null : KIND[key])
+
+// Each kind's pool for the short sessions, at their short lengths. Shortlist never plays
+// in them — it needs both acts to be fair, and that's most of a night.
+const US_POOL: RosterEntry[] = [
   { key: 'finger', rounds: 4 },
   { key: 'wave', rounds: 2 }, // one each as the psychic
   { key: 'mrmrs', rounds: 2 },
   { key: 'draw', rounds: 2 }, // one drawing each
-  { key: 'clash', rounds: 2 },
-  { key: 'chain', rounds: 2 },
   { key: 'bluff', rounds: 1 }, // one each
   { key: 'meld', rounds: 2 },
+]
+const PLAY_POOL: RosterEntry[] = [
+  { key: 'clash', rounds: 2 },
+  { key: 'chain', rounds: 2 },
   { key: 'describe', rounds: 2 },
   { key: 'twist', rounds: 3 },
   { key: 'higher', rounds: 5 },
   { key: 'guess', rounds: 4 },
 ]
-
-// One quick filler after the second game, each of these in turn.
-const TONIGHT_FILLERS: RosterEntry[] = [
+// The full session's play slots, at full length.
+const PLAY_FULL: RosterEntry[] = [
+  { key: 'clash', rounds: 3 },
+  { key: 'chain', rounds: 4 },
+  { key: 'describe', rounds: 2 },
+  { key: 'twist', rounds: 4 },
+  { key: 'higher', rounds: 6 },
+  { key: 'guess', rounds: 5 },
+]
+const FILLER_POOL: RosterEntry[] = [
   { key: 'clock', rounds: 3 },
   { key: 'spot', rounds: 3 },
   { key: 'circle', rounds: 1 },
@@ -84,24 +103,35 @@ const TONIGHT_FILLERS: RosterEntry[] = [
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
 
-function tonight(night: number): RosterEntry[] {
-  const n = TONIGHT_POOL.length
-  const skip = Math.max(0, n - TONIGHT_GAMES)
-  const first = mod(night, n)
-  const out = new Set(Array.from({ length: skip }, (_, i) => (first + i) % n))
-  const games = TONIGHT_POOL.filter((_, i) => !out.has(i))
-  const filler = TONIGHT_FILLERS[mod(night, TONIGHT_FILLERS.length)]
-  return [...games.slice(0, 2), filler, ...games.slice(2), { key: 'lights', rounds: 1 }]
+// `k` of a pool for this night, taken in turn: every game comes round once a lap
+// (pool ÷ k nights), and never two nights running. Each lap starts one place further on,
+// so the same games don't keep sharing a night.
+function dealt(pool: RosterEntry[], k: number, night: number): RosterEntry[] {
+  const n = pool.length
+  const start = k * night + Math.floor(night / Math.ceil(n / k))
+  return Array.from({ length: Math.min(k, n) }, (_, i) => pool[mod(start + i, n)])
 }
 
-// A quick game: a handful of games to play right now, dealt at random from Tonight's
-// mix — three of them, with a filler before the last — and no question at the end.
-const QUICK_GAMES = 3
+// Today: a game to play, a game about you, a filler, another of each, then a question to
+// turn the light off on. Ending on one about you two leads into it.
+function tonight(night: number): RosterEntry[] {
+  const [us1, us2] = dealt(US_POOL, 2, night)
+  // A night further on, so which of these meets which of those shifts about too.
+  const [play1, play2] = dealt(PLAY_POOL, 2, night + 1)
+  const filler = FILLER_POOL[mod(night, FILLER_POOL.length)]
+  return [play1, us1, filler, play2, us2, { key: 'lights', rounds: 1 }]
+}
 
+// A quick game: three games to play right now, dealt at random — one of each kind, then
+// either — with a filler before the last, and no question at the end.
 function quick(seed: number): RosterEntry[] {
-  const games = shuffled(makeRng(seed ^ 0x9a1c), TONIGHT_POOL).slice(0, QUICK_GAMES)
-  const filler = TONIGHT_FILLERS[mod(seed, TONIGHT_FILLERS.length)]
-  return [...games.slice(0, 2), filler, ...games.slice(2)]
+  const rng = makeRng(seed ^ 0x9a1c)
+  const us = shuffled(rng, US_POOL)
+  const play = shuffled(rng, PLAY_POOL)
+  const first = rng() < 0.5 ? [us[0], play[0]] : [play[0], us[0]]
+  const last = rng() < 0.5 ? us[1] : play[1]
+  const filler = FILLER_POOL[mod(seed, FILLER_POOL.length)]
+  return [...first, filler, last]
 }
 
 // `night` only matters to Tonight — the day number the host started the session on
@@ -112,15 +142,17 @@ export function roster(game: Game, night = 0): RosterEntry[] {
   return game === 'tonight' ? tonight(night) : game === 'quick' ? quick(night) : ROSTERS[game]
 }
 
-// The long night's two filler slots take their turn from the same list, so they vary
-// from night to night too — never the same one twice in a night.
-const FULL_FILLERS: GameKey[] = ['circle', 'clock', 'spot', 'follow', 'frenzy']
+// The long night: every game about you two, in its set places; three of the play games,
+// taken in turn; and two fillers, never the same one twice in a night.
 function full(night: number): RosterEntry[] {
-  const n = FULL_FILLERS.length
-  const pick = (k: GameKey) => TONIGHT_FILLERS.find((e) => e.key === k)!
-  const slots = [pick(FULL_FILLERS[mod(night, n)]), pick(FULL_FILLERS[mod(night + 1, n)])]
-  let k = 0
-  return ROSTERS.full.map((e) => (e.key === 'circle' || e.key === 'clock' ? slots[k++] : e))
+  const fillers = [FILLER_POOL[mod(night + 2, FILLER_POOL.length)], FILLER_POOL[mod(night, FILLER_POOL.length)]]
+  const play = dealt(PLAY_FULL, 3, night)
+  let f = 0
+  let p = 0
+  return ROSTERS.full.map((e) => {
+    const kind = kindOf(e.key)
+    return kind === 'filler' ? fillers[f++] : kind === 'play' ? play[p++] : e
+  })
 }
 
 // What each kind of session is called, where a single game would just use its own name.
@@ -165,7 +197,7 @@ export function gameOfPhase(phase: Phase): GameKey | null {
 }
 
 // The quick in-between games: a flat prize to the winner, no team points.
-export const FILLER_KEYS: ReadonlySet<string> = new Set<GameKey>(['circle', 'clock', 'spot', 'frenzy', 'follow'])
+export const FILLER_KEYS: ReadonlySet<string> = new Set<GameKey>((Object.keys(KIND) as GameKey[]).filter((k) => kindOf(k) === 'filler'))
 export const isFiller = (key: string) => FILLER_KEYS.has(key)
 
 export const GAME_LABELS: Record<GameKey, string> = {

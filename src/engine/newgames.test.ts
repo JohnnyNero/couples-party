@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type Content, type Game, type SessionState } from './state'
 import { reduce } from './reducer'
-import { roster, roundsFor } from './roster'
+import { kindOf, roster, roundsFor } from './roster'
 import { SCORING, likelyPoints, mrmrsPoints, shown, standing } from './standing'
 import { DURATIONS } from './phases'
 
@@ -121,19 +121,26 @@ describe('mr & mrs', () => {
 // ---------------------------------------------------------------- Tonight and the roster
 
 describe('tonight', () => {
-  it('plays four of the head-to-head games each night, a different set out each night, with a filler after the second', () => {
-    const pool = ['finger', 'wave', 'mrmrs', 'draw', 'clash', 'chain', 'bluff', 'meld', 'describe', 'twist', 'higher', 'guess']
-    const out: string[] = []
-    for (let night = 0; night < pool.length; night++) {
-      const keys = roster('tonight', night).map((e) => e.key)
-      expect(keys).toHaveLength(6)
-      expect(keys[2]).toBe(['clock', 'spot', 'circle', 'follow', 'frenzy'][night % 5]) // the fillers take turns
-      expect(keys[5]).toBe('lights')
-      out.push(...pool.filter((k) => !keys.includes(k as never)))
+  it('deals a game to play, one about you, a filler, one of each again, then Lights Out', () => {
+    const kinds = (night: number) => roster('tonight', night).map((e) => kindOf(e.key) ?? e.key)
+    for (let night = -6; night < 60; night++) {
+      expect(kinds(night)).toEqual(['play', 'us', 'filler', 'play', 'us', 'lights'])
+      expect(roster('tonight', night)[2].key).toBe(['clock', 'spot', 'circle', 'follow', 'frenzy'][((night % 5) + 5) % 5]) // the fillers take turns
     }
-    // Over as many nights as there are games, each sits out the same number of times.
-    for (const k of pool) expect(out.filter((o) => o === k)).toHaveLength(pool.length - 4)
-    expect(roster('tonight', -3)).toEqual(roster('tonight', -3 + 12 * 5)) // negative day numbers too
+  })
+  it('takes every game of each kind once in three nights, and never the same one two nights running', () => {
+    const games = (night: number) => roster('tonight', night).map((e) => e.key).filter((k) => kindOf(k) === 'us' || kindOf(k) === 'play')
+    for (let night = -6; night < 60; night++) {
+      expect(games(night).filter((k) => games(night + 1).includes(k))).toEqual([])
+    }
+    for (let lap = 0; lap < 20; lap++) {
+      const us = [0, 1, 2].flatMap((i) => games(lap * 3 + i).filter((k) => kindOf(k) === 'us'))
+      expect(new Set(us).size).toBe(6)
+    }
+    // Which play games share a night moves about: more than three different pairs turn up.
+    const pairs = new Set(Array.from({ length: 30 }, (_, n) => games(n).filter((k) => kindOf(k) === 'play').sort().join('+')))
+    expect(pairs.size).toBeGreaterThan(3)
+    expect(roster('tonight', -3)).toEqual(roster('tonight', -3 + 18 * 5)) // negative day numbers too
   })
   const playThrough = (state: SessionState) => {
     let s = state
@@ -148,15 +155,15 @@ describe('tonight', () => {
     return { s, seen }
   }
   it('runs its line-up in order, breaks a level night, and ends on Lights Out', () => {
-    const { s, seen } = playThrough(start('tonight', CONTENT, 40))
+    const { s, seen } = playThrough(start('tonight', CONTENT, 50))
     expect(s.phase).toBe('DONE')
-    // Night 40 (the games of night 4, and a clock night) sits Category Clash, Word Chain and Two Lies out: Finger Down and
-    // Wavelength (both skipped — no statements or spectrums in this content), the clock,
-    // then Mr & Mrs and Draw. Nobody taps and nobody scores, so the night is level and
-    // goes to a tiebreaker.
+    // Night 50 (a clock night): Guesstimate (skipped — no questions in this content), Mr &
+    // Mrs, the clock, Category Clash (skipped too), then Draw. Nobody taps and nobody
+    // scores, so the night is level and goes to a tiebreaker.
+    expect(roster('tonight', 50).map((e) => e.key)).toEqual(['guess', 'mrmrs', 'clock', 'clash', 'draw', 'lights'])
     expect(seen).toEqual([
-      'CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT',
       'MM_ANSWER', 'MM_JUDGE', 'MM_RESULT',
+      'CLOCK_READY', 'CLOCK_RUN', 'CLOCK_REVEAL', 'CLOCK_RESULT',
       'DRAW_SKETCH', 'DRAW_GUESS', 'DRAW_REVEAL', 'DRAW_RESULT',
       'DECIDER_READY', 'DECIDER_RUN', 'DECIDER_REVEAL',
       'LIGHTS_OUT',
@@ -168,10 +175,10 @@ describe('tonight', () => {
     expect(s.lights?.question).toBe('What made you laugh today?')
   })
   it('skips a game the content file gave nothing to, rather than opening it empty', () => {
-    const t = start('tonight', CONTENT, 5) // night 5: Wavelength plays first, with nothing to play
-    expect(roster('tonight', 5)[0].key).toBe('wave')
+    const t = start('tonight', CONTENT, 1) // night 1: Higher or Lower plays first, with nothing to play
+    expect(roster('tonight', 1)[0].key).toBe('higher')
     expect(t.phase).toBe('MM_ANSWER')
-    expect(t.wave).toBe(null)
+    expect(t.higher ?? null).toBe(null)
   })
   it('still plays the filler with no content at all, then ends without Lights Out', () => {
     const { s, seen } = playThrough(start('tonight', { lightsQuestions: [] }))

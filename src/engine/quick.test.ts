@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { initialState, type SessionState } from './state'
 import { reduce } from './reducer'
-import { roster } from './roster'
+import { kindOf, roster } from './roster'
 
 // A quick game: dealt fresh each time, three games and a filler, no Lights Out.
 
@@ -14,6 +14,9 @@ describe('a quick game', () => {
       const games = [r[0], r[1], r[3]]
       expect(new Set(games).size).toBe(3)
       for (const g of games) expect(['circle', 'clock', 'spot', 'frenzy', 'follow', 'lights', 'list', 'likely']).not.toContain(g)
+      // One about you two and one just to play, then either.
+      expect([kindOf(r[0]), kindOf(r[1])].sort()).toEqual(['play', 'us'])
+      expect(['play', 'us']).toContain(kindOf(r[3]))
     }
   })
   it('is a different mix from one game to the next', () => {

@@ -156,15 +156,15 @@ describe('the fillers and the tiebreaker', () => {
   })
   it('says a level night goes to a tiebreaker, then plays it as sudden death', () => {
     // The last scored game's scoreboard, still level at 0–0.
-    const cats = ['a drink', 'a colour', 'an animal', 'a film', 'a job', 'a sport']
-    // Night 5 ends on Category Clash (Word Chain and Finger Down sit out).
-    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], clashCategories: cats }, 5)
+    const qs = ['Your comfort meal?', 'Your go-to drink?']
+    // Night 3 ends on Mr & Mrs: nothing else but the filler has content here.
+    let last = initialState(1, 'tonight', { lightsQuestions: ['Goodnight?'], mrmrsQuestions: qs }, 3)
     last = reduce(last, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     last = reduce(last, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
-    for (let i = 0; i < 120 && last.phase !== 'CLASH_RESULT'; i++) {
+    for (let i = 0; i < 120 && last.phase !== 'MM_RESULT'; i++) {
       last = last.phase.endsWith('_RESULT') ? reduce(last, { type: 'CONTINUE', player: 'A' }, i * 1000) : reduce(last, { type: 'TIMEOUT' }, i * 1000)
     }
-    expect(last.phase).toBe('CLASH_RESULT') // the night's last game
+    expect(last.phase).toBe('MM_RESULT') // the night's last game
     expect(renderToStaticMarkup(<BoardStage s={last} />)).toContain('Dead level!')
     const decider = walk((x) => x.phase === 'DECIDER_READY')
     expect(renderToStaticMarkup(<BoardStage s={decider} />)).toContain('Closest takes the night')

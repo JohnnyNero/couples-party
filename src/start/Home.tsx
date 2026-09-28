@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Game } from './mode'
 import type { GameKey } from '../engine/state'
-import { GAME_LABELS, roster } from '../engine/roster'
+import { GAME_LABELS, isFiller, roster } from '../engine/roster'
 import { ProfilePage } from '../profile/ProfilePage'
 import { useBackLayer } from '../ui/back'
 import { ContinueCard } from './ContinueCard'
@@ -238,7 +238,7 @@ function Streak({ n, last7 }: { n: number; last7: number | null }) {
 function TonightCard({ onPlay }: { onPlay: () => void }) {
   const day = dayIndex(localDate())
   const lineup = roster('tonight', day).filter((e) => e.key !== 'lights')
-  const games = lineup.filter((e) => e.key !== 'circle' && e.key !== 'clock').length
+  const games = lineup.filter((e) => !isFiller(e.key)).length
   const [done] = useState(() => loadTonight(day))
   return (
     <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex flex-col gap-3.5 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
@@ -255,7 +255,7 @@ function TonightCard({ onPlay }: { onPlay: () => void }) {
       </div>
       <div className="flex gap-2">
         {lineup.map((e) => {
-          const filler = e.key === 'circle' || e.key === 'clock'
+          const filler = isFiller(e.key)
           return (
             <div
               key={e.key}
@@ -298,17 +298,21 @@ const SHORT: Record<GameKey, string> = {
 
 type Pick = { key: Exclude<Game, 'full' | 'tonight' | 'quick'>; blurb: string; meta: string }
 
-const HEAD_TO_HEAD: Pick[] = [
+// About the two of you: knowing, reading or guessing each other.
+const ABOUT_YOU: Pick[] = [
   { key: 'list', blurb: 'Rank seven things for them. They guess your order.', meta: '2 acts · 6 min' },
   { key: 'finger', blurb: 'True for you? Now call it for them.', meta: '8 rounds · 4 min' },
   { key: 'wave', blurb: 'Name a thing on a scale. They find the spot.', meta: '3 rounds · 5 min' },
   { key: 'mrmrs', blurb: 'Your answer, and your guess at theirs.', meta: '5 rounds · 5 min' },
   { key: 'draw', blurb: 'Answer about yourself, then draw it.', meta: '3 rounds · 6 min' },
+  { key: 'bluff', blurb: 'Two lies and a truth about you. Can they spot it?', meta: '3 rounds · 8 min' },
+  { key: 'meld', blurb: 'Say the same thing. A team game — no winner, just you two.', meta: '5 prompts · 4 min' },
+]
+// Nothing to do with each other: quizzes, wordplay, saying things out loud.
+const JUST_PLAY: Pick[] = [
   { key: 'clash', blurb: 'One letter, six categories. Unique answers score.', meta: '3 rounds · 5 min' },
   { key: 'chain', blurb: 'Name things in turn. The last letter starts the next.', meta: '4 rounds · 4 min' },
-  { key: 'bluff', blurb: 'Two lies and a truth about you. Can they spot it?', meta: '3 rounds · 8 min' },
   { key: 'describe', blurb: 'Describe the word, they shout guesses. Every one counts for you both.', meta: '4 turns · 4 min' },
-  { key: 'meld', blurb: 'Say the same thing. A team game — no winner, just you two.', meta: '5 prompts · 4 min' },
   { key: 'twist', blurb: 'Say it three times fast. They judge if you tripped.', meta: '6 twisters · 4 min' },
   { key: 'higher', blurb: 'Two things — which is bigger, older, taller? Quickest right wins.', meta: '8 questions · 3 min' },
   { key: 'guess', blurb: 'Nobody knows the number. Closest guess takes it.', meta: '6 questions · 4 min' },
@@ -321,46 +325,13 @@ const FILLERS: Pick[] = [
   { key: 'follow', blurb: 'Repeat the pattern till someone slips', meta: 'Sudden death' },
 ]
 
-function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
+function GameGrid({ title, games, onPick }: { title: string; games: Pick[]; onPick: (g: Game) => void }) {
   return (
-    <div className="flex flex-col gap-4">
-      <TabHeader title="Games" sub="Every one of them is you against each other." />
-      <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
-      {/* A quick game: dealt fresh each time — three games and a filler, no question at the end. */}
-      <section className={card + ' p-5 flex items-center gap-4'}>
-        <span className="shrink-0 w-12 h-12 rounded-2xl bg-pa-soft text-pa-ink inline-flex items-center justify-center" aria-hidden="true">
-          <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-          </svg>
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-xl font-extrabold leading-tight">A quick game</div>
-          <div className="mt-0.5 text-sm text-fg/60">Three at random, right now · about 6 min</div>
-        </div>
-        <button
-          onClick={() => onPick('quick')}
-          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
-        >
-          Deal
-        </button>
-      </section>
-      <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>
-          <div className="mt-1 text-sm text-paper/65">Every game and both fillers · about 40 min</div>
-        </div>
-        <button
-          onClick={() => onPick('full')}
-          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
-        >
-          Play
-        </button>
-      </section>
-
-      <div className={eyebrow + ' mt-1'}>Head to head</div>
+    <>
+      <div className={eyebrow + ' mt-1'}>{title}</div>
       <div className="grid grid-cols-2 gap-3">
-        {HEAD_TO_HEAD.map((g, i) => {
-          const wide = i === HEAD_TO_HEAD.length - 1 && HEAD_TO_HEAD.length % 2 === 1
+        {games.map((g, i) => {
+          const wide = i === games.length - 1 && games.length % 2 === 1
           return (
             <button
               key={g.key}
@@ -380,6 +351,48 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
           )
         })}
       </div>
+    </>
+  )
+}
+
+function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <TabHeader title="Games" sub="Every one of them is you against each other." />
+      <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
+      {/* A quick game: dealt fresh each time — three games and a filler, no question at the end. */}
+      <section className={card + ' p-5 flex items-center gap-4'}>
+        <span className="shrink-0 w-12 h-12 rounded-2xl bg-pa-soft text-pa-ink inline-flex items-center justify-center" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+          </svg>
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-xl font-extrabold leading-tight">A quick game</div>
+          <div className="mt-0.5 text-sm text-fg/60">One about you, one to play, one more · about 6 min</div>
+        </div>
+        <button
+          onClick={() => onPick('quick')}
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
+        >
+          Deal
+        </button>
+      </section>
+      <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>
+          <div className="mt-1 text-sm text-paper/65">Every one about you two, three more to play and two fillers · about 40 min</div>
+        </div>
+        <button
+          onClick={() => onPick('full')}
+          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
+        >
+          Play
+        </button>
+      </section>
+
+      <GameGrid title="About you two" games={ABOUT_YOU} onPick={onPick} />
+      <GameGrid title="Quizzes & wordplay" games={JUST_PLAY} onPick={onPick} />
 
       <div className={eyebrow + ' mt-1'}>Quick fillers · 30 seconds</div>
       <div className="grid grid-cols-2 gap-3">

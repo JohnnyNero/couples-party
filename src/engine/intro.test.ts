@@ -39,7 +39,7 @@ describe('title cards', () => {
     expect(s.phaseEndsAt).toBe(10 * 60 * 1000 + DURATIONS.MM_ANSWER!)
   })
   it('never shows for a game with nothing to play, nor for Lights Out', () => {
-    let s = start('tonight', true, 5) // night 5: Mr & Mrs is the first game with content here
+    let s = start('tonight', true, 1) // night 1: Mr & Mrs is the first game with content here
     expect(s.intro?.key).toBe('mrmrs')
     s = reduce(s, { type: 'TIMEOUT' }, 2000)
     for (let i = 0; i < 100 && s.phase !== 'LIGHTS_OUT' && s.phase !== 'DONE'; i++) {
