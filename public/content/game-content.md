@@ -10989,3 +10989,281 @@ a famous name. A mix of everyday ones and some about couples in general.
 - a romantic getaway
 - sharing a dessert
 - an awkward silence
+
+# Tongue Twisters
+
+Said out loud, three times fast; the other of you judges. Rounds climb from Easy to
+Hard, so keep each level stocked.
+
+## Easy
+- Red lorry, yellow lorry
+- Unique New York
+- Toy boat
+- Red leather, yellow leather
+- Truly rural
+- Mixed biscuits
+- Selfish shellfish
+- Greek grapes
+- Fresh fried fish
+- Big black bug's blood
+- Good blood, bad blood
+- Black background, brown background
+- Three free throws
+- Which witch is which?
+- Eddie edited it
+- She sees cheese
+- Sushi chef
+- Shredded Swiss cheese
+- Cheeky chimps chew cheap chips
+- Bad money, mad bunny
+- Stupid superstition
+- Knapsack straps
+- A proper copper coffee pot
+- Double bubble gum, bubbles double
+- Kiss her quick, kiss her quicker
+
+## Medium
+- She sells seashells on the seashore
+- Peter Piper picked a peck of pickled peppers
+- Betty bought a bit of better butter
+- Fred fed Ted bread and Ted fed Fred bread
+- Round the rugged rock the ragged rascal ran
+- Irish wristwatch, Swiss wristwatch
+- Kitty caught the kitten in the kitchen
+- Six slippery snails slid slowly seaward
+- Nine nice night nurses nursing nicely
+- Tie twine to three tree twigs
+- A box of mixed biscuits, a mixed biscuit box
+- Scissors sizzle, thistles sizzle
+- Wayne went to Wales to watch walruses
+- A big black bug bit a big black bear
+- A noisy noise annoys an oyster
+- Six sleek swans swam swiftly southwards
+- Sam's shop stocks short spotted socks
+- Thin sticks, thick bricks
+- Pre-shrunk silk shirts
+- Freshly fried flying fish
+- One smart fellow, he felt smart
+- Sixty-six sick chicks
+- Mrs Smith's fish sauce shop
+- Eleven benevolent elephants
+- How can a clam cram in a clean cream can?
+
+## Hard
+- The sixth sick sheik's sixth sheep's sick
+- Pad kid poured curd pulled cod
+- Rural juror
+- Aluminium, linoleum
+- Peggy Babcock
+- Six Czech cricket critics
+- Willy's real rear wheel
+- I slit a sheet, a sheet I slit
+- I'm not a pheasant plucker, I'm a pheasant plucker's son
+- Thieves seize skis
+- Many an anemone sees an enemy anemone
+- Strange strategic statistics
+- The seething sea ceaseth
+- Imagine an imaginary menagerie manager
+- Three thin thinkers thinking thick thoughts
+- Near an ear, a nearer ear, a nearly eerie ear
+- Brad's big black bath brush broke
+- Lovely lemon liniment
+- Girl gargoyle, guy gargoyle
+- Sheep shouldn't sleep in a shack
+- Six thick thistle sticks
+- Can you can a can as a canner can can a can?
+- Rory's lawn rake rarely rakes really right
+- Eleven owls licked eleven little liquorice lollipops
+- Lesser leather never weathered wetter weather better
+
+# Higher or Lower
+
+Two things, one question; tap the one that wins. Format:
+  - Question | Thing A | value A | Thing B | value B | unit
+"Which came first?" goes to the smaller number (the earlier year); every other
+question goes to the bigger one, so word them that way. Keep the gap 10% or more.
+
+- Which is taller? | Blackpool Tower | 158 | The Great Pyramid of Giza | 139 | metres
+- Which is taller? | Salisbury Cathedral's spire | 123 | St Paul's Cathedral | 111 | metres
+- Which is taller? | The Wembley arch | 133 | Big Ben's tower | 96 | metres
+- Which is taller? | Tower Bridge | 65 | The Leaning Tower of Pisa | 56 | metres
+- Which is taller? | Christ the Redeemer | 30 | The Angel of the North | 20 | metres
+- Which is taller? | The Statue of Liberty, torch and all | 93 | Nelson's Column | 52 | metres
+- Which is taller? | The Eiffel Tower | 330 | The Empire State Building, to the roof | 381 | metres
+- Which is longer? | The Titanic | 269 | The Shard, laid on its side | 310 | metres
+- Which has the longer main span? | The Humber Bridge | 1410 | The Golden Gate Bridge | 1280 | metres
+- Which is longer? | Hadrian's Wall | 73 | The M25 | 117 | miles
+- Which is longer? | The Channel Tunnel | 50 | Loch Ness | 37 | km
+- Which is wider? | The Moon | 3474 | Australia | 4000 | km
+- Which is wider? | The Moon | 3474 | Pluto | 2377 | km
+- Which lasts longer on Venus? | A day | 243 | A year | 225 | Earth days
+- Which is hotter? | A bolt of lightning | 30000 | The surface of the Sun | 5500 | °C
+- Which is further? | The Space Station, straight up | 400 | Paris, from London | 344 | km
+- Which is further from London, as the crow flies? | Paris | 344 | Edinburgh | 534 | km
+- Which is bigger? | The Isle of Wight | 380 | The Isle of Man | 572 | square km
+- Which is bigger? | Wales | 20779 | Belgium | 30689 | square km
+- Which is taller? | Snowdon | 1085 | Scafell Pike | 978 | metres
+- Which is longer? | A marathon | 26 | The English Channel at its narrowest | 21 | miles
+- Which has more teeth? | An adult dog | 42 | An adult human | 32 | teeth
+- Which has more chromosomes? | A dog | 78 | A human | 46 | chromosomes
+- Which has more legs? | A lobster | 10 | A spider | 8 | legs
+- Which has more arms and tentacles? | A squid | 10 | An octopus | 8 | limbs
+- Which pregnancy lasts longer? | A horse | 11 | A human | 9 | months
+- Which pregnancy lasts longer? | An elephant | 22 | A giraffe | 15 | months
+- Which is bigger? | A snooker maximum break | 147 | The highest darts checkout | 170 | points
+- Which is longer? | A cricket pitch | 66 | A tenpin bowling lane | 60 | feet
+- Which is higher? | A basketball hoop | 10 | A football crossbar | 8 | feet
+- Which is wider? | A football goal | 732 | Rugby posts | 560 | cm
+- Which is heavier? | A tennis ball | 57 | A golf ball | 46 | grams
+- Which team has more players? | Rugby union | 15 | Rugby league | 13 | players
+- Which team has more players on court? | Netball | 7 | Basketball | 5 | players
+- Which holds more? | A pint | 568 | A bottle of wine | 750 | ml
+- Which has more pieces? | A set of dominoes | 28 | A chess set | 32 | pieces
+- Which has more pieces? | A Scrabble set | 100 | A Jenga set | 54 | pieces
+- Which costs more on the Monopoly board? | Trafalgar Square | 240 | Piccadilly | 280 | pounds
+- Which costs more on the Monopoly board? | The Angel Islington | 100 | Pall Mall | 140 | pounds
+- Which film is longer? | The Sound of Music | 174 | Gladiator | 155 | minutes
+- Which film is longer? | Mary Poppins | 139 | Grease | 110 | minutes
+- Which film is longer? | No Time to Die | 163 | Skyfall | 143 | minutes
+- Which film is longer? | Harry Potter and the Philosopher's Stone | 152 | Jurassic Park | 127 | minutes
+- Which film is longer? | Love Actually | 135 | Home Alone | 103 | minutes
+- Which film is longer? | Toy Story | 81 | Shrek | 90 | minutes
+- Which takes longer? | Watching Titanic | 194 | The real Titanic sinking | 160 | minutes
+- Which won more Oscars? | Titanic | 11 | Slumdog Millionaire | 8 | Oscars
+- Which had more episodes? | Friends | 236 | Frasier (the original) | 264 | episodes
+- Which had more episodes? | Fawlty Towers | 12 | The Office (UK) | 14 | episodes
+- Which song is longer? | Hey Jude | 431 | Bohemian Rhapsody | 355 | seconds
+- Which reign was longer? | Elizabeth II | 70 | Victoria | 63 | years
+- Which came first? | Yuri Gagarin going to space | 1961 | The Beatles' first single | 1962 | year
+- Which came first? | Sputnik | 1957 | The first Carry On film | 1958 | year
+- Which came first? | The Moon landing | 1969 | Decimal money in the UK | 1971 | year
+- Which came first? | The first FA Cup final | 1872 | The first Wimbledon | 1877 | year
+- Which came first? | The first Boat Race | 1829 | The first Grand National | 1839 | year
+- Which came first? | The first modern Olympics | 1896 | The first Tour de France | 1903 | year
+- Which came first? | The first Cricket World Cup | 1975 | The first Rugby World Cup | 1987 | year
+- Which came first? | Heinz Tomato Ketchup | 1876 | Coca-Cola | 1886 | year
+- Which came first? | Irn-Bru | 1901 | Cadbury Dairy Milk | 1905 | year
+- Which came first? | Jaffa Cakes | 1927 | The Mars bar | 1932 | year
+- Which came first? | Walkers crisps | 1948 | Fish fingers | 1955 | year
+- Which came first? | Nutella | 1964 | Twix | 1967 | year
+- Which came first? | KFC in the UK | 1965 | McDonald's in the UK | 1974 | year
+- Which came first? | Sainsbury's | 1869 | Marks & Spencer | 1884 | year
+- Which came first? | Jaws | 1975 | Star Wars | 1977 | year
+- Which came first? | Grease | 1978 | Dirty Dancing | 1987 | year
+- Which came first? | E.T. | 1982 | Ghostbusters | 1984 | year
+- Which came first? | Toy Story | 1995 | Titanic | 1997 | year
+- Which came first? | Notting Hill | 1999 | Love Actually | 2003 | year
+- Which came first? | Four Weddings and a Funeral | 1994 | Bridget Jones's Diary | 2001 | year
+- Which came first? | Mamma Mia! the film | 2008 | Frozen | 2013 | year
+- Which came first? | Blue Peter | 1958 | Doctor Who | 1963 | year
+- Which came first? | The Office (UK) | 2001 | Gavin & Stacey | 2007 | year
+- Which came first? | ABBA winning Eurovision | 1974 | Bohemian Rhapsody | 1975 | year
+- Which came first? | Wonderwall | 1995 | Wannabe | 1996 | year
+- Which came first? | Last Christmas | 1984 | Fairytale of New York | 1987 | year
+- Which came first? | The first Glastonbury | 1970 | The first London Pride march | 1972 | year
+- Which came first? | The NHS | 1948 | Britain's first motorway | 1958 | year
+- Which came first? | Big Ben's first bong | 1859 | The London Underground | 1863 | year
+- Which came first? | The Statue of Liberty | 1886 | The Eiffel Tower | 1889 | year
+- Which came first? | The fax machine | 1843 | The telephone | 1876 | year
+- Which came first? | Teaching at Oxford University | 1096 | The Aztec city of Tenochtitlan | 1325 | year
+- Which came first? | The Titanic sinking | 1912 | The first crossword | 1913 | year
+- Which came first? | Netflix | 1997 | Google | 1998 | year
+- Which came first? | Pac-Man | 1980 | Tetris | 1984 | year
+
+# Guesstimate
+
+A question nobody knows the exact answer to; the closer guess wins. Format:
+  - Question | answer
+Whole numbers only. Say the unit in the question.
+
+- How tall is the Shard, in metres? | 310
+- How tall is the Eiffel Tower, in metres? | 330
+- How tall is the London Eye, in metres? | 135
+- How many capsules does the London Eye have? | 32
+- How long does one turn of the London Eye take, in minutes? | 30
+- How many steps up to the bell in Big Ben's tower? | 334
+- How tall is Nelson's Column, in metres? | 52
+- How wide is the Angel of the North's wingspan, in metres? | 54
+- How tall is the Great Pyramid of Giza today, in metres? | 139
+- How tall is Ben Nevis, in metres? | 1345
+- How tall is Mount Everest, in metres? | 8849
+- How long is the M25, in miles? | 117
+- How long is Hadrian's Wall, in miles? | 73
+- How far is Land's End from John o' Groats as the crow flies, in miles? | 603
+- How far is London from Edinburgh as the crow flies, in miles? | 332
+- How far is London from Paris as the crow flies, in miles? | 214
+- How long is the Channel Tunnel, in miles? | 31
+- How wide is the English Channel at its narrowest, in miles? | 21
+- How long is the River Thames, in miles? | 215
+- How deep is Loch Ness at its deepest, in metres? | 230
+- How many letters are in the full name of Llanfair PG, the long Welsh village? | 58
+- How many lines are there on the London Underground? | 11
+- In what year did the London Underground open? | 1863
+- How many MPs sit in the House of Commons? | 650
+- How many old pennies made a pound before decimal money? | 240
+- How many sides does a 50p coin have? | 7
+- How many millilitres are in a pint? | 568
+- How many yards are in a mile? | 1760
+- How many grams of sugar are in a 330ml can of full-fat Coke? | 35
+- How many squares are there around a Monopoly board? | 40
+- How much does Mayfair cost on a Monopoly board, in pounds? | 400
+- How many tiles are in a Scrabble set? | 100
+- How many squares are on a Scrabble board? | 225
+- How many blocks are in a Jenga set? | 54
+- How many dominoes are in a standard set? | 28
+- How many dots are on a dice, all six faces added up? | 21
+- How many keys are on a piano? | 88
+- How many presents in total in The Twelve Days of Christmas? | 364
+- How many lines are in a sonnet? | 14
+- How many years married is a ruby anniversary? | 40
+- How many years married is a pearl anniversary? | 30
+- How long is a cricket pitch, in yards? | 22
+- How wide is a football goal, in feet? | 24
+- How high is a basketball hoop, in feet? | 10
+- How long is a tennis court, in feet? | 78
+- How high is a tennis net in the middle, in inches? | 36
+- How many balls are on a snooker table at the start of a frame, cue ball included? | 22
+- What's the highest checkout in darts, in points? | 170
+- How long is a marathon, in kilometres? | 42
+- In what year was the first Wimbledon? | 1877
+- In what year did the Titanic sink? | 1912
+- How long did the Titanic take to sink after hitting the iceberg, in minutes? | 160
+- How long was the Titanic, in metres? | 269
+- In what year did the NHS start? | 1948
+- In what year did women in the UK first get the vote? | 1918
+- In what year did the UK switch to decimal money? | 1971
+- How many years did Queen Victoria reign? | 63
+- How many children did Queen Victoria have? | 9
+- How many years did Elizabeth II reign? | 70
+- How old was Mozart when he died? | 35
+- In what year did the Channel Tunnel open? | 1994
+- In what year was the first text message sent? | 1992
+- How many bones are in the adult human body? | 206
+- How many bones are in one human hand? | 27
+- How many teeth does an adult dog have? | 42
+- How many chromosomes does a human have? | 46
+- How many months is an elephant pregnant for? | 22
+- How many hearts does an octopus have? | 3
+- How many eyes does a honeybee have? | 5
+- How many bones are in a giraffe's neck? | 7
+- How many hairs are on the average human head? | 100000
+- How many litres of blood are in an adult body? | 5
+- How many days does it take Mars to go round the Sun? | 687
+- How many Earths would fit side by side across the Sun? | 109
+- How far is the Sun from Earth, in millions of miles? | 93
+- How many minutes does sunlight take to reach Earth? | 8
+- How far away is the Moon, in thousands of miles? | 239
+- How high does the Space Station orbit, in km? | 400
+- How many minutes does the Space Station take to go round the Earth? | 90
+- How many Apollo astronauts walked on the Moon? | 12
+- In what year was the last Apollo Moon landing? | 1972
+- How hot is the surface of the Sun, in °C? | 5500
+- How many episodes of Friends were there? | 236
+- How many episodes of Fawlty Towers were made? | 12
+- How long is the film Titanic, in minutes? | 194
+- How many Oscars did Titanic win? | 11
+- How long is Bohemian Rhapsody, in seconds? | 355
+- In what year did Friends first air? | 1994
+- In what year did Coronation Street first air? | 1960
+- In what year did EastEnders first air? | 1985
+- In what year did the Beatles release their first single? | 1962
