@@ -4,6 +4,13 @@ import { resolveGame, type Game } from './mode'
 import { gameName } from '../views/LobbyInvite'
 import { Avatar } from '../ui/Avatar'
 
+// A lobby keeps its note fresh every couple of minutes while someone's in it (see
+// LobbyInvite), so one older than this is from a phone that's since gone quiet — closed,
+// out of signal — and nobody's really waiting. (A phone whose clock runs ahead of the
+// server's still counts: better a note shown than one missed.)
+const STALE_MS = 5 * 60 * 1000
+const fresh = (n: Nudge) => !(Date.parse(n.at) < Date.now() - STALE_MS)
+
 // Checks every so often (and whenever you come back to the app) whether your partner's
 // waiting for you in a game's lobby.
 function useNudge(): Nudge | null {
@@ -12,10 +19,10 @@ function useNudge(): Nudge | null {
     let live = true
     const check = () => {
       if (document.visibilityState !== 'visible') return
-      api.nudged().then((n) => { if (live) setNudge(n) }).catch(() => {})
+      api.nudged().then((n) => { if (live) setNudge(n && fresh(n) ? n : null) }).catch(() => {})
     }
     check()
-    const id = setInterval(check, 15000)
+    const id = setInterval(check, 10000)
     document.addEventListener('visibilitychange', check)
     return () => {
       live = false
