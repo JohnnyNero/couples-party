@@ -1,3 +1,5 @@
+import { DEFAULT_SIZE, withSize } from './roster'
+
 export type PlayerId = 'A' | 'B'
 
 export const other = (p: PlayerId): PlayerId => (p === 'A' ? 'B' : 'A')
@@ -459,6 +461,10 @@ export type Action =
   // One of you has left the room (backed out, closed the app, lost signal): the game
   // pauses and waits for them. Sent by the host, never by a player.
   | { type: 'AWAY'; player: PlayerId }
+  // Game night's lobby: how long, deal again, and off we go.
+  | { type: 'SET_SIZE'; player: PlayerId; size: number }
+  | { type: 'REROLL'; player: PlayerId }
+  | { type: 'START'; player: PlayerId }
   | { type: 'RESUME'; player: PlayerId }
 // Future actions: SUBMIT_RATING, TOGGLE_LIE, CALL, DOUBLE
 
@@ -517,8 +523,9 @@ export function initialState(
     intros: false,
     paused: null,
     game,
-    // A quick game is dealt fresh each time: its line-up comes off the session's own seed.
-    night: game === 'quick' ? seed : night,
+    // Game night is dealt fresh each time: its line-up comes off the session's own seed,
+    // at the usual length until someone picks another (see roster's SIZES).
+    night: game === 'quick' ? withSize(seed, DEFAULT_SIZE) : night,
     ...EMPTY_CONTENT,
     ...content,
   }

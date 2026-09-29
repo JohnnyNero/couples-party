@@ -363,34 +363,17 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
     <div className="flex flex-col gap-4">
       <TabHeader title="Games" sub="Every one of them is you against each other." />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
-      {/* A quick game: dealt fresh each time — three games and a filler, no question at the end. */}
-      <section className={card + ' p-5 flex items-center gap-4'}>
-        <span className="shrink-0 w-12 h-12 rounded-2xl bg-pa-soft text-pa-ink inline-flex items-center justify-center" aria-hidden="true">
-          <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-          </svg>
-        </span>
+      {/* Game night: dealt fresh each time — you pick how long, and can deal again, in the lobby. */}
+      <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
         <div className="flex-1 min-w-0">
-          <div className="font-display text-xl font-extrabold leading-tight">A quick game</div>
-          <div className="mt-0.5 text-sm text-fg/60">One about you, one to play, one more · about 6 min</div>
+          <div className="font-display text-2xl font-extrabold leading-tight">Game night</div>
+          <div className="mt-1 text-sm text-paper/65">A mix of games, dealt at random. Pick short, medium or long — and reroll till you like it.</div>
         </div>
         <button
           onClick={() => onPick('quick')}
           className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
         >
           Deal
-        </button>
-      </section>
-      <section className="rounded-[1.75rem] bg-ink text-paper p-5 flex items-center gap-4 shadow-[4px_4px_0_rgba(0,0,0,0.18)]">
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-2xl font-extrabold leading-tight">The full session</div>
-          <div className="mt-1 text-sm text-paper/65">Every one about you two, three more to play and two fillers · about 40 min</div>
-        </div>
-        <button
-          onClick={() => onPick('full')}
-          className="shrink-0 min-h-[48px] px-5 rounded-2xl bg-pa text-white font-display text-lg font-extrabold press"
-        >
-          Play
         </button>
       </section>
 

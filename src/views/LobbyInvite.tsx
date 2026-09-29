@@ -6,7 +6,7 @@ import { api } from '../daily/api'
 import { useProfile } from '../profile/store'
 import { btnOutline } from '../ui/styles'
 
-const SESSION_NAMES: Record<string, string> = { tonight: 'today’s games', full: 'the full session', quick: 'a quick game' }
+const SESSION_NAMES: Record<string, string> = { tonight: 'today’s games', full: 'the full session', quick: 'a game night' }
 export const gameName = (game: string) => SESSION_NAMES[game] ?? GAME_LABELS[game as GameKey] ?? 'a game'
 
 // In the lobby, waiting for your partner. Being here puts a note on their Coupled home

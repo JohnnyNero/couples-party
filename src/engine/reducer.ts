@@ -11,7 +11,7 @@ import { chainKey, checkWord, listFor, nextLetter, rejectable, turnMs } from './
 import { circleScore, clockRoundWinner, fillerOver, keepCircle } from './fillers'
 import { needsDecider } from './standing'
 import { lowestFreeSlot, usedSlots } from './list'
-import { gameOfPhase, nextGame, roster, roundsFor } from './roster'
+import { gameOfPhase, nextGame, roster, roundsFor, SIZES, sizeOf, withSize } from './roster'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -1195,6 +1195,9 @@ export function adopt(saved: SessionState, now: number): SessionState {
   return s
 }
 
+// Game night is set up in the lobby — its length, its deal — before you start it.
+const setUpFirst = (s: SessionState) => s.game === 'quick'
+
 export function reduce(state: SessionState, action: Action, now: number): SessionState {
   if (action.type === 'AWAY') {
     // After the end there's nothing to wait for: leaving is just going home.
@@ -1228,8 +1231,9 @@ function step(state: SessionState, action: Action, now: number): SessionState {
       const s = clone(state)
       s.players[action.player] = { name: action.name, connected: true }
       const both = bothHere(s)
-      // Straight into the first game in this session's roster.
-      if (both && s.phase === 'JOIN') return beginGame(s, now, roster(s.game, s.night)[0]?.key ?? null)
+      // Straight into the first game in this session's roster — except game night, whose
+      // line-up you settle in the lobby first, and start yourselves (START).
+      if (both && s.phase === 'JOIN' && !setUpFirst(s)) return beginGame(s, now, roster(s.game, s.night)[0]?.key ?? null)
       // Back after leaving: once you're both here again, carry on — with a few seconds
       // back on the clock to find your place.
       if (both && s.paused?.away) {
@@ -1237,6 +1241,27 @@ function step(state: SessionState, action: Action, now: number): SessionState {
         s.paused = null
       }
       return s
+    }
+    case 'SET_SIZE': {
+      if (state.phase !== 'JOIN' || !setUpFirst(state) || !SIZES[action.size] || sizeOf(state.night) === action.size) return state
+      return { ...state, night: withSize(state.night, action.size) }
+    }
+    case 'REROLL': {
+      if (state.phase !== 'JOIN' || !setUpFirst(state)) return state
+      // A new deal off the old one — so it's the same on every phone — that isn't the
+      // same line-up again.
+      const was = roster(state.game, state.night).map((e) => e.key).join()
+      const rng = makeRng(state.seed ^ Math.floor(state.night / SIZES.length))
+      let night = state.night
+      for (let i = 0; i < 8; i++) {
+        night = withSize(Math.floor(rng() * 1e9), sizeOf(state.night))
+        if (roster(state.game, night).map((e) => e.key).join() !== was) break
+      }
+      return { ...state, night }
+    }
+    case 'START': {
+      if (state.phase !== 'JOIN' || !setUpFirst(state) || !bothHere(state)) return state
+      return beginGame(clone(state), now, roster(state.game, state.night)[0]?.key ?? null)
     }
     case 'PLACE_ITEM': {
       if (state.phase !== 'LIST_PLACE') return state

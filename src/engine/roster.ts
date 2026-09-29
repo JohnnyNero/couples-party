@@ -122,16 +122,34 @@ function tonight(night: number): RosterEntry[] {
   return [play1, us1, filler, play2, us2, { key: 'lights', rounds: 1 }]
 }
 
-// A quick game: three games to play right now, dealt at random — one of each kind, then
-// either — with a filler before the last, and no question at the end.
-function quick(seed: number): RosterEntry[] {
-  const rng = makeRng(seed ^ 0x9a1c)
+// Game night: as long as you like, dealt at random, and dealt again if you don't fancy
+// it. The games take turns between the two kinds (which goes first is part of the deal),
+// a filler comes after every second one — never last — and there's no question at the
+// end. Its `night` carries both the deal and the length: the length is night mod 3 (see
+// sizeOf), the rest is the deal — so the line-up is still a pure function of the session,
+// and both phones always agree on it.
+export const SIZES = [
+  { label: 'Short', games: 3, fillers: 1, about: 'about 6 min' },
+  { label: 'Medium', games: 5, fillers: 2, about: 'about 12 min' },
+  { label: 'Long', games: 8, fillers: 3, about: 'about 25 min' },
+] as const
+export const DEFAULT_SIZE = 1
+export const sizeOf = (night: number) => mod(night, SIZES.length)
+export const withSize = (night: number, size: number) => night - sizeOf(night) + size
+
+function quick(night: number): RosterEntry[] {
+  const size = SIZES[sizeOf(night)]
+  const rng = makeRng(Math.floor(night / SIZES.length) ^ 0x9a1c)
   const us = shuffled(rng, US_POOL)
   const play = shuffled(rng, PLAY_POOL)
-  const first = rng() < 0.5 ? [us[0], play[0]] : [play[0], us[0]]
-  const last = rng() < 0.5 ? us[1] : play[1]
-  const filler = FILLER_POOL[mod(seed, FILLER_POOL.length)]
-  return [...first, filler, last]
+  const usFirst = rng() < 0.5
+  const fillers = shuffled(rng, FILLER_POOL)
+  const out: RosterEntry[] = []
+  for (let i = 0; i < size.games; i++) {
+    out.push((i % 2 === 0) === usFirst ? us.shift()! : play.shift()!)
+    if (i % 2 === 1 && i < size.games - 1 && fillers.length > FILLER_POOL.length - size.fillers) out.push(fillers.shift()!)
+  }
+  return out
 }
 
 // `night` only matters to Tonight — the day number the host started the session on
@@ -156,7 +174,7 @@ function full(night: number): RosterEntry[] {
 }
 
 // What each kind of session is called, where a single game would just use its own name.
-export const SESSION_NAMES: Record<string, string> = { tonight: 'Today', full: 'The full session', quick: 'A quick game' }
+export const SESSION_NAMES: Record<string, string> = { tonight: 'Today', full: 'The full session', quick: 'Game night' }
 
 export type RosterOf = { game: Game; night?: number }
 

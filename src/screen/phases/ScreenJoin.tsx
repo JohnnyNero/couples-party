@@ -1,5 +1,7 @@
 import type { PlayerId, SessionState } from '../../engine/state'
-import { GAME_LABELS, isFiller, roster, SESSION_NAMES } from '../../engine/roster'
+import { GAME_LABELS, isFiller, roster, SESSION_NAMES, SIZES, sizeOf } from '../../engine/roster'
+import { dispatch, useMyPlayerId } from '../../net'
+import { btnAccent } from '../../ui/styles'
 import { GameGlyph } from '../../ui/GameIcon'
 import { Avatar } from '../../ui/Avatar'
 import { eyebrow, quietCard } from '../../ui/styles'
@@ -10,16 +12,20 @@ import { resolveBot, resolveMode } from '../../start/mode'
 import { leaveTo } from '../../ui/back'
 
 
-// The lobby: two seats, and what's coming. It starts by itself the moment you're both in.
+// The lobby: two seats, and what's coming. Most sessions start by themselves the moment
+// you're both in; game night waits for one of you to start it, and until then either of
+// you can change how long it is, or deal the games again.
 export function ScreenJoin({ s }: { s: SessionState }) {
   const both = s.players.A.connected && s.players.B.connected
   const lineup = roster(s.game, s.night)
+  const setUp = s.game === 'quick'
+  const me = useMyPlayerId()
   let n = 0
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-7">
       <div className="text-center">
         <div className={eyebrow}>{SESSION_NAMES[s.game] ?? GAME_LABELS[s.game as keyof typeof GAME_LABELS]}</div>
-        <h2 className="mt-1 font-display text-4xl sm:text-5xl font-extrabold leading-none">{both ? 'Here we go!' : 'Getting ready…'}</h2>
+        <h2 className="mt-1 font-display text-4xl sm:text-5xl font-extrabold leading-none">{both ? (setUp ? 'All here!' : 'Here we go!') : 'Getting ready…'}</h2>
       </div>
 
       <div className="flex items-start justify-center gap-5">
@@ -28,9 +34,19 @@ export function ScreenJoin({ s }: { s: SessionState }) {
         <Seat s={s} p="B" />
       </div>
 
+      {setUp && me && <Setup s={s} me={me} />}
+
       {lineup.length > 1 && (
-        <section className={quietCard + ' px-5 py-4 flex flex-col gap-2.5'}>
-          <div className={eyebrow}>The line-up</div>
+        <section key={s.night} className={quietCard + ' px-5 py-4 flex flex-col gap-2.5 animate-fade-up'}>
+          <div className="flex items-center justify-between gap-3">
+            <div className={eyebrow}>The line-up</div>
+            {setUp && me && (
+              <button onClick={() => dispatch({ type: 'REROLL', player: me })} className="press min-h-[36px] px-3 rounded-xl border-2 border-fg/15 text-sm font-extrabold inline-flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" /></svg>
+                Reroll
+              </button>
+            )}
+          </div>
           {lineup.map((e) => {
             const filler = isFiller(e.key)
             const lights = e.key === 'lights'
@@ -49,10 +65,43 @@ export function ScreenJoin({ s }: { s: SessionState }) {
         </section>
       )}
 
-      <p className="text-center text-sm text-fg/60">Starts the moment you're both here.</p>
+      {setUp ? (
+        both && me ? (
+          <button className={btnAccent} onClick={() => dispatch({ type: 'START', player: me })}>Start</button>
+        ) : (
+          <p className="text-center text-sm text-fg/60">Once you’re both here, either of you can start it.</p>
+        )
+      ) : (
+        <p className="text-center text-sm text-fg/60">Starts the moment you're both here.</p>
+      )}
       <LobbyInvite s={s} />
       {!both && <BotLink game={s.game} />}
     </div>
+  )
+}
+
+// How long tonight's game night runs: three lengths, and the current one lit. Either of
+// you can change it; the line-up below follows.
+function Setup({ s, me }: { s: SessionState; me: PlayerId }) {
+  const current = sizeOf(s.night)
+  return (
+    <section className="flex flex-col gap-2">
+      <div className={eyebrow + ' text-center'}>How long?</div>
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="How long">
+        {SIZES.map((size, i) => (
+          <button
+            key={size.label}
+            role="radio"
+            aria-checked={i === current}
+            onClick={() => dispatch({ type: 'SET_SIZE', player: me, size: i })}
+            className={'press min-h-[60px] rounded-2xl border-2 px-2 py-1.5 flex flex-col items-center justify-center ' + (i === current ? 'border-fg bg-fg text-bg' : 'border-fg/15 bg-card')}
+          >
+            <span className="font-display text-lg font-extrabold leading-tight">{size.label}</span>
+            <span className={'text-[0.7rem] font-bold ' + (i === current ? 'text-bg/70' : 'text-fg/50')}>{size.games} games · {size.about.replace('about ', '')}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }
 
