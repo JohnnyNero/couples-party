@@ -20,6 +20,7 @@ import { loadPacks } from '../packs'
 import { freshen } from '../store/seen'
 import { ideasForGame, withIdeas } from '../ideas/store'
 import { claimSeat, type Seats } from './ids'
+import { deviceKey } from './device'
 import { freshMemo, isLeftover, shown } from './closing'
 import { keepChainLists } from '../engine/chain'
 import { dayIndex, localDate } from '../daily/dates'
@@ -35,29 +36,15 @@ const LIVE_KEY = 'live'
 const SEATS_KEY = 'seats'
 // Each phone's own lasting id, as a player state its partner can read (see deviceKey).
 const DEVICE_KEY = 'device'
+// Set on a phone once it's showing the end of the game it played (see closing.ts): it's
+// finished here, so it's never seated in whatever the room plays next.
+const CLOSED_KEY = 'closed'
+const isClosed = (player: PlayerState) => player.getState(CLOSED_KEY) === true
 // Who's in the room right now: Playroom id → that phone's lasting id. Every phone keeps
 // this, not just the host, so whichever phone becomes host already knows.
 const present = new Map<string, string>()
-
-// Seats are kept against an id this phone keeps for good — not Playroom's, which can be
-// a new one every time a phone drops out and comes back. With Playroom's, a phone that
-// came back could be seated by whoever asked first, and find itself in its partner's
-// chair: their score, their questions.
-const STORED_DEVICE = 'coupled:device'
-let myKey: string | null = null
-function deviceKey(): string {
-  if (myKey) return myKey
-  try {
-    myKey = localStorage.getItem(STORED_DEVICE)
-    if (!myKey) {
-      myKey = `d${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`
-      localStorage.setItem(STORED_DEVICE, myKey)
-    }
-  } catch {
-    myKey ??= `d${Math.random().toString(36).slice(2, 12)}`
-  }
-  return myKey
-}
+// …and the players themselves, so the host can seat anyone it finds left out (see sweep).
+const players = new Map<string, PlayerState>()
 
 // A player's lasting id, once their phone has shared it — falling back to Playroom's own
 // for a phone that never does (an older version of the app).
@@ -157,12 +144,14 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
   // gives the newcomer a seat and tells everyone which it is.
   onPlayerJoin((player: PlayerState) => {
     present.set(player.id, keyOf(player) ?? player.id)
+    players.set(player.id, player)
     if (isHost()) seat(player)
     // Gone — backed out, closed the app, lost signal: the game pauses and waits for them
     // (see AWAY). If it was the host who went, another phone takes over as host, so this
     // gives that a moment to happen.
     player.onQuit(() => {
       present.delete(player.id)
+      players.delete(player.id)
       let tries = 0
       const away = () => {
         if (!isHost()) {
@@ -198,13 +187,59 @@ export async function initNet(chosenGame: Game, roomCode?: string, resume?: Save
     return null
   })
 
+  // The host sends its copy of the game (and the seats) out again, to a phone that's
+  // just found out it isn't the host after all — see the loop below.
+  RPC.register('resync', async () => {
+    if (!isHost()) return null
+    const current = getState(SESSION_KEY)
+    if (current) setState(SESSION_KEY, current, true)
+    setState(SEATS_KEY, seatsNow(), true)
+    return null
+  })
+
   // Host timer loop: fire TIMEOUT once the current phase's deadline has passed.
+  //
+  // It also keeps the room honest. Two phones arriving together can each act as host for
+  // a moment (whoever the server settles on, the other finds out a beat later), and in that
+  // moment each can deal a game and seat people in it — so they'd disagree. The one that
+  // finds it isn't host asks the host for its copy, and they're back on one game. And
+  // every couple of seconds the host seats anyone in the room who's missing from it (a
+  // join that got lost in the shuffle, or a phone back before its leaving was noticed).
+  let wasHost = isHost()
+  let lastSweep = 0
+  let closed = false
   setInterval(() => {
-    if (!isHost()) return
-    const current = getState(SESSION_KEY) as SessionState | undefined
-    if (!current || current.phaseEndsAt == null) return
-    if (Date.now() >= current.phaseEndsAt) hostReduce({ type: 'TIMEOUT' })
+    // This phone's own game over: say so, once, so it's left out of the next.
+    const now = getState(SESSION_KEY) as SessionState | undefined
+    if (!closed && now) {
+      shown(endMemo, now)
+      if (endMemo.end) {
+        closed = true
+        myPlayer().setState(CLOSED_KEY, true, true)
+      }
+    }
+    const host = isHost()
+    if (wasHost && !host) void RPC.call('resync', null, RPC.Mode.HOST)
+    wasHost = host
+    if (!host) return
+    if (now && now.phaseEndsAt != null && Date.now() >= now.phaseEndsAt) hostReduce({ type: 'TIMEOUT' })
+    if (Date.now() - lastSweep >= 2000) {
+      lastSweep = Date.now()
+      sweep()
+    }
   }, 200)
+}
+
+// Host only: anyone in the room without a seat, or seated but not in the game, gets
+// seated and joined — once seats are free, never by moving someone who's here.
+function sweep(): void {
+  const current = getState(SESSION_KEY) as SessionState | undefined
+  if (!current || current.phase === 'DONE') return
+  for (const player of players.values()) {
+    if (isClosed(player)) continue
+    const mine = seatsNow()[keyOf(player) ?? player.id]
+    if (!mine || !current.players[mine].connected) seat(player)
+  }
 }
 
 function hostReduce(action: Action): void {
@@ -289,8 +324,10 @@ function seat(player: PlayerState, tries = 0): void {
   }
   const key = k ?? player.id
   present.set(player.id, key)
-  const { seats, seat: mine } = claimSeat(seatsNow(), key, presentKeys())
-  setState(SEATS_KEY, seats, true)
+  if (isClosed(player)) return // showing the end of the last game — not in this one
+  const before = seatsNow()
+  const { seats, seat: mine } = claimSeat(before, key, presentKeys())
+  if (seats !== before) setState(SEATS_KEY, seats, true)
   if (!mine) return // a third device: it can watch, not play
   const current = (getState(SESSION_KEY) as SessionState | undefined) ?? hostFreshState()
   const name = player.getProfile().name || mine

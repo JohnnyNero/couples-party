@@ -17,6 +17,7 @@ import { PlayWaiting } from '../play/phases/PlayWaiting'
 import { useRecordSession } from '../store/useRecordSession'
 import { ScreenLightsOut } from '../screen/phases/ScreenLightsOut'
 import { AwayScreen } from '../views/AwayScreen'
+import { JoinedTheirs } from '../views/JoinedTheirs'
 
 // Phones-only renderer: one device, one screen, one thing on it at a time. A phase
 // either has something private to ask this player for (the board and the controller
@@ -98,6 +99,7 @@ export function Duo() {
   return (
     <div className="h-full w-full flex flex-col select-none">
       <GameHeader s={s} />
+      <JoinedTheirs s={s} me={me} />
       {/* Scrolls rather than clips when a keyboard leaves it short — the header above
           (and its clock) stays put either way. */}
       <div className="flex-1 min-h-0 overflow-y-auto">
