@@ -3,7 +3,8 @@ import type { PuzzleView } from './api'
 import { api } from './api'
 import { BigButton, Card, SmallButton, Step } from './CardKit'
 import { localDate } from './dates'
-import { PairStart, PairWaiting } from './Pairing'
+import { PairWaiting } from './Pairing'
+import { InviteCard } from '../onboard/InviteCard'
 import { questionFromThem, questionOfTheDay, renderQuestion } from './question'
 import { QuestionSpin } from './Spin'
 import { TileRow } from './Tiles'
@@ -48,17 +49,7 @@ export function DailyCard({
   }
 
   const d = status.data
-  if (d.state === 'single') {
-    return (
-      <Card title="Their Word" sub="A daily word puzzle for two">
-        <p className="text-sm text-fg/60 mb-4">
-          Link your two phones once. Then every day you both answer the same question in
-          five or six letters, and solve each other's as a Wordle.
-        </p>
-        <PairStart onDone={() => void refresh()} />
-      </Card>
-    )
-  }
+  if (d.state === 'single') return <InviteCard />
   if (d.state === 'waiting') {
     return (
       <Card title="Pair your phones">

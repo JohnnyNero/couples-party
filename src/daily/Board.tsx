@@ -9,7 +9,8 @@ import { dialOfTheDay, spectrumPrompt } from './dial'
 import { NUMBERS_COUNT, numbersOfTheDay } from './numbers'
 import { noteShown, recentFor } from './shown'
 import { EITHER_COUNT, eitherOfTheDay } from './either'
-import { PairStart, PairWaiting } from './Pairing'
+import { PairWaiting } from './Pairing'
+import { InviteCard } from '../onboard/InviteCard'
 import { PlayDial } from './PlayDial'
 import { PlayEither } from './PlayEither'
 import { PlayNumbers } from './PlayNumbers'
@@ -48,7 +49,7 @@ import { Loading } from '../ui/Loading'
 
 type Kind = keyof BoardKinds
 const KINDS: Kind[] = ['word', 'dial', 'top5', 'sketch', 'numbers', 'either']
-const NAMES: Record<Kind, string> = {
+export const NAMES: Record<Kind, string> = {
   word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That',
 }
 // The kinds this server knows — This or That needs migration 0017.
@@ -111,17 +112,7 @@ export function Board({ board }: { board: ReturnType<typeof useBoard> }) {
   }
 
   const d = status.data
-  if (d.state === 'single') {
-    return (
-      <Card title="Pair up" sub="Daily puzzles for two">
-        <p className="text-sm text-fg/60 mb-4">
-          Link your two phones once. Then every day there are six puzzles your partner set
-          for you — solve them, then set theirs for tomorrow.
-        </p>
-        <PairStart onDone={() => void refresh()} />
-      </Card>
-    )
-  }
+  if (d.state === 'single') return <InviteCard />
   if (d.state === 'waiting') {
     return <Card title="Pair your phones"><PairWaiting code={d.code} me={d.me} onCancel={() => void refresh()} /></Card>
   }
@@ -352,7 +343,7 @@ function Tile({
   )
 }
 
-function KindIcon({ kind }: { kind: Kind }) {
+export function KindIcon({ kind }: { kind: Kind }) {
   const box = 'w-6 h-6 shrink-0'
   switch (kind) {
     case 'word':

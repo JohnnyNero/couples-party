@@ -21,6 +21,7 @@ import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
 import { InstallCard } from './InstallCard'
+import { GettingStarted } from '../onboard/GettingStarted'
 import { CrosswordCard } from '../crossword/CrosswordCard'
 import { ShareButton } from '../share/ShareButton'
 import { loadTonight } from '../share/tonightResult'
@@ -153,6 +154,7 @@ function ProfileButton() {
 
 function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (saved: Saved) => void }) {
   const board = useBoard()
+  const openProfile = useContext(OpenProfile)
   const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
   // Short weekday, so it fits beside the streak on a phone.
   const date = new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
@@ -165,6 +167,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
         right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
+      {paired && <ErrorBoundary quiet><GettingStarted d={paired} onPlay={() => onPick('tonight')} onProfile={openProfile} /></ErrorBoundary>}
       <Board board={board} />
       {paired && <ErrorBoundary quiet><CrosswordCard /></ErrorBoundary>}
       <InstallCard />

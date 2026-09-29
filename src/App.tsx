@@ -15,6 +15,10 @@ import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
 import { useRecordTonight } from './share/tonightResult'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
+import { closeWelcome, markPlayedTogether, markWelcomed, openWelcome, useWelcome, welcomed } from './onboard/flags'
+
+// The welcome (the tour, setting up, inviting your partner) loads when it's wanted.
+const Welcome = lazy(() => import('./onboard/Welcome').then((m) => ({ default: m.Welcome })))
 
 // The game side (every game's screens) loads when a game starts, not with Home.
 const loadDuo = () => import('./duo/Duo')
@@ -37,6 +41,16 @@ export default function App() {
   // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
   const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
+  const welcome = useWelcome()
+  // A new phone that isn't paired gets shown round first. One that's already paired (or
+  // waiting for a partner) has been here before — it never sees it unasked.
+  useEffect(() => {
+    if (game || invite || deviceLink || welcomed()) return
+    void refreshProfile().then((p) => {
+      if (p && p.state !== 'single') markWelcomed()
+      else if (!welcomed()) openWelcome('tour')
+    })
+  }, [])
   // Once Home is up and settled, fetch the game side in the background, so starting a
   // game doesn't wait on it (and it's there offline, once the app's installed).
   useEffect(() => {
@@ -81,16 +95,19 @@ export default function App() {
         setGame(g)
       })
       return (
-        <Home
-          onPick={start}
-          onJoin={start}
-          onResume={(saved) => slide('forward', () => {
-            stampMode(saved.mode, saved.game, false)
-            setResume(saved)
-            setMode(saved.mode)
-            setGame(saved.game)
-          })}
-        />
+        <>
+          <Home
+            onPick={start}
+            onJoin={start}
+            onResume={(saved) => slide('forward', () => {
+              stampMode(saved.mode, saved.game, false)
+              setResume(saved)
+              setMode(saved.mode)
+              setGame(saved.game)
+            })}
+          />
+          {welcome && <Suspense fallback={null}><Welcome start={welcome} onClose={closeWelcome} /></Suspense>}
+        </>
       )
     }
     if (!ready) return <Connecting />
@@ -109,6 +126,8 @@ function SeenRecorder({ keep, mode }: { keep: boolean; mode: PlayMode }) {
   useKeepMemory(session, keep)
   useRecordTonight(session, keep)
   useProfileName(keep)
+  // A game played to its end on a paired phone: one off the getting-started list.
+  useEffect(() => { if (keep && session.phase === 'DONE') markPlayedTogether() }, [keep, session.phase])
   return null
 }
 

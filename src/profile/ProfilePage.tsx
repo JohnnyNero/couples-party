@@ -13,6 +13,7 @@ import { deviceUrl } from '../start/invite'
 import { useBackLayer } from '../ui/back'
 import { slide } from '../ui/transition'
 import { InstallRow } from '../start/InstallCard'
+import { openWelcome } from '../onboard/flags'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -80,6 +81,17 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
               onUnlinked={onUnpaired}
             />
           )}
+
+          <button onClick={() => openWelcome('tour-only')} className={card + ' px-4 py-4 flex items-center gap-3 text-left press'}>
+            <span className="shrink-0 w-10 h-10 rounded-xl bg-pb-soft text-pb-ink inline-flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01" /></svg>
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block font-display text-lg font-extrabold leading-tight">How Coupled works</span>
+              <span className="block text-sm text-fg/55">The quick tour again</span>
+            </span>
+            <span className="text-xl text-fg/40" aria-hidden="true">›</span>
+          </button>
 
           <section className="flex flex-col gap-2">
             <div className={eyebrow}>Settings</div>

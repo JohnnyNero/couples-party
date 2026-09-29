@@ -6,15 +6,17 @@ import { btnAccent, eyebrow, field } from '../ui/styles'
 import { refreshProfile, useProfile } from '../profile/store'
 import { shrinkPhoto } from '../profile/photo'
 import { forgetInvite, type InviteLink } from './invite'
+import { markWelcomed } from '../onboard/flags'
+import { Tour } from '../onboard/Tour'
 
 // Where an invite link lands: "Johnny's invited you". Your name, a photo if you like,
-// one button — and you're paired, then a welcome, then Today. A phone that's already
+// one button — and you're paired, then a quick tour of how it all works, then Today. A phone that's already
 // paired, or a link that's been used, gets told so and sent on to the app.
 
 const NAME_KEY = 'couples-party:name'
 const savedName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
 
-type Step = { kind: 'form' } | { kind: 'done'; partner: string } | { kind: 'dead'; why: string }
+type Step = { kind: 'form' } | { kind: 'done'; partner: string } | { kind: 'tour' } | { kind: 'dead'; why: string }
 
 export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => void }) {
   const from = invite.from || 'Your partner'
@@ -30,7 +32,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
   // Already paired on this phone: nothing to join.
   const alreadyWith = profile?.state === 'paired' && step.kind === 'form' ? profile.partner.name : null
 
-  const finish = () => { forgetInvite(); onDone() }
+  const finish = () => { forgetInvite(); markWelcomed(); onDone() }
 
   const join = async () => {
     const n = name.trim()
@@ -71,6 +73,10 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
           />
         ) : step.kind === 'dead' ? (
           <Centered title="That invite didn’t work" sub={step.why} action="Open the app" onAction={finish} />
+        ) : step.kind === 'tour' ? (
+          <div className="flex-1 flex flex-col min-h-[36rem]">
+            <Tour onDone={finish} onSkip={finish} last="Let’s play" />
+          </div>
         ) : step.kind === 'done' ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 animate-fade-up">
             <div className="flex">
@@ -80,11 +86,13 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
             <div>
               <h1 className="font-display text-4xl font-extrabold leading-tight">You’re paired!</h1>
               <p className="mt-2 text-fg/65 leading-snug">
-                You and {step.partner} are in. Every day there are six little puzzles you set for each
-                other — and a game night whenever you want one.
+                You and {step.partner} are in. Here’s how it works — it takes half a minute.
               </p>
             </div>
-            <button className={btnAccent} onClick={finish}>Let’s go</button>
+            <div className="w-full flex flex-col gap-1">
+              <button className={btnAccent} onClick={() => setStep({ kind: 'tour' })}>Show me how it works</button>
+              <button onClick={finish} className="min-h-[44px] text-sm font-bold text-fg/45">Skip — straight in</button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col gap-7 animate-fade-up">
