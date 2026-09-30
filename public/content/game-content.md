@@ -971,7 +971,6 @@ score when you agree.
 - forget where they parked
 - book a trip on a whim
 - stay up too late
-- flirt with the waiter
 - cry at a wedding
 - skinny dip
 - google their own name
@@ -10680,7 +10679,6 @@ other is how you meet.
 - A smell that means home
 - Our go-to takeaway
 - Where we'd go for a weekend away
-- Something we always argue about
 - Our song
 - The best meal we've had together
 - The film we'd watch tonight
