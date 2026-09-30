@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AccountError, confirmCode, providers, sendCode, withGoogle, type Sent } from './account'
+import { AccountError, confirmCode, confirmedByLink, providers, sendCode, withGoogle, type Sent } from './account'
 import { btnAccent, btnOutline, eyebrow, field } from '../ui/styles'
 import { TypingDots } from '../ui/kit'
 
@@ -23,6 +23,16 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
   const codeBox = useRef<HTMLInputElement>(null)
   useEffect(() => { void providers().then((p) => setGoogle(p.google)) }, [])
   useEffect(() => { if (sent) codeBox.current?.focus() }, [sent])
+  // Tapped the link in the email instead: finish as soon as it's gone through.
+  useEffect(() => {
+    if (!sent) return
+    let live = true
+    const look = () => { void confirmedByLink(email, sent).then((ok) => { if (ok && live) { live = false; onDone(sent) } }).catch(() => {}) }
+    const id = setInterval(look, 3000)
+    const back = () => { if (document.visibilityState === 'visible') look() }
+    document.addEventListener('visibilitychange', back)
+    return () => { live = false; clearInterval(id); document.removeEventListener('visibilitychange', back) }
+  }, [sent, email, onDone])
 
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const run = async (fn: () => Promise<void>) => {
@@ -38,7 +48,7 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
       <div className="text-center">
         <h1 className="font-display text-[2.1rem] font-extrabold leading-[1.1]">{sent ? 'Check your email' : title}</h1>
         <p className="mt-2 text-fg/65 leading-snug">
-          {sent ? <>We’ve sent a code to <b className="text-fg">{email.trim()}</b>. Type it in below.</> : sub}
+          {sent ? <>We’ve emailed <b className="text-fg">{email.trim()}</b>. Type in the code — or tap the link in the email, then come back here.</> : sub}
         </p>
       </div>
 

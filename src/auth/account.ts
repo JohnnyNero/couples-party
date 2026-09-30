@@ -68,14 +68,39 @@ export async function sendCode(email: string): Promise<Sent> {
   const { data } = await sb().auth.getUser()
   // A guest keeps everything: the email is added to this very account.
   if (data.user?.is_anonymous) {
-    const { error } = await sb().auth.updateUser({ email: address })
+    const { error } = await sb().auth.updateUser({ email: address }, { emailRedirectTo: back() })
     if (!error) return 'upgrade'
     if (error.code !== 'email_exists' && !/already.*(registered|exists)/i.test(error.message)) throw friendly(error)
   }
   // Someone already has this email: sign in to theirs.
-  const { error } = await sb().auth.signInWithOtp({ email: address, options: { shouldCreateUser: true } })
+  const { error } = await sb().auth.signInWithOtp({ email: address, options: { shouldCreateUser: true, emailRedirectTo: back() } })
   if (error) throw friendly(error)
   return 'signin'
+}
+
+// The email can carry a link instead of (or as well as) the code — Supabase's own
+// emails do. Tapping it confirms the email on Supabase's side and opens Coupled in the
+// browser signed in; on Android that sign-in is the installed app's too (they share it).
+// So while you're on "check your email", this looks every few seconds — and whenever
+// you come back to the app — for the email having been confirmed, and finishes up when
+// it has.
+export async function confirmedByLink(email: string, sent: Sent): Promise<boolean> {
+  const address = email.trim().toLowerCase()
+  const auth = sb().auth
+  if (sent === 'upgrade') {
+    // Same account: the server knows before this phone's copy of it does.
+    const { data } = await auth.getUser()
+    if (data.user?.email?.toLowerCase() !== address || data.user.is_anonymous) return false
+    await auth.refreshSession().catch(() => {})
+    return true
+  }
+  // Signing in: the browser that opened the link keeps the new sign-in where this phone
+  // will find it.
+  const { data } = await auth.getSession()
+  const user = data.session?.user
+  if (!user || user.is_anonymous || user.email?.toLowerCase() !== address) return false
+  forgetThisPhone()
+  return true
 }
 
 export async function confirmCode(email: string, code: string, sent: Sent): Promise<void> {
