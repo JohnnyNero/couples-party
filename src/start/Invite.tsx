@@ -7,6 +7,8 @@ import { refreshProfile, useProfile } from '../profile/store'
 import { shrinkPhoto } from '../profile/photo'
 import { forgetInvite, type InviteLink } from './invite'
 import { markWelcomed } from '../onboard/flags'
+import { useAccount } from '../auth/account'
+import { SignIn } from '../auth/SignIn'
 import { Tour } from '../onboard/Tour'
 
 // Where an invite link lands: "Johnny's invited you". Your name, a photo if you like,
@@ -16,7 +18,7 @@ import { Tour } from '../onboard/Tour'
 const NAME_KEY = 'couples-party:name'
 const savedName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
 
-type Step = { kind: 'form' } | { kind: 'done'; partner: string } | { kind: 'tour' } | { kind: 'dead'; why: string }
+type Step = { kind: 'form' } | { kind: 'account' } | { kind: 'done'; partner: string } | { kind: 'tour' } | { kind: 'dead'; why: string }
 
 export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => void }) {
   const from = invite.from || 'Your partner'
@@ -34,9 +36,13 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
 
   const finish = () => { forgetInvite(); markWelcomed(); onDone() }
 
+  const account = useAccount()
+  // Pairing needs an account, so the two of you never lose each other: a guest makes one
+  // first (or signs in to the one they have), then pairs.
   const join = async () => {
     const n = name.trim()
     if (!n) return setNote('Your name first.')
+    if (account.kind !== 'member' && step.kind === 'form') return setStep({ kind: 'account' })
     setBusy(true)
     setNote(null)
     try { localStorage.setItem(NAME_KEY, n) } catch { /* private mode */ }
@@ -47,6 +53,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
       const msg = e instanceof DailyError ? e.message : ''
       if (/didn't work/.test(msg)) return setStep({ kind: 'dead', why: `This invite has already been used, or ${from} has started again. Ask them to send a new one.` })
       if (/already paired/i.test(msg)) return setStep({ kind: 'dead', why: 'This phone is already paired.' })
+      setStep({ kind: 'form' })
       return setNote(msg || "Couldn't reach the server — try again.")
     }
     // Paired. The photo is a nice-to-have: if it doesn't go through, it can be added later.
@@ -73,6 +80,14 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
           />
         ) : step.kind === 'dead' ? (
           <Centered title="That invite didn’t work" sub={step.why} action="Open the app" onAction={finish} />
+        ) : step.kind === 'account' ? (
+          <SignIn
+            title={`Almost there, ${name.trim() || 'you'}`}
+            sub={`Your email, so you and ${from} never lose each other — and you can sign in on any phone.`}
+            onDone={() => void join()}
+            onLater={() => setStep({ kind: 'form' })}
+            later="Back"
+          />
         ) : step.kind === 'tour' ? (
           <div className="flex-1 flex flex-col min-h-[36rem]">
             <Tour onDone={finish} onSkip={finish} last="Let’s play" />

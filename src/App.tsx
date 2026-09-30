@@ -9,13 +9,13 @@ import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from '.
 import { Home } from './start/Home'
 import { Invite } from './start/Invite'
 import { Logo } from './ui/Logo'
-import { readDeviceLink, readInvite } from './start/invite'
-import { DeviceLink } from './start/DeviceLink'
+import { readInvite } from './start/invite'
+import { finishRedirect } from './auth/account'
 import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
 import { useRecordTonight } from './share/tonightResult'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
-import { closeWelcome, markPlayedTogether, markWelcomed, openWelcome, useWelcome, welcomed } from './onboard/flags'
+import { closeWelcome, markPlayedTogether, markWelcomed, openWelcome, SIGNED_OUT, useWelcome, welcomed } from './onboard/flags'
 
 // The welcome (the tour, setting up, inviting your partner) loads when it's wanted.
 const Welcome = lazy(() => import('./onboard/Welcome').then((m) => ({ default: m.Welcome })))
@@ -38,14 +38,18 @@ export default function App() {
   })
   // An invite link (?pair=CODE&from=Name) opens on its own welcome page first.
   const [invite, setInvite] = useState(() => readInvite(window.location.search))
-  // …and a device link (?device=CODE&from=Name) on a page that makes this device you.
-  const [deviceLink, setDeviceLink] = useState(() => readDeviceLink(window.location.search))
   useThemeSync()
   const welcome = useWelcome()
   // A new phone that isn't paired gets shown round first. One that's already paired (or
   // waiting for a partner) has been here before — it never sees it unasked.
   useEffect(() => {
-    if (game || invite || deviceLink || welcomed()) return
+    // Back from Google (see auth/account): finish off anything left to do.
+    void finishRedirect()
+    // Just signed out: straight to signing back in.
+    let signedOut = false
+    try { signedOut = sessionStorage.getItem(SIGNED_OUT) === '1'; sessionStorage.removeItem(SIGNED_OUT) } catch { /* fine */ }
+    if (signedOut && !game) return openWelcome('signin')
+    if (game || invite || welcomed()) return
     void refreshProfile().then((p) => {
       if (p && p.state !== 'single') markWelcomed()
       else if (!welcomed()) openWelcome('tour')
@@ -83,7 +87,6 @@ export default function App() {
   )
 
   function renderApp() {
-    if (deviceLink && !game) return <DeviceLink link={deviceLink} onDone={() => setDeviceLink(null)} />
     if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
     if (!game || !mode) {
       // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share

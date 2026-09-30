@@ -264,20 +264,22 @@ export class DailyError extends Error {
 }
 
 let client: SupabaseClient | null = null
-function sb(): SupabaseClient {
+export function sb(): SupabaseClient {
   // Created on first use, so nothing touches the network until the Today tab needs it.
   client ??= createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   return client
 }
 
-// Each phone is an anonymous user, created once and remembered by supabase-js in local
-// storage. No email, no password — pairing is what ties two of them together.
+// A phone starts as a guest — an anonymous user, created once and remembered by
+// supabase-js in local storage — and becomes an account when you add your email (or
+// Google) to it; see auth/account.ts. Either way every call below is made as whoever's
+// signed in on this phone.
 //
 // Shared across callers: the Today tab fires several calls at once on first open, and
 // if each signed in separately the phone would become several different people — one
 // of whom is paired and the rest of whom aren't.
 let signingIn: Promise<void> | null = null
-function signedIn(): Promise<void> {
+export function signedIn(): Promise<void> {
   signingIn ??= signIn().finally(() => { signingIn = null })
   return signingIn
 }
@@ -356,9 +358,8 @@ export const api = {
   profile: () => rpc<Profile>('profile'),
   setName: (name: string) => rpc<void>('set_name', { p_name: name }),
   setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
-  linkCode: () => rpc<string>('link_code'),
-  linkDevice: (code: string) => rpc<void>('link_device', { p_code: code }),
-  unlinkDevice: () => rpc<void>('unlink_device'),
+  // Your account and everything that's yours with it (migration 0025).
+  deleteAccount: () => rpc<void>('delete_account'),
   daily: (today: string) => rpc<Daily>('daily', { p_today: today }),
   createCouple: (name: string) => rpc<string>('create_couple', { p_name: name }),
   joinCouple: (code: string, name: string) => rpc<void>('join_couple', { p_code: code, p_name: name }),
@@ -417,14 +418,3 @@ export const api = {
 // One box for any code: a device code (from your own Profile, on another device) makes
 // this device you; anything else is taken as your partner's pairing code. A server
 // without migration 0015 has no device codes, so it goes straight to pairing.
-export async function enterCode(code: string, name: string): Promise<'device' | 'couple'> {
-  try {
-    await api.linkDevice(code)
-    return 'device'
-  } catch (e) {
-    const notADeviceCode = e instanceof DailyError && (e.kind === 'setup' || /didn't work/.test(e.message))
-    if (!notADeviceCode) throw e
-  }
-  await api.joinCouple(code, name)
-  return 'couple'
-}

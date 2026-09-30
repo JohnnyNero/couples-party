@@ -7,6 +7,8 @@ import { useSyncExternalStore } from 'react'
 const WELCOMED = 'coupled:welcomed'
 const LIST_HIDDEN = 'coupled:getting-started-hidden'
 const PLAYED = 'coupled:played-together'
+// Set for the reload after signing out (sessionStorage): the app opens on signing in.
+export const SIGNED_OUT = 'coupled:signed-out'
 
 const read = (k: string) => { try { return localStorage.getItem(k) !== null } catch { return false } }
 const write = (k: string) => { try { localStorage.setItem(k, String(Date.now())) } catch { /* private mode */ } }
@@ -20,7 +22,7 @@ export const markPlayedTogether = () => write(PLAYED)
 
 // The welcome, opened from anywhere — first thing on a new phone, from Today's "Invite
 // your partner", or from the profile page to see the tour again. `start` is where in it.
-export type WelcomeStart = 'tour' | 'you' | 'code' | 'tour-only'
+export type WelcomeStart = 'tour' | 'you' | 'code' | 'tour-only' | 'save' | 'signin'
 let open: WelcomeStart | null = null
 const listeners = new Set<() => void>()
 const emit = () => { for (const l of listeners) l() }

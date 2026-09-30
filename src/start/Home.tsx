@@ -22,6 +22,7 @@ import { slide } from '../ui/transition'
 import { Burst, Shower, at } from '../ui/fx'
 import { InstallCard } from './InstallCard'
 import { GettingStarted } from '../onboard/GettingStarted'
+import { SaveAccount } from '../auth/SaveAccount'
 import { CrosswordCard } from '../crossword/CrosswordCard'
 import { ShareButton } from '../share/ShareButton'
 import { loadTonight } from '../share/tonightResult'
@@ -167,6 +168,7 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
         right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
+      <ErrorBoundary quiet><SaveAccount /></ErrorBoundary>
       {paired && <ErrorBoundary quiet><GettingStarted d={paired} onPlay={() => onPick('tonight')} onProfile={openProfile} /></ErrorBoundary>}
       <Board board={board} />
       {paired && <ErrorBoundary quiet><CrosswordCard /></ErrorBoundary>}

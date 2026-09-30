@@ -54,8 +54,34 @@ SQL Editor → New query → paste the whole file → **Run**.
    `moments` table (locked down like the others), `save_moment()`, and `memories()`,
    which also returns past daily puzzles with their answers once the day is over.
 
+13–24. See the comment at the top of each file.
+25. `migrations/0025_accounts.sql` — real accounts: drops the old device-linking
+   (`link_code`, `link_device`, `unlink_device`, `device_codes`) now that signing in does
+   that job, and adds `delete_account()`.
+
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.
+
+## 3. Accounts: email codes (and optionally Google)
+
+Everyone starts as a guest (step 1) and is asked to add their email, which turns the
+same account into a real one; after that, signing in with that email on any phone is
+them. The app asks for a six-digit code, never a link, so the email templates must
+include the code:
+
+1. Authentication → Emails → Templates. In **Change Email Address** and **Magic Link**
+   (and **Confirm signup**), put the code in the message, e.g.
+   `<p>Your Coupled code is</p><h2>{{ .Token }}</h2>`. (The link can stay or go.)
+2. Authentication → Emails → SMTP Settings: set up your own email sender (Resend, Brevo,
+   Postmark…). Supabase's built-in sender only mails the project's own team, so without
+   this nobody else gets their code.
+3. Authentication → URL Configuration: Site URL and Redirect URLs both
+   `https://johnnynero.github.io/couples-party/` (or your own domain, later).
+4. Optional, Google: create an OAuth client (Web) in Google Cloud with the redirect URI
+   `https://jzplpotgeodzkrpqojwt.supabase.co/auth/v1/callback`, paste its ID and secret
+   into Authentication → Sign In / Providers → Google, and turn on **Allow manual
+   linking** (so a guest can add Google to the account they have). The app shows
+   "Continue with Google" by itself once the provider is on.
 
 ## Why the anon key is in the repo
 

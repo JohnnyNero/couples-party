@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, DailyError, enterCode } from '../daily/api'
+import { api, DailyError } from '../daily/api'
 import { refreshProfile, useProfile } from '../profile/store'
 import { shrinkPhoto } from '../profile/photo'
 import { inviteUrl } from '../start/invite'
@@ -10,6 +10,8 @@ import { Burst, at } from '../ui/fx'
 import { btnAccent, btnOutline, eyebrow, field } from '../ui/styles'
 import { useBackLayer } from '../ui/back'
 import { markWelcomed, type WelcomeStart } from './flags'
+import { useAccount } from '../auth/account'
+import { SignIn } from '../auth/SignIn'
 import { Tour } from './Tour'
 
 // A new phone's way in: how Coupled works (the tour), who you are, then getting your
@@ -21,13 +23,27 @@ const NAME_KEY = 'couples-party:name'
 const savedName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
 const saveName = (n: string) => { try { localStorage.setItem(NAME_KEY, n) } catch { /* private mode */ } }
 
-type Step = 'tour' | 'you' | 'code' | 'invite' | 'paired'
+type Step = 'tour' | 'account' | 'you' | 'code' | 'invite' | 'paired'
 
 export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () => void }) {
   const profile = useProfile()
-  // Already waiting for a partner (set up earlier, then closed): straight to the invite.
-  const initial: Step = start === 'tour' || start === 'tour-only' ? 'tour' : profile?.state === 'waiting' && start === 'you' ? 'invite' : start
+  const account = useAccount()
+  const guest = account.kind !== 'member'
+  // Where setting up carries on once you've got an account: making a couple, or joining
+  // one with a code — or, already waiting for a partner (set up earlier, then closed),
+  // straight to the invite.
+  const after: Step = start === 'code' ? 'code' : profile?.state === 'waiting' ? 'invite' : 'you'
+  const initial: Step =
+    start === 'tour' || start === 'tour-only' ? 'tour'
+      : start === 'save' || start === 'signin' ? 'account'
+      : guest ? 'account' : after
   const [step, setStep] = useState<Step>(initial)
+  // Already signed in (it can take a moment to know): no account step to show.
+  useEffect(() => {
+    if (step !== 'account' || account.kind !== 'member') return
+    if (start === 'save' || start === 'signin') onClose()
+    else setStep(after)
+  }, [step, account.kind, start, after, onClose])
   const [name, setName] = useState(() => (profile && profile.state !== 'single' ? profile.me.name : savedName()))
   const [photo, setPhoto] = useState<string | null>(null)
   const done = () => { markWelcomed(); onClose() }
@@ -39,11 +55,29 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
         {step === 'tour' ? (
           <div className="flex-1 flex flex-col min-h-[36rem]">
             <Tour
-              onDone={() => (start === 'tour-only' ? done() : (markWelcomed(), setStep('you')))}
-              onSkip={start === 'tour-only' ? done : () => { markWelcomed(); setStep('you') }}
+              onDone={() => (start === 'tour-only' ? done() : (markWelcomed(), setStep(guest ? 'account' : after)))}
+              onSkip={start === 'tour-only' ? done : () => { markWelcomed(); setStep(guest ? 'account' : after) }}
               last={start === 'tour-only' ? 'Got it' : 'Set us up'}
             />
           </div>
+        ) : step === 'account' ? (
+          <SignIn
+            title={start === 'save' ? 'Save your account' : start === 'signin' ? 'Sign in' : 'Create your account'}
+            sub={
+              start === 'save'
+                ? 'Add your email so you never lose your puzzles, streak and Memories — and can sign in on any phone.'
+                : start === 'signin'
+                  ? 'Your email, and we’ll send you a code. New here? The same gets you started.'
+                  : 'Your email, so your puzzles, streak and Memories are safe — and you can sign in on any phone. Had an account before? The same signs you back in.'
+            }
+            onDone={() => void refreshProfile().then((p) => {
+              // Signed in to an account that's already set up: nothing more to do here.
+              if (start === 'save' || p?.state === 'paired') return done()
+              setStep(p?.state === 'waiting' ? 'invite' : after)
+            })}
+            onLater={start === 'save' ? done : () => setStep(after)}
+            later={start === 'save' ? 'Not now' : 'Skip for now'}
+          />
         ) : step === 'you' ? (
           <You
             name={name}
@@ -55,7 +89,7 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
             onLater={done}
           />
         ) : step === 'code' ? (
-          <Code name={name} setName={setName} onBack={() => setStep('you')} onPaired={() => setStep('paired')} onDevice={done} />
+          <Code name={name} setName={setName} onBack={() => setStep('you')} onPaired={() => setStep('paired')} />
         ) : step === 'invite' ? (
           <Invite name={name} onPaired={() => setStep('paired')} onLater={done} />
         ) : (
@@ -154,12 +188,11 @@ function You({ name, setName, photo, setPhoto, onMade, onCode, onLater }: {
 
 // ---------------------------------------------------------------- got a code
 
-function Code({ name, setName, onBack, onPaired, onDevice }: {
+function Code({ name, setName, onBack, onPaired }: {
   name: string
   setName: (n: string) => void
   onBack: () => void
   onPaired: () => void
-  onDevice: () => void
 }) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -171,11 +204,10 @@ function Code({ name, setName, onBack, onPaired, onDevice }: {
     setBusy(true)
     setNote(null)
     try {
-      const how = await enterCode(code, n)
+      await api.joinCouple(code, n)
       await refreshProfile()
       setBusy(false)
-      if (how === 'device') onDevice()
-      else onPaired()
+      onPaired()
     } catch (e) {
       setBusy(false)
       setNote(e instanceof DailyError ? e.message : "Couldn't reach the server — try again.")

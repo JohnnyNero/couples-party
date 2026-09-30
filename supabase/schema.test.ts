@@ -24,6 +24,7 @@ import m0021 from './migrations/0021_crossword.sql?raw'
 import m0022 from './migrations/0022_rebuild_crossword.sql?raw'
 import m0023 from './migrations/0023_crossword_archive.sql?raw'
 import m0024 from './migrations/0024_crossword_each.sql?raw'
+import m0025 from './migrations/0025_accounts.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -50,7 +51,7 @@ const EVE = '00000000-0000-0000-0000-00000000000e' // not in this couple
 const SAM2 = '00000000-0000-0000-0000-0000000000a2' // Sam's second device, once it's linked
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -700,36 +701,24 @@ describe('our questions', () => {
 })
 
 describe('more than one device', () => {
-  it('makes a linked device the same person: same couple, same puzzles, same name', async () => {
+  // Signing in is how a second device becomes you now (0025), which Supabase Auth does
+  // without this schema noticing. A device linked the old way (0015) keeps working.
+  it('keeps a device linked the old way as the same person: same couple, same puzzles, same name', async () => {
     const code = await call(SAM, 'create_couple', ['Sam'])
     await call(ALEX, 'join_couple', [code, 'Alex'])
     await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
-    const link = await call(SAM, 'link_code')
-    expect(link).toMatch(/^[A-Z2-9]{6}$/)
-    await call(SAM2, 'link_device', [link.toLowerCase()])
+    await db.exec(`insert into public.devices (alias, person) values ('${SAM2}', '${SAM}')`)
     expect(await call(SAM2, 'profile')).toMatchObject({ state: 'paired', linked: true, me: { name: 'Sam' }, partner: { name: 'Alex' } })
-    expect((await call(SAM, 'profile')).devices).toBe(1)
     expect((await call(SAM2, 'daily', [today()])).mine).toMatchObject({ answer: 'pasta' }) // Sam's own puzzle, from the other device
     await call(SAM2, 'set_name', ['Samantha'])
     expect((await call(ALEX, 'profile')).partner.name).toBe('Samantha')
-    expect(await call(SAM2, 'my_couple_code')).toBe(await call(SAM, 'my_couple_code'))
-  })
-
-  it('uses a code once, only before it runs out, and never for a device that is already someone', async () => {
-    await expect(call(EVE, 'link_device', ['ZZZZZZ'])).rejects.toThrow(/no such code/)
-    const link = await call(SAM, 'link_code')
-    await expect(call(ALEX, 'link_device', [link])).rejects.toThrow(/already paired/) // Alex is someone already
-    await expect(call(SAM, 'link_device', [link])).rejects.toThrow(/another device/)
-    await expect(call(SAM2, 'link_device', [link])).rejects.toThrow(/already linked/)
-    await db.exec(`update public.device_codes set expires_at = now() - interval '1 minute'`)
-    await expect(call(EVE, 'link_device', [link])).rejects.toThrow(/no such code/)
     expect(await as(SAM, 'select * from public.devices')).toEqual([]) // no policies
   })
 
-  it('lets a device step away, leaving you and your couple as you were', async () => {
-    await call(SAM2, 'unlink_device')
-    expect(await call(SAM2, 'profile')).toEqual({ state: 'single', linked: false })
-    expect(await call(SAM, 'profile')).toMatchObject({ state: 'paired', devices: 0 })
+  it('no longer hands out codes to link one', async () => {
+    await expect(call(SAM, 'link_code')).rejects.toThrow(/does not exist/)
+    await expect(call(EVE, 'link_device', ['ZZZZZZ'])).rejects.toThrow(/does not exist/)
+    await db.exec(`delete from public.devices`)
     await call(SAM, 'leave_couple')
   })
 })
@@ -962,5 +951,28 @@ describe('our crossword', () => {
       { user_id: ALEX, cells: { '0,1': 'A', '0,2': 'T' }, solved: false },
     ])
     await old.close()
+  })
+})
+
+describe('deleting your account', () => {
+  it('takes you, your linked devices and your couple — both of you — and nobody else', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
+    await db.exec(`insert into public.devices (alias, person) values ('${SAM2}', '${SAM}')`)
+    const eve = await call(EVE, 'create_couple', ['Eve'])
+    await call(SAM2, 'delete_account') // from the linked device: it's still Sam
+    const users = (await db.query<{ id: string }>('select id from auth.users')).rows.map((r) => r.id)
+    expect(users).not.toContain(SAM)
+    expect(users).not.toContain(SAM2)
+    expect(users).toContain(ALEX)
+    expect(await call(ALEX, 'profile')).toMatchObject({ state: 'single' })
+    expect((await db.query('select * from public.couples where code is null')).rows).toHaveLength(0)
+    expect((await db.query('select * from public.puzzles')).rows).toHaveLength(0)
+    expect(await call(EVE, 'profile')).toMatchObject({ state: 'waiting', code: eve })
+  })
+
+  it('needs someone signed in', async () => {
+    await expect(call('', 'delete_account')).rejects.toThrow()
   })
 })

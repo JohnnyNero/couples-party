@@ -9,11 +9,11 @@ import { clearProfile, patchMe, refreshProfile, useProfile } from './store'
 import { shrinkPhoto } from './photo'
 import { OurQuestions } from '../ideas/OurQuestions'
 import { clearIdeas } from '../ideas/store'
-import { deviceUrl } from '../start/invite'
 import { useBackLayer } from '../ui/back'
 import { slide } from '../ui/transition'
 import { InstallRow } from '../start/InstallCard'
-import { openWelcome } from '../onboard/flags'
+import { openWelcome, SIGNED_OUT } from '../onboard/flags'
+import { signOut, useAccount } from '../auth/account'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
 // and unpairing. Opened from your avatar at the top of Home.
@@ -73,14 +73,8 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
             </button>
           )}
 
-          {onServer && (
-            <Devices
-              linked={!!onServer.linked}
-              others={onServer.devices ?? 0}
-              name={onServer.me.name}
-              onUnlinked={onUnpaired}
-            />
-          )}
+          <AccountSection />
+
 
           <button onClick={() => openWelcome('tour-only')} className={card + ' px-4 py-4 flex items-center gap-3 text-left press'}>
             <span className="shrink-0 w-10 h-10 rounded-xl bg-pb-soft text-pb-ink inline-flex items-center justify-center">
@@ -258,88 +252,71 @@ function longDate(iso: string): string {
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// Your other devices. On your first one: make a code (and a link) for another device to
-// become you. On a linked one: say so, and let it step away.
-function Devices({ linked, others, name, onUnlinked }: { linked: boolean; others: number; name: string; onUnlinked: () => void }) {
-  const [code, setCode] = useState<string | null>(null)
+// Who you're signed in as. A guest (an account that lives only on this phone) is asked
+// to save it, or can sign in to the one they already have; an account can sign out, or
+// be deleted — everything with it, for good.
+function AccountSection() {
+  const account = useAccount()
+  const [asking, setAsking] = useState<'out' | 'delete' | null>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [asking, setAsking] = useState(false)
-
-  const make = async () => {
+  const leave = async (del: boolean) => {
     setBusy(true)
     setNote(null)
     try {
-      setCode(await api.linkCode())
-    } catch (e) {
-      setNote(e instanceof DailyError && e.kind === 'setup' ? 'Linking devices needs a quick server update first.' : "Couldn't reach the server — try again.")
-    } finally {
-      setBusy(false)
-    }
-  }
-  const share = () => {
-    if (!code) return
-    const url = deviceUrl(code, name)
-    if (navigator.share) void navigator.share({ title: 'Coupled', text: `Open this on your other device to use Coupled as ${name}`, url }).catch(() => {})
-    else void navigator.clipboard?.writeText(url).then(() => setCopied(true))
-  }
-  const unlink = async () => {
-    setBusy(true)
-    try {
-      await api.unlinkDevice()
-      clearProfile()
-      clearIdeas()
-      onUnlinked()
+      if (del) await api.deleteAccount()
+      await signOut()
+      try { sessionStorage.setItem(SIGNED_OUT, '1') } catch { /* fine */ }
+      window.location.replace(window.location.pathname)
     } catch {
       setNote("Couldn't reach the server — try again.")
       setBusy(false)
     }
   }
-
-  if (linked) {
+  if (account.kind === 'loading') return null
+  if (account.kind === 'guest') {
     return (
       <section className="flex flex-col gap-2">
-        <div className={eyebrow}>This device</div>
-        <div className="rounded-2xl border-2 border-fg/15 bg-card px-4 py-3 text-sm text-fg/70 leading-snug">
-          Linked to your account from another device. Everything here is shared with it.
+        <div className={eyebrow}>Your account</div>
+        <div className="rounded-2xl border-2 border-pa bg-pa-soft px-4 py-3 text-sm text-fg/75 leading-snug">
+          You’re playing as a guest: your account only lives on this phone. Add your email to keep it safe and sign in anywhere.
         </div>
-        {asking ? (
-          <div className="flex gap-2">
-            <button onClick={() => setAsking(false)} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold">Keep</button>
-            <button onClick={() => void unlink()} disabled={busy} className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold disabled:opacity-50">Remove</button>
-          </div>
-        ) : (
-          <button onClick={() => setAsking(true)} className="self-start min-h-[44px] font-bold text-pa-ink">Remove this device</button>
-        )}
-        {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
+        <button onClick={() => openWelcome('save')} className={btnPrimary + ' !text-lg'}>Save your account</button>
+        <button onClick={() => openWelcome('signin')} className="self-center min-h-[44px] text-sm font-bold text-fg/55">Already have an account? Sign in</button>
       </section>
     )
   }
-
   return (
     <section className="flex flex-col gap-2">
-      <div className={eyebrow}>Your devices</div>
-      {code ? (
-        <div className={card + ' px-4 py-4 flex flex-col items-center gap-3 text-center'}>
-          <div className="text-sm text-fg/65">On your other device, open the link — or tap <b>I have a code</b> and type:</div>
-          <div className="font-display text-4xl font-extrabold tracking-[0.18em] text-pa-ink tabular-nums">{code}</div>
-          <button onClick={share} className={btnPrimary + ' !text-lg'}>{copied ? 'Link copied' : 'Send the link'}</button>
-          <div className="text-xs text-fg/50">Works once, for the next 15 minutes.</div>
+      <div className={eyebrow}>Your account</div>
+      <div className="rounded-2xl border-2 border-fg/15 bg-card px-4 py-3 flex items-center gap-3">
+        <span className="shrink-0 w-9 h-9 rounded-full bg-sage-ink text-white inline-flex items-center justify-center font-extrabold" aria-hidden="true">✓</span>
+        <div className="min-w-0">
+          <div className="text-xs font-bold text-fg/50">Signed in{account.google ? ' with Google' : ''}</div>
+          <div className="font-bold truncate">{account.email ?? 'Your account'}</div>
+        </div>
+      </div>
+      {asking ? (
+        <div className={'rounded-2xl border-2 px-4 py-3 flex flex-col gap-2 ' + (asking === 'delete' ? 'border-pa bg-pa-soft' : 'border-fg/15')}>
+          <div className="text-sm font-bold leading-snug">
+            {asking === 'out'
+              ? 'Sign out of this phone? Everything stays in your account — sign back in with your email any time.'
+              : 'Delete your account? Your pairing, puzzles, streak and Memories go too — for both of you — and can’t be brought back.'}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setAsking(null)} disabled={busy} className="flex-1 min-h-[48px] rounded-2xl border-2 border-fg bg-card font-display text-lg font-extrabold press">Keep</button>
+            <button onClick={() => void leave(asking === 'delete')} disabled={busy} className="flex-1 min-h-[48px] rounded-2xl bg-pa text-white font-display text-lg font-extrabold press disabled:opacity-50">
+              {asking === 'out' ? 'Sign out' : 'Delete'}
+            </button>
+          </div>
+          {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
         </div>
       ) : (
-        <button onClick={() => void make()} disabled={busy} className="w-full min-h-[56px] flex items-center gap-3 rounded-2xl border-2 border-fg/15 bg-card px-4 text-left press disabled:opacity-50">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-fg/60" aria-hidden="true">
-            <rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" />
-          </svg>
-          <span className="flex-1">
-            <span className="block font-bold">Add another device</span>
-            <span className="block text-xs text-fg/50">{others === 0 ? 'Use Coupled as you on a tablet or a second phone' : `${others} other device${others === 1 ? '' : 's'} linked`}</span>
-          </span>
-          <span className="text-xl text-fg/40" aria-hidden="true">›</span>
-        </button>
+        <div className="flex justify-between">
+          <button onClick={() => setAsking('out')} className="min-h-[44px] font-bold text-fg/65">Sign out</button>
+          <button onClick={() => setAsking('delete')} className="min-h-[44px] text-sm font-bold text-pa-ink">Delete account</button>
+        </div>
       )}
-      {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
     </section>
   )
 }
