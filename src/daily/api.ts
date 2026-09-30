@@ -310,6 +310,9 @@ async function rpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<T
 }
 
 function friendly(message: string): string {
+  if (/pair first/.test(message)) return 'Pair up with your partner first — friends are couple to couple.'
+  if (/that is you/.test(message)) return 'That’s your own code!'
+  if (/too many friends/.test(message)) return 'That’s the most friends a couple can have.'
   if (/no such code/.test(message)) return "That code didn't work — check it with them?"
   if (/already paired/.test(message)) return "You're already paired."
   if (/already started/.test(message)) return "They've already started it — too late to change."
@@ -347,6 +350,17 @@ export type Profile =
   | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number }
   | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number }
 
+// Friend couples (migration 0026): what a friend sees of a couple — never answers.
+export type FriendCard = {
+  id: string
+  members: Person[]
+  streak: number
+  today: { team: number | null; finished: boolean } | null // Today's games, if played today
+  puzzles: number // of today's puzzles, solved
+  since: string
+}
+export type FriendPreview = { members: Person[]; you: boolean; friends: boolean }
+
 // Our questions: the couple's own cards for the games — from migration 0014.
 export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word' | 'meld' | 'describe'
 export type Idea = { id: string; kind: IdeaKind; text: string; mine: boolean; createdAt: string }
@@ -358,6 +372,12 @@ export const api = {
   profile: () => rpc<Profile>('profile'),
   setName: (name: string) => rpc<void>('set_name', { p_name: name }),
   setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
+  friendCode: () => rpc<string>('friend_code'),
+  newFriendCode: () => rpc<string>('new_friend_code'),
+  friendPreview: (code: string) => rpc<FriendPreview>('friend_preview', { p_code: code }),
+  addFriend: (code: string) => rpc<void>('add_friend', { p_code: code }),
+  removeFriend: (couple: string) => rpc<void>('remove_friend', { p_couple: couple }),
+  friends: (today: string) => rpc<FriendCard[]>('friends', { p_today: today }),
   // Your account and everything that's yours with it (migration 0025).
   deleteAccount: () => rpc<void>('delete_account'),
   daily: (today: string) => rpc<Daily>('daily', { p_today: today }),

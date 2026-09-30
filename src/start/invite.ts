@@ -28,3 +28,26 @@ export function forgetInvite(): void {
   url.searchParams.delete('from')
   replaceUrl(url.toString())
 }
+
+// A friend link: "…/?friend=ABCD2345&from=Sam%20%26%20Roxx" — opening it offers to add
+// that couple as friends (see friends/FriendInvite.tsx).
+export function friendUrl(code: string, from: string): string {
+  const url = new URL(window.location.origin + window.location.pathname)
+  url.searchParams.set('friend', code)
+  if (from.trim()) url.searchParams.set('from', from.trim())
+  return url.toString()
+}
+
+export function readFriendLink(search: string): InviteLink | null {
+  const p = new URLSearchParams(search)
+  const code = (p.get('friend') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (code.length !== 8) return null
+  return { code, from: (p.get('from') ?? '').trim().slice(0, 50) }
+}
+
+export function forgetFriendLink(): void {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('friend')
+  url.searchParams.delete('from')
+  replaceUrl(url.toString())
+}

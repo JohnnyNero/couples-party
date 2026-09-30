@@ -75,8 +75,7 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
               if (start === 'save' || p?.state === 'paired') return done()
               setStep(p?.state === 'waiting' ? 'invite' : after)
             })}
-            onLater={start === 'save' ? done : () => setStep(after)}
-            later={start === 'save' ? 'Not now' : 'Skip for now'}
+            onLater={start === 'save' ? done : undefined}
           />
         ) : step === 'you' ? (
           <You

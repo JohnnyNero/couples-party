@@ -9,7 +9,8 @@ import { resolveMode, resolveGame, stampMode, type PlayMode, type Game } from '.
 import { Home } from './start/Home'
 import { Invite } from './start/Invite'
 import { Logo } from './ui/Logo'
-import { readInvite } from './start/invite'
+import { readFriendLink, readInvite } from './start/invite'
+import { FriendInvite } from './friends/FriendInvite'
 import { finishRedirect } from './auth/account'
 import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
@@ -38,6 +39,8 @@ export default function App() {
   })
   // An invite link (?pair=CODE&from=Name) opens on its own welcome page first.
   const [invite, setInvite] = useState(() => readInvite(window.location.search))
+  // …and a friend link (?friend=CODE&from=Names) on one that offers to add that couple.
+  const [friendLink, setFriendLink] = useState(() => readFriendLink(window.location.search))
   useThemeSync()
   const welcome = useWelcome()
   // A new phone that isn't paired gets shown round first. One that's already paired (or
@@ -49,7 +52,7 @@ export default function App() {
     let signedOut = false
     try { signedOut = sessionStorage.getItem(SIGNED_OUT) === '1'; sessionStorage.removeItem(SIGNED_OUT) } catch { /* fine */ }
     if (signedOut && !game) return openWelcome('signin')
-    if (game || invite || welcomed()) return
+    if (game || invite || friendLink || welcomed()) return
     void refreshProfile().then((p) => {
       if (p && p.state !== 'single') markWelcomed()
       else if (!welcomed()) openWelcome('tour')
@@ -88,6 +91,12 @@ export default function App() {
 
   function renderApp() {
     if (invite && !game) return <Invite invite={invite} onDone={() => setInvite(null)} />
+    if (friendLink && !game) {
+      return <FriendInvite link={friendLink} onDone={(added) => {
+        if (added) try { localStorage.setItem('couples-party:tab', 'friends') } catch { /* fine */ }
+        setFriendLink(null)
+      }} />
+    }
     if (!game || !mode) {
       // stampMode writes ?mode and ?game into the URL BEFORE initNet, so Playroom's share
       // link (location.href + #r=CODE) carries both to the joining device.

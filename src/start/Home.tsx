@@ -16,6 +16,7 @@ import { Board } from '../daily/Board'
 import { useBoard } from '../daily/useDaily'
 import { dayIndex, localDate } from '../daily/dates'
 import { MemoriesTab } from '../memories/MemoriesTab'
+import { FriendsTab } from '../friends/FriendsTab'
 import { GameIcon, GameGlyph } from '../ui/GameIcon'
 import { card, eyebrow } from '../ui/styles'
 import { slide } from '../ui/transition'
@@ -32,15 +33,15 @@ import { dailyNumber } from '../share/daily'
 // session — Games, for when you've got longer or want one thing, and Memories,
 // everything you've played together so far.
 
-type Tab = 'today' | 'games' | 'memories'
-const TAB_ORDER: Tab[] = ['today', 'games', 'memories']
+type Tab = 'today' | 'games' | 'friends' | 'memories'
+const TAB_ORDER: Tab[] = ['today', 'games', 'friends', 'memories']
 
 const TAB_KEY = 'couples-party:tab'
 
 function loadTab(): Tab {
   try {
     const t = localStorage.getItem(TAB_KEY)
-    return t === 'games' || t === 'memories' ? t : 'today'
+    return t === 'games' || t === 'friends' || t === 'memories' ? t : 'today'
   } catch {
     return 'today'
   }
@@ -76,13 +77,14 @@ export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; 
         <OpenProfile.Provider value={openProfile}>
           <div key={`${tab}-${epoch}-${myName}`} className="w-full max-w-xl mx-auto enter-fallback">
             {tab !== 'memories' && <div className="mb-4 empty:hidden"><ErrorBoundary quiet><NudgeBanner onJoin={onJoin} /></ErrorBoundary></div>}
-            {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : <Memories />}
+            {tab === 'today' ? <Today onPick={onPick} onResume={onResume} /> : tab === 'games' ? <Games onPick={onPick} onResume={onResume} /> : tab === 'friends' ? <Friends /> : <Memories />}
           </div>
         </OpenProfile.Provider>
       </main>
-      <nav className="vt-tabbar shrink-0 border-t border-fg/10 bg-bg grid grid-cols-3 pb-[env(safe-area-inset-bottom)]">
+      <nav className="vt-tabbar shrink-0 border-t border-fg/10 bg-bg grid grid-cols-4 pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === 'today'} onClick={() => choose('today')} label="Today" icon={<MoonIcon />} />
         <TabButton active={tab === 'games'} onClick={() => choose('games')} label="Games" icon={<GridIcon />} />
+        <TabButton active={tab === 'friends'} onClick={() => choose('friends')} label="Friends" icon={<FriendsIcon />} />
         <TabButton active={tab === 'memories'} onClick={() => choose('memories')} label="Memories" icon={<BookIcon />} />
       </nav>
       {profileOpen && (
@@ -402,6 +404,15 @@ function Games({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
   )
 }
 
+function Friends() {
+  return (
+    <div className="flex flex-col">
+      <TabHeader title="Friends" sub="Other couples, and how they're getting on." />
+      <FriendsTab />
+    </div>
+  )
+}
+
 function Memories() {
   return (
     <div className="flex flex-col">
@@ -434,6 +445,17 @@ const iconProps = {
 
 function MoonIcon() {
   return <svg {...iconProps}><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z" /></svg>
+}
+
+function FriendsIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="8.5" cy="8" r="3" />
+      <circle cx="16" cy="9" r="2.5" />
+      <path d="M3 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" />
+      <path d="M14.5 14.3c.5-.2 1-.3 1.5-.3 2.3 0 4 1.6 4.5 4.5" />
+    </svg>
+  )
 }
 
 function BookIcon() {
