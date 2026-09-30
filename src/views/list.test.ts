@@ -29,7 +29,7 @@ describe('themeText', () => {
     s.players.A.name = 'Sam'
     expect(themeText(s, act, 'A')).toBe('seven things you do in bed')
     expect(themeText(s, act, 'B')).toBe('seven things Sam does in bed')
-    expect(themeText(s, act, null)).toBe('seven things Sam does in bed') // a TV
+    expect(themeText(s, act, null)).toBe('seven things Sam does in bed') // no seat yet
   })
 })
 

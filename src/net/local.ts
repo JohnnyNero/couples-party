@@ -44,7 +44,8 @@ export function initLocal(content: Content, game: Game): void {
   }, 200)
 }
 
-// Solo: the only one typing or dragging is you, but the same preview shows on the board.
+// Solo: the only one typing or dragging is you, but the live preview works just as it
+// does between two phones.
 let live: Live | null = null
 const liveListeners = new Set<() => void>()
 export function setLocalLive(value: Live | null): void {

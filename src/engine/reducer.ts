@@ -265,7 +265,7 @@ const text = (t: string) => t
 
 // A card both of you read the same way that names one of you ({player}, from Our
 // questions): the session picks who by its seed, and it's filled in as it's dealt, so
-// both phones, the TV and Memories all say the same name.
+// both phones and Memories all say the same name.
 function namedFor(s: SessionState, t: string): string {
   if (!t.includes('{player}')) return t
   const p: PlayerId = s.seed % 2 === 0 ? 'A' : 'B'

@@ -7,7 +7,7 @@ import { playerName } from '../../views/list'
 import { Avatar } from '../../ui/Avatar'
 import { btnAccent } from '../../ui/styles'
 import { PromptCard } from '../../ui/kit'
-import { capital } from '../../screen/phases/ScreenFingerRound'
+import { capital } from '../../board/phases/BoardFingerRound'
 import { PlayWaiting } from './PlayWaiting'
 
 // Called It: is it true for you — and your call on whether it's true for them. Both go

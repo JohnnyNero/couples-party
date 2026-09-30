@@ -61,10 +61,8 @@ describe('board renders every Act III phase', () => {
   })
 
   it('never shows the items on the board while they are still being ranked', () => {
-    for (const phase of ['LIST_INTRO', 'LIST_PLACE'] as const) {
-      const html = renderToStaticMarkup(<BoardStage s={session(phase, halfPlaced())} />)
-      for (const text of ITEMS) expect(html).not.toContain(text)
-    }
+    const html = renderToStaticMarkup(<BoardStage s={session('LIST_INTRO', halfPlaced())} />)
+    for (const text of ITEMS) expect(html).not.toContain(text)
   })
 
   it('opens the act on the theme, named after the author, with its own icon', () => {
@@ -111,11 +109,9 @@ describe('the scoreboard between games', () => {
 })
 
 describe('controllers render for both players', () => {
-  const phases = ['LIST_INTRO', 'LIST_PLACE', 'LIST_REVEAL', 'LIST_RESULT'] as const
-  it.each(phases)('%s renders for author and ranker', (phase) => {
-    const a = phase === 'LIST_PLACE' ? halfPlaced() : act()
+  it('renders placing for author and ranker', () => {
     for (const me of ['A', 'B'] as const) {
-      expect(renderToStaticMarkup(<Controller s={session(phase, a)} me={me} />).length).toBeGreaterThan(0)
+      expect(renderToStaticMarkup(<Controller s={session('LIST_PLACE', halfPlaced())} me={me} />).length).toBeGreaterThan(0)
     }
   })
 
@@ -176,7 +172,6 @@ describe('the fillers and the tiebreaker', () => {
     let s = initialState(1, 'circle', {})
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     s = reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
-    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('Draw a perfect circle')
     expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain('lifting your finger sends it')
     s = reduce(s, { type: 'TIMEOUT' }, 20000)
     expect(s.phase).toBe('CIRCLE_REVEAL')
@@ -191,14 +186,13 @@ describe('Category Clash', () => {
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
   }
-  it('shows the letter and categories while writing, never anyone\'s answers', () => {
+  it('shows the letter and categories while writing, never your partner\'s answers', () => {
     let s = begin()
     const round = s.clash!.rounds[0]
     s = reduce(s, { type: 'SUBMIT_CLASH', player: 'A', answers: round.categories.map(() => `${round.letter}secret`) }, 1000)
-    const board = renderToStaticMarkup(<BoardStage s={s} />)
-    expect(board).toContain(round.categories[0])
-    expect(board).not.toContain('secret')
-    expect(renderToStaticMarkup(<Controller s={s} me="B" />)).toContain(round.categories[5])
+    const theirs = renderToStaticMarkup(<Controller s={s} me="B" />)
+    expect(theirs).toContain(round.categories[5])
+    expect(theirs).not.toContain('secret')
     expect(railText(s)).toBe('Category Clash · Round 1 of 3')
   })
   it('reveals row by row, with the verdict under each answer', () => {
@@ -213,7 +207,7 @@ describe('Category Clash', () => {
     s = reduce(s, { type: 'ADVANCE_REVEAL', player: 'A' }, 2000)
     html = renderToStaticMarkup(<BoardStage s={s} />)
     expect(html).toContain('same')
-    expect(renderToStaticMarkup(<Controller s={s} me="A" />)).toContain('Next')
+    expect(html).toContain('Next') // the board has the button: the phones show only the board here
   })
 })
 
@@ -224,15 +218,15 @@ describe('Word Chain', () => {
     s = reduce(s, { type: 'JOIN', player: 'A', name: 'Sam' }, 0)
     return reduce(s, { type: 'JOIN', player: 'B', name: 'Alex' }, 0)
   }
-  it('shows whose go it is and the letter they need, on the board and both phones', () => {
+  it('shows whose go it is and the letter they need, on both phones', () => {
     let s = begin()
     const r = s.chain!.rounds[0]
     const who = r.turn === 'A' ? 'Sam' : 'Alex'
-    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain(`${who} needs`)
+    const waiting = r.turn === 'A' ? 'B' : 'A'
     expect(renderToStaticMarkup(<Controller s={s} me={r.turn} />)).toContain('Your go')
-    expect(renderToStaticMarkup(<Controller s={s} me={r.turn === 'A' ? 'B' : 'A'} />)).toContain(`${who} needs`)
+    expect(renderToStaticMarkup(<Controller s={s} me={waiting} />)).toContain(`${who} needs`)
     s = reduce(s, { type: 'CHAIN_WORD', player: r.turn, word: 'unicorn' }, 100)
-    expect(renderToStaticMarkup(<BoardStage s={s} />)).toContain('unicorn')
+    expect(renderToStaticMarkup(<Controller s={s} me={waiting} />)).toContain('unicorn')
     expect(railText(s)).toBe('Word Chain · Round 1 of 4')
   })
   it('ends a round on whoever ran out of time', () => {

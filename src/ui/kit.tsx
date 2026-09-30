@@ -124,18 +124,6 @@ export function Said({ s, p, children, big = false }: { s: SessionState; p: Play
   )
 }
 
-// One of you, busy: their avatar and what they're up to ("Guessing…"), or done.
-export function Doing({ s, p, finished, busy, done, big = false }: { s: SessionState; p: PlayerId; finished: boolean; busy: string; done: string; big?: boolean }) {
-  const isDone = finished
-  const doing = useDoing(s, p)
-  return (
-    <div className={'flex items-center justify-center gap-2 font-bold ' + (big ? 'text-xl' : 'text-base') + (isDone ? ' ' + inkOf(p) : ' text-fg/60')}>
-      <span className={isDone ? '' : 'animate-breathe'}><Avatar p={p} name={playerName(s, p)} size={big ? 'md' : 'sm'} /></span>
-      {isDone ? done : doing ? <span className="inline-flex items-center gap-1.5">{playerName(s, p)} is {doing}<TypingDots /></span> : busy}
-    </div>
-  )
-}
-
 // The round's letter, as a chunky tile.
 export function LetterTile({ letter, size = 'md' }: { letter: string; size?: 'sm' | 'md' | 'lg' }) {
   const box = { sm: 'w-12 h-12 text-3xl rounded-xl', md: 'w-16 h-16 text-5xl rounded-2xl', lg: 'w-28 h-28 sm:w-36 sm:h-36 text-8xl sm:text-9xl rounded-3xl' }[size]

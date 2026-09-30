@@ -12,7 +12,7 @@ export function bluffOptions(round: BluffRound, owner: PlayerId): { id: number; 
 }
 
 // The prompt as `reader` sees it, about `owner`: "Your worst ever present" to the person
-// it's about, "Rocko's worst ever present" to everyone else (and to a TV).
+// it's about, "Rocko's worst ever present" to everyone else.
 export function bluffPrompt(s: SessionState, round: BluffRound, owner: PlayerId, reader: PlayerId | null): string {
   return say(round.prompt, { self: reader === owner, subject: playerName(s, owner), partner: playerName(s, other(owner)) })
 }

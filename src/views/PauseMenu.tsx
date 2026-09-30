@@ -11,7 +11,7 @@ import { btnAccent, eyebrow } from '../ui/styles'
 import { leaveTo } from '../ui/back'
 
 // The button at the top right of every game screen. Mid-game it pauses the game for
-// both of you — the clock stops and the menu comes up on both phones (and the TV). At a
+// both of you — the clock stops and the menu comes up on both phones. At a
 // moment that can't be paused (the lobby, Stop the Clock's run) it just opens the menu
 // on this phone.
 export function PauseButton({ s, onOpenLocal }: { s: SessionState; onOpenLocal: () => void }) {

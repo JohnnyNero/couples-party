@@ -9,10 +9,9 @@ export type { Game } from '../engine/state'
 // carries it to the joining device.
 export type PlayMode = 'duo' | 'solo'
 
-// There used to be a TV mode too; an old link or save that asks for it plays on phones.
 export function resolveMode(search: string): PlayMode | null {
   const m = new URLSearchParams(search).get('mode')
-  return m === 'solo' ? 'solo' : m === 'duo' || m === 'screen' ? 'duo' : null
+  return m === 'solo' || m === 'duo' ? m : null
 }
 
 const GAMES: readonly Game[] = ['full', 'tonight', 'quick', 'list', 'likely', 'finger', 'mrmrs', 'wave', 'draw', 'clash', 'chain', 'bluff', 'meld', 'describe', 'circle', 'clock', 'spot', 'frenzy', 'follow', 'twist', 'higher', 'guess']

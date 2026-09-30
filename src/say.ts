@@ -31,7 +31,7 @@ export function say(template: string, v: Voice): string {
   return /^[A-Z]/.test(template) || /^\[[A-Z]/.test(template) ? out.charAt(0).toUpperCase() + out.slice(1) : out
 }
 
-// The plain "you" reading, for a screen with no one person reading it (a TV).
+// The plain "you" reading, for text with no one person reading it (Memories, say).
 export const asYou = (template: string, subject = 'you', partner = 'your partner') =>
   say(template, { self: true, subject, partner })
 

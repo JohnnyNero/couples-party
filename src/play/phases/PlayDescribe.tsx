@@ -4,7 +4,7 @@ import { other } from '../../engine/state'
 import { describeWord } from '../../engine/reducer'
 import { dispatch } from '../../net'
 import { playerName } from '../../views/list'
-import { Clock } from '../../screen/Clock'
+import { Clock } from '../../board/Clock'
 import { inkOf } from '../../ui/Avatar'
 import { eyebrow } from '../../ui/styles'
 

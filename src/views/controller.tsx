@@ -1,38 +1,40 @@
 import type { PlayerId, SessionState } from '../engine/state'
 import { phaseKey } from './phaseKey'
-import { PlayJoin } from '../play/phases/PlayJoin'
 import { PlayListPlace } from '../play/phases/PlayListPlace'
-import { PlayListReveal } from '../play/phases/PlayListReveal'
-import { PlayContinue } from '../play/phases/PlayContinue'
 import { PlayFingerRound } from '../play/phases/PlayFingerRound'
 import { PlayLikelyRound } from '../play/phases/PlayLikelyRound'
 import { PlayMmAnswer } from '../play/phases/PlayMmAnswer'
-import { PlayMmJudge } from '../play/phases/PlayMmJudge'
-import { PlayDrawReveal } from '../play/phases/PlayDrawReveal'
 import { PlayWaveClue } from '../play/phases/PlayWaveClue'
 import { PlayWaveGuess } from '../play/phases/PlayWaveGuess'
 import { PlayDrawSketch } from '../play/phases/PlayDrawSketch'
 import { PlayDrawGuess } from '../play/phases/PlayDrawGuess'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
-import { PlayIntro } from '../play/phases/PlayIntro'
 import { PlayCircleDraw } from '../play/phases/PlayCircleDraw'
 import { PlayClashWrite } from '../play/phases/PlayClashWrite'
-import { PlayClashReveal } from '../play/phases/PlayClashReveal'
 import { PlayChainTurn } from '../play/phases/PlayChainTurn'
 import { PlayFollow, PlayFrenzy, PlaySpot } from '../play/phases/PlayMinis'
 import { PlayGuess, PlayHigher, PlayTwist } from '../play/phases/PlayQuiz'
 import { PlayClockRun } from '../play/phases/PlayClockRun'
-import { HomeButton } from './HomeButton'
 import { PlayMeldWrite } from '../play/phases/PlayMeldWrite'
 import { PlayDescribe } from '../play/phases/PlayDescribe'
-import { ScreenDescribeReady } from '../screen/phases/ScreenDescribe'
 import { PlayBluffWrite } from '../play/phases/PlayBluffWrite'
 import { PlayBluffPick } from '../play/phases/PlayBluffPick'
-import { ScreenBluffReveal } from '../screen/phases/ScreenBluff'
 
-// This player's private controller for the current phase, shared by the phone
-// renderer (Play, screen mode) and the phones-only renderer (Duo). Shows only this
-// player's own input — never the other player's.
+// The phases with nothing private to ask either of you: the board gets the whole screen
+// (see Duo), so there's no controller for them.
+export const BOARD_ONLY: ReadonlySet<string> = new Set([
+  'JOIN', 'INTRO', 'LIST_INTRO', 'LIST_REVEAL', 'LIST_RESULT', 'LIKELY_REVEAL',
+  'LIKELY_RESULT', 'MM_JUDGE', 'MM_RESULT', 'LIGHTS_OUT', 'FINGER_REVEAL', 'FINGER_RESULT',
+  'WAVE_REVEAL', 'WAVE_RESULT', 'DRAW_REVEAL', 'DRAW_RESULT', 'CLASH_REVEAL', 'CLASH_RESULT',
+  'CHAIN_END', 'CHAIN_RESULT', 'BLUFF_REVEAL', 'BLUFF_RESULT', 'MELD_REVEAL', 'MELD_RESULT',
+  'DESCRIBE_READY', 'DESCRIBE_RESULT', 'CIRCLE_REVEAL', 'CIRCLE_RESULT', 'CLOCK_READY', 'CLOCK_REVEAL',
+  'CLOCK_RESULT', 'SPOT_READY', 'SPOT_REVEAL', 'SPOT_RESULT', 'FRENZY_READY', 'FRENZY_REVEAL',
+  'FRENZY_RESULT', 'FOLLOW_REVEAL', 'FOLLOW_RESULT', 'TWIST_REVEAL', 'TWIST_RESULT', 'HL_REVEAL',
+  'HL_RESULT', 'GUESS_REVEAL', 'GUESS_RESULT', 'DECIDER_READY', 'DECIDER_REVEAL', 'DONE',
+])
+
+// This player's private controller for the current phase: only this player's own
+// input, never the other player's.
 export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
   return (
     <div key={phaseKey(s)} className="h-full w-full animate-fade-up">
@@ -43,67 +45,25 @@ export function Controller({ s, me }: { s: SessionState; me: PlayerId }) {
 
 function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
   switch (s.phase) {
-    case 'JOIN':
-      return <PlayJoin s={s} me={me} />
-    case 'INTRO':
-      return <PlayIntro s={s} me={me} />
-    case 'LIST_INTRO':
-      return <PlayWaiting label="Eyes on the board" />
     case 'LIST_PLACE':
       return <PlayListPlace s={s} me={me} />
-    case 'LIST_REVEAL':
-      return <PlayListReveal s={s} me={me} />
     case 'LIKELY_ROUND':
       return <PlayLikelyRound s={s} me={me} />
-    case 'LIKELY_REVEAL':
-      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'MM_ANSWER':
       return <PlayMmAnswer s={s} me={me} />
-    case 'MM_JUDGE':
-      return <PlayMmJudge s={s} me={me} />
-    case 'LIGHTS_OUT':
-      return <PlayContinue s={s} me={me} label="Goodnight" />
-    case 'LIST_RESULT':
-    case 'LIKELY_RESULT':
-    case 'MM_RESULT':
-    case 'FINGER_RESULT':
-    case 'WAVE_RESULT':
-    case 'DRAW_RESULT':
-    case 'CIRCLE_RESULT':
-    case 'CLOCK_RESULT':
-    case 'SPOT_RESULT':
-    case 'FRENZY_RESULT':
-    case 'FOLLOW_RESULT':
-    case 'TWIST_RESULT':
-    case 'HL_RESULT':
-    case 'GUESS_RESULT':
-    case 'CLASH_RESULT':
-    case 'CHAIN_RESULT':
-    case 'BLUFF_RESULT':
-    case 'MELD_RESULT':
-    case 'DESCRIBE_RESULT':
-      return <PlayContinue s={s} me={me} />
-    case 'DESCRIBE_READY':
-      return <div className="h-full flex items-center p-5"><ScreenDescribeReady s={s} /></div>
     case 'DESCRIBE_RUN':
       return <PlayDescribe s={s} me={me} />
     case 'MELD_WRITE':
       return <PlayMeldWrite s={s} me={me} />
-    case 'MELD_REVEAL':
-      return <PlayWaiting label="Eyes on the board" sub="Did you meet?" />
     case 'BLUFF_WRITE':
       return <PlayBluffWrite s={s} me={me} />
     case 'BLUFF_PICK':
       return <PlayBluffPick s={s} me={me} />
     // The truth, on the phone too: it's where the tap to move on is.
-    case 'BLUFF_REVEAL':
-      return <div className="h-full overflow-y-auto p-5 flex flex-col"><div className="my-auto w-full"><ScreenBluffReveal s={s} /></div></div>
     case 'CHAIN_TURN':
       return <PlayChainTurn s={s} me={me} />
     case 'CLASH_WRITE':
       return <PlayClashWrite s={s} me={me} />
-    case 'CLASH_REVEAL':
-      return <PlayClashReveal s={s} me={me} />
     case 'CIRCLE_DRAW':
       return <PlayCircleDraw s={s} me={me} />
     case 'SPOT_RUN':
@@ -119,36 +79,20 @@ function ControllerContent({ s, me }: { s: SessionState; me: PlayerId }) {
     case 'FOLLOW_SHOW':
     case 'FOLLOW_PLAY':
       return <PlayFollow s={s} me={me} />
-    case 'CLOCK_READY':
-    case 'DECIDER_READY':
-      return <PlayWaiting label="Get ready…" sub="Your Stop button is coming." />
     case 'CLOCK_RUN':
     case 'DECIDER_RUN':
       return <PlayClockRun s={s} me={me} />
     case 'FINGER_ROUND':
       return <PlayFingerRound s={s} me={me} />
-    case 'FINGER_REVEAL':
-      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'WAVE_CLUE':
       return <PlayWaveClue s={s} me={me} />
     case 'WAVE_GUESS':
       return <PlayWaveGuess s={s} me={me} />
-    case 'WAVE_REVEAL':
-      return <PlayWaiting label="Eyes on the board" sub="Here comes the reveal." />
     case 'DRAW_SKETCH':
       return <PlayDrawSketch s={s} me={me} />
     case 'DRAW_GUESS':
       return <PlayDrawGuess s={s} me={me} />
-    case 'DRAW_REVEAL':
-      return <PlayDrawReveal s={s} me={me} />
-    case 'DONE':
-      return (
-        <div className="h-full flex flex-col">
-          <div className="flex-1 min-h-0"><PlayWaiting label="That’s the night" sub="Thanks for playing." /></div>
-          <div className="px-5 pb-6"><HomeButton /></div>
-        </div>
-      )
     default:
-      return <PlayWaiting label="Eyes on the board" />
+      return <PlayWaiting label="One moment…" />
   }
 }

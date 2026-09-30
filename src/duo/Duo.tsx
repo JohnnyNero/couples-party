@@ -8,14 +8,14 @@ import { slide } from '../ui/transition'
 import { useActivitySender } from '../views/useActivitySender'
 import { useWakeLock } from '../ui/wakeLock'
 import { BoardStage } from '../views/board'
-import { Controller } from '../views/controller'
+import { BOARD_ONLY, Controller } from '../views/controller'
 import { GameHeader } from '../views/GameHeader'
 import { DebugBar } from '../debug/DebugBar'
 import { Bot } from '../bot/Bot'
 import { resolveBot, resolveMode } from '../start/mode'
 import { PlayWaiting } from '../play/phases/PlayWaiting'
 import { useRecordSession } from '../store/useRecordSession'
-import { ScreenLightsOut } from '../screen/phases/ScreenLightsOut'
+import { BoardLightsOut } from '../board/phases/BoardLightsOut'
 import { AwayScreen } from '../views/AwayScreen'
 import { JoinedTheirs } from '../views/JoinedTheirs'
 
@@ -25,32 +25,6 @@ import { JoinedTheirs } from '../views/JoinedTheirs'
 // — so only the controller shows), or it doesn't (join, a reveal, a result — nothing
 // to ask, so the board gets the whole screen). They never stack: that's what read as
 // two devices squeezed onto one.
-const BOARD_ONLY = new Set([
-  'JOIN', 'INTRO',
-  'LIST_INTRO', 'LIST_REVEAL', 'LIST_RESULT',
-  'LIKELY_REVEAL', 'LIKELY_RESULT',
-  'MM_JUDGE', 'MM_RESULT',
-  'LIGHTS_OUT',
-  'FINGER_REVEAL', 'FINGER_RESULT',
-  'WAVE_REVEAL', 'WAVE_RESULT',
-  'DRAW_REVEAL', 'DRAW_RESULT',
-  'CLASH_REVEAL', 'CLASH_RESULT',
-  'CHAIN_END', 'CHAIN_RESULT',
-  'BLUFF_REVEAL', 'BLUFF_RESULT',
-  'MELD_REVEAL', 'MELD_RESULT',
-  'DESCRIBE_READY', 'DESCRIBE_RESULT',
-  'CIRCLE_REVEAL', 'CIRCLE_RESULT',
-  'CLOCK_READY', 'CLOCK_REVEAL', 'CLOCK_RESULT',
-  'SPOT_READY', 'SPOT_REVEAL', 'SPOT_RESULT',
-  'FRENZY_READY', 'FRENZY_REVEAL', 'FRENZY_RESULT',
-  'FOLLOW_REVEAL', 'FOLLOW_RESULT',
-  'TWIST_REVEAL', 'TWIST_RESULT',
-  'HL_REVEAL', 'HL_RESULT',
-  'GUESS_REVEAL', 'GUESS_RESULT',
-  'DECIDER_READY', 'DECIDER_REVEAL',
-  'DONE',
-])
-
 // What's on screen trails the live session by a frame at each new screen: the change is
 // handed to a screen transition, which snapshots the old screen first and then deals the
 // new one in. Anything smaller (a tap, a tick) goes straight through.
@@ -90,7 +64,7 @@ export function Duo() {
   if (s.phase === 'LIGHTS_OUT') {
     return (
       <div className="h-full w-full flex flex-col">
-        <div className="flex-1 min-h-0"><ScreenLightsOut s={s} /></div>
+        <div className="flex-1 min-h-0"><BoardLightsOut s={s} /></div>
         {debug && <DebugBar s={s} />}
         {bot && <Bot />}
       </div>

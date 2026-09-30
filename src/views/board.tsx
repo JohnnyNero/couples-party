@@ -1,47 +1,35 @@
-import { ScreenDescribeReady, ScreenDescribeRun } from '../screen/phases/ScreenDescribe'
-import { ScreenMeldReveal, ScreenMeldWrite } from '../screen/phases/ScreenMeld'
+import { BoardDescribeReady } from '../board/phases/BoardDescribe'
+import { BoardMeldReveal } from '../board/phases/BoardMeld'
 import { HomeButton } from './HomeButton'
-import { ScreenBluffPick, ScreenBluffReveal, ScreenBluffWrite } from '../screen/phases/ScreenBluff'
+import { BoardBluffReveal } from '../board/phases/BoardBluff'
 import type { SessionState } from '../engine/state'
 import { GAME_LABELS, gameOfPhase, roundsFor } from '../engine/roster'
 import { phaseKey } from './phaseKey'
 import { Scoreboard } from './Scoreboard'
-import { ScreenJoin } from '../screen/phases/ScreenJoin'
-import { ScreenIntro } from '../screen/phases/ScreenIntro'
-import { ScreenListIntro } from '../screen/phases/ScreenListIntro'
-import { ScreenListPlace } from '../screen/phases/ScreenListPlace'
-import { ScreenListReveal } from '../screen/phases/ScreenListReveal'
-import { ScreenListResult } from '../screen/phases/ScreenListResult'
-import { ScreenLikelyRound } from '../screen/phases/ScreenLikelyRound'
-import { ScreenLikelyReveal } from '../screen/phases/ScreenLikelyReveal'
-import { ScreenLikelyResult } from '../screen/phases/ScreenLikelyResult'
-import { ScreenMmAnswer } from '../screen/phases/ScreenMmAnswer'
-import { ScreenMmJudge } from '../screen/phases/ScreenMmJudge'
-import { ScreenMmResult } from '../screen/phases/ScreenMmResult'
-import { ScreenLightsOut } from '../screen/phases/ScreenLightsOut'
-import { ScreenFingerRound } from '../screen/phases/ScreenFingerRound'
-import { ScreenFingerReveal } from '../screen/phases/ScreenFingerReveal'
-import { ScreenFingerResult } from '../screen/phases/ScreenFingerResult'
-import { ScreenWaveClue } from '../screen/phases/ScreenWaveClue'
-import { ScreenWaveGuess } from '../screen/phases/ScreenWaveGuess'
-import { ScreenWaveReveal } from '../screen/phases/ScreenWaveReveal'
-import { ScreenWaveResult } from '../screen/phases/ScreenWaveResult'
-import { ScreenDrawSketch } from '../screen/phases/ScreenDrawSketch'
-import { ScreenDrawGuess } from '../screen/phases/ScreenDrawGuess'
-import { ScreenDrawReveal } from '../screen/phases/ScreenDrawReveal'
-import { ScreenDrawResult } from '../screen/phases/ScreenDrawResult'
-import { ScreenCircleDraw } from '../screen/phases/ScreenCircleDraw'
-import { ScreenClashWrite } from '../screen/phases/ScreenClashWrite'
-import { ScreenClashReveal } from '../screen/phases/ScreenClashReveal'
-import { ScreenChainTurn } from '../screen/phases/ScreenChainTurn'
-import { ScreenChainEnd } from '../screen/phases/ScreenChainEnd'
-import { ScreenCircleReveal } from '../screen/phases/ScreenCircleReveal'
-import { ScreenGuessReveal, ScreenHlReveal, ScreenTwistReveal } from '../screen/phases/ScreenQuiz'
-import { ScreenFollowReveal, ScreenFrenzyReady, ScreenFrenzyReveal, ScreenSpotReady, ScreenSpotReveal } from '../screen/phases/ScreenMinis'
-import { ScreenFillerResult } from '../screen/phases/ScreenFillerResult'
-import { ScreenClockReady } from '../screen/phases/ScreenClockReady'
-import { ScreenClockRun } from '../screen/phases/ScreenClockRun'
-import { ScreenClockReveal } from '../screen/phases/ScreenClockReveal'
+import { BoardJoin } from '../board/phases/BoardJoin'
+import { BoardIntro } from '../board/phases/BoardIntro'
+import { BoardListIntro } from '../board/phases/BoardListIntro'
+import { BoardListReveal } from '../board/phases/BoardListReveal'
+import { BoardListResult } from '../board/phases/BoardListResult'
+import { BoardLikelyReveal } from '../board/phases/BoardLikelyReveal'
+import { BoardLikelyResult } from '../board/phases/BoardLikelyResult'
+import { BoardMmJudge } from '../board/phases/BoardMmJudge'
+import { BoardMmResult } from '../board/phases/BoardMmResult'
+import { BoardLightsOut } from '../board/phases/BoardLightsOut'
+import { BoardFingerReveal } from '../board/phases/BoardFingerReveal'
+import { BoardFingerResult } from '../board/phases/BoardFingerResult'
+import { BoardWaveReveal } from '../board/phases/BoardWaveReveal'
+import { BoardWaveResult } from '../board/phases/BoardWaveResult'
+import { BoardDrawReveal } from '../board/phases/BoardDrawReveal'
+import { BoardDrawResult } from '../board/phases/BoardDrawResult'
+import { BoardClashReveal } from '../board/phases/BoardClashReveal'
+import { BoardChainEnd } from '../board/phases/BoardChainEnd'
+import { BoardCircleReveal } from '../board/phases/BoardCircleReveal'
+import { BoardGuessReveal, BoardHlReveal, BoardTwistReveal } from '../board/phases/BoardQuiz'
+import { BoardFollowReveal, BoardFrenzyReady, BoardFrenzyReveal, BoardSpotReady, BoardSpotReveal } from '../board/phases/BoardMinis'
+import { BoardFillerResult } from '../board/phases/BoardFillerResult'
+import { BoardClockReady } from '../board/phases/BoardClockReady'
+import { BoardClockReveal } from '../board/phases/BoardClockReveal'
 
 // The public "board" content for the current phase, shared by the shared-screen
 // renderer (Screen) and the phones-only renderer (Duo). Holds no logic and shows
@@ -97,128 +85,95 @@ export function BoardStage({ s }: { s: SessionState }) {
 function BoardStageContent({ s }: { s: SessionState }) {
   switch (s.phase) {
     case 'JOIN':
-      return <ScreenJoin s={s} />
+      return <BoardJoin s={s} />
     case 'INTRO':
-      return <ScreenIntro s={s} />
+      return <BoardIntro s={s} />
     case 'LIST_INTRO':
-      return <ScreenListIntro s={s} />
-    case 'LIST_PLACE':
-      return <ScreenListPlace s={s} />
+      return <BoardListIntro s={s} />
     case 'LIST_REVEAL':
-      return <ScreenListReveal s={s} />
+      return <BoardListReveal s={s} />
     case 'LIST_RESULT':
-      return <ScreenListResult s={s} />
-    case 'LIKELY_ROUND':
-      return <ScreenLikelyRound s={s} />
+      return <BoardListResult s={s} />
     case 'LIKELY_REVEAL':
-      return <ScreenLikelyReveal s={s} />
+      return <BoardLikelyReveal s={s} />
     case 'LIKELY_RESULT':
-      return <ScreenLikelyResult s={s} />
-    case 'MM_ANSWER':
-      return <ScreenMmAnswer s={s} />
+      return <BoardLikelyResult s={s} />
     case 'MM_JUDGE':
-      return <ScreenMmJudge s={s} />
+      return <BoardMmJudge s={s} />
     case 'MM_RESULT':
-      return <ScreenMmResult s={s} />
+      return <BoardMmResult s={s} />
     case 'LIGHTS_OUT':
-      return <ScreenLightsOut s={s} />
-    case 'FINGER_ROUND':
-      return <ScreenFingerRound s={s} />
+      return <BoardLightsOut s={s} />
     case 'FINGER_REVEAL':
-      return <ScreenFingerReveal s={s} />
+      return <BoardFingerReveal s={s} />
     case 'FINGER_RESULT':
-      return <ScreenFingerResult s={s} />
-    case 'WAVE_CLUE':
-      return <ScreenWaveClue s={s} />
-    case 'WAVE_GUESS':
-      return <ScreenWaveGuess s={s} />
+      return <BoardFingerResult s={s} />
     case 'WAVE_REVEAL':
-      return <ScreenWaveReveal s={s} />
+      return <BoardWaveReveal s={s} />
     case 'WAVE_RESULT':
-      return <ScreenWaveResult s={s} />
-    case 'DRAW_SKETCH':
-      return <ScreenDrawSketch s={s} />
-    case 'DRAW_GUESS':
-      return <ScreenDrawGuess s={s} />
+      return <BoardWaveResult s={s} />
     case 'DRAW_REVEAL':
-      return <ScreenDrawReveal s={s} />
+      return <BoardDrawReveal s={s} />
     case 'DRAW_RESULT':
-      return <ScreenDrawResult s={s} />
-    case 'CLASH_WRITE':
-      return <ScreenClashWrite s={s} />
+      return <BoardDrawResult s={s} />
     case 'CLASH_REVEAL':
-      return <ScreenClashReveal s={s} />
+      return <BoardClashReveal s={s} />
     case 'CLASH_RESULT':
       return <Scoreboard s={s} title="Category Clash · done" />
-    case 'CHAIN_TURN':
-      return <ScreenChainTurn s={s} />
     case 'CHAIN_END':
-      return <ScreenChainEnd s={s} />
+      return <BoardChainEnd s={s} />
     case 'CHAIN_RESULT':
       return <Scoreboard s={s} title="Word Chain · done" />
-    case 'BLUFF_WRITE':
-      return <ScreenBluffWrite s={s} />
-    case 'BLUFF_PICK':
-      return <ScreenBluffPick s={s} />
     case 'BLUFF_REVEAL':
-      return <ScreenBluffReveal s={s} />
+      return <BoardBluffReveal s={s} />
     case 'BLUFF_RESULT':
       return <Scoreboard s={s} title="Two Lies & a Truth · done" />
-    case 'MELD_WRITE':
-      return <ScreenMeldWrite s={s} />
     case 'MELD_REVEAL':
-      return <ScreenMeldReveal s={s} />
+      return <BoardMeldReveal s={s} />
     case 'MELD_RESULT':
       return <Scoreboard s={s} title="Mind Meld · done" />
     case 'DESCRIBE_READY':
-      return <ScreenDescribeReady s={s} />
-    case 'DESCRIBE_RUN':
-      return <ScreenDescribeRun s={s} />
+      return <BoardDescribeReady s={s} />
     case 'DESCRIBE_RESULT':
       return <Scoreboard s={s} title="Describe It · done" />
-    case 'CIRCLE_DRAW':
-      return <ScreenCircleDraw s={s} />
     case 'CIRCLE_REVEAL':
-      return <ScreenCircleReveal s={s} />
+      return <BoardCircleReveal s={s} />
     case 'CIRCLE_RESULT':
-      return <ScreenFillerResult s={s} kind="circle" />
+      return <BoardFillerResult s={s} kind="circle" />
     case 'CLOCK_READY':
     case 'DECIDER_READY':
-      return <ScreenClockReady s={s} />
-    case 'CLOCK_RUN':
-    case 'DECIDER_RUN':
-      return <ScreenClockRun s={s} />
+      return <BoardClockReady s={s} />
     case 'CLOCK_REVEAL':
     case 'DECIDER_REVEAL':
-      return <ScreenClockReveal s={s} />
+      return <BoardClockReveal s={s} />
     case 'CLOCK_RESULT':
-      return <ScreenFillerResult s={s} kind="clock" />
+      return <BoardFillerResult s={s} kind="clock" />
     case 'SPOT_READY':
-      return <ScreenSpotReady s={s} />
+      return <BoardSpotReady s={s} />
     case 'SPOT_REVEAL':
-      return <ScreenSpotReveal s={s} />
+      return <BoardSpotReveal s={s} />
     case 'SPOT_RESULT':
-      return <ScreenFillerResult s={s} kind="spot" />
+      return <BoardFillerResult s={s} kind="spot" />
     case 'FRENZY_READY':
-      return <ScreenFrenzyReady s={s} />
+      return <BoardFrenzyReady s={s} />
     case 'FRENZY_REVEAL':
-      return <ScreenFrenzyReveal s={s} />
+      return <BoardFrenzyReveal s={s} />
     case 'FRENZY_RESULT':
-      return <ScreenFillerResult s={s} kind="frenzy" />
+      return <BoardFillerResult s={s} kind="frenzy" />
     case 'FOLLOW_REVEAL':
-      return <ScreenFollowReveal s={s} />
+      return <BoardFollowReveal s={s} />
     case 'FOLLOW_RESULT':
-      return <ScreenFillerResult s={s} kind="follow" />
+      return <BoardFillerResult s={s} kind="follow" />
     case 'TWIST_REVEAL':
-      return <ScreenTwistReveal s={s} />
+      return <BoardTwistReveal s={s} />
     case 'TWIST_RESULT':
       return <Scoreboard s={s} title="Tongue Twisters · done" />
     case 'HL_REVEAL':
-      return <ScreenHlReveal s={s} />
+      return <BoardHlReveal s={s} />
     case 'HL_RESULT':
       return <Scoreboard s={s} title="Higher or Lower · done" />
     case 'GUESS_REVEAL':
-      return <ScreenGuessReveal s={s} />
+      return <BoardGuessReveal s={s} />
     case 'GUESS_RESULT':
       return <Scoreboard s={s} title="Guesstimate · done" />
     case 'DONE':
@@ -230,6 +185,7 @@ function BoardStageContent({ s }: { s: SessionState }) {
           <HomeButton />
         </>
       )
+
     default:
       return <div className="text-2xl uppercase text-fg/50">{s.phase}</div>
   }

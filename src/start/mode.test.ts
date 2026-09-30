@@ -4,7 +4,6 @@ import { resolveBot, resolveGame, resolveMode } from './mode'
 describe('resolveMode', () => {
   it('returns duo for ?mode=duo', () => expect(resolveMode('?mode=duo')).toBe('duo'))
   it('returns solo for ?mode=solo', () => expect(resolveMode('?mode=solo')).toBe('solo'))
-  it('plays an old TV link on phones', () => expect(resolveMode('?mode=screen')).toBe('duo'))
   it('returns null when the param is absent', () => expect(resolveMode('')).toBe(null))
   it('returns null for an unknown value', () => expect(resolveMode('?mode=xyz')).toBe(null))
   it('finds mode alongside other params (e.g. a shared link)', () =>

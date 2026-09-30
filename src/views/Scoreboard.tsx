@@ -44,7 +44,7 @@ export function Scoreboard({
   const called = !next || next === 'lights'
   // A level night doesn't end level: the tap goes to a tiebreaker first.
   const decider = called && s.phase !== 'DONE' && needsDecider(s)
-  // A TV has nobody to tap it, and once the session is DONE the tap would do nothing.
+  // Not before this phone has its seat, and once the session is DONE the tap would do nothing.
   const canContinue = me !== null && s.phase !== 'DONE'
   const lead: PlayerId | null = total.A === total.B ? null : total.A > total.B ? 'A' : 'B'
   // What the game just finished added, floated up off the totals once they've counted.

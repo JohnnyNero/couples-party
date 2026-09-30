@@ -15,6 +15,17 @@ Decisions already made, so they survive between sessions. Newest at the top.
 3. Maybe: a small alert when someone in one of your *other* couples is waiting in a
    lobby or has nudged you — today you only see it once you switch to that couple.
 
+## Done: the TV system deleted
+
+The TV mode had already been switched off (games are two phones only); now its code is
+gone too. The board the phones show for reveals and results lives in `src/board/`
+(it was `src/screen/`, named for the TV); the TV's spectator views of the moments you're
+both answering, and the phone screens that went with a TV, are deleted. `BOARD_ONLY` in
+`src/views/controller.tsx` says which stages the board draws; `views/coverage.test.ts`
+checks every stage is drawn by exactly one of the board or the controller. Old
+`?mode=screen` links no longer open a game. (The database's `nudge()` still accepts a
+"screen" mode; nothing sends it.)
+
 ## Done: more than one couple (migration 0028)
 
 You can be in several couples (a partner, a friend, a sibling, a parent) and switch
@@ -79,7 +90,7 @@ Email goes through Gmail SMTP for now, since there's no domain yet.
 - **Playing together**: save a game and carry on later; nudge your partner from the
   lobby (0019), and they see you waiting without one; a game closes at its end so the
   next starts cleanly; a two-phone simulator (`src/net/fakePlayroom.ts`) and fixes for
-  the races it found. The TV mode was removed.
+  the races it found. The TV mode was switched off.
 - **Stats** from the Today scoreboard (0020); **the crossword**: weekly, built from your
   answers, solved separately, with an archive (0021–0024).
 - **Onboarding**: a tour, setting up, inviting your partner, and a getting-started list.

@@ -283,7 +283,7 @@ export function themeGlyph(themeText: string): Glyph {
 }
 
 // A square card: the icon inside a ring, sized by its container rather than a fixed
-// pixel value so the same component works on a phone and on a TV.
+// pixel value, so it fits wherever it's put.
 export function ThemeIcon({ themeText, className = '' }: { themeText: string; className?: string }) {
   const Glyph = themeGlyph(themeText)
   return (
