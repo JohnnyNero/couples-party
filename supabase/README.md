@@ -90,6 +90,10 @@ SQL Editor → New query → paste the whole file → **Run**.
    `active_personas`, `my_couples`, `switch_couple`, `add_couple`; your name and photo
    are shared across your couples, and deleting your account takes all of them. Up to
    ten couples each.
+29. `migrations/0029_leaderboard.sql` — the couple leaderboard: `friend_leaderboard(date)`
+   ranks you and your friend couples on this week's points (puzzle points plus the best
+   Today-game team score each day, Monday to Sunday). Only totals are shown. Adds one
+   private helper, `couple_week_points`. No tables change.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.
@@ -127,7 +131,7 @@ each of which checks who is calling and only touches that person's couple (the o
 they're using, if they're in several). Helpers that would give something away are
 revoked from the public roles, so they can't be called directly either. What a friend
 couple sees is limited to names, photos, streak, today's team score and how many of
-today's puzzles are solved — never answers.
+today's puzzles are solved and their points this week — never answers.
 
 Never commit the **service_role** key. It bypasses all of the above.
 

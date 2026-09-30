@@ -4,16 +4,26 @@ Decisions already made, so they survive between sessions. Newest at the top.
 
 ## Next
 
-1. **Couple leaderboards**, among friend couples.
-2. **Release readiness**, still open from the release critique:
+1. **Release readiness**, still open from the release critique:
    - pairing codes that expire;
    - the room code left out of links the lobby shares;
    - strong randomness for the older codes (pairing, room), as friend codes already use;
    - register a Playroom game id;
    - a privacy notice, error reporting, hiding the testing-only links, and a domain of
      our own (which would also let email move from Gmail to a proper sender).
-3. Maybe: a small alert when someone in one of your *other* couples is waiting in a
+2. Maybe: a small alert when someone in one of your *other* couples is waiting in a
    lobby or has nudged you — today you only see it once you switch to that couple.
+
+## Done: couple leaderboard (migration 0029)
+
+At the top of the Friends tab: you and your friend couples ranked on this week's points,
+resetting every Monday. A couple's points are both partners' puzzle points plus, for each
+day, the best Today-game team score of that day's saves. Ties share a rank. Only the total
+is shown, so it reveals no more than the friend card. Worked out on demand by
+`friend_leaderboard()`, never stored; the section hides if the server doesn't have it yet.
+Left out on purpose: last week's winner or crown, streak and all-time boards, a global
+board, and "someone overtook you" alerts. Migration 0029 has to be run by hand in the
+Supabase SQL Editor.
 
 ## Done: the TV system deleted
 
