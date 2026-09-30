@@ -65,10 +65,10 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
             title={start === 'save' ? 'Save your account' : start === 'signin' ? 'Sign in' : 'Create your account'}
             sub={
               start === 'save'
-                ? 'Add your email so you never lose your puzzles, streak and Memories — and can sign in on any phone.'
+                ? 'So you never lose your puzzles, streak and Memories — and can sign in on any phone.'
                 : start === 'signin'
-                  ? 'Your email, and we’ll send you a code. New here? The same gets you started.'
-                  : 'Your email, so your puzzles, streak and Memories are safe — and you can sign in on any phone. Had an account before? The same signs you back in.'
+                  ? 'New here? The same gets you started.'
+                  : 'So your puzzles, streak and Memories are safe — and you can sign in on any phone. Had an account before? The same signs you back in.'
             }
             onDone={() => void refreshProfile().then((p) => {
               // Signed in to an account that's already set up: nothing more to do here.

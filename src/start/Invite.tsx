@@ -83,7 +83,7 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
         ) : step.kind === 'account' ? (
           <SignIn
             title={`Almost there, ${name.trim() || 'you'}`}
-            sub={`Your email, so you and ${from} never lose each other — and you can sign in on any phone.`}
+            sub={`An account, so you and ${from} never lose each other — and you can sign in on any phone.`}
             onDone={() => void join()}
             onLater={() => setStep({ kind: 'form' })}
             later="Back"

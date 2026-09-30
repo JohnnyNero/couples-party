@@ -20,6 +20,7 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [google, setGoogle] = useState(false)
+  const [useEmail, setUseEmail] = useState(false)
   const codeBox = useRef<HTMLInputElement>(null)
   useEffect(() => { void providers().then((p) => setGoogle(p.google)) }, [])
   useEffect(() => { if (sent) codeBox.current?.focus() }, [sent])
@@ -54,27 +55,33 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
 
       {!sent ? (
         <>
-          <label className="flex flex-col gap-1.5">
-            <span className={eyebrow}>Your email</span>
-            <input
-              className={field}
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && valid) void ask() }}
-              placeholder="you@example.com"
-            />
-          </label>
-          <button className={btnAccent} onClick={() => void ask()} disabled={busy || !valid}>
-            {busy ? 'Sending…' : 'Send me a code'}
-          </button>
+          {/* Google first when it's on: one tap, and it works for everyone today. Email
+              sits behind it until asked for. */}
           {google && (
+            <button className={btnAccent + ' inline-flex items-center justify-center gap-3'} onClick={() => void run(withGoogle)} disabled={busy}>
+              <span className="w-8 h-8 rounded-full bg-white inline-flex items-center justify-center"><GoogleMark /></span> Continue with Google
+            </button>
+          )}
+          {google && !useEmail ? (
+            <button onClick={() => setUseEmail(true)} className="min-h-[44px] text-sm font-bold text-fg/55">Use my email instead</button>
+          ) : (
             <>
-              <div className="flex items-center gap-3 text-xs font-bold text-fg/40"><span className="flex-1 h-px bg-fg/15" />or<span className="flex-1 h-px bg-fg/15" /></div>
-              <button className={btnOutline + ' inline-flex items-center justify-center gap-3'} onClick={() => void run(withGoogle)} disabled={busy}>
-                <GoogleMark /> Continue with Google
+              {google && <div className="flex items-center gap-3 text-xs font-bold text-fg/40"><span className="flex-1 h-px bg-fg/15" />or<span className="flex-1 h-px bg-fg/15" /></div>}
+              <label className="flex flex-col gap-1.5">
+                <span className={eyebrow}>Your email</span>
+                <input
+                  className={field}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && valid) void ask() }}
+                  placeholder="you@example.com"
+                />
+              </label>
+              <button className={google ? btnOutline : btnAccent} onClick={() => void ask()} disabled={busy || !valid}>
+                {busy ? 'Sending…' : 'Send me a code'}
               </button>
             </>
           )}
@@ -106,7 +113,7 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
 
       {note && <div className="text-sm font-bold text-pa-ink text-center" role="alert">{note}</div>}
       <p className="mt-auto text-center text-xs text-fg/45 leading-snug">
-        No password — just a code each time you sign in on a new phone. We only use your email to sign you in.
+        No password to remember. We only use your account to sign you in — never to email you anything else.
       </p>
       {onLater && !sent && <button onClick={onLater} className="-mt-3 min-h-[44px] text-sm font-bold text-fg/45">{later}</button>}
     </div>
