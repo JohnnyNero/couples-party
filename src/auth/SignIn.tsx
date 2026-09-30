@@ -98,7 +98,7 @@ export function SignIn({ title, sub, onDone, onLater, later = 'Not now' }: {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
               onKeyDown={(e) => { if (e.key === 'Enter' && code.length >= 6) void confirm() }}
-              placeholder="••••••"
+              placeholder="••••••••"
             />
           </label>
           <button className={btnAccent} onClick={() => void confirm()} disabled={busy || code.length < 6}>
