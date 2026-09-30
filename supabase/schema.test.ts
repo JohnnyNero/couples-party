@@ -1109,6 +1109,13 @@ describe('more than one couple', () => {
     expect((await call(ALEX, 'profile')).partner.name).toBe('Samuel')
     expect((await call(EVE, 'profile')).partner.name).toBe('Samuel')
     await call(SAM, 'set_name', ['Sam'])
+    await call(SAM, 'set_photo', ['data:image/png;base64,AAAA'])
+    expect((await call(EVE, 'profile')).partner.photo).toBe('data:image/png;base64,AAAA')
+    await call(SAM, 'add_couple')
+    await call(SAM, 'create_couple', ['Sam']) // a new couple: the photo comes too
+    expect((await call(SAM, 'profile')).me.photo).toBe('data:image/png;base64,AAAA')
+    await call(SAM, 'leave_couple')
+    await call(SAM, 'switch_couple', [withAlex])
   })
 
   it('unpairing ends only the couple you’re using, and moves you to another', async () => {

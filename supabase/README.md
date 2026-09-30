@@ -62,6 +62,10 @@ SQL Editor → New query → paste the whole file → **Run**.
    a friend sees of you (names, photos, streak, today's score, puzzles solved).
 27. `migrations/0027_rude.sql` — each couple's rude-questions switch (`couples.rude`,
    `set_rude`, and `profile()` reporting it). Existing couples start on, new ones off.
+28. `migrations/0028_many_couples.sql` — being in more than one couple. Each couple
+   you're in is a "persona" (your first is your own id); `person()` answers with the
+   one you're using, so the games' functions don't change. Adds `my_couples`,
+   `switch_couple`, `add_couple`.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

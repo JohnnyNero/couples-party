@@ -312,6 +312,8 @@ async function rpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<T
 function friendly(message: string): string {
   if (/pair first/.test(message)) return 'Pair up with your partner first — friends are couple to couple.'
   if (/that is you/.test(message)) return 'That’s your own code!'
+  if (/too many couples/.test(message)) return 'That’s ten couples — the most there can be.'
+  if (/not your couple/.test(message)) return 'That couple isn’t one of yours.'
   if (/too many friends/.test(message)) return 'That’s the most friends a couple can have.'
   if (/not in a couple/.test(message)) return 'Pair up first.'
   if (/no such code/.test(message)) return "That code didn't work — check it with them?"
@@ -347,9 +349,12 @@ export type Person = { name: string; photo: string | null }
 // `linked`: this device was linked to you from another one (migration 0015);
 // `devices`: how many other devices you have linked.
 export type Profile =
-  | { state: 'single'; linked?: boolean }
-  | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number; rude?: boolean }
-  | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number; rude?: boolean }
+  | { state: 'single'; linked?: boolean; couples?: number }
+  | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number; rude?: boolean; couples?: number }
+  | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number; rude?: boolean; couples?: number }
+
+// One of the couples you're in (migration 0028); `active` is the one you're using.
+export type CoupleEntry = { id: string; active: boolean; state: 'waiting' | 'paired'; me: Person; partner: Person | null; since: string }
 
 // Friend couples (migration 0026): what a friend sees of a couple — never answers.
 export type FriendCard = {
@@ -374,6 +379,9 @@ export const api = {
   setName: (name: string) => rpc<void>('set_name', { p_name: name }),
   setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
   setRude: (on: boolean) => rpc<void>('set_rude', { p_on: on }),
+  myCouples: () => rpc<CoupleEntry[]>('my_couples'),
+  switchCouple: (id: string) => rpc<void>('switch_couple', { p_id: id }),
+  addCouple: () => rpc<void>('add_couple'),
   friendCode: () => rpc<string>('friend_code'),
   newFriendCode: () => rpc<string>('new_friend_code'),
   friendPreview: (code: string) => rpc<FriendPreview>('friend_preview', { p_code: code }),

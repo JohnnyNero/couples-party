@@ -16,6 +16,7 @@ import { leaveTo, useBackLayer } from './ui/back'
 import { slide } from './ui/transition'
 import { useRecordTonight } from './share/tonightResult'
 import { loadSaved, useKeepProgress, type Saved } from './store/progress'
+import { ADDING } from './couples/store'
 import { closeWelcome, markPlayedTogether, markWelcomed, openWelcome, SIGNED_OUT, useWelcome, welcomed } from './onboard/flags'
 
 // The welcome (the tour, setting up, inviting your partner) loads when it's wanted.
@@ -52,6 +53,10 @@ export default function App() {
     let signedOut = false
     try { signedOut = sessionStorage.getItem(SIGNED_OUT) === '1'; sessionStorage.removeItem(SIGNED_OUT) } catch { /* fine */ }
     if (signedOut && !game) return openWelcome('signin')
+    // Just made room for another couple (see couples/store): straight to setting it up.
+    let adding = false
+    try { adding = sessionStorage.getItem(ADDING) === '1'; sessionStorage.removeItem(ADDING) } catch { /* fine */ }
+    if (adding && !game) return openWelcome('you')
     if (game || invite || friendLink || welcomed()) return
     void refreshProfile().then((p) => {
       if (p && p.state !== 'single') markWelcomed()

@@ -28,6 +28,7 @@ import { CrosswordCard } from '../crossword/CrosswordCard'
 import { ShareButton } from '../share/ShareButton'
 import { loadTonight } from '../share/tonightResult'
 import { dailyNumber } from '../share/daily'
+import { SettingUpCard, SwitchButton, useManyCouples } from '../couples/Switcher'
 
 // The front door. Three tabs: Today, the nightly habit — the daily puzzles and one short
 // session — Games, for when you've got longer or want one thing, and Memories,
@@ -98,7 +99,7 @@ export function Home({ onPick, onResume, onJoin }: { onPick: (g: Game) => void; 
 }
 
 // Each tab's own title, with the theme toggle (and anything else) on the right.
-function TabHeader({ over, title, sub, right, logo = false }: { over?: string; title: string; sub?: string; right?: ReactNode; logo?: boolean }) {
+function TabHeader({ over, title, sub, right, logo = false }: { over?: string; title: ReactNode; sub?: string; right?: ReactNode; logo?: boolean }) {
   const controls = (
     <div className="shrink-0 flex items-center gap-2">
       {right}
@@ -161,16 +162,20 @@ function Today({ onPick, onResume }: { onPick: (g: Game) => void; onResume: (sav
   const paired = board.status.kind === 'ready' && board.status.data.state === 'paired' ? board.status.data : null
   // Short weekday, so it fits beside the streak on a phone.
   const date = new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+  // In more than one couple: the title says which, and switches.
+  const many = useManyCouples()
+  const hey = paired ? `Hey ${paired.me} & ${paired.partner}` : ''
   return (
     <div className="flex flex-col gap-4">
       <TabHeader
         over={date}
-        title={paired ? `Hey ${paired.me} & ${paired.partner}` : 'Coupled'}
+        title={paired ? (many ? <SwitchButton>{hey}</SwitchButton> : hey) : 'Coupled'}
         logo={!paired}
         right={paired && (paired.streak > 0 || (paired.stats?.daysLast7 ?? 0) > 0) ? <Streak n={paired.streak} last7={paired.stats?.daysLast7 ?? null} /> : null}
       />
       <ErrorBoundary quiet><ContinueCard onResume={onResume} /></ErrorBoundary>
       <ErrorBoundary quiet><SaveAccount /></ErrorBoundary>
+      <ErrorBoundary quiet><SettingUpCard /></ErrorBoundary>
       {paired && <ErrorBoundary quiet><GettingStarted d={paired} onPlay={() => onPick('tonight')} onProfile={openProfile} /></ErrorBoundary>}
       <Board board={board} />
       {paired && <ErrorBoundary quiet><CrosswordCard /></ErrorBoundary>}

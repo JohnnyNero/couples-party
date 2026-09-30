@@ -13,6 +13,9 @@ import { markWelcomed, type WelcomeStart } from './flags'
 import { useAccount } from '../auth/account'
 import { SignIn } from '../auth/SignIn'
 import { Tour } from './Tour'
+import { switchTo, useCouples } from '../couples/store'
+import { coupleLabel } from '../couples/CouplesList'
+import type { CoupleEntry } from '../daily/api'
 
 // A new phone's way in: how Coupled works (the tour), who you are, then getting your
 // partner here — a link they tap, or a code they type — and waiting with you until they
@@ -47,6 +50,9 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
   const [name, setName] = useState(() => (profile && profile.state !== 'single' ? profile.me.name : savedName()))
   const [photo, setPhoto] = useState<string | null>(null)
   const done = () => { markWelcomed(); onClose() }
+  // Setting up another couple (see couples/store): the way back to the one you were in.
+  const couples = useCouples()
+  const back = profile?.state === 'single' ? couples.find((c) => c.active) ?? couples[couples.length - 1] ?? null : null
   useBackLayer(true, done)
 
   return (
@@ -86,6 +92,7 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
             onMade={() => setStep('invite')}
             onCode={() => setStep('code')}
             onLater={done}
+            back={back}
           />
         ) : step === 'code' ? (
           <Code name={name} setName={setName} onBack={() => setStep('you')} onPaired={() => setStep('paired')} />
@@ -101,7 +108,7 @@ export function Welcome({ start, onClose }: { start: WelcomeStart; onClose: () =
 
 // ---------------------------------------------------------------- who are you
 
-function You({ name, setName, photo, setPhoto, onMade, onCode, onLater }: {
+function You({ name, setName, photo, setPhoto, onMade, onCode, onLater, back }: {
   name: string
   setName: (n: string) => void
   photo: string | null
@@ -109,6 +116,7 @@ function You({ name, setName, photo, setPhoto, onMade, onCode, onLater }: {
   onMade: () => void
   onCode: () => void
   onLater: () => void
+  back: CoupleEntry | null
 }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
@@ -139,8 +147,12 @@ function You({ name, setName, photo, setPhoto, onMade, onCode, onLater }: {
     <div className="flex-1 flex flex-col gap-7 animate-fade-up">
       <div className="text-center">
         <Wordmark className="font-display text-xl font-extrabold" />
-        <h1 className="mt-3 font-display text-[2.1rem] font-extrabold leading-[1.1]">First, who are you?</h1>
-        <p className="mt-2 text-fg/65 leading-snug">This is how you’ll show up to your partner, in every game.</p>
+        <h1 className="mt-3 font-display text-[2.1rem] font-extrabold leading-[1.1]">{back ? 'Another couple' : 'First, who are you?'}</h1>
+        <p className="mt-2 text-fg/65 leading-snug">
+          {back
+            ? 'Invite them, or type in the code they sent you. Your other couples carry on just as they are.'
+            : 'This is how you’ll show up to your partner, in every game.'}
+        </p>
       </div>
       <div className="flex flex-col items-center gap-2">
         <button onClick={() => picker.current?.click()} aria-label={photo ? 'Change photo' : 'Add a photo'} className="relative rounded-full press">
@@ -174,12 +186,18 @@ function You({ name, setName, photo, setPhoto, onMade, onCode, onLater }: {
       <div className="mt-auto flex flex-col gap-2">
         {note && <div className="text-sm font-bold text-pa-ink text-center">{note}</div>}
         <button className={btnAccent} onClick={() => void make()} disabled={busy || !name.trim()}>
-          {busy ? 'Setting up…' : 'Next: invite your partner'}
+          {busy ? 'Setting up…' : back ? 'Next: invite them' : 'Next: invite your partner'}
         </button>
         <button className={btnOutline} onClick={onCode} disabled={busy}>
-          My partner sent me a code
+          {back ? 'They sent me a code' : 'My partner sent me a code'}
         </button>
-        <button onClick={onLater} className="min-h-[44px] text-sm font-bold text-fg/45">I’ll do this later</button>
+        {back ? (
+          <button onClick={() => { setBusy(true); switchTo(back.id).catch(() => setBusy(false)) }} disabled={busy} className="min-h-[44px] text-sm font-bold text-fg/45">
+            Never mind — back to {coupleLabel(back)}
+          </button>
+        ) : (
+          <button onClick={onLater} className="min-h-[44px] text-sm font-bold text-fg/45">I’ll do this later</button>
+        )}
       </div>
     </div>
   )

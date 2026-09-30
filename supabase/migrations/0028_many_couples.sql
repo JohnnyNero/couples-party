@@ -61,7 +61,8 @@ alter table public.ideas drop constraint ideas_author_fkey;
 alter table public.ideas add constraint ideas_author_fkey
   foreign key (author) references public.personas (id) on delete cascade;
 
--- Someone joining their first couple becomes their own first persona.
+-- Someone joining their first couple becomes their own first persona; joining another,
+-- they bring their photo with them.
 create function public.ensure_persona()
 returns trigger
 language plpgsql
@@ -70,6 +71,12 @@ set search_path = ''
 as $$
 begin
   insert into public.personas (id, owner) values (new.user_id, new.user_id) on conflict do nothing;
+  if new.photo is null then
+    select m.photo into new.photo
+      from public.members m join public.personas p on p.id = m.user_id
+     where p.owner = (select owner from public.personas where id = new.user_id) and m.photo is not null
+     limit 1;
+  end if;
   return new;
 end;
 $$;

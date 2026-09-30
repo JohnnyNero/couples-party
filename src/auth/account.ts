@@ -172,14 +172,14 @@ export async function finishRedirect(): Promise<void> {
 const PERSONAL = [
   'couples-party:profile', 'couples-party:ideas', 'couples-party:seen', 'couples-party:name', 'couples-party:leaderboard',
   'couples-party:spun', 'coupled:in-progress', 'coupled:shown', 'coupled:pins', 'coupled:streak-seen',
-  'coupled:played-together', 'coupled:getting-started-hidden', 'couples-party:rude',
+  'coupled:played-together', 'coupled:getting-started-hidden', 'couples-party:rude', 'couples-party:couples',
 ]
 export function forgetThisPhone(): void {
   try {
     for (const k of PERSONAL) localStorage.removeItem(k)
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i)
-      if (k && /^coupled:(tonight|seen):/.test(k)) localStorage.removeItem(k)
+      if (k && /^coupled:(tonight|seen|stash):/.test(k)) localStorage.removeItem(k)
     }
   } catch { /* private mode: nothing kept anyway */ }
 }

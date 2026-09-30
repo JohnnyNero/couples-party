@@ -15,15 +15,18 @@ import { InstallRow } from '../start/InstallCard'
 import { openWelcome, SIGNED_OUT } from '../onboard/flags'
 import { signOut, useAccount } from '../auth/account'
 import { RudeRow } from './RudeRow'
+import { CouplesList } from '../couples/CouplesList'
+import { afterLeaving, useCouples } from '../couples/store'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
-// rude questions, and unpairing. Opened from your avatar at the top of Home.
+// rude questions, the couples you're in, and unpairing. Opened from your avatar at the top of Home.
 
 const NAME_KEY = 'couples-party:name' // the name Pairing remembers before you're paired
 const localName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
 
 export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUnpaired: () => void }) {
   const profile = useProfile()
+  const couples = useCouples()
   const [ideasOpen, setIdeasOpenNow] = useState(false)
   const setIdeasOpen = (v: boolean) => slide(v ? 'forward' : 'back', () => setIdeasOpenNow(v))
   useBackLayer(ideasOpen, () => setIdeasOpen(false))
@@ -60,6 +63,8 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
               </div>
             </section>
           )}
+
+          {(onServer || couples.length > 0) && <CouplesList />}
 
           {paired && (
             <button onClick={() => setIdeasOpen(true)} className={card + ' px-4 py-4 flex items-center gap-3 text-left press'}>
@@ -206,6 +211,7 @@ function PhotoAndName({ name, photo, canSave }: { name: string; photo: string | 
 // Two taps, on purpose: it can't be undone, and it's both of you, not just this phone.
 function Unpair({ partner, onDone }: { partner: string | null; onDone: () => void }) {
   const [asking, setAsking] = useState(false)
+  const others = useCouples().filter((c) => !c.active).length
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const go = async () => {
@@ -213,6 +219,8 @@ function Unpair({ partner, onDone }: { partner: string | null; onDone: () => voi
     setNote(null)
     try {
       await api.leaveCouple()
+      // In another couple too: that's where you are now (the app reloads into it).
+      if (await afterLeaving()) return
       clearProfile()
       clearIdeas()
       onDone()
@@ -234,6 +242,7 @@ function Unpair({ partner, onDone }: { partner: string | null; onDone: () => voi
       {partner && (
         <div className="text-sm text-fg/75 leading-snug">
           It unpairs both phones. Your daily puzzles, streak and Memories are deleted, for both of you, and can’t be brought back.
+          {others > 0 && ' Your other couples carry on as they are.'}
         </div>
       )}
       {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}

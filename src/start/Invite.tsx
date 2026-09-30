@@ -10,10 +10,12 @@ import { markWelcomed } from '../onboard/flags'
 import { useAccount } from '../auth/account'
 import { SignIn } from '../auth/SignIn'
 import { Tour } from '../onboard/Tour'
+import { arrived, joinFromInvite } from '../couples/store'
 
 // Where an invite link lands: "Johnny's invited you". Your name, a photo if you like,
-// one button — and you're paired, then a quick tour of how it all works, then Today. A phone that's already
-// paired, or a link that's been used, gets told so and sent on to the app.
+// one button — and you're paired, then a quick tour of how it all works, then Today. Already
+// in a couple, it's offered as another one (you can be in several); a link that's been
+// used gets told so and sent on to the app.
 
 const NAME_KEY = 'couples-party:name'
 const savedName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
@@ -28,26 +30,29 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
   const [photo, setPhoto] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  // Joined as another couple: the app reloads into it at the end.
+  const [moved, setMoved] = useState(false)
   const picker = useRef<HTMLInputElement>(null)
 
   useEffect(() => { void refreshProfile() }, [])
   // Already paired on this phone: nothing to join.
   const alreadyWith = profile?.state === 'paired' && step.kind === 'form' ? profile.partner.name : null
 
-  const finish = () => { forgetInvite(); markWelcomed(); onDone() }
+  const finish = () => { forgetInvite(); markWelcomed(); if (moved) arrived(); else onDone() }
 
   const account = useAccount()
   // Pairing needs an account, so the two of you never lose each other: a guest makes one
   // first (or signs in to the one they have), then pairs.
-  const join = async () => {
-    const n = name.trim()
+  const join = async (as?: string) => {
+    const n = (as ?? name).trim()
     if (!n) return setNote('Your name first.')
     if (account.kind !== 'member' && step.kind === 'form') return setStep({ kind: 'account' })
     setBusy(true)
     setNote(null)
     try { localStorage.setItem(NAME_KEY, n) } catch { /* private mode */ }
+    setName(n)
     try {
-      await api.joinCouple(invite.code, n)
+      setMoved(await joinFromInvite(invite.code, n))
     } catch (e) {
       setBusy(false)
       const msg = e instanceof DailyError ? e.message : ''
@@ -71,12 +76,15 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
   return (
     <div className="h-full w-full overflow-y-auto">
       <div className="min-h-full w-full max-w-md mx-auto px-6 py-10 flex flex-col">
-        {alreadyWith ? (
+        {alreadyWith && profile?.state === 'paired' ? (
           <Centered
-            title={`You’re already paired with ${alreadyWith}`}
-            sub="This phone can only be in one couple. To pair with someone else, unpair first from your profile."
-            action="Open the app"
-            onAction={finish}
+            title={`Add ${from} as another couple?`}
+            sub={`You’re paired with ${alreadyWith}, and that stays just as it is. You can be in more than one couple — each has its own games, puzzles and streak, and you switch between them from your profile.`}
+            action={busy ? 'Adding…' : `Add ${from}`}
+            onAction={() => { if (!busy) void join(profile.me.name) }}
+            secondary="Not now"
+            onSecondary={finish}
+            note={note}
           />
         ) : step.kind === 'dead' ? (
           <Centered title="That invite didn’t work" sub={step.why} action="Open the app" onAction={finish} />
@@ -164,12 +172,22 @@ export function Invite({ invite, onDone }: { invite: InviteLink; onDone: () => v
   )
 }
 
-function Centered({ title, sub, action, onAction }: { title: string; sub: string; action: string; onAction: () => void }) {
+function Centered({ title, sub, action, onAction, secondary, onSecondary, note }: {
+  title: string
+  sub: string
+  action: string
+  onAction: () => void
+  secondary?: string
+  onSecondary?: () => void
+  note?: string | null
+}) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 animate-fade-up">
       <h1 className="font-display text-3xl font-extrabold leading-tight">{title}</h1>
       <p className="text-fg/65 leading-snug">{sub}</p>
-      <button className={btnAccent + ' mt-2'} onClick={onAction}>{action}</button>
+      {note && <div className="text-sm font-bold text-pa-ink">{note}</div>}
+      <button className={btnAccent + ' mt-2 w-full'} onClick={onAction}>{action}</button>
+      {secondary && <button onClick={onSecondary} className="min-h-[44px] text-sm font-bold text-fg/45">{secondary}</button>}
     </div>
   )
 }
