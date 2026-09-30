@@ -1,16 +1,19 @@
 # Supabase setup
 
-The daily puzzle (Their Word) and pairing need two one-off steps in the Supabase
-dashboard for this project. Nothing else in the app needs the server — Tonight and
-every game still work without it.
+Everything that belongs to a couple lives here: accounts, pairing, the daily puzzles,
+streaks, Memories, Our questions, the crossword, friend couples, and which couples you're
+in. The live games themselves run through Playroom and work without it.
+
+Three one-off parts in the Supabase dashboard: anonymous sign-ins (1), the migrations
+(2), and email sign-in (3).
 
 ## 1. Allow anonymous sign-ins
 
 Authentication → Sign In / Providers → **Allow anonymous sign-ins** → on → Save.
 
-Each phone becomes an anonymous user the first time it opens the Today tab. No email,
-no password; pairing is what links two of them. (If a phone's browser data is cleared,
-it becomes a new person and has to pair again.)
+A new phone starts as a guest: an anonymous user, no email or password. Before pairing
+it's asked to add an email, which turns the same user into a real account (see 3), so
+nothing is lost if the phone is. A guest whose browser data is cleared is a new person.
 
 ## 2. Run the migrations, in order, once each
 
@@ -54,7 +57,26 @@ SQL Editor → New query → paste the whole file → **Run**.
    `moments` table (locked down like the others), `save_moment()`, and `memories()`,
    which also returns past daily puzzles with their answers once the day is over.
 
-13–24. See the comment at the top of each file.
+13. `migrations/0013_profile.sql` — your profile: name and a small photo on your member
+   row; adds `profile()`, `set_name()`, `set_photo()`.
+14. `migrations/0014_our_questions.sql` — Our questions: a couple's own questions for the
+   games, dealt in ahead of the built-in ones. Adds `ideas`.
+15. `migrations/0015_more_than_one_device.sql` — one of you on several devices, and
+   `person()`, which every later function uses to ask who's calling. (Its linking codes
+   were replaced by real sign-in in 0025; `person()` and `devices` stay.)
+16. `migrations/0016_week_and_team.sql` — the weekly crown, the team total, and a streak
+   that counts days played in the last seven.
+17. `migrations/0017_this_or_that.sql` — This or That, the sixth daily puzzle.
+18. `migrations/0018_day_prompts.sql` — `day_prompts()`: the question your partner already
+   set for a day, so you both answer the same one.
+19. `migrations/0019_nudge.sql` — nudging your partner into a game from its lobby.
+20. `migrations/0020_records.sql` — `records()` for the stats page, and Our questions for
+   the newer games.
+21. `migrations/0021_crossword.sql` — the weekly crossword built from your answers.
+22. `migrations/0022_rebuild_crossword.sql` — rebuilding this week's crossword (testing).
+23. `migrations/0023_crossword_archive.sql` — every week's crossword, to look back on.
+24. `migrations/0024_crossword_each.sql` — the crossword solved separately, each your own
+   copy.
 25. `migrations/0025_accounts.sql` — real accounts: drops the old device-linking
    (`link_code`, `link_device`, `unlink_device`, `device_codes`) now that signing in does
    that job, and adds `delete_account()`.
@@ -64,8 +86,10 @@ SQL Editor → New query → paste the whole file → **Run**.
    `set_rude`, and `profile()` reporting it). Existing couples start on, new ones off.
 28. `migrations/0028_many_couples.sql` — being in more than one couple. Each couple
    you're in is a "persona" (your first is your own id); `person()` answers with the
-   one you're using, so the games' functions don't change. Adds `my_couples`,
-   `switch_couple`, `add_couple`.
+   one you're using, so the games' functions don't change. Adds `personas`,
+   `active_personas`, `my_couples`, `switch_couple`, `add_couple`; your name and photo
+   are shared across your couples, and deleting your account takes all of them. Up to
+   ten couples each.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.
@@ -74,34 +98,45 @@ have to agree on what the daily card looks like.
 
 Everyone starts as a guest (step 1) and is asked to add their email, which turns the
 same account into a real one; after that, signing in with that email on any phone is
-them. The app asks for a six-digit code, never a link, so the email templates must
-include the code:
+them. The email carries a code (this project's are eight digits; the app takes six to
+ten) and a link — either works, so the templates should include both:
 
 1. Authentication → Emails → Templates. In **Change Email Address** and **Magic Link**
    (and **Confirm signup**), put the code in the message, e.g.
-   `<p>Your Coupled code is</p><h2>{{ .Token }}</h2>`. (The link can stay or go.)
-2. Authentication → Emails → SMTP Settings: set up your own email sender (Resend, Brevo,
-   Postmark…). Supabase's built-in sender only mails the project's own team, so without
-   this nobody else gets their code.
+   `<p>Your Coupled code is</p><h2>{{ .Token }}</h2>`, and keep the link.
+2. Authentication → Emails → SMTP Settings: set up your own email sender. Supabase's
+   built-in sender only mails the project's own team, so without this nobody else gets
+   their code. This project uses a Gmail address with an app password (host
+   `smtp.gmail.com`), which needs no domain; a service like Resend or Brevo is
+   the step up once there's a domain of our own.
 3. Authentication → URL Configuration: Site URL and Redirect URLs both
    `https://johnnynero.github.io/couples-party/` (or your own domain, later).
 4. Optional, Google: create an OAuth client (Web) in Google Cloud with the redirect URI
    `https://jzplpotgeodzkrpqojwt.supabase.co/auth/v1/callback`, paste its ID and secret
    into Authentication → Sign In / Providers → Google, and turn on **Allow manual
    linking** (so a guest can add Google to the account they have). The app shows
-   "Continue with Google" by itself once the provider is on.
+   "Continue with Google" by itself once the provider is on. (Not switched on yet:
+   the app offers email only.)
 
 ## Why the anon key is in the repo
 
 `src/daily/config.ts` holds the project URL and the **anon** key. That key is designed
 to be public — every visitor's browser gets it. On its own it can do nothing here: the
-tables have row level security with no policies, so the only way in is the six
-functions, each of which checks who is calling and only touches that person's couple.
+tables have row level security with no policies, so the only way in is the functions,
+each of which checks who is calling and only touches that person's couple (the one
+they're using, if they're in several). Helpers that would give something away are
+revoked from the public roles, so they can't be called directly either. What a friend
+couple sees is limited to names, photos, streak, today's team score and how many of
+today's puzzles are solved — never answers.
 
 Never commit the **service_role** key. It bypasses all of the above.
 
 ## Tests
 
-`schema.test.ts` runs the migration in Postgres-in-WebAssembly (PGlite) with Supabase's
+`schema.test.ts` runs every migration in Postgres-in-WebAssembly (PGlite) with Supabase's
 auth stubbed, calling everything as the `authenticated` role — so the grants and the
-answer-hiding are tested for real, not assumed.
+answer-hiding are tested for real, not assumed. It also applies the newest migration to
+a database that already has couples in it, the way it'll meet the live one.
+
+After running a migration on the live project, a short script checks it there too, with
+throwaway accounts that are deleted afterwards.

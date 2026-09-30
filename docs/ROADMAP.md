@@ -2,6 +2,90 @@
 
 Decisions already made, so they survive between sessions. Newest at the top.
 
+## Next
+
+1. **Couple leaderboards**, among friend couples.
+2. **Release readiness**, still open from the release critique:
+   - pairing codes that expire;
+   - the room code left out of links the lobby shares;
+   - strong randomness for the older codes (pairing, room), as friend codes already use;
+   - register a Playroom game id;
+   - a privacy notice, error reporting, hiding the testing-only links, and a domain of
+     our own (which would also let email move from Gmail to a proper sender).
+3. Maybe: a small alert when someone in one of your *other* couples is waiting in a
+   lobby or has nudged you — today you only see it once you switch to that couple.
+
+## Done: more than one couple (migration 0028)
+
+You can be in several couples (a partner, a friend, a sibling, a parent) and switch
+between them. One is the one you're using; the whole app is that couple's.
+
+How: in each couple you're a different *persona*, with its own id; your first is your
+own account id, so nothing that existed moved. `person()`, which every function already
+asks "who is this?", now answers with the persona you're using, so none of the games' or
+puzzles' functions changed. New: `my_couples()`, `switch_couple()`, `add_couple()`.
+Decisions:
+- One couple at a time, chosen on the server (not per request), so every existing
+  function works as it was.
+- Your name and photo are the same in every couple; a new couple brings your photo.
+- Unpairing ends only the couple you're using, then you're in your next one.
+  Deleting your account ends all of them.
+- You can't pair with yourself (another of your own personas). Up to ten couples.
+- Switching reloads the app. What the phone keeps for a couple (Our questions cache, a
+  game in progress, the getting-started list…) is put aside under that couple and
+  brought back when you return (`src/couples/store.ts`).
+- In the app: Profile → "Your couples" (switch, or "Add another couple"); a ▾ on
+  Today's title when you're in more than one; an invite link opened by someone already
+  paired offers "Add them as another couple".
+
+## Done: rude questions switch (migration 0027)
+
+About twenty properly rude entries in the content file are tagged `(rude)` (on an entry
+or a Shortlist theme). A couple has one switch for them, shared by both phones, in
+Profile → Settings. New couples start with it off; couples that already existed kept it
+on. Flirty entries stay in for everyone. Considered and dropped: a filter by
+relationship type (dating, married…), since the content already assumes nothing about
+living together, marriage, kids or gender.
+
+## Done: friend couples (migration 0026)
+
+A Friends tab. Each couple has a friend link and an eight-character code (strong
+randomness); opening a link or entering a code shows who it is before adding. Friends
+see only names, photos, the streak, whether you've played Today's games (and your team
+score) and how many of today's puzzles you've solved — never answers, puzzles or
+Memories. Friendships are between couples, up to 100 each, and go with the couple.
+
+## Done: real accounts (migration 0025)
+
+Sign in with an email code (or its link); Google is built in and shows once it's switched
+on in Supabase. A guest's anonymous account is upgraded in place, so nothing moves.
+Replaces the old device-linking codes. Every tester makes an account before pairing (no
+"skip for now"). Profile shows who you're signed in as, Sign out, and Delete account.
+Email goes through Gmail SMTP for now, since there's no domain yet.
+
+## Done, in brief: from Profile to Game night (migrations 0013–0024)
+
+- **Profile** (0013): name, photo, unpairing; **Our questions** (0014), your own questions
+  dealt in ahead of the built-in ones; **invite links** that pair in one tap.
+- **Today**: a weekly crown and team total, a kinder streak (0016); **This or That**, the
+  sixth daily puzzle (0017); the same question for both of you (0018); a numbered daily
+  session, the same for every couple, with a share card.
+- **Live games**: Two Lies & a Truth, Called It (replacing Put a Finger Down), Mind Meld,
+  Describe It, Tongue Twisters, Higher or Lower, Guesstimate, and fillers (Spot It,
+  Frenzy, Follow Me alongside Perfect Circle and Stop the Clock). Team points, with every
+  game worth the same to the night. Games sorted into kinds (about you two / play /
+  filler) and sessions built from slots of each. Game night picks its length (short,
+  medium, long) and can reroll its games in the lobby.
+- **Playing together**: save a game and carry on later; nudge your partner from the
+  lobby (0019), and they see you waiting without one; a game closes at its end so the
+  next starts cleanly; a two-phone simulator (`src/net/fakePlayroom.ts`) and fixes for
+  the races it found. The TV mode was removed.
+- **Stats** from the Today scoreboard (0020); **the crossword**: weekly, built from your
+  answers, solved separately, with an archive (0021–0024).
+- **Onboarding**: a tour, setting up, inviting your partner, and a getting-started list.
+- Our own on-screen keyboard; installing to the home screen; transitions, touch feedback
+  and celebrations.
+
 ## Done: Memories (migration 0012)
 
 A third home tab. Both paired phones save the live session as it goes, at every
