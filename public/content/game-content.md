@@ -707,6 +707,44 @@ and keep a mix: some most people have done, some hardly anyone has.
 - you've lied about reading a book
 - you've returned something you'd already worn
 - you've sent a nude (rude)
+- you've talked to yourself in the mirror
+- you've stayed up too late on purpose
+- you've laughed at your own joke first
+- you've lost your keys in your own hand
+- you've walked into a room and forgotten why
+- you've sung in the shower
+- you've replied "haha" without laughing
+- you've said "I'll do it later" and not
+- you've googled a symptom at 2am
+- you've ordered food instead of cooking
+- you've eaten dessert first
+- you've rehearsed a phone call
+- you've pretended not to see someone
+- you've said "we should catch up" and never did
+- you've muted a group chat
+- you've left a group chat
+- you've liked an old photo by accident
+- you've stalked someone's profile
+- you've screenshotted a chat to send to a friend
+- you've complained about them to a friend
+- you've bought something and hidden the bag
+- you've been late and blamed traffic
+- you've cried in a car
+- you've hidden in the bathroom on your phone
+- you've forgotten someone's name straight away
+- you've called a teacher "mum"
+- you've gone back to check the door was locked
+- you've waited for them to text first
+- you've been jealous of a friend of theirs
+- you've been too hungry to be nice
+- you've gone to bed angry
+- you've eaten their leftovers
+- you've dreamed about someone else
+- you've flirted to get something free
+- you've had a crush on someone they know
+- you've faked it (rude)
+- you've thought about someone else in bed (rude)
+- you've been turned on at an awkward moment (rude)
 
 # Wavelength
 
@@ -743,6 +781,92 @@ between has to be nameable.
 - Terrible superpower | Great superpower
 - Rude | Polite
 - Worst gift | Best gift
+- Bland | Tasty
+- Snack | Meal
+- Healthy | Unhealthy
+- Breakfast food | Dinner food
+- Fresh | Stale
+- Soft | Crunchy
+- Overcooked | Undercooked
+- Early night | Late night
+- Tidy | Messy
+- Annoying habit | Cute habit
+- Cosy | Chilly
+- Sofa night | Night out
+- Bad TV | Good TV
+- Rushed | Slow
+- Lazy Sunday | Busy Sunday
+- Rubbish | Treasure
+- Grumpy | Cheerful
+- Pyjamas | Nothing on (rude)
+- Morning cuddle | Morning sex (rude)
+- Stingy | Generous
+- Ghosting | Replying instantly
+- Too soon | Too late
+- Awkward | Smooth
+- Nervous | Confident
+- Friend zone | Soulmate
+- Boring text | Flirty text
+- Shy | Bold
+- Stranger | Family
+- Dealbreaker | Dealmaker
+- Ex | Crush
+- Small talk | Deep talk
+- Cold shoulder | Warm hug
+- Clingy | Distant
+- Bad kiss | Great kiss
+- Awkward silence | Comfortable silence
+- Fling | Forever
+- Long distance | Next door
+- Second thoughts | No doubts
+- Cheesy | Charming
+- Flirty | Creepy
+- Wingman | Third wheel
+- Mixed signals | Clear signals
+- Jealous | Secure
+- Butterflies | Nausea
+- Honeymoon phase | Long haul
+- Awkward hug | Perfect hug
+- Cute | Hot
+- Bad match | Perfect match
+- Romantic gesture | Empty gesture
+- Overdressed | Underdressed
+- Slow dance | Grind (rude)
+- Holding hands | Hands everywhere (rude)
+- Peck | Full make-out
+- Snuggle | Steamy (rude)
+- Lingering look | Undressing look (rude)
+- Innocent flirt | Dirty flirt (rude)
+- Broke | Rich
+- Worthless | Priceless
+- Bargain | Rip-off
+- Frugal | Extravagant
+- Bad investment | Good investment
+- Sensible purchase | Impulse buy
+- Dead-end job | Dream job
+- Easy job | Hard job
+- Low status | High status
+- Unprofessional | Professional
+- Lazy | Hardworking
+- Boring meeting | Useful meeting
+- Bad boss | Great boss
+- Needy text | Chill text
+- Unsendable | Sendable
+- Embarrassing search | Normal search
+- Old tech | New tech
+- Clunky | Sleek
+- Outdated | Cutting edge
+- Annoying app | Useful app
+- Addictive | Forgettable
+- Fake | Authentic
+- Bad selfie | Good selfie
+- Oversharing | Undersharing
+- Tacky | Classy
+- Splurge | Save
+- Overpaid | Underpaid
+- Scam | Legit
+- Nosy | Trusting
+- Sexting no-go | Sexting yes (rude)
 
 # Draw Your Answer
 
@@ -789,6 +913,51 @@ Pick things that have a drawable answer.
 - favourite flower
 - favourite hobby
 - worst nightmare
+- favourite mug
+- go-to lunch
+- ideal sandwich
+- favourite cereal
+- comfort blanket
+- go-to midnight snack
+- favourite soup
+- perfect cup of tea
+- ideal breakfast in bed
+- favourite pasta shape
+- favourite ice cream flavour
+- favourite pyjamas
+- ideal bath
+- favourite cheese
+- go-to hangover food
+- favourite biscuit
+- perfect roast dinner
+- favourite fruit
+- weirdest dream
+- favourite toast topping
+- best nap ever
+- first date spot
+- first kiss location
+- worst date ever
+- first date outfit
+- dream wedding
+- honeymoon destination
+- ideal proposal
+- go-to date meal
+- favourite couple photo
+- ideal anniversary
+- best gift received
+- worst gift received
+- ideal Valentine's Day
+- favourite place to kiss
+- favourite way to flirt
+- dating app photo
+- ideal weekend away
+- romantic gesture
+- perfect picnic
+- favourite cuddle position
+- ideal candlelit dinner
+- best kiss ever
+- favourite sexy outfit (rude)
+- biggest bedroom fantasy (rude)
 
 # Who's More Likely
 
@@ -829,6 +998,66 @@ score when you agree.
 - wake up grumpy
 - talk to strangers
 - survive a horror film
+- hit snooze five times
+- eat cereal for dinner
+- cook something from scratch
+- order takeaway again
+- stay in bed all day
+- nap on the sofa
+- wake up first
+- talk in their sleep
+- sleepwalk
+- take the longest shower
+- lose the remote
+- steal food off the other's plate
+- get hangry
+- burn the toast
+- sleep through an alarm
+- hide snacks
+- say they're not hungry then eat everything
+- get up for a midnight snack
+- lie about how much they slept
+- oversleep on a Sunday
+- forget to lock the door
+- leave the lights on
+- spill something on the sofa
+- fall in love first
+- say I love you first
+- text back first
+- reply in one word
+- check their ex's profile
+- get jealous
+- flirt with a stranger
+- get chatted up
+- plan the date night
+- cancel the date night
+- turn up late to a date
+- cry at a rom-com
+- remember the anniversary
+- buy a soppy gift
+- write a love letter
+- send a heart-eyes emoji
+- send a good morning text
+- kiss in public
+- blush
+- get the giggles on a date
+- pick the restaurant
+- pay on the first date
+- slide into someone's DMs
+- fall for a pretty face
+- stay friends with an ex
+- propose first
+- want a big wedding
+- get embarrassed by a compliment
+- swipe right on everyone
+- get a crush on a colleague
+- fancy a celebrity
+- get too drunk on a date
+- talk about the future
+- say the cheesy line
+- pull someone in a bar
+- send a late night text
+- suggest a quickie (rude)
 
 
 # Mr & Mrs
@@ -888,6 +1117,46 @@ person the answer belongs to decides if the guess counts. Short answers only.
 - Your favourite holiday we've been on?
 - The best meal you've ever had?
 - Your weirdest fear?
+- Your usual bedtime?
+- Your go-to midnight snack?
+- How many pillows do you sleep with?
+- How many times do you hit snooze?
+- Your first coffee or tea of the day?
+- How long is your shower?
+- The show you fall asleep to?
+- What you wear to bed?
+- What do you do first when you get home?
+- Your favourite mug?
+- The thing you always forget to buy?
+- Your favourite roast dinner part?
+- Your favourite ice cream flavour?
+- Your favourite sandwich filling?
+- Your favourite thing on toast?
+- The dinner you'd never cook again?
+- Your favourite thing to do in bed? (rude)
+- Where is the strangest place you've done it? (rude)
+- Where did we first meet?
+- Your first impression of me?
+- What were you wearing on our first date?
+- Who said "I love you" first?
+- Your favourite photo of us?
+- The song that reminds you of us?
+- Where would you take me on a surprise date?
+- The best compliment you've ever had?
+- Your go-to flirty text?
+- Who made the first move?
+- Your favourite thing about my looks?
+- Your dream wedding location?
+- What would you order on a first date?
+- Your worst date ever?
+- Your favourite romantic film?
+- The most romantic thing I've done?
+- Your go-to chat-up line?
+- Where was our first kiss?
+- Your favourite pet name for me?
+- What do you wear to feel sexy?
+- Your favourite thing to do on a night in together?
+- Your favourite outfit of mine?
 
 # Lights Out
 
@@ -938,6 +1207,60 @@ question to talk about with the phone face down. Keep them gentle and short.
 - What's the best advice you've ever had?
 - What do you want to remember about this year?
 - What made you smile today that you haven't told me?
+- What was the best thing you ate today?
+- What's your favourite meal I make?
+- What's a dinner we should cook together?
+- What's your ideal Sunday morning?
+- What's a breakfast you'd have every day?
+- What's the best sleep you've ever had?
+- What's a morning habit you'd never give up?
+- What's a meal from your childhood you miss?
+- What's a smell that makes you feel at home?
+- What would you cook for me if I'd had a bad day?
+- What's your favourite thing to do on a rainy night?
+- What would a lazy day in with me look like?
+- What's a restaurant we should go back to?
+- What time of day do you like best?
+- What's a dream you had recently?
+- What do you think about while you fall asleep?
+- What's your favourite thing to do in your pyjamas?
+- What's a takeaway we should order again?
+- What would you want on a movie night with me?
+- What's something you'd like to try in bed tonight? (rude)
+- What's the best thing we've done in the dark? (rude)
+- What was your first impression of me?
+- What do you remember about our first date?
+- Where was our first kiss?
+- What did you think when I first texted you?
+- What's the best date we've been on?
+- What was the first thing you noticed about me?
+- What would a perfect date night look like?
+- When did you realise this was serious?
+- What was the nicest thing I did early on?
+- What's a date you'd like to do again?
+- Who made the first move?
+- What's the most romantic thing I've done?
+- What outfit of mine do you like most?
+- What song would you play on a date with me?
+- What's a date we haven't done yet?
+- What's a flirty text you still remember?
+- What's something I do that still gives you butterflies?
+- What did you wear on our first date?
+- Where would you take me for a surprise date?
+- What's your favourite memory from our early days?
+- What's the best way to be flirted with?
+- What's a date idea you've never suggested?
+- What did you think of my friends when we met?
+- What's a romantic gesture you'd love?
+- What would you want to be doing with me right now?
+- What's something you'd like me to say more?
+- What were you nervous about when we met?
+- What did you tell your friends about me first?
+- What's a tiny routine of ours you'd hate to lose?
+- What's something we should eat more of?
+- What's the best cup of tea or coffee you've had lately?
+- What would you like more of in our romantic life?
+- What do you like most about how we got together?
 
 # Category Clash
 
@@ -1017,6 +1340,28 @@ start them the way an answer would finish them: "A …" or "Something …".
 - Something at the zoo
 - Something you'd pack for a holiday
 - An excuse to leave a party
+- Something in a pub
+- Something in a school
+- Something at a gym
+- Something at a party
+- Something at a festival
+- Something on a menu
+- Something in a cinema
+- Something in a pocket
+- Something in a park
+- Something that beeps
+- Something sharp
+- Something spicy
+- Something salty
+- Something with a screen
+- A snack
+- A villain
+- A reason to call in sick
+- A bad habit
+- Something you do when you're drunk
+- A place to kiss
+- Something you'd hide from your partner
+- A place to have sex (rude)
 
 # Word Chain
 
@@ -9888,6 +10233,98 @@ because they're not in the word list. Keep them short. No "right now", no
 - {partner} as a zoo animal
 - What [you|@] always lose
 - {partner}'s hidden talent
+- [Your|@'s] go-to takeaway
+- A sandwich filling [you love|@ loves]
+- [Your|@'s] favourite vegetable
+- A vegetable [you|@] avoid
+- [Your|@'s] usual lunch
+- What [you|@] eat when alone
+- [Your|@'s] midnight snack
+- A food [you|@] overcook
+- [Your|@'s] favourite pizza topping
+- A drink [you|@] always order
+- What [you|@] drink before bed
+- [Your|@'s] favourite biscuit
+- A food [you'd|@ would] eat daily
+- [Your|@'s] ideal Sunday
+- [Your|@'s] bedtime in one word
+- What [you|@] do when [you can't|@ can't] sleep
+- What [you|@] dream about
+- Something [you|@] leave on the floor
+- What [you|@] do first in the morning
+- [Your|@'s] alarm sound
+- The chore [you|@] avoid
+- The chore [you|@] don't mind
+- Something [you|@] never put away
+- {partner}'s bedtime habit
+- What {partner} says when tired
+- {partner}'s Saturday morning in one word
+- {partner}'s worst cooking habit
+- What {partner} eats too much of
+- Something {partner} never finishes
+- {partner}'s hangover food
+- What {partner} does when hungry
+- A bedroom noise {partner} makes (rude)
+- What [you|@] do in bed besides sleep (rude)
+- What [you|@] noticed first about {partner}
+- What [you wore|@ wore] on our first date
+- What [you|@] ordered on our first date
+- What {partner} does when flirting
+- Something {partner} wears that [you love|@ loves]
+- [Your|@'s] ideal date night
+- What [you|@] would cook for {partner}
+- A drink [you'd|@ would] buy {partner}
+- What {partner} smells like
+- Something {partner} does when jealous
+- What makes {partner} blush
+- {partner}'s best feature
+- A nickname for {partner}
+- What [you|@] miss about {partner}
+- {partner}'s worst dance move
+- Something romantic {partner} would never do
+- A gift {partner} would love
+- [Your|@'s] first impression of {partner}
+- What {partner} does to get [your|@'s] attention
+- A flower for {partner}
+- What {partner} steals from [your|@'s] plate
+- {partner}'s cheesiest habit
+- What turns [you|@] on (rude)
+- Something [you'd|@ would] try in bed (rude)
+- {partner}'s best move in bed (rude)
+- A word to whisper in [your|@'s] ear
+- What [you|@] find hot about {partner}
+- [Your|@'s] biggest waste of money
+- What [you|@] would buy with a windfall
+- Something [you|@] overpaid for
+- What [you|@] never lend out
+- [Your|@'s] guilty purchase
+- What [you|@] would splurge on
+- A gift [you|@] never wanted
+- What [you|@] spend money on when sad
+- [Your|@'s] worst job
+- [Your|@'s] boss in one word
+- What [you|@] do in a boring meeting
+- [Your|@'s] work personality in one word
+- What [you|@] would quit tomorrow
+- [Your|@'s] favourite thing about work
+- What [you|@] snack on at work
+- The job {partner} would be bad at
+- The job {partner} would be great at
+- {partner}'s work outfit in one word
+- What {partner} complains about at work
+- [Your|@'s] most used app
+- The app [you|@] would delete last
+- [Your|@'s] phone wallpaper
+- What [you|@] search for most
+- [Your|@'s] most used emoji
+- What [you|@] type in a group chat
+- {partner}'s phone habit
+- What {partner} scrolls late at night
+- What {partner} googles most
+- {partner}'s browser history in one word
+- What {partner} buys online at 2am
+- A gadget [you|@] can't live without
+- What [you|@] would never post online
 
 # Their Numbers
 
@@ -9965,6 +10402,76 @@ money and anything with a right answer to be embarrassed about.
 - Out of 10, how good [you are|@ is] at flirting
 - Out of 10, how jealous [you are|@ is]
 - Out of 10, how much [you like|@ likes] rainy days
+- Minutes [you'd|@ would] nap for, given the chance
+- Hours of sleep [you|@] get on a normal night
+- Minutes it takes [you|@] to fall asleep
+- Times [you wake|@ wakes] up in the night
+- Out of 10, how well [you sleep|@ sleeps]
+- Out of 10, how much [you like|@ likes] a lie-in
+- Out of 10, how much [you like|@ likes] naps
+- Out of 10, how much [you snore|@ snores]
+- Out of 10, how much [you like|@ likes] staying up late
+- Out of 10, how much [you like|@ likes] an early night
+- Minutes [you spend|@ spends] on [your|their] phone in bed
+- Out of 10, how much [you like|@ likes] sleeping naked
+- Out of 10, how much [you like|@ likes] cooking dinner
+- Out of 10, how good [you are|@ is] at putting things away
+- Out of 10, how much [you like|@ likes] a takeaway
+- Out of 10, how much [you like|@ likes] leftovers
+- Out of 10, how much [you like|@ likes] curry
+- Out of 10, how much [you like|@ likes] cereal
+- Out of 10, how much [you like|@ likes] snacking at night
+- Out of 10, how good [you are|@ is] at cooking a full roast
+- Snacks [you have|@ has] in a normal day
+- Minutes [you'd|@ would] wait to eat when hungry
+- Minutes [you spend|@ spends] deciding what to watch
+- Hours [you spend|@ spends] on the sofa at the weekend
+- Minutes [you spend|@ spends] in bed after waking up
+- Out of 10, how much [you like|@ likes] a slow Sunday
+- Out of 10, how much [you like|@ likes] a cold shower
+- Out of 10, how nervous [you were|@ was] before a first date
+- Out of 10, how good [you are|@ is] at texting back quickly
+- Out of 10, how much [you like|@ likes] surprise dates
+- Out of 10, how much [you like|@ likes] a dinner date
+- Out of 10, how much [you like|@ likes] a cinema date
+- Out of 10, how much [you like|@ likes] love songs
+- Out of 10, how much [you like|@ likes] romcoms
+- Out of 10, how much [you like|@ likes] getting flowers
+- Out of 10, how much [you like|@ likes] handwritten cards
+- Out of 10, how good [you are|@ is] at planning a date
+- Out of 10, how good [you are|@ is] at chatting up strangers
+- Out of 10, how good [you are|@ is] at compliments
+- Out of 10, how good [you are|@ is] at taking compliments
+- Out of 10, how much [you like|@ likes] being teased
+- Out of 10, how much [you like|@ likes] cuddling
+- Out of 10, how much [you like|@ likes] holding hands
+- Out of 10, how shy [you are|@ is] on a first date
+- Out of 10, how much [you like|@ likes] dating apps
+- Out of 10, how much [you like|@ likes] a blind date
+- Out of 10, how much [you like|@ likes] weekends away
+- Out of 10, how much [you like|@ likes] Valentine's Day
+- Out of 10, how much [you like|@ likes] being chatted up
+- Out of 10, how good [you are|@ is] at playing hard to get
+- Out of 10, how much [you like|@ likes] a good chat-up line
+- Out of 10, how good [you are|@ is] at dressing up
+- Minutes early [you|@] turn up to a date
+- Outfits [you|@] try on before a date
+- Dates [you|@] went on before meeting [your|their] partner
+- Hours [you'd|@ would] happily spend on a date
+- Times [you|@] checked [your|their] phone on a first date
+- Minutes [you'd|@ would] wait for a date to turn up
+- The age [you were|@ was] at [your|their] first date
+- Texts [you|@] send in a day when flirting
+- Dates it takes before [you'd|@ would] say I love you
+- Dates it takes before [you'd|@ would] kiss someone
+- Out of 10, how much [you like|@ likes] being watched while dancing
+- Out of 10, how good [you are|@ is] at making the first move
+- Out of 10, how much [you like|@ likes] sending a flirty text
+- Out of 10, how flirty [you get|@ gets] when drunk
+- Out of 10, how good [you are|@ is] at sexting (rude)
+- Out of 10, how much [you like|@ likes] a quickie (rude)
+- Out of 10, how much [you like|@ likes] sex in the morning (rude)
+- Out of 10, how much [you like|@ likes] dirty talk (rude)
 
 # This or That
 
@@ -10053,6 +10560,62 @@ predict. No names and no "you": it's always about whoever's picking.
 - Tidy while cooking | Tidy after
 - Netflix | YouTube
 - Road trip snacks | Service station stop
+- Duvet | Blanket
+- Fried eggs | Scrambled eggs
+- Soft pillow | Firm pillow
+- Make the bed | Leave it
+- Breakfast | Dinner
+- Soup | Sandwich
+- Curtains open | Curtains shut
+- Snooze | Up straight away
+- Shower gel | Bar soap
+- Pasta | Rice
+- Nap | Push through
+- Salt | Pepper
+- Cooking together | Cooking solo
+- Hot drink | Cold drink
+- Bedtime routine | Just collapse
+- Sleep naked | Pyjamas
+- Breakfast for dinner | Dinner for breakfast
+- Porridge | Pancakes
+- Dinner at six | Dinner at nine
+- Shower together | Shower alone
+- Big breakfast | Skip it
+- Cheese | Chocolate
+- Telly on | Telly off
+- Morning cuddle | Morning coffee
+- Own blanket | Shared blanket
+- Sex before dinner | Sex after dinner (rude)
+- First date drinks | First date dinner
+- Blind date | Dating app
+- Meet through friends | Meet a stranger
+- Pick-up line | Cheeky look
+- Love letter | Love song
+- Holding hands | Arm round shoulder
+- Public affection | Private affection
+- Pet names | Real names
+- Flirt in person | Flirt by text
+- Compliments | Gifts
+- Anniversary trip | Anniversary dinner
+- Proposal in public | Proposal in private
+- Big wedding | Elope
+- Spring wedding | Winter wedding
+- Sunset picnic | Stargazing
+- Weekend away | Day trip
+- Double date | Date for two
+- Same-day reply | Leave them waiting
+- Good morning text | Goodnight text
+- Ex talk | No ex talk
+- Cook for them | Book a table
+- Rose petals | Fairy lights
+- Long goodbye | Quick goodbye
+- Sleepover | Home by midnight
+- Wear their hoodie | Lend your hoodie
+- Serenade | Playlist
+- Dirty talk | Sweet talk (rude)
+- Quickie | Long session (rude)
+- Sexy text | Sexy photo (rude)
+- Foreplay | Afterglow (rude)
 
 # Two Lies & a Truth
 
@@ -10115,6 +10678,49 @@ already know.
 - The worst thing [you've|@ has] said to a boss
 - A time [you|@] got into trouble abroad
 - A skill [you|@] learned and then forgot
+- The weirdest time [you've|@ has] fallen asleep
+- Something [you|@] eat when nobody's watching
+- [Your|@'s] worst ever night's sleep
+- A meal [you|@] can cook without a recipe
+- A chore [you|@] secretly enjoy
+- The oddest thing [you've|@ has] put in a sandwich
+- [Your|@'s] go-to takeaway order as a student
+- Something [you've|@ has] sleepwalked or sleep-talked
+- The latest [you've|@ has] ever stayed up
+- A dinner [you|@] made up to impress someone
+- [Your|@'s] worst flatmate or housemate story
+- A food [you|@] pretend to have cooked from scratch
+- A weird thing [you|@] need to fall asleep
+- Something [you|@] ate that was well past its date
+- A dream [you've|@ has] never forgotten
+- A bedtime routine [you|@] had as a kid
+- The most [you've|@ has] ever spent on a takeaway
+- A place other than a bed [you've|@ has] woken up
+- A time [you've|@ has] got carried away in the kitchen (rude)
+- The first thing [you|@] noticed about {partner}
+- A crush [you've|@ has] had on someone unexpected
+- [Your|@'s] worst chat-up line
+- A place [you've|@ has] kissed someone
+- Something [you|@] did to impress a crush
+- The longest [you've|@ has] waited for a reply
+- [Your|@'s] first ever kiss
+- A gift [you've|@ has] given a date
+- The worst outfit [you've|@ has] worn on a date
+- A song [you|@] link to a past romance
+- [Your|@'s] first ever love letter or message
+- The most romantic thing [you've|@ has] done
+- Something [you|@] said on a first date that wasn't true
+- A date [you|@] left early
+- The first present [you|@] gave {partner}
+- Something [you|@] googled before meeting {partner}
+- A pet name [you've|@ has] been called
+- A dating app opening line [you've|@ has] used
+- Something [you|@] did to avoid a second date
+- Somewhere [you|@] hid to avoid someone [you|they] liked
+- A film [you've|@ has] watched to impress someone
+- The first lie [you|@] told {partner}
+- A secret [you|@] kept from {partner} early on
+- Something [you've|@ has] done in a car with a date (rude)
 
 # Mind Meld
 
@@ -10183,6 +10789,39 @@ other is how you meet.
 - A word one of us says too much
 - Our favourite holiday so far
 - Where we'd go on a first date again
+- A fruit
+- A pub snack
+- A bedtime drink
+- A pizza chain
+- A Harry Potter character
+- A fizzy drink
+- Something in a fridge
+- A Sunday roast side
+- An ice cream flavour
+- A musical
+- A stand-up comedian
+- A Spice Girl
+- A type of bread
+- Something you find on a beach
+- A European city
+- A fast food restaurant
+- A children's TV show
+- A pub game
+- A hot drink
+- A Netflix series
+- A Christmas dinner item
+- A soup
+- A superpower
+- Something in a gym bag
+- A style of dance
+- Something we'd cook together
+- Our guilty pleasure
+- A place we'd go for a day out
+- Something we'd never do again
+- Where we'd go for a romantic dinner
+- A game we'd play tonight
+- Something we do in bed (rude)
+- Something we'd try in the bedroom (rude)
 
 # Describe It
 
@@ -11079,6 +11718,28 @@ Hard, so keep each level stocked.
 - Rory's lawn rake rarely rakes really right
 - Eleven owls licked eleven little liquorice lollipops
 - Lesser leather never weathered wetter weather better
+- Rubber baby buggy bumpers
+- Blue glue, green glue
+- Yellow yo-yo
+- Silly Sally sang softly
+- Crisp crusts crackle
+- Six sticky skeletons
+- Pirates' private property
+- Slippery silk sheets
+- Naked knees, nervous knees
+- Sexy sixty-six sex shops (rude)
+- Cooks cook cupcakes quickly
+- Friendly fleas and fireflies
+- Fuzzy Wuzzy was a bear, Fuzzy Wuzzy had no hair
+- Two tiny timid toads trying to talk
+- Flash mob selfie
+- Slippery sex, sloppy sex (rude)
+- Lucky lovers laugh late
+- Lily ladles little Letty's lentil soup
+- The queen in green screamed
+- Cinnamon swirl, swirly cinnamon
+- Thirty-three thirsty thieves thrust thumbs
+- A tutor who tooted the flute tried to tutor two tooters
 
 # Higher or Lower
 
@@ -11173,6 +11834,19 @@ question goes to the bigger one, so word them that way. Keep the gap 10% or more
 - Which came first? | The Titanic sinking | 1912 | The first crossword | 1913 | year
 - Which came first? | Netflix | 1997 | Google | 1998 | year
 - Which came first? | Pac-Man | 1980 | Tetris | 1984 | year
+- Which is taller? | The Shard | 310 | The Gherkin | 180 | metres
+- Which is taller? | Ben Nevis | 1345 | Scafell Pike | 978 | metres
+- Which has more hearts? | An octopus | 3 | A human | 1 | hearts
+- Which has more cards? | An Uno deck | 108 | A standard deck | 52 | cards
+- Which team has more players? | Baseball | 9 | Indoor volleyball | 6 | players
+- Which scores more? | An American football touchdown | 6 | A rugby union try | 5 | points
+- Which alphabet has more letters? | Russian | 33 | English | 26 | letters
+- Which came first? | Facebook | 2004 | YouTube | 2005 | year
+- Which came first? | The iPhone | 2007 | Instagram | 2010 | year
+- Which came first? | The first Harry Potter book | 1997 | The first Hunger Games book | 2008 | year
+- Which came first? | The Berlin Wall falling | 1989 | The Channel Tunnel opening | 1994 | year
+- Which came first? | Grindr | 2009 | Tinder | 2012 | year
+- Which came first? | Playboy | 1953 | The contraceptive pill | 1960 | year
 
 # Guesstimate
 
@@ -11271,3 +11945,27 @@ Whole numbers only. Say the unit in the question.
 - In what year did Coronation Street first air? | 1960
 - In what year did EastEnders first air? | 1985
 - In what year did the Beatles release their first single? | 1962
+- How tall is the Statue of Liberty from the ground to the torch, in feet? | 305
+- How tall is the Burj Khalifa, in metres? | 828
+- How many rooms are in Buckingham Palace? | 775
+- How many years married is a golden anniversary? | 50
+- In what year did the Berlin Wall fall? | 1989
+- In what year was the first iPhone released? | 2007
+- In what year was the first Harry Potter book published? | 1997
+- How long is an Olympic swimming pool, in metres? | 50
+- How many minutes is a rugby union match? | 80
+- What's the highest possible break in snooker? | 147
+- How many people can Wembley Stadium hold? | 90000
+- At what temperature does water boil, in °F? | 212
+- How many teeth does an adult human have, wisdom teeth included? | 32
+- How many ribs does a human have? | 24
+- How many moons does Mars have? | 2
+- How many time zones does Russia have? | 11
+- How long is the film Love Actually, in minutes? | 135
+- How many bones are in the human penis? | 0 (rude)
+- In what year was the first Eurovision Song Contest? | 1956
+- In what year was the first Glastonbury Festival? | 1970
+- In what year was Dolly the sheep born? | 1996
+- In what year did Tower Bridge open? | 1894
+- In what year did Concorde first carry passengers? | 1976
+- In what year was the contraceptive pill first approved in the US? | 1960
