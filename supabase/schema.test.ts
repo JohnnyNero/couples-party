@@ -25,6 +25,7 @@ import m0022 from './migrations/0022_rebuild_crossword.sql?raw'
 import m0023 from './migrations/0023_crossword_archive.sql?raw'
 import m0024 from './migrations/0024_crossword_each.sql?raw'
 import m0025 from './migrations/0025_accounts.sql?raw'
+import m0026 from './migrations/0026_friends.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -49,9 +50,11 @@ const SAM = '00000000-0000-0000-0000-00000000000a'
 const ALEX = '00000000-0000-0000-0000-00000000000b'
 const EVE = '00000000-0000-0000-0000-00000000000e' // not in this couple
 const SAM2 = '00000000-0000-0000-0000-0000000000a2' // Sam's second device, once it's linked
+const DAN = '00000000-0000-0000-0000-00000000000d' // Eve's partner, for friend couples
+const FAY = '00000000-0000-0000-0000-0000000000ff' // on her own
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -74,7 +77,7 @@ beforeAll(async () => {
   db = new PGlite()
   await db.exec(STUB)
   for (const m of MIGRATIONS) await db.exec(m)
-  await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}')`)
+  await db.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}'), ('${SAM2}'), ('${DAN}'), ('${FAY}')`)
 }, 30000)
 
 describe('the wordle colouring', () => {
@@ -951,6 +954,78 @@ describe('our crossword', () => {
       { user_id: ALEX, cells: { '0,1': 'A', '0,2': 'T' }, solved: false },
     ])
     await old.close()
+  })
+})
+
+describe('friend couples', () => {
+  let code = ''
+  it('gives a whole couple a friend code — the same for both of you — and nobody else one', async () => {
+    const pair = await call(SAM, 'create_couple', ['Sam'])
+    await expect(call(SAM, 'friend_code')).rejects.toThrow(/pair first/) // still waiting for Alex
+    await call(ALEX, 'join_couple', [pair, 'Alex'])
+    await expect(call(FAY, 'friend_code')).rejects.toThrow(/pair first/)
+    code = await call(SAM, 'friend_code')
+    expect(code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/)
+    expect(await call(SAM, 'friend_code')).toBe(code)
+    expect(await call(ALEX, 'friend_code')).toBe(code)
+  })
+
+  it('shows who a code belongs to before you add them', async () => {
+    const other = await call(EVE, 'create_couple', ['Eve'])
+    await call(DAN, 'join_couple', [other, 'Dan'])
+    expect(await call(EVE, 'friend_preview', [code.toLowerCase()])).toMatchObject({
+      members: [{ name: 'Sam', photo: null }, { name: 'Alex', photo: null }], you: false, friends: false,
+    })
+    expect((await call(SAM, 'friend_preview', [code])).you).toBe(true)
+    await expect(call(EVE, 'friend_preview', ['NOPE2345'])).rejects.toThrow(/no such code/)
+  })
+
+  it('adds them, once, for both of you on both sides — and never yourselves, or a couple of one', async () => {
+    await call(EVE, 'add_friend', [code])
+    await call(DAN, 'add_friend', [code]) // already friends: no second row
+    await expect(call(SAM, 'add_friend', [code])).rejects.toThrow(/that is you/)
+    await expect(call(FAY, 'add_friend', [code])).rejects.toThrow(/pair first/)
+    expect((await call(ALEX, 'friends', [today()])).map((f: any) => f.members.map((m: any) => m.name))).toEqual([['Eve', 'Dan']]) // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect((await call(DAN, 'friends', [today()])).map((f: any) => f.members.map((m: any) => m.name))).toEqual([['Sam', 'Alex']]) // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect((await call(EVE, 'friend_preview', [code])).friends).toBe(true)
+    expect((await db.query('select * from public.friendships')).rows).toHaveLength(1)
+  })
+
+  it('shows a friend how you are doing today — and nothing of your answers', async () => {
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
+    await db.exec(`update public.puzzles set status = 'solved', finished_at = now() where setter = '${SAM}'`) // Alex solved it
+    await call(SAM, 'save_moment', ['night-1', today(), { v: 1, game: 'tonight', players: { A: 'Sam', B: 'Alex' }, score: { A: 20, B: 18 }, team: 31, finished: true }])
+    const [card] = await call(EVE, 'friends', [today()])
+    expect(Object.keys(card).sort()).toEqual(['id', 'members', 'puzzles', 'since', 'streak', 'today'])
+    expect(card.today).toEqual({ team: 31, finished: true })
+    expect(card.puzzles).toBe(1)
+    expect(JSON.stringify(card)).not.toMatch(/pasta|comfort/)
+    const [back] = await call(SAM, 'friends', [today()])
+    expect(back.today).toBeNull() // Eve and Dan haven't played today
+  })
+
+  it('makes a new code on request — the old link stops working, the friends you have stay', async () => {
+    const fresh = await call(ALEX, 'new_friend_code')
+    expect(fresh).not.toBe(code)
+    await expect(call(FAY, 'friend_preview', [code])).rejects.toThrow(/no such code/)
+    expect(await call(EVE, 'friends', [today()])).toHaveLength(1)
+    code = fresh
+  })
+
+  it('keeps the parts that do the work to itself', async () => {
+    await expect(call(SAM, 'fresh_code', [8])).rejects.toThrow(/permission denied/)
+    await expect(call(SAM, 'my_pair')).rejects.toThrow(/permission denied/)
+    await expect(as(SAM, 'select * from public.friendships')).rejects.toThrow(/permission denied/)
+  })
+
+  it('lets either couple end it, and unpairing ends all of them', async () => {
+    const [card] = await call(DAN, 'friends', [today()])
+    await call(DAN, 'remove_friend', [card.id])
+    expect(await call(SAM, 'friends', [today()])).toEqual([])
+    await call(EVE, 'add_friend', [code])
+    await call(SAM, 'leave_couple')
+    expect(await call(EVE, 'friends', [today()])).toEqual([])
+    await call(EVE, 'leave_couple')
   })
 })
 
