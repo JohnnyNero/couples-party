@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import m0001 from './migrations/0001_pairing_and_daily.sql?raw'
 import m0002 from './migrations/0002_same_question_same_day.sql?raw'
@@ -28,6 +28,7 @@ import m0025 from './migrations/0025_accounts.sql?raw'
 import m0026 from './migrations/0026_friends.sql?raw'
 import m0027 from './migrations/0027_rude.sql?raw'
 import m0028 from './migrations/0028_many_couples.sql?raw'
+import m0029 from './migrations/0029_leaderboard.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -56,7 +57,7 @@ const DAN = '00000000-0000-0000-0000-00000000000d' // Eve's partner, for friend 
 const FAY = '00000000-0000-0000-0000-0000000000ff' // on her own
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027, m0028]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027, m0028, m0029]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -1028,6 +1029,101 @@ describe('friend couples', () => {
     await call(SAM, 'leave_couple')
     expect(await call(EVE, 'friends', [today()])).toEqual([])
     await call(EVE, 'leave_couple')
+  })
+})
+
+describe('the couple leaderboard', () => {
+  // Fresh people, so none of the earlier tests' puzzles or games are in the totals.
+  const GUS = '00000000-0000-0000-0000-0000000000c1'
+  const HAL = '00000000-0000-0000-0000-0000000000c2'
+  const IVY = '00000000-0000-0000-0000-0000000000c3'
+  const JO = '00000000-0000-0000-0000-0000000000c4'
+  const KIT = '00000000-0000-0000-0000-0000000000c5'
+  const LOU = '00000000-0000-0000-0000-0000000000c6'
+  const NEL = '00000000-0000-0000-0000-0000000000c7' // on her own
+
+  const shift = (iso: string, days: number) => {
+    const d = new Date(iso + 'T00:00:00Z')
+    d.setUTCDate(d.getUTCDate() + days)
+    return d.toISOString().slice(0, 10)
+  }
+  const monday = () => {
+    const d = new Date(today() + 'T00:00:00Z')
+    return shift(today(), -((d.getUTCDay() + 6) % 7))
+  }
+  // A puzzle solved in as many guesses as given: 1 is worth 10, 2 is worth 8, 3 is worth 6.
+  const solved = (setter: string, solver: string, forDate: string, guesses: string[]) =>
+    db.exec(`insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer, guesses, status)
+             select couple_id, '${setter}', '${solver}', '${forDate}', 'word', 'p', 'pasta', '{${guesses.join(',')}}', 'solved'
+               from public.members where user_id = '${setter}'`)
+  const night = (uid: string, key: string, team: number) =>
+    call(uid, 'save_moment', [key, today(), { v: 1, game: 'tonight', team, finished: true }])
+  type Row = { id: string; members: { name: string }[]; points: number; me: boolean }
+  const rows = async (uid: string) => (await call(uid, 'friend_leaderboard', [today()])) as Row[]
+  const names = (r: Row) => r.members.map((m) => m.name).join(' & ')
+
+  beforeAll(async () => {
+    await db.exec(`insert into auth.users (id) values ('${GUS}'), ('${HAL}'), ('${IVY}'), ('${JO}'), ('${KIT}'), ('${LOU}'), ('${NEL}')`)
+    await call(HAL, 'join_couple', [await call(GUS, 'create_couple', ['Gus']), 'Hal'])
+    await call(JO, 'join_couple', [await call(IVY, 'create_couple', ['Ivy']), 'Jo'])
+    await call(LOU, 'join_couple', [await call(KIT, 'create_couple', ['Kit']), 'Lou'])
+    await call(IVY, 'add_friend', [await call(GUS, 'friend_code')]) // Gus & Hal are friends with Ivy & Jo, not Kit & Lou
+  })
+  // Later tests expect a database with no other couples in it: these go, with their puzzles, games and friendships.
+  afterAll(async () => {
+    await db.exec(`delete from public.couples where id in (select couple_id from public.members where user_id in ('${GUS}', '${IVY}', '${KIT}'))`)
+  })
+
+  it('lists a couple with no friends alone, at 0', async () => {
+    const solo = await rows(KIT)
+    expect(solo.map(names)).toEqual(['Kit & Lou'])
+    expect(solo[0]).toMatchObject({ points: 0, me: true })
+  })
+
+  it('is empty for someone not in a whole couple, and refuses someone signed out', async () => {
+    expect(await rows(NEL)).toEqual([])
+    await expect(as('', `select public.friend_leaderboard('${today()}')`)).rejects.toThrow(/not signed in/)
+  })
+
+  it('adds up both partners’ puzzle points and the best night of each day, this week only', async () => {
+    await solved(GUS, HAL, today(), ['pasta']) // 10, solved by Hal
+    await solved(HAL, GUS, monday(), ['a', 'b', 'pasta']) // 6, solved by Gus
+    await solved(GUS, HAL, shift(monday(), -1), ['pasta']) // last Sunday: not this week
+    await db.exec(`insert into public.puzzles (couple_id, setter, solver, for_date, kind, prompt, answer, guesses, status)
+                   select couple_id, '${GUS}', '${HAL}', '${today()}', 'either', 'p', '', '{}', 'open'
+                     from public.members where user_id = '${GUS}'`) // open: worth NULL, must not null the total
+    await night(GUS, 'lb-night-a', 20)
+    await night(HAL, 'lb-night-b', 30) // a second save of the night, higher: counts once, at 30
+    await db.exec(`insert into public.moments (couple_id, session_key, played_on, payload)
+                   select couple_id, 'lb-old', '${shift(monday(), -1)}', '{"game":"tonight","team":99}'
+                     from public.members where user_id = '${GUS}'`) // last Sunday's night: not this week
+    expect((await rows(GUS)).find((r) => r.me)).toMatchObject({ points: 10 + 6 + 30 })
+  })
+
+  it('ranks you with your friends, highest first — and never a couple that is not your friend', async () => {
+    await solved(IVY, JO, today(), ['a', 'pasta']) // 8, solved by Jo
+    const mine = await rows(GUS)
+    expect(mine.map(names)).toEqual(['Gus & Hal', 'Ivy & Jo'])
+    expect(mine.map((r) => r.points)).toEqual([46, 8])
+    expect(mine.map((r) => r.me)).toEqual([true, false])
+    const theirs = await rows(IVY)
+    expect(theirs.map(names)).toEqual(['Gus & Hal', 'Ivy & Jo']) // the same board from the other side
+    expect(theirs.map((r) => r.me)).toEqual([false, true])
+    expect(JSON.stringify(mine)).not.toMatch(/Kit|Lou|pasta/)
+  })
+
+  it('breaks a tie by name, and drops a friend once you are no longer friends', async () => {
+    await night(IVY, 'lb-night-c', 38) // Ivy & Jo now 46 too
+    expect((await rows(GUS)).map((r) => r.points)).toEqual([46, 46])
+    expect((await rows(GUS)).map(names)).toEqual(['Gus & Hal', 'Ivy & Jo']) // tied: by name
+    const ivyRow = (await rows(GUS)).find((r) => names(r) === 'Ivy & Jo')!
+    await call(GUS, 'remove_friend', [ivyRow.id])
+    expect((await rows(GUS)).map(names)).toEqual(['Gus & Hal'])
+    expect((await rows(IVY)).map(names)).toEqual(['Ivy & Jo'])
+  })
+
+  it('keeps the total helper private, so no one can look up a couple by id', async () => {
+    await expect(as(GUS, `select public.couple_week_points(gen_random_uuid(), '${today()}')`)).rejects.toThrow(/permission/)
   })
 })
 
