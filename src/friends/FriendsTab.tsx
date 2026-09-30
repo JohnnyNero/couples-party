@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, DailyError, type FriendCard, type Person } from '../daily/api'
+import { api, DailyError, type FriendCard, type LeaderboardRow, type Person } from '../daily/api'
 import { useProfile } from '../profile/store'
 import { friendUrl } from '../start/invite'
 import { localDate, dayIndex } from '../daily/dates'
@@ -7,6 +7,7 @@ import { dailyNumber } from '../share/daily'
 import { Avatar } from '../ui/Avatar'
 import { card, eyebrow, field } from '../ui/styles'
 import { Loading } from '../ui/Loading'
+import { Leaderboard } from './Leaderboard'
 
 // Your friend couples: how each is getting on today (their streak, whether they've played
 // Today's games and how they did as a team, how many of today's puzzles they've solved),
@@ -28,10 +29,12 @@ export function FriendsTab() {
   const profile = useProfile()
   const paired = profile?.state === 'paired' ? profile : null
   const [list, setList] = useState<FriendCard[] | null>(null)
+  const [board, setBoard] = useState<LeaderboardRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const load = useCallback(() => {
     setError(null)
     api.friends(localDate()).then(setList).catch((e) => setError(e instanceof DailyError ? e.message : 'Couldn’t reach the server.'))
+    api.friendLeaderboard(localDate()).then(setBoard).catch(() => setBoard(null)) // hidden until the server has it
   }, [])
   useEffect(() => { if (paired) load() }, [paired?.partner.name, load]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -45,6 +48,7 @@ export function FriendsTab() {
   }
   return (
     <div className="flex flex-col gap-4">
+      {board && <Leaderboard rows={board} />}
       <AddFriends me={`${paired.me.name} & ${paired.partner.name}`} onAdded={load} />
       <div className={eyebrow + ' mt-1'}>Your friends{list && list.length > 0 ? ` · ${list.length}` : ''}</div>
       {error ? (

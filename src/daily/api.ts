@@ -367,6 +367,9 @@ export type FriendCard = {
 }
 export type FriendPreview = { members: Person[]; you: boolean; friends: boolean }
 
+// The couple leaderboard (migration 0029): you and your friends, ranked on this week's points.
+export type LeaderboardRow = { id: string; members: Person[]; points: number; me: boolean }
+
 // Our questions: the couple's own cards for the games — from migration 0014.
 export type IdeaKind = 'mrmrs' | 'finger' | 'lights' | 'wave' | 'clash' | 'word' | 'meld' | 'describe'
 export type Idea = { id: string; kind: IdeaKind; text: string; mine: boolean; createdAt: string }
@@ -388,6 +391,7 @@ export const api = {
   addFriend: (code: string) => rpc<void>('add_friend', { p_code: code }),
   removeFriend: (couple: string) => rpc<void>('remove_friend', { p_couple: couple }),
   friends: (today: string) => rpc<FriendCard[]>('friends', { p_today: today }),
+  friendLeaderboard: (today: string) => rpc<LeaderboardRow[]>('friend_leaderboard', { p_today: today }),
   // Your account and everything that's yours with it (migration 0025).
   deleteAccount: () => rpc<void>('delete_account'),
   daily: (today: string) => rpc<Daily>('daily', { p_today: today }),
