@@ -27,6 +27,7 @@ import m0024 from './migrations/0024_crossword_each.sql?raw'
 import m0025 from './migrations/0025_accounts.sql?raw'
 import m0026 from './migrations/0026_friends.sql?raw'
 import m0027 from './migrations/0027_rude.sql?raw'
+import m0028 from './migrations/0028_many_couples.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -55,7 +56,7 @@ const DAN = '00000000-0000-0000-0000-00000000000d' // Eve's partner, for friend 
 const FAY = '00000000-0000-0000-0000-0000000000ff' // on her own
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027, m0028]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -1052,6 +1053,95 @@ describe('rude questions', () => {
   })
 })
 
+describe('more than one couple', () => {
+  const names = async (uid: string) => (await call(uid, 'my_couples')).map((c: any) => `${c.partner?.name ?? '…'}${c.active ? '*' : ''}`) // eslint-disable-line @typescript-eslint/no-explicit-any
+  let withAlex = ''
+  let withEve = ''
+
+  it('lets you start another couple while keeping the first', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    withAlex = (await call(SAM, 'my_couples'))[0].id
+    expect(withAlex).toBe(SAM) // your first couple is you, as it always was
+    await call(SAM, 'add_couple')
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'single', couples: 1 })
+    await call(SAM, 'add_couple') // already free: stays put
+    const second = await call(SAM, 'create_couple', ['Sam'])
+    await call(EVE, 'join_couple', [second, 'Eve'])
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'paired', partner: { name: 'Eve' }, couples: 2 })
+    expect(await names(SAM)).toEqual(['Alex', 'Eve*'])
+    withEve = (await call(SAM, 'my_couples'))[1].id
+    expect(await call(ALEX, 'profile')).toMatchObject({ state: 'paired', partner: { name: 'Sam' } }) // Alex sees no change
+  })
+
+  it('keeps each couple’s puzzles and questions apart', async () => {
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'toast']) // for Eve
+    await call(SAM, 'switch_couple', [withAlex])
+    await call(SAM, 'set_word', [today(), 'Your comfort food', 'pasta']) // for Alex: no clash with Eve's
+    await call(SAM, 'add_idea', ['word', 'Our first holiday'])
+    expect(JSON.stringify(await call(ALEX, 'daily', [today()]))).not.toMatch(/toast/)
+    expect(await call(EVE, 'ideas')).toEqual([])
+    expect(await call(SAM, 'ideas')).toHaveLength(1)
+    expect((await call(SAM, 'profile')).partner.name).toBe('Alex')
+  })
+
+  it('never lets you switch to, or into, someone else’s couple', async () => {
+    await expect(call(EVE, 'switch_couple', [withAlex])).rejects.toThrow(/not your couple/)
+    await expect(call(SAM, 'switch_couple', [EVE])).rejects.toThrow(/not your couple/)
+    expect((await call(EVE, 'profile')).partner.name).toBe('Sam')
+    await expect(as(SAM, 'select * from public.personas')).rejects.toThrow(/permission denied/)
+    await expect(call(SAM, 'use_persona', [EVE])).rejects.toThrow(/permission denied/)
+  })
+
+  it('won’t pair you with yourself', async () => {
+    await call(SAM, 'add_couple')
+    const own = await call(SAM, 'create_couple', ['Sam'])
+    await call(SAM, 'switch_couple', [withAlex])
+    await call(SAM, 'add_couple')
+    await expect(call(SAM, 'join_couple', [own, 'Sam'])).rejects.toThrow(/that is you/)
+    await call(SAM, 'switch_couple', [withAlex]) // the spare one tidies itself away
+    expect(await names(SAM)).toEqual(['Alex*', 'Eve', '…'])
+    expect((await db.query(`select * from public.personas where owner = '${SAM}'`)).rows).toHaveLength(3)
+  })
+
+  it('uses one name and photo everywhere', async () => {
+    await call(SAM, 'set_name', ['Samuel'])
+    expect((await call(ALEX, 'profile')).partner.name).toBe('Samuel')
+    expect((await call(EVE, 'profile')).partner.name).toBe('Samuel')
+    await call(SAM, 'set_name', ['Sam'])
+  })
+
+  it('unpairing ends only the couple you’re using, and moves you to another', async () => {
+    const waiting = (await call(SAM, 'my_couples'))[2].id
+    await call(SAM, 'switch_couple', [waiting])
+    await call(SAM, 'leave_couple')
+    expect(await names(SAM)).toEqual(['Alex', 'Eve*'])
+    await call(SAM, 'leave_couple')
+    expect(await names(SAM)).toEqual(['Alex*'])
+    expect(await call(EVE, 'profile')).toMatchObject({ state: 'single' })
+    expect((await db.query(`select * from public.personas where owner = '${SAM}'`)).rows).toHaveLength(1)
+    expect(withEve).not.toBe(SAM)
+  })
+
+  it('has room for ten', async () => {
+    for (let i = 0; i < 9; i++) { await call(SAM, 'add_couple'); await call(SAM, 'create_couple', ['Sam']) }
+    await expect(call(SAM, 'add_couple')).rejects.toThrow(/too many couples/)
+    for (let i = 0; i < 9; i++) await call(SAM, 'leave_couple')
+    expect(await names(SAM)).toEqual(['Alex*'])
+  })
+
+  it('deleting your account takes every couple you’re in', async () => {
+    await call(SAM, 'add_couple')
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(EVE, 'join_couple', [code, 'Eve'])
+    await call(SAM, 'delete_account')
+    expect(await call(ALEX, 'profile')).toMatchObject({ state: 'single' })
+    expect(await call(EVE, 'profile')).toMatchObject({ state: 'single' })
+    expect((await db.query(`select * from public.personas where owner = '${SAM}'`)).rows).toHaveLength(0)
+    await db.exec(`insert into auth.users (id) values ('${SAM}')`) // back, for what follows
+  })
+})
+
 describe('deleting your account', () => {
   it('takes you, your linked devices and your couple — both of you — and nobody else', async () => {
     const code = await call(SAM, 'create_couple', ['Sam'])
@@ -1073,4 +1163,34 @@ describe('deleting your account', () => {
   it('needs someone signed in', async () => {
     await expect(call('', 'delete_account')).rejects.toThrow()
   })
+})
+
+describe('0028 on a database that already has couples in it', () => {
+  it('leaves everyone where they were, and lets them add a couple', async () => {
+    const old = new PGlite()
+    await old.exec(STUB)
+    for (const m of MIGRATIONS.slice(0, -1)) await old.exec(m)
+    await old.exec(`insert into auth.users (id) values ('${SAM}'), ('${ALEX}'), ('${EVE}')`)
+    const run = async (uid: string, fn: string, args: unknown[] = []) => {
+      await old.exec(`set test.uid = '${uid}'; set role authenticated;`)
+      try {
+        const ph = args.map((_, i) => `$${i + 1}`).join(', ')
+        return (await old.query<{ r: unknown }>(`select public.${fn}(${ph}) as r`, args)).rows[0].r as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      } finally { await old.exec('reset role;') }
+    }
+    const code = await run(SAM, 'create_couple', ['Sam'])
+    await run(ALEX, 'join_couple', [code, 'Alex'])
+    await run(SAM, 'set_word', [today(), 'Your comfort food', 'pasta'])
+    await run(ALEX, 'add_idea', ['word', 'Our first holiday'])
+    await old.exec(MIGRATIONS[MIGRATIONS.length - 1])
+    expect(await run(SAM, 'profile')).toMatchObject({ state: 'paired', partner: { name: 'Alex' }, couples: 1 })
+    expect(await run(ALEX, 'ideas')).toHaveLength(1)
+    expect((await run(ALEX, 'daily', [today()])).theirs).toBeTruthy() // Sam's word still waiting for Alex
+    await run(SAM, 'add_couple')
+    const second = await run(SAM, 'create_couple', ['Sam'])
+    await run(EVE, 'join_couple', [second, 'Eve'])
+    expect((await run(SAM, 'my_couples')).map((c: any) => c.partner.name)).toEqual(['Alex', 'Eve']) // eslint-disable-line @typescript-eslint/no-explicit-any
+    await run(ALEX, 'delete_account')
+    expect((await run(SAM, 'my_couples')).map((c: any) => c.partner.name)).toEqual(['Eve']) // eslint-disable-line @typescript-eslint/no-explicit-any
+  }, 30000)
 })
