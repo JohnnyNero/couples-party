@@ -26,6 +26,7 @@ import m0023 from './migrations/0023_crossword_archive.sql?raw'
 import m0024 from './migrations/0024_crossword_each.sql?raw'
 import m0025 from './migrations/0025_accounts.sql?raw'
 import m0026 from './migrations/0026_friends.sql?raw'
+import m0027 from './migrations/0027_rude.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -54,7 +55,7 @@ const DAN = '00000000-0000-0000-0000-00000000000d' // Eve's partner, for friend 
 const FAY = '00000000-0000-0000-0000-0000000000ff' // on her own
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -1025,6 +1026,28 @@ describe('friend couples', () => {
     await call(EVE, 'add_friend', [code])
     await call(SAM, 'leave_couple')
     expect(await call(EVE, 'friends', [today()])).toEqual([])
+    await call(EVE, 'leave_couple')
+  })
+})
+
+describe('rude questions', () => {
+  it('start off for a new couple, and either of you can switch them for both', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    expect(await call(SAM, 'profile')).toMatchObject({ state: 'waiting', rude: false })
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    expect(await call(ALEX, 'profile')).toMatchObject({ state: 'paired', rude: false })
+    await call(ALEX, 'set_rude', [true])
+    expect(await call(SAM, 'profile')).toMatchObject({ rude: true })
+    await call(SAM, 'set_rude', [false])
+    expect(await call(ALEX, 'profile')).toMatchObject({ rude: false })
+  })
+
+  it('touch only your own couple, and need one', async () => {
+    const eve = await call(EVE, 'create_couple', ['Eve'])
+    await call(SAM, 'set_rude', [true])
+    expect(await call(EVE, 'profile')).toMatchObject({ code: eve, rude: false })
+    await expect(call(FAY, 'set_rude', [true])).rejects.toThrow(/not in a couple/)
+    await call(SAM, 'leave_couple')
     await call(EVE, 'leave_couple')
   })
 })

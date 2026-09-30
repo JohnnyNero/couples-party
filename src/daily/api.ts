@@ -313,6 +313,7 @@ function friendly(message: string): string {
   if (/pair first/.test(message)) return 'Pair up with your partner first — friends are couple to couple.'
   if (/that is you/.test(message)) return 'That’s your own code!'
   if (/too many friends/.test(message)) return 'That’s the most friends a couple can have.'
+  if (/not in a couple/.test(message)) return 'Pair up first.'
   if (/no such code/.test(message)) return "That code didn't work — check it with them?"
   if (/already paired/.test(message)) return "You're already paired."
   if (/already started/.test(message)) return "They've already started it — too late to change."
@@ -347,8 +348,8 @@ export type Person = { name: string; photo: string | null }
 // `devices`: how many other devices you have linked.
 export type Profile =
   | { state: 'single'; linked?: boolean }
-  | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number }
-  | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number }
+  | { state: 'waiting'; code: string | null; me: Person; linked?: boolean; devices?: number; rude?: boolean }
+  | { state: 'paired'; me: Person; partner: Person; since: string; linked?: boolean; devices?: number; rude?: boolean }
 
 // Friend couples (migration 0026): what a friend sees of a couple — never answers.
 export type FriendCard = {
@@ -372,6 +373,7 @@ export const api = {
   profile: () => rpc<Profile>('profile'),
   setName: (name: string) => rpc<void>('set_name', { p_name: name }),
   setPhoto: (photo: string | null) => rpc<void>('set_photo', { p_photo: photo }),
+  setRude: (on: boolean) => rpc<void>('set_rude', { p_on: on }),
   friendCode: () => rpc<string>('friend_code'),
   newFriendCode: () => rpc<string>('new_friend_code'),
   friendPreview: (code: string) => rpc<FriendPreview>('friend_preview', { p_code: code }),

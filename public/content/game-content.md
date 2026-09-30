@@ -10,6 +10,9 @@
     - "- " is one entry.
     - A Wavelength entry is two poles: "- Low | High".
     - A This or That entry is two choices: "- Tea | Coffee".
+    - End an entry (or a "## " theme) with "(rude)" if it's properly rude —
+      it only comes up for couples who've switched rude questions on:
+      "- washing the sex toys (rude)". Flirty is fine untagged; rude is sex.
 
   ---------------------------------------------------------------------------
   WHO IS "YOU"
@@ -58,7 +61,8 @@
   That's the writer winking at the reader.
 
   Spice: the mix is deliberate. Most entries are safe, some are flirty, a few
-  are genuinely rude. Keep that spread when adding more.
+  are genuinely rude. Keep that spread when adding more, and tag the rude ones
+  "(rude)" — new couples start with them switched off.
 
   Audience: any couple — three months in or thirty years. Don't assume they
   live together, own a house, or have a pet.
@@ -85,7 +89,7 @@ the same theme plays differently every time.
 - the last word
 - sugar
 - ordering in
-- sex
+- sex (rude)
 - crisps
 - their own bed
 - tea
@@ -173,7 +177,7 @@ the same theme plays differently every time.
 - reading the comments
 - eating in bed
 - romance novels
-- sexting
+- sexting (rude)
 - true crime
 - daytime TV
 - leftover cake
@@ -475,7 +479,7 @@ the same theme plays differently every time.
 - sleep talking
 - texting
 - cuddling
-- having sex
+- having sex (rude)
 - overthinking
 - playing games
 - listening to podcasts
@@ -529,7 +533,7 @@ the same theme plays differently every time.
 - slow wifi
 - loud neighbours
 - humble brags
-- unsolicited dick pics
+- unsolicited dick pics (rude)
 - sloppy kissers
 
 ## seven things [you'd|@ would] do with a million pounds
@@ -552,7 +556,7 @@ the same theme plays differently every time.
 - keeping it secret
 - buying a pub
 - hiring a cleaner
-- building a sex dungeon
+- building a sex dungeon (rude)
 
 ## seven snacks [you|@] can't resist
 - salt and vinegar crisps
@@ -595,8 +599,8 @@ the same theme plays differently every time.
 - doing an escape room
 - going to the football
 - checking their phone
-- going commando
-- sleeping together
+- going commando (rude)
+- sleeping together (rude)
 
 ## seven chores [you hate|@ hates] most
 - ironing
@@ -618,7 +622,7 @@ the same theme plays differently every time.
 - scrubbing the shower
 - sorting the recycling
 - putting clothes away
-- washing the sex toys
+- washing the sex toys (rude)
 
 ## seven things [you'd|@ would] want in a dream house
 - big bath
@@ -639,8 +643,8 @@ the same theme plays differently every time.
 - heated floors
 - sauna
 - separate bedrooms
-- soundproof bedroom
-- mirrored ceiling
+- soundproof bedroom (rude)
+- mirrored ceiling (rude)
 
 # Called It
 
@@ -702,7 +706,7 @@ and keep a mix: some most people have done, some hardly anyone has.
 - you've skipped a shower and hoped nobody noticed
 - you've lied about reading a book
 - you've returned something you'd already worn
-- you've sent a nude
+- you've sent a nude (rude)
 
 # Wavelength
 
@@ -716,7 +720,7 @@ between has to be nameable.
 - Boring | Exciting
 - Cheap | Expensive
 - Ugly | Beautiful
-- Innocent | Filthy
+- Innocent | Filthy (rude)
 - Cringe | Cool
 - Red flag | Green flag
 - Turn-off | Turn-on
@@ -771,9 +775,9 @@ Pick things that have a drawable answer.
 - favourite dessert
 - dream superpower
 - celebrity crush
-- favourite body part
-- biggest turn-on
-- favourite position
+- favourite body part (rude)
+- biggest turn-on (rude)
+- favourite position (rude)
 - ideal Sunday
 - best holiday ever
 - guilty pleasure
@@ -860,8 +864,8 @@ person the answer belongs to decides if the guess counts. Short answers only.
 - The chore you hate most?
 - Your perfect pizza topping?
 - The first thing you notice about someone?
-- Your favourite place to be kissed?
-- Your biggest turn-on?
+- Your favourite place to be kissed? (rude)
+- Your biggest turn-on? (rude)
 - The best date we've been on?
 - Your go-to takeaway order?
 - The film that makes you cry?
@@ -1000,7 +1004,7 @@ start them the way an answer would finish them: "A …" or "Something …".
 - Something you'd wear to bed
 - Something you do in the shower
 - Something you'd never tell your mum
-- A turn-on
+- A turn-on (rude)
 - Something in an office
 - Something at a wedding
 - Something in a car
@@ -10007,9 +10011,9 @@ predict. No names and no "you": it's always about whoever's picking.
 - Tidy | Cosy chaos
 - Text first | Play it cool
 - Big spoon | Little spoon
-- Morning sex | Night-time sex
+- Morning sex | Night-time sex (rude)
 - Neck kisses | Lip kisses
-- Lights on | Lights off
+- Lights on | Lights off (rude)
 - Dance floor | Bar
 - Burger | Kebab
 - Ketchup | Mayo

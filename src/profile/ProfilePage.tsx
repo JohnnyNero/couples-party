@@ -14,9 +14,10 @@ import { slide } from '../ui/transition'
 import { InstallRow } from '../start/InstallCard'
 import { openWelcome, SIGNED_OUT } from '../onboard/flags'
 import { signOut, useAccount } from '../auth/account'
+import { RudeRow } from './RudeRow'
 
 // You, your partner, and the few settings there are: your name and photo, day or night,
-// and unpairing. Opened from your avatar at the top of Home.
+// rude questions, and unpairing. Opened from your avatar at the top of Home.
 
 const NAME_KEY = 'couples-party:name' // the name Pairing remembers before you're paired
 const localName = () => { try { return localStorage.getItem(NAME_KEY) ?? '' } catch { return '' } }
@@ -92,6 +93,7 @@ export function ProfilePage({ onClose, onUnpaired }: { onClose: () => void; onUn
             <ThemeChoice />
             <FullscreenRow />
             <HapticsRow />
+            <RudeRow />
             <InstallRow />
           </section>
 

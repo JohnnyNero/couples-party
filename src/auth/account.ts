@@ -172,7 +172,7 @@ export async function finishRedirect(): Promise<void> {
 const PERSONAL = [
   'couples-party:profile', 'couples-party:ideas', 'couples-party:seen', 'couples-party:name', 'couples-party:leaderboard',
   'couples-party:spun', 'coupled:in-progress', 'coupled:shown', 'coupled:pins', 'coupled:streak-seen',
-  'coupled:played-together', 'coupled:getting-started-hidden',
+  'coupled:played-together', 'coupled:getting-started-hidden', 'couples-party:rude',
 ]
 export function forgetThisPhone(): void {
   try {

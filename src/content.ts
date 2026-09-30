@@ -36,7 +36,12 @@ function sectionFor(heading: string): Section {
   }
 }
 
-export function parseContent(text: string): ParsedContent {
+// "(rude)" at the end of an entry or a Shortlist theme marks it as properly rude: left
+// out unless the couple has rude questions switched on (see profile/rude). Ids are
+// counted with the rude ones in, so they're the same whichever way it's set.
+const RUDE = /\s*\(rude\)\s*$/i
+
+export function parseContent(text: string, { rude = true }: { rude?: boolean } = {}): ParsedContent {
   const themes: Theme[] = []
   const fingerStatements: string[] = []
   const spectrums: WaveSpectrum[] = []
@@ -60,6 +65,9 @@ export function parseContent(text: string): ParsedContent {
 
   let section: Section = null
   let currentTheme: Theme | null = null
+  let themeCount = 0
+  let spectrumCount = 0
+  let drawCount = 0
 
   for (const rawLine of text.split('\n')) {
     const line = rawLine.trim()
@@ -67,10 +75,13 @@ export function parseContent(text: string): ParsedContent {
     // "## theme text" starts a new Shortlist theme — everything else is only
     // recognized inside a section, and a theme only means anything inside Shortlist.
     if (line.startsWith('## ')) {
-      const themeText = line.slice(3).trim()
+      const heading = line.slice(3).trim()
+      const themeText = heading.replace(RUDE, '')
       if (section === 'shortlist' && themeText.length > 0) {
-        currentTheme = { id: `t${String(themes.length + 1).padStart(3, '0')}`, text: themeText, pool: [] }
-        themes.push(currentTheme)
+        const theme = { id: `t${String(++themeCount).padStart(3, '0')}`, text: themeText, pool: [] }
+        // A rude theme's entries have nowhere to go.
+        currentTheme = rude || !RUDE.test(heading) ? theme : null
+        if (currentTheme) themes.push(currentTheme)
       }
       // Inside Tongue Twisters, "## Easy" / "## Medium" / "## Hard" says how hard.
       if (section === 'twist') {
@@ -93,8 +104,14 @@ export function parseContent(text: string): ParsedContent {
     }
     // Everything else — blank lines, plain prose instructions — is commentary.
     if (!line.startsWith('- ')) continue
-    const item = line.slice(2).trim()
+    const entry = line.slice(2).trim()
+    const item = entry.replace(RUDE, '')
     if (item.length === 0) continue
+    if (!rude && item !== entry) {
+      if (section === 'wavelength') spectrumCount++
+      if (section === 'draw') drawCount++
+      continue
+    }
 
     switch (section) {
       case 'shortlist':
@@ -105,11 +122,11 @@ export function parseContent(text: string): ParsedContent {
         break
       case 'wavelength': {
         const [low, high] = item.split('|').map((s) => s.trim())
-        if (low && high) spectrums.push({ id: `w${String(spectrums.length + 1).padStart(2, '0')}`, low, high })
+        if (low && high) spectrums.push({ id: `w${String(++spectrumCount).padStart(2, '0')}`, low, high })
         break
       }
       case 'draw':
-        drawPrompts.push({ id: `d${String(drawPrompts.length + 1).padStart(2, '0')}`, text: item })
+        drawPrompts.push({ id: `d${String(++drawCount).padStart(2, '0')}`, text: item })
         break
       case 'likely':
         likelyStatements.push(item)

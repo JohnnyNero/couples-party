@@ -323,3 +323,54 @@ describe('the shipped content keeps its shape', () => {
     expect(dupes(parsed.clashCategories)).toEqual([])
   })
 })
+
+describe('rude questions', () => {
+  const sample = `
+# Shortlist
+## seven snacks
+- crisps
+- sex (rude)
+- toast
+## seven things in bed (rude)
+- snoring
+## seven drinks
+- tea
+# Wavelength
+- Innocent | Filthy (rude)
+- Cold | Hot
+# Draw Your Answer
+- favourite position (RUDE)
+- dream car
+`
+
+  it('are left out when switched off, with the (rude) tag never shown either way', () => {
+    const on = parseContent(sample)
+    expect(on.themes.map((t) => t.text)).toEqual(['seven snacks', 'seven things in bed', 'seven drinks'])
+    expect(on.themes[0].pool).toEqual(['crisps', 'sex', 'toast'])
+    expect(on.spectrums.map((w) => w.high)).toEqual(['Filthy', 'Hot'])
+    const off = parseContent(sample, { rude: false })
+    expect(off.themes.map((t) => t.text)).toEqual(['seven snacks', 'seven drinks'])
+    expect(off.themes[0].pool).toEqual(['crisps', 'toast'])
+    expect(off.spectrums.map((w) => w.high)).toEqual(['Hot'])
+    expect(off.drawPrompts.map((d) => d.text)).toEqual(['dream car'])
+  })
+
+  it('keep everything else’s ids the same whichever way it’s set', () => {
+    const on = parseContent(sample)
+    const off = parseContent(sample, { rude: false })
+    const ids = (c: typeof on) => [...c.themes.map((t) => `${t.id}:${t.text}`), ...c.spectrums.map((w) => `${w.id}:${w.low}`), ...c.drawPrompts.map((d) => `${d.id}:${d.text}`)]
+    for (const id of ids(off)) expect(ids(on)).toContain(id)
+  })
+
+  it('leave the shipped games enough to play with them off', () => {
+    const on = parseContent(shippedContent)
+    const off = parseContent(shippedContent, { rude: false })
+    expect(JSON.stringify(on)).not.toMatch(/\(rude\)/i)
+    const count = (c: typeof on) => [c.themes, c.fingerStatements, c.spectrums, c.drawPrompts, c.mrmrsQuestions, c.clashCategories, c.eitherPairs].map((x) => x.length)
+    expect(count(off).every((n, i) => n < count(on)[i] || n === count(on)[i])).toBe(true)
+    expect(count(off).reduce((a, b) => a + b)).toBeLessThan(count(on).reduce((a, b) => a + b))
+    for (const t of off.themes) expect(t.pool.length).toBeGreaterThanOrEqual(7)
+    const asked = [off.themes, off.fingerStatements, off.spectrums, off.drawPrompts, off.likelyStatements, off.mrmrsQuestions, off.lightsQuestions, off.clashCategories, off.eitherPairs, off.wordPrompts, off.numberQuestions]
+    expect(JSON.stringify(asked)).not.toMatch(/\bsex\b|nude|Filthy|biggest turn-on|"A turn-on"/i)
+  })
+})

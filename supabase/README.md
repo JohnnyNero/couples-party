@@ -58,6 +58,10 @@ SQL Editor → New query → paste the whole file → **Run**.
 25. `migrations/0025_accounts.sql` — real accounts: drops the old device-linking
    (`link_code`, `link_device`, `unlink_device`, `device_codes`) now that signing in does
    that job, and adds `delete_account()`.
+26. `migrations/0026_friends.sql` — friend couples: friend codes, `friendships`, and what
+   a friend sees of you (names, photos, streak, today's score, puzzles solved).
+27. `migrations/0027_rude.sql` — each couple's rude-questions switch (`couples.rude`,
+   `set_rude`, and `profile()` reporting it). Existing couples start on, new ones off.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

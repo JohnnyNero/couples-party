@@ -34,6 +34,8 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l)
 }
 
+export const profileNow = (): Profile | null => current
+
 export function useProfile(): Profile | null {
   return useSyncExternalStore(subscribe, () => current, () => null)
 }
@@ -69,6 +71,11 @@ export function usePhoto(name: string | undefined): string | null {
 }
 
 // Changes made on the profile page, reflected locally straight away.
+export function patchCouple(change: { rude: boolean }) {
+  if (!current || current.state === 'single') return
+  set({ ...current, ...change })
+}
+
 export function patchMe(change: Partial<{ name: string; photo: string | null }>) {
   if (!current || current.state === 'single') return
   set({ ...current, me: { ...current.me, ...change } })
