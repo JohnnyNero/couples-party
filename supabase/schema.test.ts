@@ -29,6 +29,7 @@ import m0026 from './migrations/0026_friends.sql?raw'
 import m0027 from './migrations/0027_rude.sql?raw'
 import m0028 from './migrations/0028_many_couples.sql?raw'
 import m0029 from './migrations/0029_leaderboard.sql?raw'
+import m0030 from './migrations/0030_two_lies_puzzle.sql?raw'
 
 // The migrations run for real, in order, in Postgres compiled to WebAssembly. Supabase's own auth
 // schema is stubbed down to the one thing the migration relies on — auth.uid() — and
@@ -57,7 +58,7 @@ const DAN = '00000000-0000-0000-0000-00000000000d' // Eve's partner, for friend 
 const FAY = '00000000-0000-0000-0000-0000000000ff' // on her own
 
 let db: PGlite
-const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027, m0028, m0029]
+const MIGRATIONS = [m0001, m0002, m0003, m0004, m0005, m0006, m0007, m0008, m0009, m0010, m0011, m0012, m0013, m0014, m0015, m0016, m0017, m0018, m0019, m0020, m0021, m0022, m0023, m0024, m0025, m0026, m0027, m0028, m0029, m0030]
 
 // Run SQL as a signed-in user, then drop back to the owner.
 async function as<T = Record<string, unknown>>(uid: string, sql: string, params: unknown[] = []) {
@@ -474,7 +475,7 @@ describe('the board: solve theirs, then set tomorrow', () => {
   it('starts empty: nothing to solve, nothing set, no points', async () => {
     const b = await call(ROBIN, 'board', [today()])
     expect(b).toMatchObject({ state: 'paired', me: 'Robin', partner: 'Jess', today: { me: 0, them: 0 }, total: { me: 0, them: 0 }, streak: 0 })
-    expect(Object.keys(b.kinds).sort()).toEqual(['dial', 'either', 'numbers', 'sketch', 'top5', 'word'])
+    expect(Object.keys(b.kinds).sort()).toEqual(['bluff', 'dial', 'either', 'numbers', 'sketch', 'top5', 'word'])
     expect(b.kinds.word).toEqual({ solve: null, mine: null, next: null })
   })
   it("sets tomorrow's for the partner, shown as next", async () => {
@@ -1242,6 +1243,37 @@ describe('more than one couple', () => {
     expect(await call(EVE, 'profile')).toMatchObject({ state: 'single' })
     expect((await db.query(`select * from public.personas where owner = '${SAM}'`)).rows).toHaveLength(0)
     await db.exec(`insert into auth.users (id) values ('${SAM}')`) // back, for what follows
+  })
+})
+
+describe('Two Lies & a Truth, the daily puzzle', () => {
+  const three = ['I broke my arm skiing', 'I met the Queen', 'I once won a pie-eating contest']
+  it('takes three different answers and which one is true, and keeps the truth from the guesser', async () => {
+    const code = await call(SAM, 'create_couple', ['Sam'])
+    await call(ALEX, 'join_couple', [code, 'Alex'])
+    await expect(call(SAM, 'set_bluff', [today(), "[Your|@'s] best story", ['a', 'b'], 0])).rejects.toThrow(/three answers/)
+    await expect(call(SAM, 'set_bluff', [today(), "[Your|@'s] best story", ['a', 'A', 'b'], 0])).rejects.toThrow(/three different/)
+    await expect(call(SAM, 'set_bluff', [today(), "[Your|@'s] best story", three, 3])).rejects.toThrow(/which one is true/)
+    await call(SAM, 'set_bluff', [today(), "[Your|@'s] best story", three, 1])
+    await call(ALEX, 'set_bluff', [today(), 'something else entirely', ['x', 'y', 'z'], 2]) // the day's prompt is Sam's
+    const board = await call(ALEX, 'board', [today()])
+    expect(board.kinds.bluff.solve).toMatchObject({ statements: three, truth: null, pick: null, status: 'open' })
+    expect(board.kinds.bluff.mine.prompt).toBe("[Your|@'s] best story")
+    expect(board.kinds.sketch).toBeDefined() // still there for older copies of the app
+    expect((await call(SAM, 'board', [today()])).kinds.bluff.mine.truth).toBe(1) // yours, you can see
+  })
+
+  it('scores one pick, 10 for the truth and nothing for a lie, and only once', async () => {
+    const mine = (await call(ALEX, 'board', [today()])).kinds.bluff.solve
+    await expect(call(SAM, 'submit_bluff', [mine.id, 1])).rejects.toThrow(/no such puzzle/) // not Sam's to solve
+    expect(await call(ALEX, 'submit_bluff', [mine.id, 1])).toMatchObject({ pick: 1, truth: 1, status: 'solved' })
+    expect(await call(ALEX, 'submit_bluff', [mine.id, 0])).toMatchObject({ pick: 1 }) // a second go changes nothing
+    expect((await call(ALEX, 'board', [today()])).kinds.bluff.solve.points).toBe(10)
+    await expect(call(SAM, 'set_bluff', [today(), 'x', three, 0])).rejects.toThrow(/already started/)
+    const theirs = (await call(SAM, 'board', [today()])).kinds.bluff.solve
+    expect(await call(SAM, 'submit_bluff', [theirs.id, 0])).toMatchObject({ status: 'failed', truth: 2 })
+    expect((await call(SAM, 'board', [today()])).kinds.bluff.solve.points).toBe(0)
+    await call(SAM, 'leave_couple')
   })
 })
 
