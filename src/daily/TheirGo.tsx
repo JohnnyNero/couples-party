@@ -1,4 +1,5 @@
-import type { DialView, EitherView, NumbersView, PuzzleView, SketchView, Top5View } from './api'
+import type { BluffView, DialView, EitherView, NumbersView, PuzzleView, Top5View } from './api'
+import { BluffResult, bluffVerdict } from './BluffKit'
 import { EitherResult } from './EitherKit'
 import { eitherSummary } from './either'
 import { TileRow } from './Tiles'
@@ -7,7 +8,6 @@ import { outcome } from './Top5Card'
 import { parseSpectrumPrompt } from './dial'
 import { renderQuestion } from './question'
 import { RevealLadder } from './PlayTop5'
-import { DrawingCanvas } from '../views/DrawingCanvas'
 import { WaveDial } from '../ui/WaveDial'
 import { say } from '../say'
 import { eyebrow } from '../ui/styles'
@@ -16,9 +16,9 @@ import { eyebrow } from '../ui/styles'
 // your side: your answer or mark or order, next to what they did with it. Opened from
 // your own finished puzzle's result, once they've finished yours.
 
-export type Mine = PuzzleView | DialView | Top5View | SketchView | NumbersView | EitherView
+export type Mine = PuzzleView | DialView | Top5View | BluffView | NumbersView | EitherView
 
-const NAMES = { word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That' } as const
+const NAMES = { word: 'Their Word', dial: 'The Dial', top5: 'Top 5', bluff: 'Two Lies & a Truth', numbers: 'Their Numbers', either: 'This or That' } as const
 
 export function TheirGo({ puzzle, partner, me, onClose, back = 'Back to mine' }: { puzzle: Mine; partner: string; me: string; onClose: () => void; back?: string }) {
   return (
@@ -46,7 +46,7 @@ function title(p: Mine, partner: string, me: string): string {
     case 'word': return renderQuestion(p.prompt, partner)
     case 'dial': { const { low, high } = parseSpectrumPrompt(p.prompt); return `${low} ↔ ${high}` }
     case 'top5': return say(p.prompt, { self: true, subject: me, partner })
-    case 'sketch': return `Your ${p.prompt}`
+    case 'bluff': return say(p.prompt, { self: true, subject: me, partner })
     case 'numbers': return 'Your numbers'
     case 'either': return 'Your picks'
   }
@@ -88,22 +88,11 @@ function Replay({ puzzle: p, partner, me }: { puzzle: Mine; partner: string; me:
           <Verdict>{outcome(p.exact ?? 0, p.near ?? 0)}</Verdict>
         </>
       )
-    case 'sketch':
+    case 'bluff':
       return (
         <>
-          <div className="w-full max-w-sm"><DrawingCanvas strokes={p.strokes} /></div>
-          <div className="text-sm text-fg/60">You drew <b className="uppercase tracking-wider text-fg">{p.answer}</b></div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {p.guesses.map((g, i) => {
-              const hit = p.status === 'solved' && i === p.guesses.length - 1
-              return (
-                <span key={i} className={'px-3 py-1 rounded-full text-sm font-bold ' + (hit ? 'bg-correct text-white' : 'bg-fg/10 text-fg/50 line-through')}>
-                  {g}
-                </span>
-              )
-            })}
-          </div>
-          <Verdict>{p.status === 'solved' ? `${partner} got it in ${p.guesses.length}` : `${partner} didn’t get it`}</Verdict>
+          <BluffResult statements={p.statements} truth={p.truth ?? -1} pick={p.pick} guesser={{ p: 'B', name: partner }} />
+          <Verdict>{bluffVerdict(p.status === 'solved', partner)}</Verdict>
         </>
       )
     case 'numbers':

@@ -14,6 +14,16 @@ Decisions already made, so they survive between sessions. Newest at the top.
 2. Maybe: a small alert when someone in one of your *other* couples is waiting in a
    lobby or has nudged you — today you only see it once you switch to that couple.
 
+## Done: Two Lies & a Truth replaces Sketch as a daily puzzle (migration 0030)
+
+Sketch didn't work without the drawer there: a guess had to match their answer word for
+word ("puppy" for "dog" lost), and nobody could wave a near miss through. Drawing stays a
+live game (Draw Your Answer), where the drawer can count a near miss. In its place on the
+Today board: Two Lies & a Truth — the day's prompt from the live game's pool, the same for
+both of you; you write one truth and two lies (the app shuffles where the truth sits); your
+partner picks once, 10 for the truth, 0 for a lie. Nothing typed is ever marked, so there's
+nothing to dispute.
+
 ## Done: couple leaderboard (migration 0029)
 
 At the top of the Friends tab: you and your friend couples ranked on this week's points,

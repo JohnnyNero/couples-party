@@ -14,7 +14,7 @@ import { InviteCard } from '../onboard/InviteCard'
 import { PlayDial } from './PlayDial'
 import { PlayEither } from './PlayEither'
 import { PlayNumbers } from './PlayNumbers'
-import { PlaySketch } from './PlaySketch'
+import { PlayBluff } from './PlayBluff'
 import { PlayTop5 } from './PlayTop5'
 import { questionFromThem, questionOfTheDay, renderQuestion } from './question'
 import { say } from '../say'
@@ -27,9 +27,9 @@ import { caughtUpOn, markCaughtUp, settle, type Pin } from './pins'
 import { SetDialClue } from './SetDialClue'
 import { SetEither } from './SetEither'
 import { SetNumbers } from './SetNumbers'
-import { SetSketch } from './SetSketch'
+import { SetBluff } from './SetBluff'
 import { SetTop5 } from './SetTop5'
-import { sketchOfTheDay } from './sketch'
+import { bluffOfTheDay } from './bluff'
 import { TodayPuzzle } from './TodayPuzzle'
 import { StatsPage } from './StatsPage'
 import { fiveify, itemsOfTheDay, themeOfTheDay } from './top5'
@@ -48,11 +48,13 @@ import { Loading } from '../ui/Loading'
 // tile goes straight to setting.
 
 type Kind = keyof BoardKinds
-const KINDS: Kind[] = ['word', 'dial', 'top5', 'sketch', 'numbers', 'either']
+// Sketch was one of these until Two Lies & a Truth took its place: a drawing guessed in
+// a word or two needed the drawer there to wave a near miss through.
+const KINDS: Kind[] = ['word', 'dial', 'top5', 'bluff', 'numbers', 'either']
 export const NAMES: Record<Kind, string> = {
-  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That',
+  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', bluff: 'Two Lies & a Truth', numbers: 'Their Numbers', either: 'This or That',
 }
-// The kinds this server knows — This or That needs migration 0017.
+// The kinds this server knows — This or That needs migration 0017, Two Lies 0030.
 const kindsOf = (d: { kinds: BoardKinds }) => KINDS.filter((k) => d.kinds[k])
 
 // 'theirs': how your partner did on the one you set them today (TheirGo).
@@ -370,11 +372,12 @@ export function KindIcon({ kind }: { kind: Kind }) {
           ))}
         </svg>
       )
-    case 'sketch':
+    case 'bluff':
       return (
-        <svg viewBox="0 0 24 24" className={box} aria-hidden="true" fill="none">
-          <path d="m15 4 5 5L9 20H4v-5z" fill="rgb(var(--present) / 0.35)" stroke="rgb(var(--fg))" strokeWidth="1.8" strokeLinejoin="round" />
-          <path d="m13 6 5 5" stroke="rgb(var(--fg))" strokeWidth="1.8" />
+        <svg viewBox="0 0 24 24" className={box} aria-hidden="true">
+          <rect x="2" y="3" width="20" height="5" rx="2.5" fill="rgb(var(--fg) / 0.25)" />
+          <rect x="2" y="9.5" width="20" height="5" rx="2.5" fill="rgb(var(--correct))" />
+          <rect x="2" y="16" width="20" height="5" rx="2.5" fill="rgb(var(--fg) / 0.25)" />
         </svg>
       )
     case 'numbers':
@@ -449,7 +452,7 @@ function PuzzleScreen({
       }
       case 'dial': return <PlayDial puzzle={kinds.dial.solve!} partner={partner} spectrum={kinds.dial.solve!.prompt} onClose={onClose} extra={extra} />
       case 'top5': return <PlayTop5 puzzle={kinds.top5.solve!} partner={partner} me={me} theme={say(kinds.top5.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} extra={extra} />
-      case 'sketch': return <PlaySketch puzzle={kinds.sketch.solve!} partner={partner} prompt={kinds.sketch.solve!.prompt} onClose={onClose} extra={extra} />
+      case 'bluff': return <PlayBluff puzzle={kinds.bluff!.solve!} partner={partner} me={me} question={say(kinds.bluff!.solve!.prompt, { self: false, subject: partner, partner: me })} onClose={onClose} extra={extra} />
       case 'numbers': return <PlayNumbers puzzle={kinds.numbers.solve!} partner={partner} me={me} onClose={onClose} extra={extra} />
       case 'either': return <PlayEither puzzle={kinds.either!.solve!} partner={partner} onClose={onClose} extra={extra} />
     }
@@ -486,7 +489,7 @@ function SetScreen({ kind, forDate, partner, me, pools, ourWords, onClose }: {
           const theme = themeOfTheDay(day, pools.content.themes, recentFor('top5', day, pools.content.themes.length))
           return theme ? { prompt: fiveify(theme.text), items: itemsOfTheDay(day, theme) } : {}
         }
-        case 'sketch': return { prompt: sketchOfTheDay(day, pools.content.drawPrompts, recentFor('sketch', day, pools.content.drawPrompts.length)) ?? '' }
+        case 'bluff': return { prompt: bluffOfTheDay(day, pools.content.bluffPrompts, recentFor('bluff', day, pools.content.bluffPrompts.length)) ?? '' }
         case 'numbers': return { questions: numbersOfTheDay(day, pools.numbers, recentFor('numbers', day, pools.numbers.length, NUMBERS_COUNT)) ?? [] }
         case 'either': return { questions: eitherOfTheDay(day, pools.either, recentFor('either', day, pools.either.length, EITHER_COUNT)) ?? [] }
       }
@@ -514,8 +517,10 @@ function SetScreen({ kind, forDate, partner, me, pools, ourWords, onClose }: {
       const template = p.prompt ?? ''
       return <SetTop5 partner={partner} theme={say(template, { self: true, subject: me, partner })} template={template} items={p.items ?? []} onClose={onClose} forDate={forDate} />
     }
-    case 'sketch':
-      return <SetSketch partner={partner} prompt={p.prompt || 'comfort food'} onClose={onClose} forDate={forDate} />
+    case 'bluff': {
+      const template = p.prompt || "[Your|@'s] worst ever present"
+      return <SetBluff partner={partner} template={template} question={say(template, { self: true, subject: me, partner })} onClose={onClose} forDate={forDate} />
+    }
     case 'numbers':
       return <SetNumbers partner={partner} questions={p.questions ?? []} onClose={onClose} forDate={forDate} />
     case 'either':

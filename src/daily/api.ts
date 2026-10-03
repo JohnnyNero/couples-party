@@ -157,6 +157,19 @@ export type EitherView = {
   status: 'open' | 'solved'
 }
 
+// Two Lies & a Truth (migration 0030): three answers to the day's prompt, one true. The
+// three are never hidden; which is true is, until the solver has picked.
+export type BluffView = {
+  id: string
+  forDate: string
+  kind: 'bluff'
+  prompt: string
+  statements: string[]
+  truth: number | null
+  pick: number | null
+  status: 'open' | 'solved' | 'failed'
+}
+
 // The Today board: every kind at once. For each, `solve` is your partner's puzzle for
 // you today, `mine` is yours for them today, `next` is what you've set them for
 // tomorrow. Finished puzzles carry `points` (out of 10) for whoever solved them.
@@ -165,10 +178,12 @@ export type BoardKinds = {
   word: { solve: (PuzzleView & Scored) | null; mine: (PuzzleView & Scored) | null; next: (PuzzleView & Scored) | null }
   dial: { solve: (DialView & Scored) | null; mine: (DialView & Scored) | null; next: (DialView & Scored) | null }
   top5: { solve: (Top5View & Scored) | null; mine: (Top5View & Scored) | null; next: (Top5View & Scored) | null }
-  sketch: { solve: (SketchView & Scored) | null; mine: (SketchView & Scored) | null; next: (SketchView & Scored) | null }
   numbers: { solve: (NumbersView & Scored) | null; mine: (NumbersView & Scored) | null; next: (NumbersView & Scored) | null }
   // Missing on a server without migration 0017.
   either?: { solve: (EitherView & Scored) | null; mine: (EitherView & Scored) | null; next: (EitherView & Scored) | null }
+  // Missing on a server without migration 0030. (The server still sends Sketch, for older
+  // copies of the app; it's no longer one of the board's puzzles.)
+  bluff?: { solve: (BluffView & Scored) | null; mine: (BluffView & Scored) | null; next: (BluffView & Scored) | null }
 }
 export type Board =
   | { state: 'single' }
@@ -251,7 +266,7 @@ export type Memories =
       partner: string
       since: string // the oldest day this window covers
       sessions: { key: string; playedOn: string; payload: unknown }[]
-      puzzles: Array<(PuzzleView | DialView | Top5View | SketchView | NumbersView | EitherView) & { mine: boolean; points?: number | null }>
+      puzzles: Array<(PuzzleView | DialView | Top5View | SketchView | NumbersView | EitherView | BluffView) & { mine: boolean; points?: number | null }>
     }
 
 // Why a call failed, in words the app can show. 'setup' means the project isn't ready
@@ -432,7 +447,7 @@ export const api = {
     rpc<NumbersView>('submit_numbers', { p_puzzle: puzzleId, p_guesses: guesses }),
   // The questions your partner already set for a day, kind by kind (migration 0018).
   dayPrompts: (date: string) =>
-    rpc<Partial<Record<'word' | 'dial' | 'top5' | 'sketch' | 'numbers' | 'either', { prompt?: string; items?: string[]; questions?: string[] }>>>('day_prompts', { p_date: date }),
+    rpc<Partial<Record<'word' | 'dial' | 'top5' | 'sketch' | 'numbers' | 'either' | 'bluff', { prompt?: string; items?: string[]; questions?: string[] }>>>('day_prompts', { p_date: date }),
   // Nudging your partner into a game from its lobby (migration 0019).
   nudge: (game: string, mode: string) => rpc<void>('nudge', { p_game: game, p_mode: mode }),
   clearNudge: () => rpc<void>('clear_nudge'),
@@ -447,6 +462,10 @@ export const api = {
     rpc<void>('set_either', { p_for_date: forDate, p_questions: questions, p_answers: picks }),
   submitEither: (puzzleId: string, guesses: number[]) =>
     rpc<EitherView>('submit_either', { p_puzzle: puzzleId, p_guesses: guesses }),
+  setBluff: (forDate: string, prompt: string, statements: string[], truth: number) =>
+    rpc<void>('set_bluff', { p_for_date: forDate, p_prompt: prompt, p_statements: statements, p_truth: truth }),
+  submitBluff: (puzzleId: string, pick: number) =>
+    rpc<BluffView>('submit_bluff', { p_puzzle: puzzleId, p_pick: pick }),
 }
 
 // One box for any code: a device code (from your own Profile, on another device) makes

@@ -94,6 +94,11 @@ SQL Editor → New query → paste the whole file → **Run**.
    ranks you and your friend couples on this week's points (puzzle points plus the best
    Today-game team score each day, Monday to Sunday). Only totals are shown. Adds one
    private helper, `couple_week_points`. No tables change.
+30. `migrations/0030_two_lies_puzzle.sql` — Two Lies & a Truth as a daily puzzle, in
+   Sketch's place: three answers to the day's prompt, one true, one pick, 10 for the
+   truth. Adds the `bluff` kind, `set_bluff`, `submit_bluff`, `bluff_view`, and the
+   points, views and board rows. Sketch stays in the database (board() still lists it
+   for older copies of the app); the app no longer offers it.
 
 Run a new one before deploying the app that needs it — the app and the functions
 have to agree on what the daily card looks like.

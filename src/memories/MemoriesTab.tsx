@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { api, DailyError, type Memories } from '../daily/api'
-import type { DialView, EitherView, NumbersView, PuzzleView, SketchView, Top5View } from '../daily/api'
+import type { BluffView, DialView, EitherView, NumbersView, PuzzleView, SketchView, Top5View } from '../daily/api'
 import { sides } from '../daily/either'
 import { localDate } from '../daily/dates'
 import { questionFromThem } from '../daily/question'
@@ -264,7 +264,7 @@ function Part({ title, children }: { title: string; children: ReactNode }) {
 // ---------------------------------------------------------------- a day's puzzles
 
 const PUZZLE_NAMES: Record<Puzzle['kind'], string> = {
-  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That',
+  word: 'Their Word', dial: 'The Dial', top5: 'Top 5', sketch: 'Sketch', numbers: 'Their Numbers', either: 'This or That', bluff: 'Two Lies & a Truth',
 }
 
 function PuzzlesCard({ puzzles, me, partner }: { puzzles: Puzzle[]; me: string; partner: string }) {
@@ -346,6 +346,15 @@ function PuzzleLine({ p, setter, solver }: { p: Puzzle; setter: string; solver: 
           ))}
           {outcome && <span className="text-fg/45">{outcome}</span>}
         </div>
+      )
+    }
+    case 'bluff': {
+      const bv = p as BluffView
+      return (
+        <>
+          {questionFromThem(bv.prompt, setter, solver)}: <b>{bv.truth !== null ? bv.statements[bv.truth] : '—'}</b>
+          <span className="text-fg/45"> · {outcome ?? (bv.status === 'solved' ? `${solver} spotted the truth` : `${solver} fell for "${bv.statements[bv.pick ?? 0]}"`)}</span>
+        </>
       )
     }
     case 'either': {
