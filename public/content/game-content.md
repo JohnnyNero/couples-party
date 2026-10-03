@@ -738,31 +738,33 @@ and keep a mix: some most people have done, some hardly anyone has.
 
 # Wavelength
 
-Seven are drawn per session. Two poles, one or two words each. One player sees
-a hidden mark somewhere on the line between them and has to NAME A THING that
-sits at that exact spot — so both ends have to be arguable, and everything in
-between has to be nameable.
+Seven are drawn per session (and one a day for The Dial). Two poles, one or two
+words each. One player sees a hidden mark somewhere on the line between them and
+has to NAME A THING that sits at that exact spot; the other places it.
+
+What makes a good one: The poles are the two ends of ONE scale, true opposites
+("Cold | Hot"), not two different ideas ("Butterflies | Nausea", "Wingman | Third
+wheel"). You can name plenty of THINGS along it — foods, animals, films, jobs,
+people, places, habits — not moments or feelings ("Too soon | Too late"). The
+middle is as easy to fill as the ends. If almost everything is one end or the
+other ("Sweet | Savoury"), it's a coin toss, not a scale.
 
 - Cold | Hot
 - Underrated | Overrated
 - Boring | Exciting
 - Cheap | Expensive
 - Ugly | Beautiful
-- Innocent | Filthy (rude)
 - Cringe | Cool
 - Red flag | Green flag
 - Turn-off | Turn-on
 - Childish | Grown up
 - Embarrassing | Impressive
 - Weird | Normal
-- Casual | Serious
 - Unromantic | Romantic
-- Private | Public
 - Quiet | Loud
 - Useless | Useful
 - Scary | Comforting
 - Cheap date | Fancy date
-- Sweet | Savoury
 - Mild | Spicy
 - Relaxing | Stressful
 - Smells bad | Smells good
@@ -772,109 +774,86 @@ between has to be nameable.
 - Rude | Polite
 - Worst gift | Best gift
 - Bland | Tasty
+- Gross | Delicious
 - Snack | Meal
 - Healthy | Unhealthy
 - Breakfast food | Dinner food
-- Fresh | Stale
 - Soft | Crunchy
-- Overcooked | Undercooked
-- Early night | Late night
+- Simple | Fancy
 - Tidy | Messy
 - Annoying habit | Cute habit
-- Cosy | Chilly
 - Sofa night | Night out
 - Bad TV | Good TV
-- Rushed | Slow
-- Lazy Sunday | Busy Sunday
+- Sad | Happy
+- Kid-friendly | Adults only
+- Forgettable | Iconic
+- Unknown | Famous
+- Mainstream | Niche
+- Old-fashioned | Trendy
 - Rubbish | Treasure
-- Grumpy | Cheerful
-- Pyjamas | Nothing on (rude)
-- Morning cuddle | Morning sex (rude)
+- Pointless | Essential
+- Short-lived | Long-lasting
+- Harmless | Dangerous
+- Normal pet | Weird pet
+- Slow | Fast
+- Light | Heavy
+- Common | Rare
+- Calm | Chaotic
+- Villain | Hero
 - Stingy | Generous
-- Ghosting | Replying instantly
-- Too soon | Too late
-- Awkward | Smooth
-- Nervous | Confident
-- Boring text | Flirty text
 - Shy | Bold
 - Stranger | Family
 - Dealbreaker | Dealmaker
 - Small talk | Deep talk
-- Cold shoulder | Warm hug
-- Clingy | Distant
-- Bad kiss | Great kiss
-- Awkward silence | Comfortable silence
-- Fling | Forever
-- Long distance | Next door
-- Second thoughts | No doubts
+- Boring text | Flirty text
 - Cheesy | Charming
-- Flirty | Creepy
-- Wingman | Third wheel
-- Mixed signals | Clear signals
-- Butterflies | Nausea
-- Honeymoon phase | Long haul
-- Awkward hug | Perfect hug
 - Cute | Hot
 - Bad match | Perfect match
-- Romantic gesture | Empty gesture
-- Overdressed | Underdressed
-- Slow dance | Grind (rude)
-- Holding hands | Hands everywhere (rude)
-- Peck | Full make-out
-- Snuggle | Steamy (rude)
-- Lingering look | Undressing look (rude)
-- Innocent flirt | Dirty flirt (rude)
 - Broke | Rich
 - Worthless | Priceless
 - Bargain | Rip-off
-- Frugal | Extravagant
 - Bad investment | Good investment
 - Sensible purchase | Impulse buy
 - Dead-end job | Dream job
 - Easy job | Hard job
-- Low status | High status
-- Unprofessional | Professional
+- Overpaid | Underpaid
 - Lazy | Hardworking
-- Boring meeting | Useful meeting
 - Bad boss | Great boss
-- Needy text | Chill text
-- Unsendable | Sendable
-- Embarrassing search | Normal search
 - Old tech | New tech
 - Clunky | Sleek
-- Outdated | Cutting edge
 - Annoying app | Useful app
-- Addictive | Forgettable
 - Fake | Authentic
-- Bad selfie | Good selfie
-- Oversharing | Undersharing
 - Tacky | Classy
-- Splurge | Save
-- Overpaid | Underpaid
 - Scam | Legit
-- Sexting no-go | Sexting yes (rude)
+- Embarrassing search | Normal search
+- Innocent | Filthy (rude)
+- Pyjamas | Nothing on (rude)
+- Slow dance | Grind (rude)
+- Holding hands | Hands everywhere (rude)
+- Innocent flirt | Dirty flirt (rude)
 
 # Draw Your Answer
 
-Six are drawn per session. A bare noun phrase — the app puts "Your" in front for
-the drawer and "Sam's" for everyone else, so it has to read right after both.
-The drawer secretly types their real answer, draws it, and the other guesses.
-Pick things that have a drawable answer.
+Six are drawn per session (and one a day for Sketch). A bare noun phrase — the app
+puts "Your" in front for the drawer and "Sam's" for everyone else, so it has to read
+right after both. The drawer secretly types their real answer, draws it, and the
+other guesses it.
+
+What makes a good one: The answer is ONE concrete thing — a food, an animal, an
+object, a character, a place you could sketch — not an experience or a plan
+("ideal Sunday", "perfect date", "weirdest dream"). It can be drawn in under a
+minute, by someone who can't draw. It's guessable in a word or two: "pizza", "a
+penguin", "the beach". Not a film title or a long description.
 
 - comfort food
-- dream holiday
 - favourite animal
-- worst habit
 - dream car
-- hidden talent
 - biggest fear
 - happy place
 - go-to snack
 - dream pet
 - favourite sport
 - dream job
-- favourite film
-- perfect date
 - favourite drink
 - least favourite chore
 - spirit animal
@@ -884,60 +863,51 @@ Pick things that have a drawable answer.
 - most-used app
 - favourite dessert
 - dream superpower
-- celebrity crush
-- favourite body part (rude)
-- biggest turn-on (rude)
-- favourite position (rude)
-- ideal Sunday
-- best holiday ever
-- guilty pleasure
-- sleeping position
-- ideal pizza
+- favourite pizza topping
 - favourite takeaway
-- most treasured possession
 - desert island item
 - favourite flower
 - favourite hobby
-- worst nightmare
-- favourite mug
+- most treasured possession
 - go-to lunch
-- ideal sandwich
+- favourite sandwich filling
 - favourite cereal
-- comfort blanket
 - go-to midnight snack
 - favourite soup
-- perfect cup of tea
-- ideal breakfast in bed
 - favourite pasta shape
 - favourite ice cream flavour
-- favourite pyjamas
-- ideal bath
-- favourite cheese
 - go-to hangover food
 - favourite biscuit
-- perfect roast dinner
 - favourite fruit
-- weirdest dream
+- favourite vegetable
 - favourite toast topping
-- best nap ever
-- first date spot
-- first kiss location
-- first date outfit
-- dream wedding
-- honeymoon destination
-- ideal proposal
-- go-to date meal
-- favourite couple photo
-- ideal anniversary
-- best gift received
-- ideal Valentine's Day
-- favourite place to kiss
-- favourite way to flirt
-- ideal weekend away
-- romantic gesture
-- perfect picnic
-- favourite cuddle position
-- ideal candlelit dinner
+- roast dinner must-have
+- go-to date night meal
+- best present ever
+- dream holiday destination
+- favourite bird
+- favourite sea creature
+- favourite farm animal
+- favourite dinosaur
+- favourite emoji
+- dream fancy dress costume
+- favourite cartoon character
+- favourite superhero
+- favourite cake
+- favourite chocolate bar
+- favourite sweet
+- favourite board game
+- favourite fairground ride
+- favourite childhood toy
+- dream instrument
+- favourite weather
+- favourite room
+- favourite item of clothing
+- favourite Christmas food
+- favourite kitchen gadget
+- favourite pub snack
+- favourite body part (rude)
+- favourite position (rude)
 - favourite sexy outfit (rude)
 
 # Who's More Likely
